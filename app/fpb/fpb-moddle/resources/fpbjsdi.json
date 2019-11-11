@@ -1,0 +1,140 @@
+{
+    "name": "FPB.JS DI",
+    "uri": "http://www.hsu-ifa.de/fpbjs/di",
+    "types": [
+        {
+            "name": "FPBJSDiagram",
+            "properties": [
+                {
+                    "name": "plane",
+                    "type": "FPBPlane",
+                    "redefines": "di:Diagram#rootElement"
+                },
+                {
+                    "name": "labelStyle",
+                    "type": "FPBLabelStyle",
+                    "isMany": true
+                }
+            ],
+            "superClass": [
+                "di:Diagram"
+            ]
+        },
+        {
+            "name": "FPBJSPlane",
+            "properties": [
+                {
+                    "name": "fpbjsElement",
+                    "isAttr": true,
+                    "isReference": true,
+                    "type": "fpb:BaseElement",
+                    "redefines": "di:DiagramElement#modelElement"
+                }
+            ],
+            "superClass": [
+                "di:Plane"
+            ]
+        },
+        {
+            "name": "FPBJSShape",
+            "properties": [
+                {
+                    "name": "fpbjsElement",
+                    "isAttr": true,
+                    "isReference": true,
+                    "type": "fpbjs:BaseElement",
+                    "redefines": "di:DiagramElement#modelElement"
+                },
+                {
+                    "name": "isHorizontal",
+                    "isAttr": true,
+                    "type": "Boolean"
+                },
+                {
+                    "name": "isExpanded",
+                    "isAttr": true,
+                    "type": "Boolean"
+                },
+                {
+                    "name": "isMarkerVisible",
+                    "isAttr": true,
+                    "type": "Boolean"
+                },
+                {
+                    "name": "label",
+                    "type": "FPBJSLabel"
+                },
+                {
+                    "name": "isMessageVisible",
+                    "isAttr": true,
+                    "type": "Boolean"
+                }
+            ],
+            "superClass": [
+                "di:LabeledShape"
+            ]
+        },
+        {
+            "name": "FPBJSEdge",
+            "properties": [
+                {
+                    "name": "label",
+                    "type": "FPBJSLabel"
+                },
+                {
+                    "name": "fpbjsElement",
+                    "isAttr": true,
+                    "isReference": true,
+                    "type": "fpb:BaseElement",
+                    "redefines": "di:DiagramElement#modelElement"
+                },
+                {
+                    "name": "sourceElement",
+                    "isAttr": true,
+                    "isReference": true,
+                    "type": "di:DiagramElement",
+                    "redefines": "di:Edge#source"
+                },
+                {
+                    "name": "targetElement",
+                    "isAttr": true,
+                    "isReference": true,
+                    "type": "di:DiagramElement",
+                    "redefines": "di:Edge#target"
+                }
+            ],
+            "superClass": [
+                "di:LabeledEdge"
+            ]
+        },
+        {
+            "name": "FPBJSLabel",
+            "properties": [
+                {
+                    "name": "labelStyle",
+                    "type": "FPBJSLabelStyle",
+                    "isAttr": true,
+                    "isReference": true,
+                    "redefines": "di:DiagramElement#style"
+                }
+            ],
+            "superClass": [
+                "di:Label"
+            ]
+        },
+        {
+            "name": "FPBJSLabelStyle",
+            "properties": [
+                {
+                    "name": "font",
+                    "type": "dc:Font"
+                }
+            ],
+            "superClass": [
+                "di:Style"
+            ]
+        }
+    ],
+    "associations": [],
+    "prefix": "fpbjsdi"
+}

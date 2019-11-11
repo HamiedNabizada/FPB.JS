@@ -1,0 +1,306 @@
+{
+    "name": "FPB",
+    "uri": "http://www.hsu-ifa.de/fpbjs",
+    "associations": [],
+    "types": [
+        {
+            "name": "Project",
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "default": "FPBJS_Project",
+                    "type": "String"
+                },
+                {
+                    "name": "targetNamespace",
+                    "isAttr": true,
+                    "default": "http://www.hsu-ifa.de/fpbjs",
+                    "type": "String"
+                },
+                {
+                    "name": "entryPoint",
+                    "isAttr": true,
+                  
+                    "type": "Process"
+                }
+            ]
+        },
+        {
+            "name": "BaseElement",
+            "isAbstract": true,
+            "properties": [
+                {
+                    "name": "id",
+                    "isAttr": true,
+                    "type": "String",
+                    "isId": true
+                },
+                {
+                    "name": "ProjectAssignment",
+                    "isReference": true,
+                    "type": "Project"
+                }
+            ]
+        },
+        {
+            "name": "Process",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "elementsContainer",
+                    "isMany": true,
+                    "type": "BaseElement"
+                },
+                {
+                    "name": "isDecomposedProcessOperator",
+                    "isReference": true,
+                    "type": "ProcessOperator"
+                },
+                {
+                    "name": "consistsOfStates",
+                    "isReference": true,
+                    "isMany": true,
+                    "type": "State"
+                },
+                {
+                    "name": "consistsOfSystemLimit",
+                    "isReference": true,
+                    "type": "SystemLimit"
+                },
+                {
+                    "name": "consistsOfProcessOperator",
+                    "isReference": true,
+                    "isMany": true,
+                    "type": "ProcessOperator"
+                },
+                {
+                    "name": "consistsOfProcesses",
+                    "isReference": true,
+                    "isMany": true,
+                    "type": "Process"
+                }
+            ]
+        },
+        {
+            "name": "SystemLimit",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "elementsContainer",
+                    "isMany": true,
+                    "type": "Object"
+                },
+                {
+                    "name": "decomposedViewOf",
+                    "isReference": true,
+                    "type": "ProcessOperator"
+                }
+            ]
+        },
+        {
+            "name": "Object",
+            "isAbstract": true,
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "identification",
+                    "isAttr": true,
+                    "type": "Identification"
+                },
+                {
+                    "name": "characteristics",
+                    "isAttr": true,
+                    "isMany": true,
+                    "type": "fpbch:Characteristics"
+                },
+                {
+                    "name": "incoming",
+                    "isReference": true,
+                    "isMany": true,
+                    "type": "Flows"
+                },
+                {
+                    "name": "outgoing",
+                    "isReference": true,
+                    "isMany": true,
+                    "type": "Flows"
+                }
+            ]
+        },
+        {
+            "name": "State",
+            "isAbstract": true,
+            "superClass": [
+                "Object"
+            ],
+            "properties": [
+                {
+                    "name": "isAssignedTo",
+                    "isReference": true,
+                    "isMany": true,
+                    "type": "ProcessOperator"
+                }
+            ]
+        },
+        {
+            "name": "Product",
+            "superClass": [
+                "State"
+            ]
+        },
+        {
+            "name": "Energy",
+            "superClass": [
+                "State"
+            ]
+        },
+        {
+            "name": "Information",
+            "superClass": [
+                "State"
+            ]
+        },
+        {
+            "name": "ProcessOperator",
+            "superClass": [
+                "Object"
+            ],
+            "properties": [
+                {
+                    "name": "isAssignedTo",
+                    "isReference": true,
+                    "isMany": true,
+                    "type": "TechnicalResource"
+                },
+                {
+                    "name": "decomposedView",
+                    "isReference": true,
+                    "type": "Process"
+                }
+            ]
+        },
+        {
+            "name": "TechnicalResource",
+            "superClass": [
+                "Object"
+            ],
+            "properties": [
+                {
+                    "name": "isAssignedTo",
+                    "isReference": true,
+                    "isMany": true,
+                    "type": "ProcessOperator"
+                }
+            ]
+        },
+        {
+            "name": "Flow",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "sourceRef",
+                    "isAttr": true,
+                    "isReference": true,
+                    "type": "Object"
+                },
+                {
+                    "name": "targetRef",
+                    "isAttr": true,
+                    "isReference": true,
+                    "type": "Object"
+                }
+            ]
+        },
+        {
+            "name": "Usage",
+            "superClass": [
+                "Flow"
+            ]
+        },
+        {
+            "name": "AlternativeFlow",
+            "superClass": [
+                "Flow"
+            ],
+            "properties": [
+                {
+                    "name": "inTandemWith",
+                    "isReference": true,
+                    "isMany": true,
+                    "type": "AlternativeFlow"
+                }
+            ]
+        },
+        {
+            "name": "ParallelFlow",
+            "superClass": [
+                "Flow"
+            ],
+            "properties": [
+                {
+                    "name": "inTandemWith",
+                    "isReference": true,
+                    "isMany": true,
+                    "type": "ParallelFlow"
+                }
+            ]
+        },
+        {
+            "name": "Identification",
+            "properties": [
+                {
+                    "name": "uniqueIdent",
+                    "type": "String",
+                    "isId": true,
+                    "isAttr": true
+                },
+                {
+                    "name": "longName",
+                    "type": "String",
+                    "isAttr": true
+                },
+                {
+                    "name": "shortName",
+                    "type": "String",
+                    "isAttr": true
+                },
+                {
+                    "name": "referenceTo",
+                    "type": "BaseElement",
+                    "isAttr": true,
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "versionNumber",
+                    "type": "String",
+                    "isAttr": true
+                },
+                {
+                    "name": "revisionNumber",
+                    "type": "String",
+                    "isAttr": true
+                }
+            ]
+        }
+    ],
+    "prefix": "fpb",
+    "xml": {
+        "tagAlias": "lowerCase",
+        "typePrefix": "t"
+    }
+}

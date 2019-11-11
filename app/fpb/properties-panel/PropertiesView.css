@@ -1,0 +1,23 @@
+.element-properties label {
+  font-weight: bold;
+}
+
+.element-properties label:after {
+  content: ': ';
+}
+
+.element-properties button + button {
+  margin-left: 10px;
+}
+.config {
+  padding-bottom: 5px;
+}
+input[placeholder="unit"] {
+  width: 80px;
+}
+#openPropertiesPanelButton {
+  width: 100%;
+}
+.card-body {
+  padding: 10px;
+}

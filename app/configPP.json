@@ -1,0 +1,39 @@
+{
+    "propertiesPanel": {
+        "showPanel": true,
+        "showIdentifactionCard": true,
+        "identificationElements": {
+            "showUniqueIdent": true,
+            "showLongName": true,
+            "showVersionNumber": true,
+            "showRevisionNumber": true
+        },
+        "showActionsCard": true,
+        "actionsElements": {
+            "addCharasterics": true
+        },
+        "defaultCharacteristics": {
+            "showCategoryCard": true,
+            "categoryElements": {
+                "showUniqueIdent": true,
+                "showLongName": true,
+                "showVersionNumber": true,
+                "showRevisionNumber": true
+            },
+            "showDescriptiveElementCard": true,
+            "descriptiveElements": {
+                "showValueDeterminationProcess": true,
+                "showRepresentivity": true,
+                "showSetpointValue": true,
+                "showActualValues": true,
+                "showXXXXvalidityLimitsTODO": true
+            },
+            "showRelationalElementCard": true,
+            "relationalElements": {
+                "showModel": true,
+                "showRegulationsforRelationalGeneration": true,
+                "showView": true
+            }
+        }
+    }
+}

@@ -1,0 +1,60 @@
+.layerPanel{
+    display: flex;
+    flex-direction: column;
+    position:relative;
+}
+.process-button + .process-button{
+padding-top: 3px;
+}
+.layerPanel-ProcessOverview-Content {
+    border-top: solid 1px #CCC;
+    padding-top: 3px;
+}
+.layerPanel button + button {
+    margin-left: 10px;
+  }
+  .layerPanel .layerPanel-ProcessOverview-Config {
+      display: flex;
+      flex-direction: row;
+  }
+
+  .toggle-icon {
+    display: inline-block; }
+    .toggle-icon-symbol {
+      width: 2rem;
+      height: 1rem;
+      text-align: center;
+      line-height: 1rem; }
+  
+  .tree-item-group {
+    list-style-type: none;
+    padding-left: 0px;
+    border-top: 1px solid #ccc;
+    text-align: left;
+    width: 100%; }
+  /*
+  
+  */
+  .tree-item {
+    padding: 0.5rem;
+    padding-left: 0.5rem;
+    cursor: pointer;
+    color: #333;
+    background: none;
+    border-bottom: 0.5px solid #ccc;
+    box-shadow: none;
+    z-index: unset;
+    position: relative; }
+    .tree-item--active {
+        font-weight: bold;
+        background: rgb(181, 181, 181);
+      }
+/* border-bottom: none;
+      color: white;
+      background: #179ed3;
+*/
+  
+  .search {
+    padding: 0.5rem 1.5rem;
+    border: none;
+    width: 100%; }

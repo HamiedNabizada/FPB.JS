@@ -1,0 +1,70 @@
+<html>
+
+<head>
+  <link rel="stylesheet" href="../css/diagram-js.css">
+  <link rel="stylesheet" href="../css/fpbjs.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <style>
+    body,
+    html {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+    }
+
+    .fpb-wrapper {
+      height: 100vh;
+      width: 100vw;
+      display: grid;
+      grid-template-rows: 1fr auto;
+    }
+
+    .modeler-parent {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+    }
+
+    .modal-body .row {
+      padding-bottom: 5px;
+    }
+
+    .modal-body .row .col .card {
+      height: 100%;
+    }
+
+    #properties-container {
+      border-left: solid 1px #CCC;
+      background: #FAFAFA;
+      padding: 5px;
+    }
+
+    #layer-container {
+      border-left: solid 1px #CCC;
+      background: #FAFAFA;
+      padding: 5px;
+    }
+
+    
+
+
+  </style>
+</head>
+
+<body>
+  
+  <div class="fpb-wrapper">
+    <div class="modeler-parent">
+      <div id="modeler-container"></div>
+      <div id="properties-container"></div>
+      <div id="layer-container">
+      </div>
+    </div>
+
+  </div>
+
+
+  <script src="./app.js"></script>
+</body>
+
+</html>

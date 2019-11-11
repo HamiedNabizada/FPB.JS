@@ -1,0 +1,1590 @@
+{
+    "name": "FPBJS",
+    "uri": "http://www.hsu-ifa.de/fpb",
+    "associations": [],
+    "types": [
+        {
+            "name": "ValidityLimits",
+            "properties": [
+                {
+                    "name": "limitType",
+                    "type": "String",
+                    "isAttr": true
+                },
+                {
+                    "name": "from",
+                    "type": "Real",
+                    "isAttr": true
+                },
+                {
+                    "name": "to",
+                    "type": "Real",
+                    "isAttr": true
+                }
+            ]
+        },
+        {
+            "name": "ValueWithUnit",
+            "properties": [
+                {
+                    "name": "value",
+                    "isAttr": true,
+                    "type": "Real"
+                },
+                {
+                    "name": "unit",
+                    "isAttr": true,
+                    "type": "String"
+                }
+            ]
+        },
+        {
+            "name": "Identification",
+            "properties": [
+                {
+                    "name": "uniqueIdent",
+                    "isAttr": true,
+                    "isId": true,
+                    "type": "String"
+                },
+                {
+                    "name": "longName",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "shortName",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "referenceTo",
+                    "isAttr": true,
+                    "isReference": true,
+                    "isMany": true,
+                    "type": "BaseElement"
+                },
+                {
+                    "name": "versionNumber",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "revisionNumber",
+                    "isAttr": true,
+                    "type": "String"
+                }
+            ]
+        },
+        {
+            "name": "Characteristics",
+            "properties": [
+                {
+                    "name": "category",
+                    "type": "Identification",
+                    "isAttr": true
+                },
+                {
+                    "name": "descriptiveElement",
+                    "type": "DescriptiveElement",
+                    "isAttr": true
+                },
+                {
+                    "name": "relationalElement",
+                    "type": "RelationalElement",
+                    "isAttr": true
+                }
+            ]
+        },
+        {
+            "name": "DescriptiveElement",
+            "properties": [
+                {
+                    "name": "valueDeterminationProcess",
+                    "type": "String",
+                    "isAttr": true
+                },
+                {
+                    "name": "representivity",
+                    "type": "String",
+                    "isAttr": true
+                },
+                {
+                    "name": "setpointValue",
+                    "type": "ValueWithUnit",
+                    "isAttr": true
+                },
+                {
+                    "name": "validityLimits",
+                    "type": "ValidityLimits",
+                    "isMany": true,
+                    "isAttr": true
+                },
+                {
+                    "name": "actualValues",
+                    "type": "ValueWithUnit",
+                    "isAttr": true,
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "RelationalElement",
+            "properties": [
+                {
+                    "name": "view",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "model",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "regulationsForRelationalGeneration",
+                    "isAttr": true,
+                    "type": "String"
+                }
+            ]
+        },
+        {
+            "name": "Object",
+            "isAbstract": true,
+            "superClass": [
+                "FlowNode"
+            ],
+            "properties": [
+                {
+                    "name": "identification",
+                    "type": "Identification",
+                    "isAttr": true
+                },
+                {
+                    "name": "characteristics",
+                    "type": "Characteristics",
+                    "isAttr": true,
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "State",
+            "isAbstract": true,
+            "superClass": [
+                "Object"
+            ],
+            "properties": [
+                {
+                    "name": "stateStatus",
+                    "isAttr": true,
+                    "type": "StateStatus"
+                },
+                {
+                    "name": "isAssignedTo",
+                    "type": "ProcessOperator",
+                    "isAttr": true,
+                    "isReference": true
+                },
+                {
+                    "name": "onSystemBorder",
+                    "isAttr": true,
+                    "type": "Boolean"
+                }
+            ]
+        },
+        {
+            "name": "Product",
+            "superClass": [
+                "State"
+            ]
+        },
+        {
+            "name": "Energy",
+            "superClass": [
+                "State"
+            ]
+        },
+        {
+            "name": "Information",
+            "superClass": [
+                "State"
+            ]
+        },
+        {
+            "name": "SystemLimit",
+            "superClass": [
+                "Object"
+            ]
+        },
+        {
+            "name": "ProcessOperator",
+            "superClass": [
+                "Object"
+            ],
+            "properties": [
+                {
+                    "name": "isAggregated",
+                    "isAttr": true,
+                    "type": "Boolean",
+                    "default": false
+                },
+                {
+                    "name": "isAggregatedFrom",
+                    "isReference": true,
+                    "isAttr": true,
+                    "type": "Object",
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "TechnicalResource",
+            "superClass": [
+                "Object"
+            ],
+            "properties": [
+                {
+                    "name": "isAssignedTo",
+                    "isAttr": true,
+                    "type": "ProcessOperator",
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "Process1",
+            "superClass": [
+                "Process"
+            ],
+            "properties": [
+                {
+                    "name": "consistsOfStates",
+                    "type": "State",
+                    "isReference": true,
+                    "isAttr": true,
+                    "isMany": true
+                },
+                {
+                    "name": "consistsOfSystemLimit",
+                    "type": "SystemLimit",
+                    "isReference": true,
+                    "isAttr": true
+                },
+                {
+                    "name": "consistsOfProcessOperator",
+                    "type": "ProcessOperator",
+                    "isReference": true,
+                    "isAttr": true,
+                    "isMany": true
+                },
+                {
+                    "name": "consistsOfProcesses",
+                    "type": "Process1",
+                    "isReference": true,
+                    "isAttr": true,
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "Flow",
+            "superClass": [
+                "FlowElement"
+            ],
+            "properties": [
+                {
+                    "name": "sourceRef",
+                    "type": "FlowNode",
+                    "isAttr": true,
+                    "isReference": true
+                },
+                {
+                    "name": "targetRef",
+                    "type": "FlowNode",
+                    "isAttr": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "Usage",
+            "superClass": [
+                "FlowElement"
+            ],
+            "properties": [
+                {
+                    "name": "sourceRef",
+                    "type": "FlowNode",
+                    "isAttr": true,
+                    "isReference": true
+                },
+                {
+                    "name": "targetRef",
+                    "type": "FlowNode",
+                    "isAttr": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "ParallelFlow",
+            "superClass": [
+                "Flow"
+            ],
+            "properties": [
+                {
+                    "name": "inTandemWith",
+                    "isAttr": true,
+                    "type": "ParallelFlow",
+                    "isReference": true,
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "AlternativeFlow",
+            "superClass": [
+                "Flow"
+            ],
+            "properties": [
+                {
+                    "name": "inTandemWith",
+                    "isAttr": true,
+                    "type": "ParallelFlow",
+                    "isReference": true,
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "BaseElement",
+            "isAbstract": true,
+            "properties": [
+                {
+                    "name": "id",
+                    "isAttr": true,
+                    "type": "String",
+                    "isId": true
+                },
+                {
+                    "name": "documentation",
+                    "type": "Documentation",
+                    "isMany": true
+                },
+                {
+                    "name": "extensionDefinitions",
+                    "type": "ExtensionDefinition",
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "extensionElements",
+                    "type": "ExtensionElements"
+                }
+            ]
+        },
+        {
+            "name": "Documentation",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "text",
+                    "type": "String",
+                    "isBody": true
+                },
+                {
+                    "name": "textFormat",
+                    "default": "text/plain",
+                    "isAttr": true,
+                    "type": "String"
+                }
+            ]
+        },
+        {
+            "name": "ExtensionDefinition",
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "extensionAttributeDefinitions",
+                    "type": "ExtensionAttributeDefinition",
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "ExtensionElements",
+            "properties": [
+                {
+                    "name": "valueRef",
+                    "isAttr": true,
+                    "isReference": true,
+                    "type": "Element"
+                },
+                {
+                    "name": "values",
+                    "type": "Element",
+                    "isMany": true
+                },
+                {
+                    "name": "extensionAttributeDefinition",
+                    "type": "ExtensionAttributeDefinition",
+                    "isAttr": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "ExtensionAttributeDefinition",
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "type",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "isReference",
+                    "default": false,
+                    "isAttr": true,
+                    "type": "Boolean"
+                },
+                {
+                    "name": "extensionDefinition",
+                    "type": "ExtensionDefinition",
+                    "isAttr": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "Definitions",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "targetNamespace",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "expressionLanguage",
+                    "default": "http://www.w3.org/1999/XPath",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "typeLanguage",
+                    "default": "http://www.w3.org/2001/XMLSchema",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "imports",
+                    "type": "Import",
+                    "isMany": true
+                },
+                {
+                    "name": "extensions",
+                    "type": "Extension",
+                    "isMany": true
+                },
+                {
+                    "name": "rootElements",
+                    "type": "RootElement",
+                    "isMany": true
+                },
+                {
+                    "name": "diagrams",
+                    "isMany": true,
+                    "type": "fpbjsdi:FPBJSDiagram"
+                },
+                {
+                    "name": "exporter",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "relationships",
+                    "type": "Relationship",
+                    "isMany": true
+                },
+                {
+                    "name": "exporterVersion",
+                    "isAttr": true,
+                    "type": "String"
+                }
+            ]
+        },
+        {
+            "name": "Import",
+            "properties": [
+                {
+                    "name": "importType",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "location",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "namespace",
+                    "isAttr": true,
+                    "type": "String"
+                }
+            ]
+        },
+        {
+            "name": "Extension",
+            "properties": [
+                {
+                    "name": "mustUnderstand",
+                    "default": false,
+                    "isAttr": true,
+                    "type": "Boolean"
+                },
+                {
+                    "name": "definition",
+                    "type": "ExtensionDefinition",
+                    "isAttr": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "RootElement",
+            "isAbstract": true,
+            "superClass": [
+                "BaseElement"
+            ]
+        },
+        {
+            "name": "Relationship",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "type",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "direction",
+                    "type": "RelationshipDirection",
+                    "isAttr": true
+                },
+                {
+                    "name": "source",
+                    "isMany": true,
+                    "isReference": true,
+                    "type": "Element"
+                },
+                {
+                    "name": "target",
+                    "isMany": true,
+                    "isReference": true,
+                    "type": "Element"
+                }
+            ]
+        },
+        {
+            "name": "FlowElement",
+            "isAbstract": true,
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "auditing",
+                    "type": "Auditing"
+                },
+                {
+                    "name": "monitoring",
+                    "type": "Monitoring"
+                },
+                {
+                    "name": "categoryValueRef",
+                    "type": "CategoryValue",
+                    "isMany": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "Auditing",
+            "superClass": [
+                "BaseElement"
+            ]
+        },
+        {
+            "name": "Monitoring",
+            "superClass": [
+                "BaseElement"
+            ]
+        },
+        {
+            "name": "CategoryValue",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "categorizedFlowElements",
+                    "type": "FlowElement",
+                    "isVirtual": true,
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "value",
+                    "isAttr": true,
+                    "type": "String"
+                }
+            ]
+        },
+        {
+            "name": "FlowNode",
+            "isAbstract": true,
+            "superClass": [
+                "FlowElement"
+            ],
+            "properties": [
+                {
+                    "name": "incoming",
+                    "type": "Flow",
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "outgoing",
+                    "type": "Flow",
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "lanes",
+                    "type": "Lane",
+                    "isVirtual": true,
+                    "isMany": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "SequenceFlow",
+            "superClass": [
+                "FlowElement"
+            ],
+            "properties": [
+                {
+                    "name": "isImmediate",
+                    "isAttr": true,
+                    "type": "Boolean"
+                },
+                {
+                    "name": "conditionExpression",
+                    "type": "Expression",
+                    "xml": {
+                        "serialize": "xsi:type"
+                    }
+                },
+                {
+                    "name": "sourceRef",
+                    "type": "FlowNode",
+                    "isAttr": true,
+                    "isReference": true
+                },
+                {
+                    "name": "targetRef",
+                    "type": "FlowNode",
+                    "isAttr": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "Expression",
+            "superClass": [
+                "BaseElement"
+            ],
+            "isAbstract": false,
+            "properties": [
+                {
+                    "name": "body",
+                    "type": "String",
+                    "isBody": true
+                }
+            ]
+        },
+        {
+            "name": "Lane",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "partitionElementRef",
+                    "type": "BaseElement",
+                    "isAttr": true,
+                    "isReference": true
+                },
+                {
+                    "name": "partitionElement",
+                    "type": "BaseElement"
+                },
+                {
+                    "name": "flowNodeRef",
+                    "type": "FlowNode",
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "childLaneSet",
+                    "type": "LaneSet",
+                    "xml": {
+                        "serialize": "xsi:type"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "LaneSet",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "lanes",
+                    "type": "Lane",
+                    "isMany": true
+                },
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                }
+            ]
+        },
+        {
+            "name": "FlowElementsContainer",
+            "isAbstract": true,
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "laneSets",
+                    "type": "LaneSet",
+                    "isMany": true
+                },
+                {
+                    "name": "flowElements",
+                    "type": "FlowElement",
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "CallableElement",
+            "isAbstract": true,
+            "superClass": [
+                "RootElement"
+            ],
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "ioSpecification",
+                    "type": "InputOutputSpecification",
+                    "xml": {
+                        "serialize": "property"
+                    }
+                },
+                {
+                    "name": "supportedInterfaceRef",
+                    "type": "Interface",
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "ioBinding",
+                    "type": "InputOutputBinding",
+                    "isMany": true,
+                    "xml": {
+                        "serialize": "property"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "InputOutputSpecification",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "dataInputs",
+                    "type": "DataInput",
+                    "isMany": true
+                },
+                {
+                    "name": "dataOutputs",
+                    "type": "DataOutput",
+                    "isMany": true
+                },
+                {
+                    "name": "inputSets",
+                    "type": "InputSet",
+                    "isMany": true
+                },
+                {
+                    "name": "outputSets",
+                    "type": "OutputSet",
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "DataInput",
+            "superClass": [
+                "ItemAwareElement"
+            ],
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "isCollection",
+                    "default": false,
+                    "isAttr": true,
+                    "type": "Boolean"
+                },
+                {
+                    "name": "inputSetRef",
+                    "type": "InputSet",
+                    "isVirtual": true,
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "inputSetWithOptional",
+                    "type": "InputSet",
+                    "isVirtual": true,
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "inputSetWithWhileExecuting",
+                    "type": "InputSet",
+                    "isVirtual": true,
+                    "isMany": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "DataOutput",
+            "superClass": [
+                "ItemAwareElement"
+            ],
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "isCollection",
+                    "default": false,
+                    "isAttr": true,
+                    "type": "Boolean"
+                },
+                {
+                    "name": "outputSetRef",
+                    "type": "OutputSet",
+                    "isVirtual": true,
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "outputSetWithOptional",
+                    "type": "OutputSet",
+                    "isVirtual": true,
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "outputSetWithWhileExecuting",
+                    "type": "OutputSet",
+                    "isVirtual": true,
+                    "isMany": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "InputSet",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "dataInputRefs",
+                    "type": "DataInput",
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "optionalInputRefs",
+                    "type": "DataInput",
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "whileExecutingInputRefs",
+                    "type": "DataInput",
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "outputSetRefs",
+                    "type": "OutputSet",
+                    "isMany": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "OutputSet",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "dataOutputRefs",
+                    "type": "DataOutput",
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "inputSetRefs",
+                    "type": "InputSet",
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "optionalOutputRefs",
+                    "type": "DataOutput",
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "whileExecutingOutputRefs",
+                    "type": "DataOutput",
+                    "isMany": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "ItemAwareElement",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "itemSubjectRef",
+                    "type": "ItemDefinition",
+                    "isAttr": true,
+                    "isReference": true
+                },
+                {
+                    "name": "dataState",
+                    "type": "DataState"
+                }
+            ]
+        },
+        {
+            "name": "ItemDefinition",
+            "superClass": [
+                "RootElement"
+            ],
+            "properties": [
+                {
+                    "name": "itemKind",
+                    "type": "ItemKind",
+                    "isAttr": true
+                },
+                {
+                    "name": "structureRef",
+                    "type": "String",
+                    "isAttr": true
+                },
+                {
+                    "name": "isCollection",
+                    "default": false,
+                    "isAttr": true,
+                    "type": "Boolean"
+                },
+                {
+                    "name": "import",
+                    "type": "Import",
+                    "isAttr": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "DataState",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                }
+            ]
+        },
+        {
+            "name": "Interface",
+            "superClass": [
+                "RootElement"
+            ],
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "operations",
+                    "type": "Operation",
+                    "isMany": true
+                },
+                {
+                    "name": "implementationRef",
+                    "type": "String",
+                    "isAttr": true
+                }
+            ]
+        },
+        {
+            "name": "Operation",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "inMessageRef",
+                    "type": "Message",
+                    "isReference": true
+                },
+                {
+                    "name": "outMessageRef",
+                    "type": "Message",
+                    "isReference": true
+                },
+                {
+                    "name": "errorRef",
+                    "type": "Error",
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "implementationRef",
+                    "type": "String",
+                    "isAttr": true
+                }
+            ]
+        },
+        {
+            "name": "Message",
+            "superClass": [
+                "RootElement"
+            ],
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "itemRef",
+                    "type": "ItemDefinition",
+                    "isAttr": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "Error",
+            "superClass": [
+                "RootElement"
+            ],
+            "properties": [
+                {
+                    "name": "structureRef",
+                    "type": "ItemDefinition",
+                    "isAttr": true,
+                    "isReference": true
+                },
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "errorCode",
+                    "isAttr": true,
+                    "type": "String"
+                }
+            ]
+        },
+        {
+            "name": "InputOutputBinding",
+            "properties": [
+                {
+                    "name": "inputDataRef",
+                    "type": "InputSet",
+                    "isAttr": true,
+                    "isReference": true
+                },
+                {
+                    "name": "outputDataRef",
+                    "type": "OutputSet",
+                    "isAttr": true,
+                    "isReference": true
+                },
+                {
+                    "name": "operationRef",
+                    "type": "Operation",
+                    "isAttr": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "Process",
+            "superClass": [
+                "FlowElementsContainer",
+                "CallableElement"
+            ],
+            "properties": [
+                {
+                    "name": "processType",
+                    "type": "ProcessType",
+                    "isAttr": true
+                },
+                {
+                    "name": "isClosed",
+                    "isAttr": true,
+                    "type": "Boolean"
+                },
+                {
+                    "name": "auditing",
+                    "type": "Auditing"
+                },
+                {
+                    "name": "monitoring",
+                    "type": "Monitoring"
+                },
+                {
+                    "name": "properties",
+                    "type": "Property",
+                    "isMany": true
+                },
+                {
+                    "name": "laneSets",
+                    "type": "LaneSet",
+                    "isMany": true,
+                    "replaces": "FlowElementsContainer#laneSets"
+                },
+                {
+                    "name": "flowElements",
+                    "type": "FlowElement",
+                    "isMany": true,
+                    "replaces": "FlowElementsContainer#flowElements"
+                },
+                {
+                    "name": "artifacts",
+                    "type": "Artifact",
+                    "isMany": true
+                },
+                {
+                    "name": "resources",
+                    "type": "ResourceRole",
+                    "isMany": true
+                },
+                {
+                    "name": "correlationSubscriptions",
+                    "type": "CorrelationSubscription",
+                    "isMany": true
+                },
+                {
+                    "name": "supports",
+                    "type": "Process",
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "isExecutable",
+                    "isAttr": true,
+                    "type": "Boolean"
+                }
+            ]
+        },
+        {
+            "name": "Property",
+            "superClass": [
+                "ItemAwareElement"
+            ],
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                }
+            ]
+        },
+        {
+            "name": "Artifact",
+            "isAbstract": true,
+            "superClass": [
+                "BaseElement"
+            ]
+        },
+        {
+            "name": "ResourceRole",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "resourceRef",
+                    "type": "Resource",
+                    "isReference": true
+                },
+                {
+                    "name": "resourceParameterBindings",
+                    "type": "ResourceParameterBinding",
+                    "isMany": true
+                },
+                {
+                    "name": "resourceAssignmentExpression",
+                    "type": "ResourceAssignmentExpression"
+                },
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                }
+            ]
+        },
+        {
+            "name": "Resource",
+            "superClass": [
+                "RootElement"
+            ],
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "resourceParameters",
+                    "type": "ResourceParameter",
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "ResourceParameter",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "isRequired",
+                    "isAttr": true,
+                    "type": "Boolean"
+                },
+                {
+                    "name": "type",
+                    "type": "ItemDefinition",
+                    "isAttr": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "ResourceParameterBinding",
+            "properties": [
+                {
+                    "name": "expression",
+                    "type": "Expression",
+                    "xml": {
+                        "serialize": "xsi:type"
+                    }
+                },
+                {
+                    "name": "parameterRef",
+                    "type": "ResourceParameter",
+                    "isAttr": true,
+                    "isReference": true
+                }
+            ],
+            "superClass": [
+                "BaseElement"
+            ]
+        },
+        {
+            "name": "ResourceAssignmentExpression",
+            "properties": [
+                {
+                    "name": "expression",
+                    "type": "Expression",
+                    "xml": {
+                        "serialize": "xsi:type"
+                    }
+                }
+            ],
+            "superClass": [
+                "BaseElement"
+            ]
+        },
+        {
+            "name": "CorrelationSubscription",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "correlationKeyRef",
+                    "type": "CorrelationKey",
+                    "isAttr": true,
+                    "isReference": true
+                },
+                {
+                    "name": "correlationPropertyBinding",
+                    "type": "CorrelationPropertyBinding",
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "CorrelationKey",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "correlationPropertyRef",
+                    "type": "CorrelationProperty",
+                    "isMany": true,
+                    "isReference": true
+                },
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                }
+            ]
+        },
+        {
+            "name": "CorrelationProperty",
+            "superClass": [
+                "RootElement"
+            ],
+            "properties": [
+                {
+                    "name": "correlationPropertyRetrievalExpression",
+                    "type": "CorrelationPropertyRetrievalExpression",
+                    "isMany": true
+                },
+                {
+                    "name": "name",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "type",
+                    "type": "ItemDefinition",
+                    "isAttr": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "CorrelationPropertyRetrievalExpression",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "messagePath",
+                    "type": "FormalExpression"
+                },
+                {
+                    "name": "messageRef",
+                    "type": "Message",
+                    "isAttr": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "FormalExpression",
+            "superClass": [
+                "Expression"
+            ],
+            "properties": [
+                {
+                    "name": "language",
+                    "isAttr": true,
+                    "type": "String"
+                },
+                {
+                    "name": "evaluatesToTypeRef",
+                    "type": "ItemDefinition",
+                    "isAttr": true,
+                    "isReference": true
+                }
+            ]
+        },
+        {
+            "name": "CorrelationPropertyBinding",
+            "superClass": [
+                "BaseElement"
+            ],
+            "properties": [
+                {
+                    "name": "dataPath",
+                    "type": "FormalExpression"
+                },
+                {
+                    "name": "correlationPropertyRef",
+                    "type": "CorrelationProperty",
+                    "isAttr": true,
+                    "isReference": true
+                }
+            ]
+        }
+    ],
+    "enumerations": [
+        {
+            "name": "StateStatus",
+            "literalValues": [
+                {
+                    "name": "ante"
+                },
+                {
+                    "name": "post"
+                }
+            ]
+        },
+        {
+            "name": "RelationshipDirection",
+            "literalValues": [
+                {
+                    "name": "None"
+                },
+                {
+                    "name": "Forward"
+                },
+                {
+                    "name": "Backward"
+                },
+                {
+                    "name": "Both"
+                }
+            ]
+        },
+        {
+            "name": "ItemKind",
+            "literalValues": [
+                {
+                    "name": "Physical"
+                },
+                {
+                    "name": "Information"
+                }
+            ]
+        },
+        {
+            "name": "ProcessType",
+            "literalValues": [
+                {
+                    "name": "None"
+                },
+                {
+                    "name": "Public"
+                },
+                {
+                    "name": "Private"
+                }
+            ]
+        }
+    ],
+    "prefix": "fpbjs",
+    "xml": {
+        "tagAlias": "lowerCase",
+        "typePrefix": "t"
+    }
+}

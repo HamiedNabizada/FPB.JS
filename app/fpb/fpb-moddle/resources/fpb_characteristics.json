@@ -1,0 +1,119 @@
+{
+    "name": "FPB Characteristics",
+    "uri": "http://www.hsu-ifa.de/fpbch",
+    "associations": [],
+    "types": [
+        {
+            "name": "Characteristics",
+            "properties": [
+                {
+                    "name": "category",
+                    "type": "fpb:Identification",
+                    "isAttr": true
+                },
+                {
+                    "name": "descriptiveElement",
+                    "type": "DescriptiveElement",
+                    "isAttr": true
+                },
+                {
+                    "name": "relationalElement",
+                    "type": "RelationalElement",
+                    "isAttr": true
+                }
+            ]
+        },
+        {
+            "name": "DescriptiveElement",
+            "properties": [
+                {
+                    "name": "valueDeterminationProcess",
+                    "type": "String",
+                    "isAttr": true
+                },
+                {
+                    "name": "representivity",
+                    "type": "String",
+                    "isAttr": true
+                },
+                {
+                    "name": "setpointValue",
+                    "type": "ValueWithUnit",
+                    "isAttr": true
+                },
+                {
+                    "name": "validityLimits",
+                    "type": "ValidityLimits",
+                    "isAttr": true,
+                    "isMany": true
+                },
+                {
+                    "name": "actualValues",
+                    "type": "ValueWithUnit",
+                    "isAttr": true,
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "RelationalElement",
+            "properties": [
+                {
+                    "name": "view",
+                    "type": "String",
+                    "isAttr": true
+                },
+                {
+                    "name": "model",
+                    "type": "String",
+                    "isAttr": true
+                },
+                {
+                    "name": "regulationsForRelationalGeneration",
+                    "type": "String",
+                    "isAttr": true
+                }
+            ]
+        },
+        {
+            "name": "ValidityLimits",
+            "properties": [
+                {
+                    "name": "limitType",
+                    "type": "String",
+                    "isAttr": true
+                },
+                {
+                    "name": "from",
+                    "type": "Real",
+                    "isAttr": true
+                },
+                {
+                    "name": "to",
+                    "type": "Real",
+                    "isAttr": true
+                }
+            ]
+        },
+        {
+            "name": "ValueWithUnit",
+            "properties": [
+                {
+                    "name": "value",
+                    "type": "Real",
+                    "isAttr": true
+                },
+                {
+                    "name": "unit",
+                    "type": "String",
+                    "isAttr": true
+                }
+            ]
+        }
+    ],
+    "prefix": "fpbch",
+    "xml": {
+        "tagAlias": "lowerCase",
+        "typePrefix": "t"
+    }
+}
