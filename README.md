@@ -44,7 +44,7 @@ Für die Inbetriebnahme von FPB.JS im Development Mode wird
 [Node.JS](https://nodejs.org/en/) benötigt. Außerdem empfiehlt es sich, eine IDE wie [Visual Studio Code](https://code.visualstudio.com/) für das Ausführen der Commands zum Installieren / Starten von FPB.JS im Development Mode zu verwenden. Dies ist jedoch nicht zwingend notwendig und geht in gleicher Weise auch über die Eingabeaufforderung Ihres Betriebssystems.
 
 ### Vorgehen
-1) Clonen oder [Downloaden](https://github.com/HamiedNabizada/FPBJS/archive/master.zip) Sie sich dieses Repository. Wenn Sie sich das Repository heruntergeladen haben, dann müssen Sie die zip-komprimierte Datei auf Ihrem lokalen Speicher entpacken.  
+1) Clonen oder [Downloaden](https://github.com/HamiedNabizada/FPB.JS/archive/master.zip) Sie sich dieses Repository. Wenn Sie sich das Repository heruntergeladen haben, dann müssen Sie die zip-komprimierte Datei auf Ihrem lokalen Speicher entpacken.  
 2) Navigieren Sie entweder in der Eingabeaufforderung Ihres Betriebssystems oder im Terminal Ihrer IDE zum Stammordner der FPB.JS Kopie.
 3) Führen Sie zur Installation den Command:
 
@@ -63,7 +63,7 @@ Für die Inbetriebnahme von FPB.JS im Development Mode wird
    
 ## Nutzung von FPB.JS
 Wie Sie FPB.JS nutzen können, wird im Wiki dieses GitHub Repositories erläutert:
-[Wiki](https://github.com/HamiedNabizada/FPBJS-Prerelease/wiki/Quickstart)
+[Wiki](https://github.com/HamiedNabizada/FPB.JS/wiki)
 
 ## License
 [MIT](https://raw.githubusercontent.com/HamiedNabizada/FPB.JS/master/LICENSE)
