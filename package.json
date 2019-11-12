@@ -1,6 +1,6 @@
 {
   "name": "fpbjs",
-  "version": "0.1",
+  "version": "0.1.0",
   "description": "Graphical tool used for formalized process description according to VDI/VDE 3682",
   "main": "app/app.js",
   "scripts": {
@@ -15,7 +15,7 @@
     "url": "git+https://github.com/HamiedNabizada/FPB.JS.git"
   },
   "author": "Hamied Nabizada",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/HamiedNabizada/FPB.JS/issues"
   },

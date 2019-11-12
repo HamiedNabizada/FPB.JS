@@ -8,10 +8,12 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
+import Container from 'react-bootstrap/Container';
+
 
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDownload, faPaperPlane, faFileImage } from '@fortawesome/free-solid-svg-icons';
+import { faDownload, faPaperPlane, faFileImage, faWindowClose } from '@fortawesome/free-solid-svg-icons';
 
 
 
@@ -64,7 +66,6 @@ function DownloadModal(props) {
     var selectedProcess = props.props.selectedProcess;
     eventBus.on(eventName, (e) => {
         console.log(e)
-        console.log(e.data);
     })
 
     function download(dataStr) {
@@ -138,23 +139,7 @@ function DownloadModal(props) {
 
     };
 
-    function importTest() {
-        let data = FPBJson;
-        for (let i of data) {
-            console.log(i)
-        }
-    }
-
-    function createProjectDefintion() {
-
-    }
-
-    function createProcess() {
-
-    }
-
     function go() {
-        importTest()
         eventBus.fire('dataStore.updateAll', {});
         let data;
         let dataStr;
@@ -197,7 +182,7 @@ function DownloadModal(props) {
             <OverlayTrigger placement="auto" overlay={<Tooltip id={`tooltip-uniqueId2`}>
                 {tooltTipExportOptions}
             </Tooltip>}>
-                <Button variant="secondary-outline" onClick={handleShow}>
+                <Button variant="secondary-outline" onClick={handleShow} >
                     <FontAwesomeIcon icon={faDownload} size="lg" />
                 </Button>
 
@@ -205,8 +190,17 @@ function DownloadModal(props) {
 
 
             <Modal bg="light" show={show} onHide={handleClose} centered size="xl">
-                <Modal.Header closeButton>
-                    <Modal.Title>Export Options</Modal.Title>
+                <Modal.Header>
+                    <Container fluid>
+                        <Row as={Modal.Title}>
+                            <Col>Export Options</Col>
+                            <Col md="auto">
+                                <Button variant="secondary" size="sm">
+                                <FontAwesomeIcon  icon={faWindowClose} size="lg" onClick={handleClose} />
+                                </Button>
+                                </Col>
+                        </Row>
+                    </Container>
                 </Modal.Header>
                 <Modal.Body>
                     <Row>
