@@ -121,6 +121,8 @@ function DownloadModal(props) {
             case 'decomposedView':
             case 'parent':
             case 'consistsOfSystemLimit':
+                console.log(name)
+                console.log(val)
                 return val.id;
             case 'isDecomposedProcessOperator':
                 if (val === null) {
@@ -178,17 +180,13 @@ function DownloadModal(props) {
     let tooltTipExportOptions = 'Export Options';
     return (
         <div className="download-properties" key='dl-properties'>
-
             <OverlayTrigger placement="auto" overlay={<Tooltip id={`tooltip-uniqueId2`}>
                 {tooltTipExportOptions}
             </Tooltip>}>
                 <Button variant="secondary-outline" onClick={handleShow} >
                     <FontAwesomeIcon icon={faDownload} size="lg" />
                 </Button>
-
             </OverlayTrigger>
-
-
             <Modal bg="light" show={show} onHide={handleClose} centered size="xl">
                 <Modal.Header>
                     <Container fluid>

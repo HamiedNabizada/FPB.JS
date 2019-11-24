@@ -1,4 +1,5 @@
 import { assign } from 'min-dash';
+import { is } from '../help/utils';
 
 import TextUtil from 'diagram-js/lib/util/Text';
 
@@ -48,10 +49,23 @@ export default function TextRenderer(config) {
     return {
       x: Math.round(bounds.x + bounds.width / 2 - layoutedDimensions.width / 2),
       y: Math.round(bounds.y),
-      width: Math.ceil(layoutedDimensions.width),
+      width: Math.ceil(layoutedDimensions.width) + 1,
       height: Math.ceil(layoutedDimensions.height)
     };
   };
+  this.getInternalLabelPadding = function (element, text) {
+
+    var layoutedDimensions = textUtil.getDimensions(text, {
+      box: {
+        width: element.width,
+        height: element.height,
+        x: element.x,
+        y: element.y
+      },
+      style: defaultStyle
+    });
+    return Math.ceil(layoutedDimensions.height);
+  }
 
 
   /**

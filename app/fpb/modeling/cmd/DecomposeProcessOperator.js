@@ -45,6 +45,7 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
 
     // Falls ProcessOperator bereits dekomponiert gewesen ist
     if (processOperator.businessObject.decomposedView) {
+        console.log("DECIMPOSED VIEW")
         isDecomposed = true;
         decomposedProcess = processOperator.businessObject.decomposedView;
         systemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
@@ -86,7 +87,7 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
 
         decomposedProcess.businessObject.isDecomposedProcessOperator = processOperator.businessObject;
         decomposedProcess.businessObject.parent = process;
-        
+
         // Hinzufügen als Bestandteil des übergeordneten Prozesses und als Information bei dem dekomponierten ProcessOperator;
         collectionAdd(process.businessObject.consistsOfProcesses, decomposedProcess);
         processOperator.businessObject.decomposedView = decomposedProcess;
@@ -100,8 +101,6 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
         // States für decomposed Process erstellen:
         incomingFlows.forEach((incoming) => {
             if (is(incoming.businessObject.sourceRef, 'fpb:State')) {
-
-
                 let stateShape = createStateShapeForNewLayer(elementFactory, incoming.businessObject.sourceRef.$type, incoming.businessObject.sourceRef);
                 collectionAdd(decomposedProcess.businessObject.consistsOfStates, stateShape.businessObject);
                 collectionAdd(systemLimit.businessObject.elementsContainer, stateShape);
@@ -134,13 +133,20 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
         if (state.position === 'incoming') {
             if (state.state.outgoing.length > 0) {
                 state.state.outgoing.forEach(function (connection) {
+                    console.log(connection)
                     // Flows anpassen
                     connection.waypoints[0].x = sizesAndPositions.incomings.start_x + 25;
-                    connection.businessObject.di.waypoint[0].x = sizesAndPositions.incomings.start_x + 25;
+                    try {
+                        connection.businessObject.di.waypoint[0].x = sizesAndPositions.incomings.start_x + 25;
+                    } catch (error) {
+                    }
                     // Für Flows mit Knick
                     if (connection.waypoints.length === 4) {
                         connection.waypoints[1].x = sizesAndPositions.incomings.start_x + 25;
-                        connection.businessObject.di.waypoint[1].x = sizesAndPositions.incomings.start_x + 25;
+                        try {
+                            connection.businessObject.di.waypoint[1].x = sizesAndPositions.incomings.start_x + 25;
+                        } catch (error) {
+                        }
                     }
                 })
             }
@@ -153,11 +159,21 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
                 state.state.incoming.forEach(function (connection) {
                     // Flows anpassen
                     connection.waypoints[0].x = sizesAndPositions.outgoings.start_x + 25;
-                    connection.businessObject.di.waypoint[0].x = sizesAndPositions.outgoings.start_x + 25;
+                    try {
+                        connection.businessObject.di.waypoint[0].x = sizesAndPositions.outgoings.start_x + 25;
+                    } catch (error) {
+
+                    }
+
                     // Flows mit Knick
                     if (connection.waypoints.length === 4) {
                         connection.waypoints[1].x = sizesAndPositions.outgoings.start_x + 25;
-                        connection.businessObject.di.waypoint[1].x = sizesAndPositions.outgoings.start_x + 25;
+                        try {
+                            connection.businessObject.di.waypoint[1].x = sizesAndPositions.outgoings.start_x + 25;
+                        } catch (error) {
+
+                        }
+
                     }
                 })
             }
@@ -254,7 +270,7 @@ DecomposeProcessOperator.prototype.postExecute = function (context) {
     var systemLimitFlows = context.systemLimitFlows;
     stateShapes.forEach((state) => {
         if (state.state.businessObject.name) {
-            if(state.state.labels[0]){
+            if (state.state.labels[0]) {
                 collectionRemove(state.state.labels, state.state.labels[0]);
                 delete state.state.businessObject.di.label;
             }

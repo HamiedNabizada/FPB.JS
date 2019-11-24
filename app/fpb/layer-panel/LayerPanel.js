@@ -4,9 +4,11 @@ import Button from 'react-bootstrap/Button';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import Collapse from 'react-collapse';
-import TreeMenu, { ItemComponent } from 'react-simple-tree-menu'
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import TreeMenu from 'react-simple-tree-menu'
 
-
+import Import from './features/Import';
 
 import DownloadOptions from './features/DownloadOptions'
 
@@ -19,7 +21,7 @@ import {
 
 // Icons
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFolder, faFolderOpen } from '@fortawesome/free-solid-svg-icons';
+import { faFolder, faFolderOpen, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 
 import './LayerPanel.css'
 
@@ -32,7 +34,7 @@ export default class LayerPanel extends Component {
             selectedProcess: null,
             processes: [],
             isOpenedLayerPanel: false,
-            sortLogic: 'abc'
+            isOpenedOptions: false
         };
     };
     componentDidMount() {
@@ -40,7 +42,6 @@ export default class LayerPanel extends Component {
             modeler,
             config
         } = this.props;
-        // newProcess wird als Event abgefeuert, wenn ein ProcessOperator erstmalig dekomponiert wird angelegt wird
         modeler.on('layerPanel.newProcess', (e) => {
             const {
                 selectedProcess,
@@ -81,7 +82,8 @@ export default class LayerPanel extends Component {
         const {
             selectedProcess,
             processes,
-            isOpenedLayerPanel
+            isOpenedLayerPanel,
+            isOpenedOptions
         } = this.state;
 
 
@@ -180,7 +182,10 @@ export default class LayerPanel extends Component {
             }
             return (<div></div>)
         };
-
+        let tooltipsOptions = 'Show Options';
+        if(isOpenedOptions){
+            tooltipsOptions = 'Hide Options';
+        }
         let isOpenedLayerButton = <FontAwesomeIcon icon={faFolder} size="lg" />
         let tooltipsTextLayer = 'Open Process Overview';
         if (isOpenedLayerPanel) {
@@ -189,11 +194,17 @@ export default class LayerPanel extends Component {
         };
 
 
-
         return (
             <div className="layerPanel">
-                <i className="fa fa-level-up" aria-hidden="true"></i>
-                <DownloadOptions modeler={modeler} processes={processes} selectedProcess={selectedProcess} selectedElements={selectedElements} />
+                <OverlayTrigger placement="auto" overlay={<Tooltip id={`tooltip-uniqueId1`}>
+                    {tooltipsOptions}
+                </Tooltip>}>
+                    <Button onClick={() => this.setState({ isOpenedOptions: !isOpenedOptions })} variant="secondary-outline"><FontAwesomeIcon icon={faEllipsisV} size="lg" /></Button>
+                </OverlayTrigger>
+                <Collapse isOpened={isOpenedOptions}>
+                        <Import modeler={modeler} />
+                        <DownloadOptions modeler={modeler} processes={processes} selectedProcess={selectedProcess} selectedElements={selectedElements} />       
+                </Collapse>
                 {processes.length > 1 && <div>
                     <div className="layerPanel-ProcessOverview-Config">
                         <OverlayTrigger placement="auto" overlay={<Tooltip id={`tooltip-uniqueId`}>

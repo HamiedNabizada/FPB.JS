@@ -10,11 +10,12 @@ import { isAny, is } from '../../help/utils';
 
 
 export default function DataBehavior(eventBus, fpbjs) {
-
+   
     this._fpbjs = fpbjs;
     this._eventBus = eventBus;
     CommandInterceptor.call(this, eventBus);
     this._eventBus.on('dataStore.addedProjectDefinition', (e) => {
+
         let projectDefinition = e.projectDefinition;
         var processes = this._fpbjs.getProcesses();
         collectionAdd(processes, projectDefinition);
@@ -62,9 +63,9 @@ export default function DataBehavior(eventBus, fpbjs) {
                     processId: pro.process.id
                 })
             }
-            else{
+            else {
                 pro.entryPoint = pro.entryPoint.id;
-                
+
             }
         })
     })

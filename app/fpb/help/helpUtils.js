@@ -9,10 +9,19 @@ import { is } from './utils';
  * @param {*} businessObject 
  */
 export function createStateShapeForNewLayer(elementFactory, type, businessObject) {
+    console.log(businessObject)
+    /*
     let stateShape = elementFactory.create('shape', {
         type: type,
         businessObject: businessObject
+    });*/
+    let stateShape = elementFactory.create('shape', {
+        type: type,
+        id: businessObject.id,
+
     });
+    stateShape.businessObject.name = businessObject.name;
+    stateShape.businessObject.identification = businessObject.identification;
     stateShape.businessObject.isAssignedTo = [];
     stateShape.businessObject.incoming = [];
     stateShape.businessObject.outgoing = [];

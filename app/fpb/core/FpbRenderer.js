@@ -8,14 +8,13 @@ import {
 
 import BaseRenderer from 'diagram-js/lib/draw/BaseRenderer';
 
-import { is } from '../help/utils';
+import { is, isAny } from '../help/utils';
 
 import {
   rotate,
   transform,
   translate
 } from 'diagram-js/lib/util/SvgTransformUtil';
-
 import {
   append as svgAppend,
   attr as svgAttr,
@@ -154,7 +153,7 @@ export default function FpbRenderer(eventBus, styles, canvas, textRenderer) {
       }
     }, options);
     var text = textRenderer.createText(label || '', options);
-  
+
     svgClasses(text).add('djs-label');
     svgAppend(parentGfx, text);
     return text;
@@ -163,40 +162,40 @@ export default function FpbRenderer(eventBus, styles, canvas, textRenderer) {
   function renderEmbeddedLabel(parentGfx, element, align) {
     var semantic = element.businessObject;
     var box;
-
-      if (is(element, 'fpb:TechnicalResource')) {
-      box = {
-        width: element.width,
-        height: 1.7 * element.height
+    var padding = 5;
+    box = {
+      width: element.width,
+      height: element.height
+    }
+    if(!semantic.name){
+      return
+    }
+    
+    if (isAny(element, ['fpb:ProcessOperator', 'fpb:TechnicalResource'])) {
+      let topPadding = textRenderer.getInternalLabelPadding(element,semantic.name);
+      // TODO: Randfälle überprüfen und Logik eventuell anpassen
+      if(semantic.name.length >= 19 && topPadding == 18){
+        topPadding *=2;
       }
-    };
-
-      if (is(element, 'fpb:ProcessOperator')) {
-  
-      box = {
-        width: 1.7 * element.width,
-        height: 1.7 * element.height
-
+      padding = {
+        top: element.height - topPadding,
+        bottom: 5,
+        left: 5,
+        right: 3
       }
-    };
-    if (is(element, 'fpb:SystemLimit')) {
-      box = {
-        width: element.width,
-        height: element.height
-      }
-    };
+    }
 
     return renderLabel(parentGfx, semantic.name, {
       box: box,
       align: align,
-      padding: 5,
+      padding: padding,
       style: {
         fill: COLOR_FPB_STROKE
       }
     });
   }
 
-  this.renderExternalLabel = function(parentGfx, element) {
+  this.renderExternalLabel = function (parentGfx, element) {
     var semantic = element.businessObject;
     var box = {
 
@@ -231,7 +230,7 @@ export default function FpbRenderer(eventBus, styles, canvas, textRenderer) {
   };
   function drawPath(parentGfx, d, attrs) {
 
-    attrs = computeStyle(attrs, [ 'no-fill' ], {
+    attrs = computeStyle(attrs, ['no-fill'], {
       strokeWidth: 2,
       stroke: 'black'
     });
@@ -351,7 +350,8 @@ export default function FpbRenderer(eventBus, styles, canvas, textRenderer) {
     });
     svgAttr(rect, attrs);
     svgAppend(p, rect);
-    renderEmbeddedLabel(p, element, 'center-middle');
+    // renderEmbeddedLabel(p, element, 'center-middle');
+    renderEmbeddedLabel(p, element, 'right-top');
     return rect;
   };
 
@@ -376,7 +376,7 @@ export default function FpbRenderer(eventBus, styles, canvas, textRenderer) {
     });
     svgAttr(rect, attrs);
     svgAppend(p, rect);
-    renderEmbeddedLabel(p, element, 'center-middle');
+    renderEmbeddedLabel(p, element, 'center-top');
     return rect;
   };
 
@@ -624,7 +624,7 @@ FpbRenderer.prototype.canRender = function (element) {
 
 FpbRenderer.prototype.drawShape = function (p, element) {
   var type = element.type;
-  if (type === 'label'){
+  if (type === 'label') {
     return this.renderExternalLabel(p, element);
   };
 
@@ -637,10 +637,10 @@ FpbRenderer.prototype.drawShape = function (p, element) {
   if (is(element, 'fpb:Energy')) {
     return this.drawFpbEnergy(p, element);
   };
-    if (is(element, 'fpb:ProcessOperator')) {
+  if (is(element, 'fpb:ProcessOperator')) {
     return this.drawFpbProcessOperator(p, element);
   };
-    if (is(element, 'fpb:TechnicalResource')) {
+  if (is(element, 'fpb:TechnicalResource')) {
     return this.drawFpbTechnicalResource(p, element);
   };
   if (is(element, 'fpb:SystemLimit')) {
@@ -672,23 +672,24 @@ FpbRenderer.prototype.getShapePath = function (shape) {
 };
 
 FpbRenderer.prototype.drawConnection = function (p, element) {
-  if(is(element, 'fpb:Usage')){
+  if (is(element, 'fpb:Usage')) {
     return this.drawFpbUsage(p, element);
   };
-  if(is(element, 'fpb:ParallelFlow')){
+  if (is(element, 'fpb:ParallelFlow')) {
     return this.drawFpbFlow(p, element);
   };
-  if(is(element, 'fpb:AlternativeFlow')){
+  if (is(element, 'fpb:AlternativeFlow')) {
     return this.drawFpbFlow(p, element);
   };
-  if(is(element, 'fpb:Flow')){
+  if (is(element, 'fpb:Flow')) {
     return this.drawFpbFlow(p, element);
   };
 };
 
 // TODO: Vermutlich überflüssig wenn COnnections eh mit Path erstellt werden
+/*
 FpbRenderer.prototype.getConnectionPath = function (connection) {
-  
+
   var type = connection.type;
 
   if (type === 'fpb:connection') {
@@ -698,3 +699,4 @@ FpbRenderer.prototype.getConnectionPath = function (connection) {
     return this.getFpbConnectionPath(connection);
   }
 };
+*/

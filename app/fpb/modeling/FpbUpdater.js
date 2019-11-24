@@ -105,69 +105,6 @@ export default function FpbUpdater(
     'connection.delete'
   ], ifFpb(reverseUpdateProcessInformation));
 
-
-  /*
-    // update parent
-    function updateParent(e) {
-      var context = e.context;
-  
-      self.updateParent(context.shape || context.connection, context.oldParent);
-    }
-  
-    function reverseUpdateParent(e) {
-      var context = e.context;
-      var element = context.shape || context.connection,
-        // oldParent is the (old) new parent, because we are undoing
-        oldParent = context.parent || context.newParent;
-  
-      self.updateParent(element, oldParent);
-    }*/
-  /*
-    this.executed([
-      'shape.move',
-      'shape.create',
-      'shape.delete',
-      'connection.create',
-      'connection.move',
-      'connection.delete'
-    ], ifFpb(updateParent));
-  
-    this.reverted([
-      'shape.move',
-      'shape.create',
-      'shape.delete',
-      'connection.create',
-      'connection.move',
-      'connection.delete'
-    ], ifFpb(reverseUpdateParent));*/
-
-
-  /*
-   * ## Updating Parent
-   *
-   * When morphing a Process into a Collaboration or vice-versa,
-   * make sure that both the *semantic* and *di* parent of each element
-   * is updated.
-   *
-   */
-  /*
-  function updateRoot(event) {
-
-    var context = event.context,
-      oldRoot = context.oldRoot,
-      children = oldRoot.children;
-
-    forEach(children, function (child) {
-      if (is(child, 'fpb:BaseElement')) {
-        self.updateParent(child);
-      }
-    });
-  }
-
-  this.executed(['canvas.updateRoot'], updateRoot);
-  this.reverted(['canvas.updateRoot'], updateRoot);
-*/
-
   // update bounds
   function updateBounds(e) {
     var shape = e.context.shape;
@@ -344,7 +281,7 @@ FpbUpdater.prototype.updateProcessInformation = function (command, context, oldP
       this._canvas.setRootElement(process_rootElement, true)
       element.parent = process_rootElement; // Da noch kein Process als Rootelement definiert gewesen ist, kann es sich hierbei nur um ein SystemLimit oder TechnicalResource handeln
       fpbjs.setProjectDefinition(projectDefintion);
-      
+
       this._eventBus.fire('dataStore.newProcess', {
         newProcess: process_rootElement,
         parentProcess: null
@@ -492,7 +429,13 @@ FpbUpdater.prototype.updateProcessInformation = function (command, context, oldP
     // Connection zu Technical Resource
     if (is(context.source, 'fpb:TechnicalResource') || is(context.target, 'fpb:TechnicalResource')) {
       collectionAdd(process_rootElement.businessObject.elementsContainer, element);
+      if (!Array.isArray(context.source.businessObject.isAssignedTo)) {
+        context.source.businessObject.isAssignedTo = [context.source.businessObject.isAssignedTo];
+      }
       collectionAdd(context.source.businessObject.isAssignedTo, context.target.businessObject)
+      if(!Array.isArray(context.target.businessObject.isAssignedTo)){
+        context.target.businessObject.isAssignedTo = [context.target.businessObject.isAssignedTo];
+      }
       collectionAdd(context.target.businessObject.isAssignedTo, context.source.businessObject)
     }
   };
@@ -646,7 +589,7 @@ FpbUpdater.prototype.updateDiParent = function (di, parentDi) {
       di.$parent = null;
     }
   } catch (error) {
- 
+
   }
 
 };
@@ -663,9 +606,7 @@ FpbUpdater.prototype.updateConnection = function (context) {
   var connection = context.connection,
     businessObject = getBusinessObject(connection),
     newSource = getBusinessObject(connection.source),
-    newTarget = getBusinessObject(connection.target),
-    visualParent;
-
+    newTarget = getBusinessObject(connection.target);
   //TODO: Das Modell nochmal überdenken
   // Connections die von Product, Energy oder Information kommen
   if (is(newSource, 'fpb:State')) {
@@ -684,8 +625,11 @@ FpbUpdater.prototype.updateConnection = function (context) {
         if (businessObject.sourceRef.get('outgoing') === undefined) {
           businessObject.sourceRef.outgoing = [];
         }
-        businessObject.sourceRef.outgoing.push(businessObject);
+
+        //businessObject.sourceRef.outgoing.push(businessObject);
+        collectionAdd(businessObject.sourceRef.outgoing, businessObject)
       }
+
       // Update Target
       if (businessObject.targetRef !== newTarget) {
         if (inverseSet) {
@@ -696,19 +640,9 @@ FpbUpdater.prototype.updateConnection = function (context) {
           businessObject.targetRef.incoming = [];
         };
         businessObject.targetRef.incoming.push(businessObject);
+      } else {
+        collectionAdd(businessObject.targetRef.incoming, businessObject)
       };
-      // Information für Parallel/Alternative Flow hinterlegen
-      if (isAny(businessObject, ['fpb:AlternativeFlow', 'fpb:ParallelFlow'])) {
-        // Prüft welche Flows schon von der Source abgehen und fügt dem Parallel/Alternative Flow diese Information hinzu
-        for (let i of businessObject.sourceRef.get('outgoing')) {
-          // TODO: Logik implementieren, die alten Flow zu einem Alternative bzw Parallel umwandelt
-          // TODO: inTandemWith als Array in Model definieren
-          if (i !== businessObject) {
-            //TODO: 03.11.2019 Hier war der Fehler
-            // businessObject.inTandemWith = i;
-          }
-        }
-      }
     }
   };
 
@@ -730,6 +664,8 @@ FpbUpdater.prototype.updateConnection = function (context) {
           businessObject.sourceRef.outgoing = [];
         }
         businessObject.sourceRef.outgoing.push(businessObject);
+      } else {
+        collectionAdd(businessObject.sourceRef.outgoing, businessObject)
       }
       // Update Target
       if (businessObject.targetRef !== newTarget) {
@@ -741,9 +677,12 @@ FpbUpdater.prototype.updateConnection = function (context) {
           businessObject.targetRef.incoming = [];
         };
         businessObject.targetRef.incoming.push(businessObject);
+      }
+      else {
+        collectionAdd(businessObject.targetRef.incoming, businessObject)
       };
       // Information für Parallel/Alternative Flow hinterlegen
-      if (isAny(businessObject, ['fpb:AlternativeFlow', 'fpb:ParallelFlow'])) {
+      /*if (isAny(businessObject, ['fpb:AlternativeFlow', 'fpb:ParallelFlow'])) {
         // Prüft welche Flows schon von der Source abgehen und fügt dem Parallel/Alternative Flow diese Information hinzu
         for (let i of businessObject.sourceRef.get('outgoing')) {
           // TODO: Logik implementieren, die alten Flow zu einem Alternative bzw Parallel umwandelt
@@ -753,7 +692,7 @@ FpbUpdater.prototype.updateConnection = function (context) {
             // businessObject.inTandemWith = i;
           }
         }
-      }
+      }*/
     };
     if (is(newTarget, 'fpb:TechnicalResource')) {
       var inverseSet = is(businessObject, 'fpb:Usage');
@@ -808,11 +747,11 @@ FpbUpdater.prototype.updateConnection = function (context) {
         if (businessObject.targetRef.get('incoming') === undefined) {
           businessObject.targetRef.incoming = [];
         }
-        businessObject.targetRef.incoming.push(businessObject);
+        collectionAdd(businessObject.targetRef.incoming, businessObject)
+        //businessObject.targetRef.incoming.push(businessObject);
       };
     }
   }
-
   this.updateConnectionWaypoints(connection);
 
   this.updateDiConnection(businessObject.di, newSource, newTarget);

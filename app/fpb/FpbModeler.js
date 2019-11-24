@@ -24,7 +24,6 @@ import {
 
 
 
-// Test 06.09.2019
 import KeyboardMoveModule from 'diagram-js/lib/navigation/keyboard-move';
 import MoveCanvasModule from 'diagram-js/lib/navigation/movecanvas';
 import TouchModule from 'diagram-js/lib/navigation/touch';
@@ -40,19 +39,14 @@ import SelectionModule from 'diagram-js/lib/features/selection';
 import OverlaysModule from 'diagram-js/lib/features/overlays';
 import AutoResize from 'diagram-js/lib/features/auto-resize';
 
-
-// Test Ende
-//import KeyboardModule from './keyboard';
 // Fpb Specific Module 
 import FpbCoreModule from './core'
 import LabelEditingModule from './label';
 import ContextPadModule from './context-pad';
 import PaletteModule from './palette';
-//import RulesModule from './rules';  // nicht drin
-//import OrderingModule from './ordering'; // nicht drin
 import ModelingModule from './modeling';
+import JsonImporter from './importer';
 
-//import LayerPanel from './layer-panel';
 
 var DEFAULT_OPTIONS = {
     width: '100%',
@@ -72,29 +66,12 @@ export default function FpbModeler(options) {
     this._fpbElements = [];
     this._project;
     this._processes = [];
-    // 29.09.2019
-    /*
-    this.on('import.parse.complete', function (event) {
-        if (!event.error) {
-            this._collectIds(event.definitions, event.context);
-        }
-    }, this);
-
-    this.on('diagram.destroy', function () {
-        this.get('moddle').ids.clear();
-    }, this);*/
-
-    // --- 29.09.2019
-
 
 }
 
 
 inherits(FpbModeler, Diagram);
-/*
-FpbModeler.prototype._setDefinitions = function (definitions) {
-    this._definitions = definitions;
-};*/
+
 
 FpbModeler.prototype.getModules = function () {
     return this._modules;
@@ -143,12 +120,11 @@ FpbModeler.prototype._modules = [
     ContextPadModule,
     PaletteModule,
     ModelingModule,
-   // KeyboardModule,
+    JsonImporter,
     AutoResize
 ];
 
 FpbModeler.prototype._createContainer = function (options) {
-
     var container = domify('<div class="djs-container"></div>');
     assign(container.style, {
         width: ensureUnit(options.width),
@@ -162,7 +138,6 @@ FpbModeler.prototype._createContainer = function (options) {
 FpbModeler.prototype._createModdle = function (options) {
     var moddleOptions = assign({}, this._moddleExtensions, options.moddleExtensions);
     var moddle = new FpbjsModdle(moddleOptions);
-    //moddle.ids = new Ids([32, 36, 1]);
     return moddle;
 };
 
@@ -177,12 +152,10 @@ FpbModeler.prototype.attachTo = function (parentNode) {
     // unwrap jQuery if provided
     if (parentNode.get && parentNode.constructor.prototype.jquery) {
         parentNode = parentNode.get(0);
-        //console.log(parentNode)
     }
 
     if (typeof parentNode === 'string') {
         parentNode = domQuery(parentNode);
-        //console.log(parentNode)
     }
 
     parentNode.appendChild(this._container);
@@ -210,7 +183,6 @@ FpbModeler.prototype._emit = function (type, event) {
     return this.get('eventBus').fire(type, event);
 };
 
-// 29.09.2019
 FpbModeler.prototype.on = function (event, priority, callback, target) {
     return this.get('eventBus').on(event, priority, callback, target);
 };
@@ -245,23 +217,7 @@ FpbModeler.prototype.clear = function () {
     // remove drawn elements
     Diagram.prototype.clear.call(this);
 };
-/*
-FpbModeler.prototype._collectIds = function (definitions, context) {
 
-    var moddle = definitions.$model,
-        ids = moddle.ids,
-        id;
-
-    // remove references from previous import
-    ids.clear();
-
-    for (id in context.elementsById) {
-        ids.claim(id, context.elementsById[id]);
-    }
-};
-
-// --- 29.09.2019
-*/
 function ensureUnit(val) {
     return val + (isNumber(val) ? 'px' : '');
 }
@@ -354,24 +310,24 @@ FpbModeler.prototype.getSelectedElements = function (processId) {
     let vsInfos = [];
     let dataInfos = [];
     let elementIds = [];
-    
+
     selectedElements.forEach((el) => {
         elementIds.push(el.id);
     })
     while (elementIds.length > 0) {
         let id = elementIds.pop();
         pro.elementVisualInformation.forEach((vs) => {
-            if(vs.id == id){
+            if (vs.id == id) {
                 vsInfos.push(vs);
             }
         })
-        pro.elementDataInformation.forEach((edi) =>{
-            if(edi.id ===id){
+        pro.elementDataInformation.forEach((edi) => {
+            if (edi.id === id) {
                 dataInfos.push(edi);
             }
         })
     }
-    return {elementDataInformation: dataInfos, elementVisualInformation: vsInfos}
+    return { elementDataInformation: dataInfos, elementVisualInformation: vsInfos }
 
 }
 

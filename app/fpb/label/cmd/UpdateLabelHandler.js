@@ -98,9 +98,7 @@ export default function UpdateLabelHandler(modeling, textRenderer, eventBus, can
     if (element.businessObject.identification) {
       element.businessObject.identification.shortName = ctx.newLabel;
     }
-
-
-    // ignore internal labels for elements except text annotations
+    
     if (!is(element, 'fpb:State')) {
       return;
     }

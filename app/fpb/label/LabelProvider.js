@@ -177,7 +177,6 @@ LabelEditingProvider.prototype.getEditingBBox = function (element) {
     paddingTop = 7 * zoom,
     paddingBottom = 4 * zoom;
 
-  // external labels for events, data elements, gateways and connections
   if (target.labelTarget) {
     assign(bounds, {
       width: width,
@@ -210,7 +209,7 @@ LabelEditingProvider.prototype.getEditingBBox = function (element) {
     });
 
     assign(style, {
-      textAlign: 'left',  
+      textAlign: 'left',
       fontSize: externalFontSize + 'px',
       lineHeight: externalLineHeight,
       paddingTop: paddingTop + 'px',
@@ -220,35 +219,13 @@ LabelEditingProvider.prototype.getEditingBBox = function (element) {
 
 
   }
-  // Für Information, Product, Enegry -> Label Box oben links
-  /*if (isAny(element, ['fpb:Product', 'fpb:Information', 'fpb:Energy'])) {
-    console.error(element)
-    assign(bounds, {
-      width: defaultTextBoxSize.x,
-      height: defaultTextBoxSize.y,
-      x: bbox.x - (defaultTextBoxSize.x / 2) * zoom,
-      y: bbox.y - (defaultTextBoxSize.y / 2) * zoom
-    });
-    assign(style, {
-      textAlign: 'left',
-      fontSize: externalFontSize + 'px',
-      lineHeight: externalLineHeight
-    });
-  }*/
-
-
-
   return { bounds: bounds, style: style };
 };
 
 
 LabelEditingProvider.prototype.update = function (
-  element, newLabel,
-  activeContextText, bounds) {
-
-  var newBounds,
-    bbox;
-
+  element, newLabel) {
+  var newBounds;
   if (isEmptyText(newLabel)) {
     newLabel = null;
   };

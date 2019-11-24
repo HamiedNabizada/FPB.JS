@@ -8,12 +8,13 @@ import {
 
 import { checkIfOnSystemBorder, getElementById, getElementsFromElementsContainer, createStateShapeForNewLayer } from '../../help/helpUtils'
 
-export default function ComposeProcess(canvas, modeling, elementFactory, eventBus, elementRegistry) {
+export default function ComposeProcess(canvas, modeling, elementFactory, eventBus, elementRegistry, fpbjs) {
     this._canvas = canvas;
     this._modeling = modeling;
     this._elementFactory = elementFactory;
     this._eventBus = eventBus;
     this._elementRegistry = elementRegistry;
+    this._fpbjs = fpbjs;
 }
 
 ComposeProcess.$inject = [
@@ -21,7 +22,8 @@ ComposeProcess.$inject = [
     'modeling',
     'elementFactory',
     'eventBus',
-    'elementRegistry'
+    'elementRegistry',
+    'fpbjs'
 ];
 // Preprocessing
 ComposeProcess.prototype.preExecute = function (context) {
@@ -79,14 +81,19 @@ ComposeProcess.prototype.preExecute = function (context) {
         processNew = this._elementFactory.create('root', {
             type: 'fpb:Process'
         });
+        let project = this._fpbjs.getProjectDefinition();
+        project.entryPoint = processNew;
+
+        /*
         processNew.businessObject.ProjectAssignment = processOld.businessObject.ProjectAssignment;
-        processOld.businessObject.ProjectAssignment.entryPoint = processNew;
+        processOld.businessObject.ProjectAssignment.entryPoint = processNew;*/
         processOld.businessObject.parent = processNew;
         processOperatorNew = this._elementFactory.create('shape', {
             type: 'fpb:ProcessOperator',
             id: processOld.id
         })
-        processNew.businessObject.parent = processNew.businessObject.ProjectAssignment;
+       // processNew.businessObject.parent = processNew.businessObject.ProjectAssignment;
+       processNew.businessObject.parent = project;
         processOperatorNew.businessObject.decomposedView = processOld;
 
         // Namen der SystemGrenze als Bezeichnung für den neuen ProcessOperator
