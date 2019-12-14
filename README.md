@@ -53,7 +53,7 @@ Für die Inbetriebnahme von FPB.JS im Development Mode wird
    aus, dies installiert alle softwareseitigen Abhängigkeiten von FPB.JS: 
 4) Zum Starten führen Sie im Terminal den Command:
 
-   `npm run dev`  
+   `npm run dev-local`  
    
    aus. Durch das Aufrufen von 
    
