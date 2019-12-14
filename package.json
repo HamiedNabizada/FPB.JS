@@ -7,6 +7,7 @@
     "all": "run-s build",
     "build": "webpack --mode production",
     "dev": "webpack-dev-server --content-base=public --open --host 0.0.0.0",
+    "dev-local": "webpack-dev-server --content-base=public --open",
     "start": "run-s dev",
     "starttest": "webpack-dev-server --open --watch --host 0.0.0.0"
   },
