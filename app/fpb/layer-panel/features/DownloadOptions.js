@@ -98,6 +98,7 @@ function DownloadModal(props) {
             }
         }
         switch (name) {
+            case 'entryPoint':
             case 'elementsContainer':
             case 'consistsOfStates':
             case 'consistsOfProcessOperator':
@@ -121,8 +122,6 @@ function DownloadModal(props) {
             case 'decomposedView':
             case 'parent':
             case 'consistsOfSystemLimit':
-                console.log(name)
-                console.log(val)
                 return val.id;
             case 'isDecomposedProcessOperator':
                 if (val === null) {

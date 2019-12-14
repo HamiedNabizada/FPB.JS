@@ -148,7 +148,6 @@ JSONImporter.prototype.buildProcesses = function (data, projectDefinition) {
 }
 
 JSONImporter.prototype.filterElements = function (id, eVI, eDI, process, parent, no) {
-
     let dataInformation;
     let visualInformation;
     let type;
@@ -212,6 +211,9 @@ JSONImporter.prototype.buildSystemLimitShapes = function (vI, dI, process, syste
     shape.businessObject.outgoing = dI.outgoing;
     shape.businessObject.name = dI.name;
     shape.businessObject.isAssignedTo = dI.isAssignedTo;
+    if (dI.characteristics) {
+        this.buildCharacteristics(shape.businessObject, dI.characteristics);
+    }
     if (dI.decomposedView) {
         shape.businessObject.decomposedView = dI.decomposedView;
     }
@@ -257,6 +259,9 @@ JSONImporter.prototype.buildTRandUsage = function (vI, dI, process, no) {
         element.businessObject.incoming = dI.incoming;
         element.businessObject.outgoing = dI.outgoing;
         element.businessObject.isAssignedTo = dI.isAssignedTo;
+        if (dI.characteristics) {
+            this.buildCharacteristics(shape.businessObject, dI.characteristics);
+        }
     }
     if (vI.type === 'fpb:Usage') {
         element = this._elementFactory.create('connection', {
@@ -269,6 +274,60 @@ JSONImporter.prototype.buildTRandUsage = function (vI, dI, process, no) {
     }
     collectionAdd(process.businessObject.elementsContainer, element);
     collectionAdd(this._processes[no - 1].updateElements, element);
+}
+
+JSONImporter.prototype.buildCharacteristics = function (bO, char) {
+    let characteristics = [];
+    const addValidityLimits = (limits) => {
+        let validityLimits = [];
+        limits.forEach((limit) => {
+            let validityLimit;
+            if (limit.$type == 'fpbch:ValidityLimits') {
+                validityLimit = this._fpbFactory.create(limit.$type, {
+                    limitType: limit.limitType,
+                    from: limit.from,
+                    to: limit.to
+                })
+            }
+            collectionAdd(validityLimits, validityLimit);
+        })
+        return validityLimits;
+    }
+    char.forEach(ch => {
+        let type = ch.$type;
+        if (type === 'fpbch:Characteristics') {
+            let characteristic = this._fpbFactory.create(type, {
+                //category
+                category: this._fpbFactory.create(ch.category.$type, {
+                    uniqueIdent: ch.category.uniqueIdent,
+                    longName: ch.category.longName,
+                    shortName: ch.category.shortName,
+                    versionNumber: ch.category.versionNumber,
+                    revisionNumber: ch.category.revisionNumber
+                }),
+                descriptiveElement: this._fpbFactory.create(ch.descriptiveElement.$type, {
+                    valueDeterminationProcess: ch.descriptiveElement.valueDeterminationProcess,
+                    representivity: ch.descriptiveElement.representivity,
+                    setpointValue: this._fpbFactory.create(ch.descriptiveElement.setpointValue.$type, {
+                        value: ch.descriptiveElement.setpointValue.value,
+                        unit: ch.descriptiveElement.setpointValue.unit
+                    }),
+                    validityLimits: addValidityLimits(ch.descriptiveElement.validityLimits),
+                    actualValues: this._fpbFactory.create(ch.descriptiveElement.actualValues.$type, {
+                        value: ch.descriptiveElement.actualValues.value,
+                        unit: ch.descriptiveElement.actualValues.unit
+                    }),
+                }),
+                relationalElement: this._fpbFactory.create(ch.relationalElement.$type, {
+                    view: ch.relationalElement.view,
+                    model: ch.relationalElement.model,
+                    regulationsForRelationalGeneration: ch.relationalElement.regulationsForRelationalGeneration
+                })
+            });
+            collectionAdd(characteristics, characteristic);
+        }
+    });
+    bO.characteristics = characteristics;
 }
 
 JSONImporter.prototype.updateDepedencies = function (container, element) {

@@ -9,7 +9,6 @@ import { is } from './utils';
  * @param {*} businessObject 
  */
 export function createStateShapeForNewLayer(elementFactory, type, businessObject) {
-    console.log(businessObject)
     /*
     let stateShape = elementFactory.create('shape', {
         type: type,

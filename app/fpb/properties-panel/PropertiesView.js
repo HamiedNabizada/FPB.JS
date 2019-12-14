@@ -1,7 +1,10 @@
 import { is, isAny } from '../help/utils';
+import {
+  remove as collectionRemove
+} from 'diagram-js/lib/util/Collections';
 // Icons
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAngleDoubleRight, faAngleDoubleLeft, faClipboard } from '@fortawesome/free-solid-svg-icons';
+import { faAngleDoubleRight, faAngleDoubleLeft, faClipboard, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 
 
 import React, { Component } from 'react';
@@ -97,6 +100,7 @@ export default class PropertiesView extends Component {
       element,
       isOpenedPropertiesPanel
     } = this.state;
+
     let isOpenedPropertiesPanelButton = <FontAwesomeIcon icon={faAngleDoubleLeft} />
     if (isOpenedPropertiesPanel) {
       isOpenedPropertiesPanelButton = <FontAwesomeIcon icon={faAngleDoubleRight} />
@@ -218,14 +222,17 @@ function ElementProperties(props) {
   };
   const modeling = modeler.get('modeling');
   function updateIdentifactionProperty(property, value) {
-    let identification = element.businessObject.get('identification');
-    identification[property] = value;
-    const modeling = modeler.get('modeling');
-    modeling.updateProperties(element, {
-      'identification': identification
-    });
     if (property === 'shortName') {
       modeling.updateLabel(element, value);
+    } else {
+
+
+      let identification = element.businessObject.get('identification');
+      identification[property] = value;
+      const modeling = modeler.get('modeling');
+      modeling.updateProperties(element, {
+        'identification': identification
+      });
     }
   };
 
@@ -288,9 +295,6 @@ function ElementProperties(props) {
 
   }
 
-  function testing() {
-    modeling.testing(element);
-  }
   return (
     <div className="element-properties" key={element.id}>
 
@@ -415,6 +419,12 @@ function Characteristics(props, index) {
   let no = index;
   let characteristics = element.businessObject.get('characteristics');
   const modeling = modeler.get('modeling');
+
+  function removeCharacteristic() {
+    collectionRemove(characteristics, characteristics[no]);
+    rerender(element);
+  }
+
   function updateCharacteristics(type, valueType, value, addOptions) {
     if (addOptions) {
       characteristics = element.businessObject.get('characteristics');
@@ -436,6 +446,7 @@ function Characteristics(props, index) {
     <div className="characteristics-properties" key={characteristics[no].category.uniqueIdent}>
       <Card>
         <Card.Header>
+
           <Accordion.Toggle as={Button} variant={Card.Header} eventKey={`pp_characteristics${no}`}>
             <b>{characteristics[no].category.shortName}</b>
           </Accordion.Toggle>
@@ -622,9 +633,16 @@ function Characteristics(props, index) {
               }
 
             </Accordion>
-
+            <OverlayTrigger placement="auto" overlay={<Tooltip id={`tooltip-RemoveCharacterics${no}`}>
+                   Removes the characteristic
+                </Tooltip>}>
+                <Button variant="secondary" onClick={() => removeCharacteristic()}><FontAwesomeIcon icon={faTrashAlt} /></Button>
+                </OverlayTrigger>
+            
           </Card.Body>
+          
         </Accordion.Collapse>
+
       </Card>
 
     </div>)

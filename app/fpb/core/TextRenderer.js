@@ -1,5 +1,5 @@
 import { assign } from 'min-dash';
-import { is } from '../help/utils';
+import { isLabel } from '../help/utils';
 
 import TextUtil from 'diagram-js/lib/util/Text';
 
@@ -35,6 +35,10 @@ export default function TextRenderer(config) {
    * @return {Bounds}
    */
   this.getExternalLabelBounds = function (bounds, text) {
+    let targetElement;
+    if(isLabel(bounds)){
+      targetElement = bounds.labelTarget;
+    }
     var layoutedDimensions = textUtil.getDimensions(text, {
       box: {
         width: 90,
@@ -47,9 +51,9 @@ export default function TextRenderer(config) {
     });
     // resize label shape to fit label text
     return {
-      x: Math.round(bounds.x + bounds.width / 2 - layoutedDimensions.width / 2),
-      y: Math.round(bounds.y),
-      width: Math.ceil(layoutedDimensions.width) + 1,
+      x: Math.round(targetElement.x - layoutedDimensions.width),
+      y: Math.round(targetElement.y -  layoutedDimensions.height),
+      width: Math.ceil(layoutedDimensions.width),
       height: Math.ceil(layoutedDimensions.height)
     };
   };

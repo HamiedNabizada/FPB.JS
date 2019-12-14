@@ -1,16 +1,10 @@
-'use strict'
-import { is, isAny } from '../help/utils';
+import { is } from '../help/utils';
 
 import { getBusinessObjectFromElementsContainer, noOfUsageConnections, getElementsFromElementsContainer } from '../help/helpUtils'
 
 import { assign, some, filter } from 'min-dash';
 
 import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
-
-import {
-  hasPrimaryModifier
-} from 'diagram-js/lib/util/Mouse';
-
 import translate from 'diagram-js/lib/i18n/translate/translate';
 
 
@@ -72,24 +66,32 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
 
   function startConnect(event, element, autoActivate) {
     if (is(element, 'fpb:Object')) {
-      // legt fest, welcher Flow Type ausgewählt wurde und speichert diese Information.
       let hint;
-      if (event.srcElement.className.search('parallel') !== -1) {
+      let className;
+      // Unterscheidung ob Verbindung über MouseClick oder Touch
+      if (event.type == 'click') {
+        className = event.srcElement.className;
+      } else {
+        className = event.srcEvent.srcElement.className;
+      }
+      // legt fest, welcher Flow Type ausgewählt wurde und speichert diese Information.
+      if (className.search('parallel') !== -1) {
         hint = 'Parallel'
       }
-      else if (event.srcElement.className.search('alternative') !== -1) {
+      else if (className.search('alternative') !== -1) {
         hint = 'Alternative'
       }
-      else if (event.srcElement.className.search('usage') !== -1) {
+      else if (className.search('usage') !== -1) {
         hint = 'Usage'
       }
       else {
         hint = 'Flow'
       }
+
+
       element.TemporaryFlowHint = hint;
 
       let sourcePos = getMid(element);
-      //  if (isAny(element, ['fpbjs:Product', 'fpbjs:Information', 'fpbjsEnergy'])) {
       if (is(element, 'fpb:State')) {
         sourcePos.y += element.width / 2;
       }
@@ -172,10 +174,8 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
   // Entfernen von fpbjs Präfix für Tooltip Anzeige auf Icon
   let elementType;
   if (element.type) {
-    // elementType = element.type.replace('fpbjs:', '');
     elementType = element.type.replace('fpb:', '');
   }
-
   // Kein ContextPad für Labels
   if (element.type === 'label') {
     return pad;
@@ -195,13 +195,31 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
   });
   // ContextPad für Product, Information und Energy
   if (is(element, 'fpb:State')) {
-    // Anzeige von normalen Flow, nur wenn kein OutgoingFlow vorhanden ist und Wenn sich unterhalb ProcessOperatoren befinden, 
+    // Solange kein Outgoing Flow angelegt ist + mindestens 1 ProcessOperator unterhalb des States ist: alle drei Verbindungen anbieten
     if (element.outgoing.length == 0 && noOfElementsUnderTheSource(element, processOperators, 50) > 0) {
       assign(pad, {
         'connect': {
           group: 'edit',
           className: 'context-pad-icon-fpbconnection',
           title: translate('Connect {type} with ProcessOperator', { type: elementType }),
+          action: {
+            click: startConnect,
+            dragstart: startConnect
+          }
+        },
+        'connect_parallel': {
+          group: 'edit',
+          className: 'context-pad-icon-fpbparallelconnection',
+          title: translate('Parallel used {type}', { type: elementType }),
+          action: {
+            click: startConnect,
+            dragstart: startConnect
+          }
+        },
+        'connect_alternative': {
+          group: 'edit',
+          className: 'context-pad-icon-fpbalternativeconnection',
+          title: translate('Alternative Process'),
           action: {
             click: startConnect,
             dragstart: startConnect
@@ -307,7 +325,6 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
 
   };
   // TechnicalResource hat Möglichkeit Usage Flow anzulegen
-  //  if (is(element, 'fpbjs:TechnicalResource')) {
   if (is(element, 'fpb:TechnicalResource')) {
     assign(pad, {
       'connect_usage': {
@@ -324,6 +341,7 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
 
   };
   // Über SystemLimit besteht Möglichkeit für Compose
+  //TODO: Überprüfung ob StateShapes auf Systemgrenze liegen
   if (is(element, 'fpb:SystemLimit')) {
     if (process.businessObject.isDecomposedProcessOperator) {
       assign(pad, {

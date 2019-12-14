@@ -6,7 +6,7 @@ import {
     remove as collectionRemove
 } from 'diagram-js/lib/util/Collections';
 
-import { isAny, is } from '../../help/utils';
+import { is } from '../../help/utils';
 
 
 export default function DataBehavior(eventBus, fpbjs) {
@@ -64,8 +64,7 @@ export default function DataBehavior(eventBus, fpbjs) {
                 })
             }
             else {
-                pro.entryPoint = pro.entryPoint.id;
-
+                //pro.entryPoint = pro.entryPoint.id;
             }
         })
     })
