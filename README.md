@@ -37,13 +37,13 @@ Die Darstellung von alternativen und parallelen Prozessabläufen wird von der Ri
 
 
 ## Inbetriebnahme von FPB.JS
+Es gibt zwei Varianten, wie man FPB.JS in Betrieb nehmen kann. Es kann lokal auf dem Rechner oder innerhalb eines Container installiert werden. Beide Varianten werden im Folgenden beschrieben.
 
-### Voraussetzungen
-
+### Voraussetzungen für die lokale Installation
 Für die Inbetriebnahme von FPB.JS im Development Mode wird
 [Node.JS](https://nodejs.org/en/) benötigt. Außerdem empfiehlt es sich, eine IDE wie [Visual Studio Code](https://code.visualstudio.com/) für das Ausführen der Commands zum Installieren / Starten von FPB.JS im Development Mode zu verwenden. Dies ist jedoch nicht zwingend notwendig und geht in gleicher Weise auch über die Eingabeaufforderung Ihres Betriebssystems.
 
-### Vorgehen
+### Vorgehen zur lokalen Installation
 1) Clonen oder [Downloaden](https://github.com/HamiedNabizada/FPB.JS/archive/master.zip) Sie sich dieses Repository. Wenn Sie sich das Repository heruntergeladen haben, dann müssen Sie die zip-komprimierte Datei auf Ihrem lokalen Speicher entpacken.  
 2) Navigieren Sie entweder in der Eingabeaufforderung Ihres Betriebssystems oder im Terminal Ihrer IDE zum Stammordner der FPB.JS Kopie.
 3) Führen Sie zur Installation den Command:
@@ -60,7 +60,29 @@ Für die Inbetriebnahme von FPB.JS im Development Mode wird
    `localhost:8080` 
    
    in Ihrem Webbrowser haben Sie Zugriff auf die Benutzeroberfläche von FPB.JS.
+
+
+### Voraussetzungen für die Erstellung eines Container Image
+Zur Erstellung des Container Image und zum Betrieb des Containers wird Docker benötigt. 
+
+### Erstellung eines Container Image
+
+Navigieren Sie entweder in der Eingabeaufforderung Ihres Betriebssystems oder im Terminal Ihrer IDE zum Stammordner der FPB.JS Kopie. Erstellen die ein Container Image mit:
+
+ `docker build  -t fpb_js:0.0.1 .`
+
+
+Anschließend kann der Container mit 
+
+ `docker run -p 8080:8080 fpb_js:0.0.1`
+
+gestartet werden. Durch das Aufrufen von 
    
+   `0.0.0.0:8080` 
+   
+in Ihrem Webbrowser haben Sie Zugriff auf die Benutzeroberfläche von FPB.JS.
+
+
 ## Nutzung von FPB.JS
 Wie Sie FPB.JS nutzen können, wird im Wiki dieses GitHub Repositories erläutert:
 [Wiki](https://github.com/HamiedNabizada/FPB.JS/wiki)
