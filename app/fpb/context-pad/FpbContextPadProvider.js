@@ -69,7 +69,7 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
       let hint;
       let className;
       // Unterscheidung ob Verbindung über MouseClick oder Touch
-      if (event.type == 'click') {
+      if (event.type == 'click' || event.type == 'dragstart') {
         className = event.srcElement.className;
       } else {
         className = event.srcEvent.srcElement.className;
