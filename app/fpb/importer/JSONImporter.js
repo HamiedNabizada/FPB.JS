@@ -260,7 +260,7 @@ JSONImporter.prototype.buildTRandUsage = function (vI, dI, process, no) {
         element.businessObject.outgoing = dI.outgoing;
         element.businessObject.isAssignedTo = dI.isAssignedTo;
         if (dI.characteristics) {
-            this.buildCharacteristics(shape.businessObject, dI.characteristics);
+            this.buildCharacteristics(element.businessObject, dI.characteristics);
         }
     }
     if (vI.type === 'fpb:Usage') {

@@ -433,7 +433,7 @@ FpbUpdater.prototype.updateProcessInformation = function (command, context, oldP
         context.source.businessObject.isAssignedTo = [context.source.businessObject.isAssignedTo];
       }
       collectionAdd(context.source.businessObject.isAssignedTo, context.target.businessObject)
-      if(!Array.isArray(context.target.businessObject.isAssignedTo)){
+      if (!Array.isArray(context.target.businessObject.isAssignedTo)) {
         context.target.businessObject.isAssignedTo = [context.target.businessObject.isAssignedTo];
       }
       collectionAdd(context.target.businessObject.isAssignedTo, context.source.businessObject)
@@ -507,6 +507,19 @@ FpbUpdater.prototype.updateProcessInformation = function (command, context, oldP
         });
 
       }
+    }
+    if (is(context.source, 'fpb:TechnicalResource') || is(context.target, 'fpb:TechnicalResource')) {
+      collectionRemove(context.source.businessObject.isAssignedTo, context.target.businessObject);
+      collectionRemove(context.target.businessObject.isAssignedTo, context.source.businessObject);
+      collectionRemove(process_rootElement.businessObject.elementsContainer, connection);
+      try {
+        collectionRemove(context.source.businessObject.outgoing, connection.businessObject);
+        collectionRemove(context.target.businessObject.incoming, connection.businessObject);    
+      } catch (error) {
+        
+      }
+
+
     }
   }
 
@@ -681,18 +694,6 @@ FpbUpdater.prototype.updateConnection = function (context) {
       else {
         collectionAdd(businessObject.targetRef.incoming, businessObject)
       };
-      // Information für Parallel/Alternative Flow hinterlegen
-      /*if (isAny(businessObject, ['fpb:AlternativeFlow', 'fpb:ParallelFlow'])) {
-        // Prüft welche Flows schon von der Source abgehen und fügt dem Parallel/Alternative Flow diese Information hinzu
-        for (let i of businessObject.sourceRef.get('outgoing')) {
-          // TODO: Logik implementieren, die alten Flow zu einem Alternative bzw Parallel umwandelt
-          // TODO: inTandemWith als Array in Model definieren
-          if (i !== businessObject && !is(i, 'fpb:Usage')) { // Usage Connections sind nicht Teil von Alternative/Parallel 
-            //TODO: 03.11.2019 Hier Fehler
-            // businessObject.inTandemWith = i;
-          }
-        }
-      }*/
     };
     if (is(newTarget, 'fpb:TechnicalResource')) {
       var inverseSet = is(businessObject, 'fpb:Usage');
@@ -716,8 +717,21 @@ FpbUpdater.prototype.updateConnection = function (context) {
           collectionRemove(businessObject.targetRef && businessObject.targetRef.get('incoming'), businessObject);
         }
         businessObject.targetRef = newTarget;
-        businessObject.targetRef.incoming = businessObject;
-        businessObject.targetRef.isAssignedTo = businessObject.sourceRef;
+        if (businessObject.targetRef.get('incoming') === undefined) {
+          businessObject.targetRef.incoming = [];
+        };
+        if (!Array.isArray(businessObject.targetRef.incoming)) {
+          businessObject.targetRef.incoming  = [businessObject.targetRef.incoming];
+        }
+        //businessObject.targetRef.incoming.push(businessObject);
+        collectionAdd(businessObject.targetRef.incoming, businessObject)
+        businessObject.targetRef = newTarget;
+        //businessObject.targetRef.incoming = businessObject;
+        
+        if (!Array.isArray(businessObject.targetRef.isAssignedTo)) {
+          businessObject.targetRef.isAssignedTo  = [businessObject.targetRef.isAssignedTo];
+        }
+        collectionAdd(businessObject.targetRef.isAssignedTo, businessObject.sourceRef)
       };
     }
   };
@@ -736,16 +750,20 @@ FpbUpdater.prototype.updateConnection = function (context) {
         }
         // Neue Ref
         businessObject.sourceRef = newSource;
-        businessObject.sourceRef = businessObject;
+        businessObject.sourceRef.outgoing.push(businessObject);
       }
       // Update Target
       if (businessObject.targetRef !== newTarget) {
         if (inverseSet) {
           collectionRemove(businessObject.targetRef && businessObject.targetRef.get('incoming'), businessObject);
         }
+
         businessObject.targetRef = newTarget;
         if (businessObject.targetRef.get('incoming') === undefined) {
           businessObject.targetRef.incoming = [];
+        }
+        if (!Array.isArray(businessObject.targetRef.incoming)) {
+          businessObject.targetRef.incoming  = [businessObject.targetRef.incoming];
         }
         collectionAdd(businessObject.targetRef.incoming, businessObject)
         //businessObject.targetRef.incoming.push(businessObject);
@@ -788,134 +806,6 @@ function cleanUpDependenciesOfFlow(flow, stateShape) {
   collectionRemove(decomposedProcessSystemLimit.businessObject.elementsContainer, stateInDecomposedProcess);
   collectionRemove(decomposedProcess.businessObject.consistsOfStates, stateInDecomposedProcess.businessObject);
 }
-
-
-
-// ---- 29.09.2019
-
-/**
- * A handler responsible for updating the custom element's businessObject
- * once changes on the diagram happen.
- */
-
-/*
-export default function FpbUpdater(eventBus, modeling, fpbjs, connectionDocking) {
- //export default function FpbUpdater(eventBus, modeling) {
- CommandInterceptor.call(this, eventBus);
- 
- 
- 
- function updateFpbElement(e) {
-   var context = e.context,
-     shape = context.shape,
-     businessObject = shape.businessObject;
-   if (!isFpb(shape)) {
-     return;
-   }
-   var parent = shape.parent;
-   var fpbElements = fpbjs._fpbElements;
- 
-   // make sure element is added / removed from bpmnjs.customElements
-   if (!parent) {
-     collectionRemove(fpbElements, businessObject);
-   } else {
-     collectionAdd(fpbElements, businessObject);
-   }
- 
-   // save custom element position
-   assign(businessObject, pick(shape, ['x', 'y']));
- }
- 
- function updateFpbConnection(e) {
- 
-   var context = e.context,
-     connection = context.connection,
-     source = connection.source,
-     target = connection.target,
-     businessObject = connection.businessObject;
- 
-   var parent = connection.parent;
- 
-   var fpbElements = fpbjs._fpbElements;
- 
-   // make sure element is added / removed from bpmnjs.customElements
-   if (!parent) {
-     collectionRemove(fpbElements, businessObject);
-   } else {
-     collectionAdd(fpbElements, businessObject);
-   }
- 
-   // update waypoints
-   assign(businessObject, {
-     waypoints: copyWaypoints(connection)
-   });
- 
-   if (source && target) {
-     assign(businessObject, {
-       source: source.id,
-       target: target.id
-     });
-   }
- }
- 
- this.executed([
-   'shape.create',
-   'shape.move',
-   'shape.delete'
- ], ifFpbElement(updateFpbElement));
- 
- this.reverted([
-   'shape.create',
-   'shape.move',
-   'shape.delete'
- ], ifFpbElement(updateFpbElement));
- 
- this.executed([
-   'connection.create',
-   'connection.reconnectStart',
-   'connection.reconnectEnd',
-   'connection.updateWaypoints',
-   'connection.delete',
-   'connection.layout',
-   'connection.move'
- ], ifFpbElement(updateFpbConnection));
- 
- this.reverted([
-   'connection.create',
-   'connection.reconnectStart',
-   'connection.reconnectEnd',
-   'connection.updateWaypoints',
-   'connection.delete',
-   'connection.layout',
-   'connection.move'
- ], ifFpbElement(updateFpbConnection));
-*/
-
-/**
- * When morphing a Process into a Collaboration or vice-versa,
- * make sure that the existing custom elements get their parents updated.
- */
-/*
-function updateFpbElementsRoot(event) {
-  var context = event.context,
-    oldRoot = context.oldRoot,
-    newRoot = context.newRoot,
-    children = oldRoot.children;
- 
-  var fpbChildren = children.filter(isFpb);
- 
-  if (fpbChildren.length) {
-    modeling.moveElements(fpbChildren, { x: 0, y: 0 }, newRoot);
-  }
-}
- 
-this.postExecute('canvas.updateRoot', updateFpbElementsRoot);
-}
- 
-inherits(FpbUpdater, CommandInterceptor);
- 
-FpbUpdater.$inject = ['eventBus', 'modeling', 'fpbjs'];
-*/
 
 /////// helpers ///////////////////////////////////
 
