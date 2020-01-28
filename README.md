@@ -4,6 +4,16 @@ Offenes, webbasiertes Werkzeug für die Formalisierte Prozessbeschreibung nach V
 
 [VDI 3682](#vdi-3682---formalisierte-prozessbeschreibungen) | [Inbetriebnahme](#inbetriebnahme-von-fpbjs) | [Wiki](https://github.com/HamiedNabizada/FPB.JS/wiki) | [Demo](http://demo.fpbjs.net/)
 
+## Beta-Disclaimer
+
+Please note that you are accessing the Beta Version of FPB.JS which is in the process of being tested before its official release. The sole purpose of this BETA Version is to conduct testing and obtain feedback.
+ 
+FPB.JS does not give any warranties, whether express or implied, as to the suitability or usability of the software or any of its content.
+ 
+FPB.JS will not be liable for any loss, whether such loss is direct, indirect, special or consequential, suffered by any party as a result of their use of the beta software, its content and functionalities.
+ 
+If you encounter errors, glitches, lack of functionality or other problems with the beta software, please post this in the [Issue section](https://github.com/HamiedNabizada/FPB.JS/issues) of this repository.
+
 ## VDI 3682 - Formalisierte Prozessbeschreibungen
 
 Die Richtlinie stellt ein Vorgehensmodell vor, mit dessen Hilfe Prozesse universell grafisch beschrieben und informationstechnisch erfasst werden können. Während aller Phasen (Planung, Realisierung, Inbetriebsetzung, Wartung, etc.) des Engineerings wird dadurch ein eindeutiges, gewerkeübergreifendes Prozessverständnis erreicht.
