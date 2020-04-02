@@ -196,7 +196,7 @@ export default class LayerPanel extends Component {
 
         return (
             <div className="layerPanel">
-                <OverlayTrigger placement="auto" overlay={<Tooltip id={`tooltip-uniqueId1`}>
+                <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId1`}>
                     {tooltipsOptions}
                 </Tooltip>}>
                     <Button onClick={() => this.setState({ isOpenedOptions: !isOpenedOptions })} variant="secondary-outline"><FontAwesomeIcon icon={faEllipsisV} size="lg" /></Button>
@@ -207,7 +207,7 @@ export default class LayerPanel extends Component {
                 </Collapse>
                 {processes.length > 1 && <div>
                     <div className="layerPanel-ProcessOverview-Config">
-                        <OverlayTrigger placement="auto" overlay={<Tooltip id={`tooltip-uniqueId`}>
+                        <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId`}>
                             {tooltipsTextLayer}
                         </Tooltip>}>
                             <Button id="openLayerButton" variant="secondary-outline" onClick={() => this.setState({ isOpenedLayerPanel: !isOpenedLayerPanel })}>{isOpenedLayerButton}</Button>

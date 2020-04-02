@@ -179,7 +179,7 @@ function DownloadModal(props) {
     let tooltTipExportOptions = 'Export Options';
     return (
         <div className="download-properties" key='dl-properties'>
-            <OverlayTrigger placement="auto" overlay={<Tooltip id={`tooltip-uniqueId2`}>
+            <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId2`}>
                 {tooltTipExportOptions}
             </Tooltip>}>
                 <Button variant="secondary-outline" onClick={handleShow} >

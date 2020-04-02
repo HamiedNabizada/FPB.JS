@@ -63,7 +63,7 @@ function ImportModal(props) {
     return (
         <div className="upload-properties" key='ul-properties'>
 
-            <OverlayTrigger placement="auto" overlay={<Tooltip id={`tooltip-uniqueId2_upload`}>
+            <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId2_upload`}>
                 {tooltTipImportOptions}
             </Tooltip>}>
                 <Button variant="secondary-outline" onClick={handleShow} >
