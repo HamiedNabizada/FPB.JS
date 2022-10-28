@@ -125,7 +125,7 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
         })
     };
     // Shortname des zu dekomponierenden ProcessOperators als Namen auf die SystemGrenze
-    systemLimit.businessObject.name = processOperator.businessObject.name;
+    systemLimit.businessObject.name = "SL_" + processOperator.businessObject.name;
     // Positionierung der Shapes berechnen
     var sizesAndPositions = calculateSizeAndPositions(systemLimit, incomingFlows, outgoingFlows);
     systemLimit.width = sizesAndPositions.SystemLimitWidth;
