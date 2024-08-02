@@ -101,7 +101,7 @@ FpbLayouter.prototype.layoutConnection = function (connection, hints) {
           manhattanOptions
         )
       );
-    if (is(connection, 'fpb:ParallelFlow') && connection.businessObject.inTandemWith[0]) {
+    if (is(connection, 'fpb:ParallelFlow') && connection.businessObject.inTandemWith[0] && connection.businessObject.inTandemWith[0].di) {
       let partnerWaypoints = connection.businessObject.inTandemWith[0].di.waypoint;
       
       if (target.y > partnerWaypoints[1].y && updatedWaypoints.length > 2) { // Nur wenn Shape tiefer als Knick platziert ist und Connection einen Knick hat

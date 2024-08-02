@@ -364,16 +364,19 @@ JSONImporter.prototype.updateDepedencies = function (container, element) {
         if (element.businessObject.inTandemWith) {
             element.businessObject.inTandemWith.forEach((tandemFlow) => {
                 if (typeof tandemFlow === 'string' || tandemFlow instanceof String) {
-                    let flow = container.find((partner) => {
+                    let partner = container.find((partner) => {
                         if (partner.id === tandemFlow) {
                             collectionRemove(partner.businessObject.inTandemWith, element.id);
                             collectionAdd(partner.businessObject.inTandemWith, element.businessObject);
                         }
                         return partner.id === tandemFlow
 
-                    }).businessObject;
-                    collectionRemove(element.businessObject.inTandemWith, flow.id);
-                    collectionAdd(element.businessObject.inTandemWith, flow);
+                    });
+                    if (partner) {
+                        let flow = partner.businessObject;
+                        collectionRemove(element.businessObject.inTandemWith, flow.id);
+                        collectionAdd(element.businessObject.inTandemWith, flow);
+                    }
                 }
             })
 
