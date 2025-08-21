@@ -16,8 +16,8 @@ import {
 } from 'diagram-js/lib/util/Collections';
 
 import {
-  Label
-} from 'diagram-js/lib/model';
+  isLabel
+} from 'diagram-js/lib/util/ModelUtil';
 
 import {
   getBusinessObject,
@@ -252,7 +252,7 @@ FpbUpdater.prototype.updateProcessInformation = function (command, context, oldP
   var element = context.shape || context.connection;
   var parentShape = element.parent;
   var process_rootElement = this._canvas.getRootElement();
-  if (element instanceof Label) {
+  if (isLabel(element)) {
     return;
   };
 
@@ -546,7 +546,7 @@ FpbUpdater.prototype.updateAttachment = function (context) {
 FpbUpdater.prototype.updateBounds = function (shape) {
   var di = shape.businessObject.di;
 
-  var target = (shape instanceof Label) ? this._getLabel(di) : di;
+  var target = isLabel(shape) ? this._getLabel(di) : di;
 
 
   var bounds = target.bounds;

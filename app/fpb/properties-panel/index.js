@@ -1,8 +1,8 @@
-import ReactDOM from 'react-dom';
 import React from 'react';
+import { createRoot } from 'react-dom/client';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import PropertiesView from './PropertiesView';
-
+import ErrorBoundary from '../ErrorBoundary';
 
 export default class PropertiesPanel {
 
@@ -13,9 +13,12 @@ export default class PropertiesPanel {
       container,
       configPP
     } = options;
-    ReactDOM.render(
-      <PropertiesView modeler={modeler} config={configPP} />,
-      container
+    const root = createRoot(container);
+    root.render(
+      <ErrorBoundary>
+        <PropertiesView modeler={modeler} config={configPP} />
+      </ErrorBoundary>
     );
   }
 }
+

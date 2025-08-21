@@ -2,21 +2,25 @@ import { is, isAny } from '../help/utils';
 import {
   remove as collectionRemove
 } from 'diagram-js/lib/util/Collections';
-// Icons
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAngleDoubleRight, faAngleDoubleLeft, faClipboard, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 
 
-import React, { Component } from 'react';
+
+import React, { useState, useEffect, useCallback, memo } from 'react';
 
 // Bootstrap Komponenten
 // https://react-bootstrap.github.io/
 import Collapse from 'react-collapse';
 import Accordion from 'react-bootstrap/Accordion';
+import AccordionHeader from 'react-bootstrap/AccordionHeader';
+import AccordionBody from 'react-bootstrap/AccordionBody';
+import AccordionItem from 'react-bootstrap/AccordionItem';
 import Card from 'react-bootstrap/Card'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
 import Table from 'react-bootstrap/Table';
 import InputGroup from 'react-bootstrap/InputGroup'
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
@@ -31,111 +35,87 @@ const tooltips_text = {
 }
 
 
-export default class PropertiesView extends Component {
+const PropertiesView = ({ modeler, config }) => {
+  const [selectedElements, setSelectedElements] = useState([]);
+  const [element, setElement] = useState(null);
+  const [isOpenedPropertiesPanel, setIsOpenedPropertiesPanel] = useState(false);
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      selectedElements: [],
-      element: null,
-      isOpenedPropertiesPanel: false
+  const rerender = useCallback((element) => {
+    setElement(element);
+  }, []);
+
+  useEffect(() => {
+    const handleSelectionChanged = (e) => {
+      setSelectedElements(e.newSelection);
+      setElement(e.newSelection[0]);
     };
-  };
 
+    const handleElementChanged = (e) => {
+      const { element: changedElement } = e;
 
-  componentDidMount() {
-    const {
-      modeler,
-      config
-    } = this.props;
-
-    modeler.on('selection.changed', (e) => {
-      const {
-        element
-      } = this.state;
-
-      this.setState({
-        selectedElements: e.newSelection,
-        element: e.newSelection[0]
-      });
-    });
-
-    modeler.on('element.changed', (e) => {
-      const {
-        element
-      } = e;
-
-      const {
-        element: currentElement
-      } = this.state;
-
-      if (!currentElement) {
+      if (!element) {
         return;
       }
 
       // update panel, if currently selected element changed
-      if (element.id === currentElement.id) {
-        this.setState({
-          element
-        });
+      if (changedElement.id === element.id) {
+        setElement(changedElement);
       }
-    });
-  };
+    };
 
+    modeler.on('selection.changed', handleSelectionChanged);
+    modeler.on('element.changed', handleElementChanged);
 
-  render() {
-    const {
-      modeler,
-      config
-    } = this.props;
+    return () => {
+      modeler.off('selection.changed', handleSelectionChanged);
+      modeler.off('element.changed', handleElementChanged);
+    };
+  }, [modeler, element]);
 
-    const rerender = (element) => {
-      this.setState({
-        element: element
-      })
-    }
+  const togglePropertiesPanel = useCallback(() => {
+    setIsOpenedPropertiesPanel(prev => !prev);
+  }, []);
 
-    const {
-      selectedElements,
-      element,
-      isOpenedPropertiesPanel
-    } = this.state;
+  const isOpenedPropertiesPanelButton = isOpenedPropertiesPanel 
+    ? <FontAwesomeIcon icon="angles-right" />
+    : <FontAwesomeIcon icon="angles-left" />;
 
-    let isOpenedPropertiesPanelButton = <FontAwesomeIcon icon={faAngleDoubleLeft} />
-    if (isOpenedPropertiesPanel) {
-      isOpenedPropertiesPanelButton = <FontAwesomeIcon icon={faAngleDoubleRight} />
-    }
-    return (
-      <div className="propertiespanel">
-        <div className="config">
-          <Button id="openPropertiesPanelButton" variant="secondary" onClick={() => this.setState({ isOpenedPropertiesPanel: !isOpenedPropertiesPanel })}>{isOpenedPropertiesPanelButton}</Button>
-        </div>
-        <Collapse isOpened={isOpenedPropertiesPanel}>
-          {
-            selectedElements.length === 1 && isOpenedPropertiesPanel
-            &&
-            <ElementProperties modeler={modeler} element={element} config={config} rerender={rerender} />
-          }
-          {
-            selectedElements.length === 0 && isOpenedPropertiesPanel
-            && <ProcessStats modeler={modeler} />
-          }
-          {
-            selectedElements.length > 1 && isOpenedPropertiesPanel
-            && <span>Please select a single element.</span>
-          }
-        </Collapse>
+  return (
+    <div className="propertiespanel">
+      <div className="config">
+        <Button 
+          id="openPropertiesPanelButton" 
+          variant="secondary" 
+          onClick={togglePropertiesPanel}
+        >
+          {isOpenedPropertiesPanelButton}
+        </Button>
       </div>
-    );
-  }
+      <Collapse isOpened={isOpenedPropertiesPanel}>
+        {selectedElements.length === 1 && isOpenedPropertiesPanel && (
+          <ElementProperties 
+            modeler={modeler} 
+            element={element} 
+            config={config} 
+            rerender={rerender} 
+          />
+        )}
+        {selectedElements.length === 0 && isOpenedPropertiesPanel && (
+          <ProcessStats modeler={modeler} />
+        )}
+        {selectedElements.length > 1 && isOpenedPropertiesPanel && (
+          <span>Please select a single element.</span>
+        )}
+      </Collapse>
+    </div>
+  );
 };
 
-function ProcessStats(props) {
-  let {
-    modeler
-  } = props;
+export default memo(PropertiesView);
+
+const ProcessStats = memo(({ modeler }) => {
   const canvas = modeler.get('canvas');
-  process = canvas.getRootElement();
+  const process = canvas.getRootElement();
   let noOfStates = 0;
   let noOfProcessOperators = 0;
   let noOfProcesses = 0;
@@ -204,17 +184,11 @@ function ProcessStats(props) {
       </Card>
 
     </div>
-  )
+  );
+});
 
-}
-
-function ElementProperties(props) {
-  let {
-    element,
-    modeler,
-    config,
-    rerender
-  } = props;
+const ElementProperties = memo(({ element, modeler, config, rerender }) => {
+  const [, forceUpdate] = useState({});
 
   let characteristics = element.businessObject.get('characteristics');
   if (element.labelTarget) {
@@ -238,11 +212,16 @@ function ElementProperties(props) {
 
   function addCharacteristics() {
     const fpbFactory = modeler.get('fpbFactory');
+    const modeling = modeler.get('modeling');
 
+    // Get fresh characteristics reference
+    let currentCharacteristics = element.businessObject.get('characteristics');
     let characterNo;
-    if (characteristics === undefined) {
+    if (!currentCharacteristics || currentCharacteristics.length === 0) {
       characterNo = 1;
-    } else { characterNo = characteristics.length + 1 }
+    } else { 
+      characterNo = currentCharacteristics.length + 1;
+    }
 
     let newCharacteristics = fpbFactory.create('fpbch:Characteristics', {
       category: fpbFactory.create('fpb:Identification', {
@@ -264,10 +243,10 @@ function ElementProperties(props) {
           from: 0.0,
           to: 0.0
         })],
-        actualValues: fpbFactory.create('fpbch:ValueWithUnit', {
+        actualValues: [fpbFactory.create('fpbch:ValueWithUnit', {
           value: 0.0,
           unit: ''
-        }),
+        })],
       }),
       relationalElement: fpbFactory.create('fpbch:RelationalElement', {
         view: '',
@@ -276,17 +255,28 @@ function ElementProperties(props) {
       })
     });
 
-    if (characteristics === undefined) {
-      element.businessObject.characteristics = [newCharacteristics]
+    // Update characteristics using modeling service for proper change detection
+    if (!currentCharacteristics || currentCharacteristics.length === 0) {
+      modeling.updateProperties(element, {
+        'characteristics': [newCharacteristics]
+      });
     } else {
-      element.businessObject.characteristics[characterNo - 1] = newCharacteristics;
+      const updatedCharacteristics = [...currentCharacteristics, newCharacteristics];
+      modeling.updateProperties(element, {
+        'characteristics': updatedCharacteristics
+      });
     }
-    rerender(element)
+    
+    // Force component re-render to show new characteristic
+    forceUpdate({});
+    rerender(element);
   };
   function renderCharacteristics() {
-    if (characteristics !== undefined) {
-      return characteristics.map(function (char, index) {
-        return new Characteristics({ element, modeler, config, rerender }, index)
+    // Get fresh characteristics reference for rendering
+    const currentCharacteristics = element.businessObject.get('characteristics');
+    if (currentCharacteristics !== undefined && currentCharacteristics.length > 0) {
+      return currentCharacteristics.map(function (char, index) {
+        return <Characteristics key={index} element={element} modeler={modeler} config={config} rerender={rerender} index={index} />
       })
     }
     else {
@@ -302,103 +292,92 @@ function ElementProperties(props) {
         {is(element, 'fpb:Object') &&
           <div>
             {config.propertiesPanel.showIdentifactionCard &&
-              <Card>
-                <Card.Header>
-                  <Accordion.Toggle as={Button} variant={Card.Header} eventKey="pp_identification">
-                    <b>Identification</b>
-                  </Accordion.Toggle>
-                </Card.Header>
-                <Accordion.Collapse eventKey="pp_identification">
-                  <Card.Body>
+              <Accordion.Item eventKey="pp_identification">
+                <Accordion.Header>
+                  <b>Identification</b>
+                </Accordion.Header>
+                <Accordion.Body>
                     <Form>
                       {config.propertiesPanel.identificationElements.showUniqueIdent &&
-                        <Form.Row>
+                        <Row>
                           <Form.Group as={Col}>
                             <Form.Label>Unique Identifaction</Form.Label>
                             <InputGroup>
                               <Form.Control id="uniqueIdent_id" readOnly defaultValue={element.businessObject.identification.uniqueIdent} />
-                              <InputGroup.Append>
-                                <OverlayTrigger
-                                  placement="top"
-                                  overlay={<Tooltip id={`tooltip-uniqueId`}>
-                                    {tooltips_text.copyUniqueIdToClipboard}
-                                  </Tooltip>}
-                                >
-                                  <Button variant="secondary" onClick={
-                                    () => {
-                                      var copyText = document.getElementById("uniqueIdent_id");
-                                      copyText.select();
-                                      copyText.setSelectionRange(0, 99999); /*For mobile devices*/
-                                      document.execCommand("copy");
-                                    }
-                                  }><FontAwesomeIcon icon={faClipboard}></FontAwesomeIcon></Button>
-                                </OverlayTrigger>
-                              </InputGroup.Append>
+                              <OverlayTrigger
+                                placement="top"
+                                overlay={<Tooltip id={`tooltip-uniqueId`}>
+                                  {tooltips_text.copyUniqueIdToClipboard}
+                                </Tooltip>}
+                              >
+                                <Button variant="secondary" onClick={
+                                  () => {
+                                    var copyText = document.getElementById("uniqueIdent_id");
+                                    copyText.select();
+                                    copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+                                    document.execCommand("copy");
+                                  }
+                                }><FontAwesomeIcon icon="clipboard"></FontAwesomeIcon></Button>
+                              </OverlayTrigger>
                             </InputGroup>
                           </Form.Group>
-                        </Form.Row>
+                        </Row>
                       }
                       {config.propertiesPanel.identificationElements.showLongName &&
-                        <Form.Row>
+                        <Row>
                           <Form.Group as={Col} controlId="pp_identification_longName">
                             <Form.Label>Long Name</Form.Label>
                             <Form.Control defaultValue={element.businessObject.identification.longName} onChange={(event) => {
                               updateIdentifactionProperty('longName', event.target.value)
                             }} />
                           </Form.Group>
-                        </Form.Row>
+                        </Row>
                       }
 
-                      <Form.Row>
+                      <Row>
                         <Form.Group as={Col} controlId="pp_identification_shortName">
                           <Form.Label>Short Name</Form.Label>
                           <Form.Control defaultValue={element.businessObject.identification.shortName} onChange={(event) => {
                             updateIdentifactionProperty('shortName', event.target.value)
                           }} />
                         </Form.Group>
-                      </Form.Row>
+                      </Row>
                       {config.propertiesPanel.identificationElements.showVersionNumber &&
-                        <Form.Row>
+                        <Row>
                           <Form.Group as={Col} controlId="pp_identification_versionNumber">
                             <Form.Label>Version Number</Form.Label>
                             <Form.Control defaultValue={element.businessObject.identification.versionNumber} onChange={(event) => {
                               updateIdentifactionProperty('versionNumber', event.target.value)
                             }} />
                           </Form.Group>
-                        </Form.Row>
+                        </Row>
                       }
                       {config.propertiesPanel.identificationElements.showRevisionNumber &&
-                        <Form.Row>
+                        <Row>
                           <Form.Group as={Col} controlId="pp_identification_revisionNumber">
                             <Form.Label>Revision Number</Form.Label>
                             <Form.Control defaultValue={element.businessObject.identification.revisionNumber} onChange={(event) => {
                               updateIdentifactionProperty('revisionNumber', event.target.value)
                             }} />
                           </Form.Group>
-                        </Form.Row>
+                        </Row>
                       }
                     </Form>
-                  </Card.Body>
-                </Accordion.Collapse>
-              </Card>
+                </Accordion.Body>
+              </Accordion.Item>
             }
             {config.propertiesPanel.showActionsCard &&
-              <Card>
-                <Card.Header>
-                  <Accordion.Toggle as={Button} variant={Card.Header} eventKey="pp_actions">
-                    <b>Actions</b>
-                  </Accordion.Toggle>
-                </Card.Header>
-                <Accordion.Collapse eventKey="pp_actions">
+              <Accordion.Item eventKey="pp_actions">
+                <Accordion.Header>
+                  <b>Actions</b>
+                </Accordion.Header>
+                <Accordion.Body>
 
-                  <Card.Body>
                     {config.propertiesPanel.actionsElements.addCharasterics &&
                       <Button variant="secondary" onClick={addCharacteristics}>Add characteristics</Button>
                     }
-                  </Card.Body>
-
-                </Accordion.Collapse>
-              </Card>
+                </Accordion.Body>
+              </Accordion.Item>
             }
             {renderCharacteristics()}
           </div>
@@ -407,216 +386,203 @@ function ElementProperties(props) {
       <br />
     </div >
   );
-};
+});
 
-function Characteristics(props, index) {
+const Characteristics = (props) => {
   let {
     element,
     modeler,
     config,
-    rerender
+    rerender,
+    index
   } = props;
   let no = index;
-  let characteristics = element.businessObject.get('characteristics');
+  
+  // Always get fresh characteristics data to ensure tab names update
+  const getCharacteristics = () => element.businessObject.get('characteristics');
   const modeling = modeler.get('modeling');
 
   function removeCharacteristic() {
+    const characteristics = getCharacteristics();
     collectionRemove(characteristics, characteristics[no]);
     rerender(element);
   }
 
   function updateCharacteristics(type, valueType, value, addOptions) {
+    const characteristics = getCharacteristics();
     if (addOptions) {
-      characteristics = element.businessObject.get('characteristics');
       characteristics[no][type][valueType][addOptions] = value;
-
       modeling.updateProperties(element, {
         'characteristics': characteristics
       });
     }
     else {
-      characteristics = element.businessObject.get('characteristics');
       characteristics[no][type][valueType] = value;
       modeling.updateProperties(element, {
         'characteristics': characteristics
       });
     }
+    // Trigger re-render to update characteristic tab names and other UI elements
+    rerender(element);
   }
+  const characteristics = getCharacteristics();
+  
   return (
     <div className="characteristics-properties" key={characteristics[no].category.uniqueIdent}>
-      <Card>
-        <Card.Header>
-
-          <Accordion.Toggle as={Button} variant={Card.Header} eventKey={`pp_characteristics${no}`}>
-            <b>{characteristics[no].category.shortName}</b>
-          </Accordion.Toggle>
-        </Card.Header>
-        <Accordion.Collapse eventKey={`pp_characteristics${no}`}>
-          <Card.Body>
+      <Accordion.Item eventKey={`pp_characteristics${no}`}>
+        <Accordion.Header>
+          <b>{characteristics[no].category.shortName}</b>
+        </Accordion.Header>
+        <Accordion.Body>
             <Accordion defaultActiveKey="pp_characteristics_category">
               {config.propertiesPanel.defaultCharacteristics.showCategoryCard &&
-                <Card>
-                  <Card.Header>
-                    <Accordion.Toggle as={Button} variant={Card.Header} eventKey="pp_characteristics_category">
-                      <b>Category</b>
-                    </Accordion.Toggle>
-                  </Card.Header>
-                  <Accordion.Collapse eventKey="pp_characteristics_category">
-                    <Card.Body>
+                <Accordion.Item eventKey="pp_characteristics_category">
+                  <Accordion.Header>
+                    <b>Category</b>
+                  </Accordion.Header>
+                  <Accordion.Body>
                       <Form>
                         {config.propertiesPanel.defaultCharacteristics.categoryElements.showUniqueIdent &&
-                          <Form.Row>
+                          <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_category_id">
                               <Form.Label>Unique Identifaction</Form.Label>
                               <Form.Control readOnly defaultValue={characteristics[no].category.uniqueIdent} />
                             </Form.Group>
-                          </Form.Row>
+                          </Row>
                         }
                         {config.propertiesPanel.defaultCharacteristics.categoryElements.showLongName &&
-                          <Form.Row>
+                          <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_category_longName">
                               <Form.Label>Long Name</Form.Label>
                               <Form.Control defaultValue={characteristics[no].category.longName} onChange={(event) => {
                                 updateCharacteristics('category', 'longName', event.target.value)
                               }} />
                             </Form.Group>
-                          </Form.Row>
+                          </Row>
                         }
 
-                        <Form.Row>
+                        <Row>
                           <Form.Group as={Col} controlId="pp_characteristics_category_shortName">
                             <Form.Label>Short Name</Form.Label>
                             <Form.Control defaultValue={characteristics[no].category.shortName} onChange={(event) => {
                               updateCharacteristics('category', 'shortName', event.target.value)
                             }} />
                           </Form.Group>
-                        </Form.Row>
+                        </Row>
                         {config.propertiesPanel.defaultCharacteristics.categoryElements.showVersionNumber &&
-                          <Form.Row>
+                          <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_category_versionNumber">
                               <Form.Label>Version Number</Form.Label>
                               <Form.Control defaultValue={characteristics[no].category.versionNumber} onChange={(event) => {
                                 updateCharacteristics('category', 'versionNumber', event.target.value)
                               }} />
                             </Form.Group>
-                          </Form.Row>
+                          </Row>
                         }
                         {config.propertiesPanel.defaultCharacteristics.categoryElements.showRevisionNumber &&
-                          <Form.Row>
+                          <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_category_revisionNumber">
                               <Form.Label>Revision Number</Form.Label>
                               <Form.Control defaultValue={characteristics[no].category.revisionNumber} onChange={(event) => {
                                 updateCharacteristics('category', 'revisionNumber', event.target.value)
                               }} />
                             </Form.Group>
-                          </Form.Row>
+                          </Row>
                         }
                       </Form>
-                    </Card.Body>
-                  </Accordion.Collapse>
-                </Card>
+                  </Accordion.Body>
+                </Accordion.Item>
               }
               {config.propertiesPanel.defaultCharacteristics.showDescriptiveElementCard &&
-                <Card>
-                  <Card.Header>
-                    <Accordion.Toggle as={Button} variant={Card.Header} eventKey="pp_characteristics_descriptiveElement">
-                      <b>Descriptive Element</b>
-                    </Accordion.Toggle>
-                  </Card.Header>
-                  <Accordion.Collapse eventKey="pp_characteristics_descriptiveElement">
-                    <Card.Body>
+                <Accordion.Item eventKey="pp_characteristics_descriptiveElement">
+                  <Accordion.Header>
+                    <b>Descriptive Element</b>
+                  </Accordion.Header>
+                  <Accordion.Body>
                       <Form>
                         {config.propertiesPanel.defaultCharacteristics.descriptiveElements.showValueDeterminationProcess &&
-                          <Form.Row>
+                          <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_descriptiveElement_vdp">
                               <Form.Label>Value Determination Process</Form.Label>
                               <Form.Control defaultValue={characteristics[no].descriptiveElement.valueDeterminationProcess} onChange={(event) => {
                                 updateCharacteristics('descriptiveElement', 'valueDeterminationProcess', event.target.value)
                               }} />
                             </Form.Group>
-                          </Form.Row>
+                          </Row>
                         }
                         {config.propertiesPanel.defaultCharacteristics.descriptiveElements.showRepresentivity &&
-                          <Form.Row>
+                          <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_descriptiveElement_representivity">
                               <Form.Label>Representivity</Form.Label>
                               <Form.Control defaultValue={characteristics[no].descriptiveElement.representivity} onChange={(event) => {
                                 updateCharacteristics('descriptiveElement', 'representivity', event.target.value)
                               }} />
                             </Form.Group>
-                          </Form.Row>
+                          </Row>
                         }
                         {config.propertiesPanel.defaultCharacteristics.descriptiveElements.showSetpointValue &&
-                          <Form.Row>
+                          <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_descriptiveElement_setPointValue">
                               <Form.Label>Setpoint Value</Form.Label>
                               <InputGroup>
                                 <Form.Control placeholder="value" defaultValue={characteristics[no].descriptiveElement.setpointValue.value} onChange={(event) => {
                                   updateCharacteristics('descriptiveElement', 'setpointValue', event.target.value, 'value')
                                 }} />
-                                <InputGroup.Append>
-                                  <Form.Control placeholder="unit" defaultValue={characteristics[no].descriptiveElement.setpointValue.unit} onChange={(event) => {
-                                    updateCharacteristics('descriptiveElement', 'setpointValue', event.target.value, 'unit')
-                                  }} />
-                                </InputGroup.Append>
+                                <Form.Control placeholder="unit" defaultValue={characteristics[no].descriptiveElement.setpointValue.unit} onChange={(event) => {
+                                  updateCharacteristics('descriptiveElement', 'setpointValue', event.target.value, 'unit')
+                                }} />
                               </InputGroup>
                             </Form.Group>
-                          </Form.Row>
+                          </Row>
                         }
                         {config.propertiesPanel.defaultCharacteristics.descriptiveElements.showActualValues &&
-                          <Form.Row>
+                          <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_descriptiveElement_actualValues">
                               <Form.Label>Actual Values</Form.Label>
                               <InputGroup>
                                 <Form.Control placeholder="value" defaultValue={characteristics[no].descriptiveElement.actualValues.value} onChange={(event) => {
                                   updateCharacteristics('descriptiveElement', 'actualValues', event.target.value, 'value')
                                 }} />
-                                <InputGroup.Append>
-                                  <Form.Control placeholder="unit" defaultValue={characteristics[no].descriptiveElement.setpointValue.unit} onChange={(event) => {
-                                    updateCharacteristics('descriptiveElement', 'actualValues', event.target.value, 'unit')
-                                  }} />
-                                </InputGroup.Append>
+                                <Form.Control placeholder="unit" defaultValue={characteristics[no].descriptiveElement.setpointValue.unit} onChange={(event) => {
+                                  updateCharacteristics('descriptiveElement', 'actualValues', event.target.value, 'unit')
+                                }} />
                               </InputGroup>
                             </Form.Group>
-                          </Form.Row>
+                          </Row>
                         }
                       </Form>
-                    </Card.Body>
-                  </Accordion.Collapse>
-                </Card>
+                  </Accordion.Body>
+                </Accordion.Item>
               }
               {config.propertiesPanel.defaultCharacteristics.showRelationalElementCard &&
-                <Card>
-                  <Card.Header>
-                    <Accordion.Toggle as={Button} variant={Card.Header} eventKey="pp_characteristics_relationalElement">
-                      <b>Relational Element</b>
-                    </Accordion.Toggle>
-                  </Card.Header>
-                  <Accordion.Collapse eventKey="pp_characteristics_relationalElement">
-                    <Card.Body>
+                <Accordion.Item eventKey="pp_characteristics_relationalElement">
+                  <Accordion.Header>
+                    <b>Relational Element</b>
+                  </Accordion.Header>
+                  <Accordion.Body>
                       <Form>
                         {config.propertiesPanel.defaultCharacteristics.relationalElements.showModel &&
-                          <Form.Row>
+                          <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_relationalElement_model">
                               <Form.Label>Model</Form.Label>
                               <Form.Control defaultValue={characteristics[no].relationalElement.model} onChange={(event) => {
                                 updateCharacteristics('relationalElement', 'model', event.target.value)
                               }} />
                             </Form.Group>
-                          </Form.Row>
+                          </Row>
                         }
                         {config.propertiesPanel.defaultCharacteristics.relationalElements.showRegulationsforRelationalGeneration &&
-                          <Form.Row>
+                          <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_relationalElement_rfrg">
                               <Form.Label>Regulations for Relational Generation</Form.Label>
                               <Form.Control defaultValue={characteristics[no].relationalElement.regulationsForRelationalGeneration} onChange={(event) => {
                                 updateCharacteristics('relationalElement', 'regulationsForRelationalGeneration', event.target.value)
                               }} />
                             </Form.Group>
-                          </Form.Row>
+                          </Row>
                         }
                         {config.propertiesPanel.defaultCharacteristics.relationalElements.showView &&
-                          <Form.Row>
+                          <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_relationalElement_view">
                               <Form.Label>View</Form.Label>
                               <Form.Control defaultValue={characteristics[no].relationalElement.view} onChange={(event) => {
@@ -624,27 +590,26 @@ function Characteristics(props, index) {
                               }} />
 
                             </Form.Group>
-                          </Form.Row>
+                          </Row>
                         }
                       </Form>
-                    </Card.Body>
-                  </Accordion.Collapse>
-                </Card>
+                  </Accordion.Body>
+                </Accordion.Item>
               }
 
             </Accordion>
             <OverlayTrigger placement="auto" overlay={<Tooltip id={`tooltip-RemoveCharacterics${no}`}>
                    Removes the characteristic
                 </Tooltip>}>
-                <Button variant="secondary" onClick={() => removeCharacteristic()}><FontAwesomeIcon icon={faTrashAlt} /></Button>
+
+                <Button variant="secondary" onClick={() => removeCharacteristic()}><FontAwesomeIcon icon="trash-can" /></Button>
+
                 </OverlayTrigger>
             
-          </Card.Body>
+        </Accordion.Body>
           
-        </Accordion.Collapse>
+      </Accordion.Item>
 
-      </Card>
-
-    </div>)
-}
+    </div>);
+};
 

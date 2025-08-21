@@ -1,4 +1,4 @@
-import React, { Component, useState } from 'react';
+import React, { useState, memo } from 'react';
 
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
@@ -10,68 +10,71 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import Container from 'react-bootstrap/Container';
 
-
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDownload, faPaperPlane, faFileImage, faWindowClose } from '@fortawesome/free-solid-svg-icons';
+import XMLExporter from '../../exporter/XMLExporter';
 
+const DownloadOptions = memo(({ modeler, processes, selectedProcess, selectedElements }) => {
+    return (
+        <div className="downloadButton">
+            <DownloadModal 
+                modeler={modeler}
+                processes={processes}
+                selectedProcess={selectedProcess}
+                selectedElements={selectedElements}
+            />
+        </div>
+    );
+});
 
+export default DownloadOptions;
 
-export default class DownloadOptions extends Component {
-    constructor(props) {
-        super(props);
-    };
-
-    render() {
-        return (
-            <div className="downloadButton">
-                <DownloadModal props={this.props} />
-            </div>
-        )
-    };
-}
-
-function DownloadModal(props) {
+const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedElements }) => {
     const [show, setShow] = useState(false);
-    var informationLevel;
+    const [informationLevel, setInformationLevel] = useState('1');
+    const [exportAsEvent, setExportAsEvent] = useState(false);
+    const [exportAsDownload, setExportAsDownload] = useState(false);
+    const [information, setInformation] = useState('information1');
+    const [filename, setFilename] = useState('FPB');
+    const [eventName, setEventName] = useState('fpbjs');
+    const [exportFormat, setExportFormat] = useState('json');
+
     const handleInformationLevel = (infoLevel) => {
-        informationLevel = infoLevel;
-
-    }
-    var exportAsEvent;
+        setInformationLevel(infoLevel);
+    };
+    
     const handleExportAsEvent = (ev) => {
-        exportAsEvent = ev;
-    }
-    var exportAsDownload;
+        setExportAsEvent(ev);
+    };
+    
     const handleExportAsDownload = (ev) => {
-        exportAsDownload = ev;
-    }
-    var information;
+        setExportAsDownload(ev);
+    };
+    
     const handleInformation = (inf) => {
-        information = inf;
-    }
-    var filename = "FPB";
+        setInformation(inf);
+    };
+    
     const handleFilename = (fn) => {
-        filename = fn;
-    }
-    var eventName = 'fpbjs';
+        setFilename(fn);
+    };
+    
     const handleEventname = (en) => {
-        eventName = en;
-    }
+        setEventName(en);
+    };
+    
+    const handleExportFormat = (format) => {
+        setExportFormat(format);
+    };
 
-    const modeler = props.props.modeler;
     const eventBus = modeler.get('eventBus');
-    var processes = props.props.processes;
-    var selectedElements = props.props.selectedElements;
-    var selectedProcess = props.props.selectedProcess;
     eventBus.on(eventName, (e) => {
-        console.log(e)
-    })
+        console.log(e);
+    });
 
-    function download(dataStr) {
+    function download(dataStr, fileExtension = exportFormat) {
         let tempLink = document.createElement('a');
         tempLink.href = dataStr;
-        tempLink.setAttribute('download', `${filename}.json`);
+        tempLink.setAttribute('download', `${filename}.${fileExtension}`);
         document.getElementsByClassName('layerPanel')[0].appendChild(tempLink);
         tempLink.click();
         document.getElementsByClassName('layerPanel')[0].removeChild(tempLink);
@@ -87,10 +90,10 @@ function DownloadModal(props) {
                 document.getElementsByClassName('layerPanel')[0].appendChild(tempLink);
                 tempLink.click();
                 document.getElementsByClassName('layerPanel')[0].removeChild(tempLink);
-
             }
         });
     }
+
     function replacer(name, val) {
         if (informationLevel === '2') {
             if (name === 'elementVisualInformation') {
@@ -137,53 +140,79 @@ function DownloadModal(props) {
                 return undefined;
             default: return val;
         }
-
-    };
+    }
 
     function go() {
         eventBus.fire('dataStore.updateAll', {});
         let data;
         let dataStr;
         let dataEdited;
-        if (information == 'information1') {
+        let contentType;
+        
+        // Get data based on information selection
+        if (information === 'information1') {
             data = modeler.getProcesses();
         }
-        if (information == 'information2') {
+        if (information === 'information2') {
             data = modeler.getProcess(selectedProcess.id);
         }
-        if (information == 'information3') {
+        if (information === 'information3') {
             data = modeler.getSelectedElements(selectedProcess.id, selectedElements)
         }
-        if (data == undefined) {
+        if (data === undefined) {
             return;
         }
 
-        dataEdited = JSON.stringify(data, replacer, 4);
+        try {
+            console.log('DownloadOptions: Export data format:', typeof data);
+            console.log('DownloadOptions: Export data structure:', data);
+            console.log('DownloadOptions: Is array:', Array.isArray(data));
+            
+            // Export based on format selection
+            if (exportFormat === 'json') {
+                dataEdited = JSON.stringify(data, replacer, 4);
+                contentType = "data:text/json;charset=utf-8,";
+            } else if (exportFormat === 'xml') {
+                const xmlExporter = new XMLExporter();
+                dataEdited = xmlExporter.exportToXML(data, { 
+                    informationLevel: informationLevel 
+                });
+                contentType = "data:text/xml;charset=utf-8,";
+            }
 
+            dataStr = contentType + encodeURIComponent(dataEdited);
+            
+            if (exportAsDownload) {
+                download(dataStr, exportFormat);
+            }
 
-        dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(dataEdited);
-        if (exportAsDownload) {
-            download(dataStr);
+            if (exportAsEvent) {
+                const eventData = exportFormat === 'json' ? JSON.parse(dataEdited) : dataEdited;
+                eventBus.fire(eventName, {
+                    data: eventData,
+                    format: exportFormat
+                });
+            }
+        } catch (error) {
+            console.error('Export failed:', error);
+            alert(`Export failed: ${error.message}`);
+            return;
         }
-
-        if (exportAsEvent) {
-            eventBus.fire(eventName, {
-                data: JSON.parse(dataEdited)
-            })
-        }
+        
         handleClose();
-    };
+    }
 
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
     let tooltTipExportOptions = 'Export Options';
+    
     return (
         <div className="download-properties" key='dl-properties'>
             <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId2`}>
                 {tooltTipExportOptions}
             </Tooltip>}>
                 <Button variant="secondary-outline" onClick={handleShow} >
-                    <FontAwesomeIcon icon={faDownload} size="lg" />
+                    <FontAwesomeIcon icon="download" size="lg" />
                 </Button>
             </OverlayTrigger>
             <Modal bg="light" show={show} onHide={handleClose} centered size="xl">
@@ -193,7 +222,7 @@ function DownloadModal(props) {
                             <Col>Export Options</Col>
                             <Col md="auto">
                                 <Button variant="secondary" size="sm">
-                                <FontAwesomeIcon  icon={faWindowClose} size="lg" onClick={handleClose} />
+                                <FontAwesomeIcon  icon="rectangle-xmark" size="lg" onClick={handleClose} />
                                 </Button>
                                 </Col>
                         </Row>
@@ -202,7 +231,7 @@ function DownloadModal(props) {
                 <Modal.Body>
                     <Row>
                         <Col>
-                            <Forms_Format onInformationLevel={handleInformationLevel} onExportAsEvent={handleExportAsEvent} onExportAsDownload={handleExportAsDownload} />
+                            <Forms_Format onInformationLevel={handleInformationLevel} onExportAsEvent={handleExportAsEvent} onExportAsDownload={handleExportAsDownload} onExportFormat={handleExportFormat} />
                         </Col>
                         <Col>
                             <Forms_Data onInformationChange={handleInformation} />
@@ -216,15 +245,13 @@ function DownloadModal(props) {
                             <Forms_Download onFileNameChange={handleFilename} />
                         </Col>
                     </Row>
-
-
                 </Modal.Body>
                 <Modal.Footer>
                     <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-uniqueId`}>
                         Downloads a snapshot of the current process as SVG.
                     </Tooltip>}>
                         <Button variant="secondary" onClick={() => { downloadSnapshot() }}>
-                            <FontAwesomeIcon icon={faFileImage} size="lg" />
+                            <FontAwesomeIcon icon="file-image" size="lg" />
                         </Button>
                     </OverlayTrigger>
 
@@ -232,30 +259,56 @@ function DownloadModal(props) {
                         Export
                     </Tooltip>}>
                         <Button variant="secondary" onClick={() => { go() }}>
-                            <FontAwesomeIcon icon={faPaperPlane} size="lg" />
+                            <FontAwesomeIcon icon="paper-plane" size="lg" />
                         </Button>
                     </OverlayTrigger>
-
                 </Modal.Footer>
             </Modal>
         </div>
     );
-};
+});
 
-function Forms_Format(props) {
+const Forms_Format = memo(function Forms_Format(props) {
     function handleInformationLevelChange(e) {
         props.onInformationLevel(e.target.value);
-    };
+    }
     function handleExportAsDownloadChange(e) {
         props.onExportAsDownload(e.target.checked);
     }
     function handleExportAsEventChange(e) {
         props.onExportAsEvent(e.target.checked);
     }
+    function handleExportFormatChange(e) {
+        props.onExportFormat(e.target.value);
+    }
     return (
         <Card>
             <Card.Header as="h5">Format</Card.Header>
             <Card.Body>
+                <fieldset>
+                    <Form.Group as={Row} onChange={(e) => { handleExportFormatChange(e) }}>
+                        <Form.Label as="legend" column sm={4}>
+                            <h6>File Format</h6>
+                        </Form.Label>
+                        <Col sm={6}>
+                            <Form.Check
+                                type="radio"
+                                label="JSON"
+                                name="exportFormat"
+                                id="formatJSON"
+                                value="json"
+                                defaultChecked
+                            />
+                            <Form.Check
+                                type="radio"
+                                label="XML"
+                                name="exportFormat"
+                                id="formatXML"
+                                value="xml"
+                            />
+                        </Col>
+                    </Form.Group>
+                </fieldset>
                 <fieldset>
                     <Form.Group as={Row} onChange={(e) => { handleInformationLevelChange(e) }}>
                         <Form.Label as="legend" column sm={4}>
@@ -268,7 +321,7 @@ function Forms_Format(props) {
                                 name="informationLevel"
                                 id="informationLevel1"
                                 value="1"
-
+                                defaultChecked
                             />
                             <Form.Check
                                 type="radio"
@@ -292,7 +345,6 @@ function Forms_Format(props) {
                                 name="export"
                                 id="export1"
                                 onChange={(e) => { handleExportAsEventChange(e) }}
-
                             />
                             <Form.Check
                                 type="checkbox"
@@ -306,17 +358,14 @@ function Forms_Format(props) {
                 </fieldset>
             </Card.Body>
         </Card>
-
-
     )
-}
+});
 
-function Forms_Data(props) {
+const Forms_Data = memo(function Forms_Data(props) {
     function handleChange(e) {
         props.onInformationChange(e.target.id)
     }
     return (
-
         <Card>
             <Card.Header as="h5">Data</Card.Header>
             <Card.Body>
@@ -332,7 +381,6 @@ function Forms_Data(props) {
                                 name="information"
                                 id="information1"
                                 onChange={(e) => handleChange(e)}
-
                             />
                             <Form.Check
                                 type="radio"
@@ -340,7 +388,6 @@ function Forms_Data(props) {
                                 name="information"
                                 id="information2"
                                 onChange={(e) => handleChange(e)}
-
                             />
                             <Form.Check
                                 type="radio"
@@ -352,26 +399,23 @@ function Forms_Data(props) {
                         </Col>
                     </Form.Group>
                 </fieldset>
-
             </Card.Body>
         </Card>
     )
-}
+});
 
-function Forms_Event(props) {
+const Forms_Event = memo(function Forms_Event(props) {
     function handleEventNameChange(e) {
         props.onEventnameChange(e.target.value)
     }
 
     return (
-
         <Card>
             <Card.Header as="h5">Event</Card.Header>
             <Card.Body>
                 <Card.Text>
                     The desired information will be sent to interested applications via the event bus.
-                        </Card.Text>
-
+                </Card.Text>
                 <Form>
                     <Form.Group as={Row} controlId="formEvent">
                         <Form.Label as="legend" column sm={4}><h6>Eventname</h6></Form.Label>
@@ -382,12 +426,10 @@ function Forms_Event(props) {
                 </Form>
             </Card.Body>
         </Card>
-
-
     )
-}
+});
 
-function Forms_Download(props) {
+const Forms_Download = memo(function Forms_Download(props) {
     function handleFilenameChange(e) {
         props.onFileNameChange(e.target.value);
     }
@@ -406,8 +448,4 @@ function Forms_Download(props) {
             </Card.Body>
         </Card>
     )
-}
-
-
-
-
+});

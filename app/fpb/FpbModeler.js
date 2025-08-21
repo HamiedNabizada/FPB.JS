@@ -26,7 +26,6 @@ import {
 
 import KeyboardMoveModule from 'diagram-js/lib/navigation/keyboard-move';
 import MoveCanvasModule from 'diagram-js/lib/navigation/movecanvas';
-import TouchModule from 'diagram-js/lib/navigation/touch';
 import ZoomScrollModule from 'diagram-js/lib/navigation/zoomscroll';
 import AlignElementsModule from 'diagram-js/lib/features/align-elements';
 import AutoScrollModule from 'diagram-js/lib/features/auto-scroll';
@@ -104,7 +103,6 @@ FpbModeler.prototype._init = function (container, moddle, options) {
 FpbModeler.prototype._modules = [
     KeyboardMoveModule,
     MoveCanvasModule,
-    TouchModule,
     ZoomScrollModule,
     AlignElementsModule,
     AutoScrollModule,
