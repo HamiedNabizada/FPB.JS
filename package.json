@@ -1,72 +1,68 @@
 {
   "name": "fpbjs",
   "version": "1.0.0",
-  "description": "JavaScript library for creating formalized process descriptions according to VDI/VDE 3682 standard. Provides both programmatic API and web application.",
+  "description": "JavaScript library for creating formalized process descriptions according to VDI/VDE 3682. Includes both a complete standalone web application and React library for integration.",
   "main": "dist/fpbjs.js",
   "module": "dist/fpbjs.esm.js",
-  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/fpbjs.esm.js",
-      "require": "./dist/fpbjs.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./web": "./dist/web/index.html"
+      "require": "./dist/fpbjs.js"
+    }
   },
   "files": [
-    "dist",
+    "dist/",
     "README.md",
     "LICENSE"
   ],
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "npm run build:lib && npm run build:web",
+    "build:lib": "webpack --config webpack.lib.config.js",
+    "build:web": "webpack --config webpack.config.js",
+    "dev": "webpack-dev-server --config webpack.config.js --open",
+    "analyze": "webpack --config webpack.lib.config.js --analyze"
+  },
   "keywords": [
     "fpb",
     "vdi-3682",
     "process-modeling",
     "diagram",
-    "formalized-process-description",
-    "modeling",
-    "process-flow",
+    "react",
+    "javascript",
+    "visualization",
+    "workflow",
+    "process-description",
     "engineering"
   ],
-  "scripts": {
-    "build": "npm run build:lib && npm run build:web",
-    "build:lib": "webpack --config webpack.lib.config.js",
-    "build:web": "webpack --config webpack.config.js",
-    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist",
-    "dev": "webpack-dev-server --static public --open --host 0.0.0.0",
-    "dev-local": "webpack-dev-server --static public --open",
-    "start": "npm run dev",
-    "analyze": "webpack --mode production --analyze",
-    "prepare": "npm run build",
-    "test": "echo \"No tests specified\" && exit 0",
-    "version": "npm run build",
-    "pack:local": "npm pack"
-  },
+  "author": "Hamied Nabizada",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/HamiedNabizada/FPB.JS.git"
   },
-  "author": "Hamied Nabizada",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/HamiedNabizada/FPB.JS/issues"
   },
   "homepage": "https://github.com/HamiedNabizada/FPB.JS#readme",
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
+  },
   "devDependencies": {
     "@babel/core": "^7.26.0",
     "@babel/preset-env": "^7.26.0",
-    "copy-webpack-plugin": "^11.0.0",
-    "npm-run-all": "^4.1.5",
-    "webpack": "^5.101.2",
-    "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.2.2",
     "@babel/preset-react": "^7.26.3",
     "babel-loader": "^9.2.1",
+    "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^7.1.2",
-    "mini-css-extract-plugin": "^2.9.2",
+    "html-webpack-plugin": "^5.6.3",
+    "npm-run-all": "^4.1.5",
     "style-loader": "^4.0.0",
+    "webpack": "^5.101.2",
     "webpack-bundle-analyzer": "^4.10.2",
-    "html-webpack-plugin": "^5.6.3"
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.2.2"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.0.0",
@@ -80,10 +76,8 @@
     "inherits": "^2.0.4",
     "moddle": "^7.2.0",
     "moddle-xml": "^11.0.0",
-    "react": "^18.3.1",
     "react-bootstrap": "^2.10.10",
     "react-collapse": "^5.1.1",
-    "react-dom": "^18.3.1",
     "react-simple-tree-menu": "^1.1.18",
     "uuid": "^11.1.0"
   }

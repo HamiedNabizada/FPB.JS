@@ -82,7 +82,7 @@ module.exports = (env, argv) => {
       }),
       new CopyWebpackPlugin({
         patterns: [
-          { from: '**/*.css', context: 'app', to: '.' },
+          { from: '**/*.css', context: 'app', to: '../css/' },
           { from: 'favicon.*', context: 'app', to: '.' }
         ]
       }),
