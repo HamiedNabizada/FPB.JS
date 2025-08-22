@@ -1,59 +1,84 @@
 {
   "name": "fpbjs",
-  "version": "0.1.0",
-  "description": "Graphical tool used for formalized process description according to VDI/VDE 3682",
-  "main": "app/app.js",
-  "scripts": {
-    "all": "run-s build",
-    "build": "webpack --mode production",
-    "dev": "webpack-dev-server --content-base=public --open --host 0.0.0.0",
-    "dev-local": "webpack-dev-server --content-base=public --open",
-    "start": "run-s dev",
-    "starttest": "webpack-dev-server --open --watch --host 0.0.0.0"
+  "version": "1.0.2",
+  "description": "JavaScript library for creating formalized process descriptions according to VDI/VDE 3682. Includes both a complete standalone web application and React library for integration.",
+  "main": "dist/fpbjs.js",
+  "module": "dist/fpbjs.esm.js",
+  "exports": {
+    ".": {
+      "import": "./dist/fpbjs.esm.js",
+      "require": "./dist/fpbjs.js"
+    }
   },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "npm run build:lib && npm run build:web",
+    "build:lib": "webpack --config webpack.lib.config.js",
+    "build:web": "webpack --config webpack.config.js",
+    "dev": "webpack-dev-server --config webpack.config.js --open",
+    "analyze": "webpack --config webpack.lib.config.js --analyze"
+  },
+  "keywords": [
+    "fpb",
+    "vdi-3682",
+    "process-modeling",
+    "diagram",
+    "react",
+    "javascript",
+    "visualization",
+    "workflow",
+    "process-description",
+    "engineering"
+  ],
+  "author": "Hamied Nabizada",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/HamiedNabizada/FPB.JS.git"
   },
-  "author": "Hamied Nabizada",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/HamiedNabizada/FPB.JS/issues"
   },
   "homepage": "https://github.com/HamiedNabizada/FPB.JS#readme",
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
+  },
   "devDependencies": {
-    "@babel/core": "^7.4.4",
-    "@babel/preset-env": "^7.4.4",
-    "copy-webpack-plugin": "^5.1.1",
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.26.3",
+    "babel-loader": "^9.2.1",
+    "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^7.1.2",
+    "html-webpack-plugin": "^5.6.3",
     "npm-run-all": "^4.1.5",
-    "webpack": "^4.30.0",
-    "webpack-cli": "^3.3.1",
-    "webpack-dev-server": "^3.3.1",
-    "@babel/plugin-transform-react-jsx": "^7.3.0",
-    "babel-loader": "^8.0.5",
-    "css-loader": "^2.1.0",
-    "file-loader": "^3.0.1",
-    "raw-loader": "^1.0.0",
-    "style-loader": "^0.23.1"
+    "style-loader": "^4.0.0",
+    "webpack": "^5.101.2",
+    "webpack-bundle-analyzer": "^4.10.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.2.2"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^1.2.25",
-    "@fortawesome/free-solid-svg-icons": "^5.11.2",
-    "@fortawesome/react-fontawesome": "^0.1.6",
-    "bootstrap": "^4.3.1",
-    "diagram-js": "^5.0.2",
-    "diagram-js-direct-editing": "^1.5.0",
+    "@fortawesome/fontawesome-svg-core": "^7.0.0",
+    "@fortawesome/free-solid-svg-icons": "^7.0.0",
+    "@fortawesome/react-fontawesome": "^0.2.3",
+    "bootstrap": "^5.3.7",
+    "diagram-js": "^15.3.0",
+    "diagram-js-direct-editing": "^3.2.0",
     "downloadjs": "^1.4.7",
-    "ids": "^0.2.2",
-    "inherits": "^2.0.3",
-    "moddle": "^4.1.0",
-    "moddle-xml": "^7.5.0",
-    "react": "^16.10.2",
-    "react-bootstrap": "^1.0.0-beta.14",
-    "react-collapse": "^5.0.0",
-    "react-dom": "^16.10.2",
-    "react-simple-tree-menu": "^1.1.7",
-    "reactstrap": "^8.0.1",
-    "uuid": "^3.3.3"
+    "ids": "^1.0.5",
+    "inherits": "^2.0.4",
+    "moddle": "^7.2.0",
+    "moddle-xml": "^11.0.0",
+    "react-bootstrap": "^2.10.10",
+    "react-collapse": "^5.1.1",
+    "react-simple-tree-menu": "^1.1.18",
+    "uuid": "^11.1.0"
   }
 }

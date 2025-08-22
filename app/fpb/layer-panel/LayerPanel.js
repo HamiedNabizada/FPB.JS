@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import Button from 'react-bootstrap/Button';
 
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -19,208 +19,202 @@ import {
     remove as collectionRemove
 } from 'diagram-js/lib/util/Collections';
 
+
 // Icons
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFolder, faFolderOpen, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 
 import './LayerPanel.css'
 
+const LayerPanel = ({ modeler, config }) => {
+    const [selectedProcess, setSelectedProcess] = useState(null);
+    const [processes, setProcesses] = useState([]);
+    const [isOpenedLayerPanel, setIsOpenedLayerPanel] = useState(false);
+    const [isOpenedOptions, setIsOpenedOptions] = useState(false);
 
-
-export default class LayerPanel extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            selectedProcess: null,
-            processes: [],
-            isOpenedLayerPanel: false,
-            isOpenedOptions: false
-        };
-    };
-    componentDidMount() {
-        const {
-            modeler,
-            config
-        } = this.props;
+    useEffect(() => {
         modeler.on('layerPanel.newProcess', (e) => {
-            const {
-                selectedProcess,
-                processes
-            } = this.state;
-            collectionAdd(processes, e.newProcess);
-            this.setState({
-                selectedProcess: e.newProcess,
-                processes: processes
-            })
+            setProcesses(prevProcesses => {
+                const newProcesses = [...prevProcesses];
+                collectionAdd(newProcesses, e.newProcess);
+                return newProcesses;
+            });
+            setSelectedProcess(e.newProcess);
         });
 
         modeler.on('layerPanel.processDeleted', (e) => {
-            const {
-                processes
-            } = this.state;
-            collectionRemove(processes, e.deletedProcess);
-            this.setState({
-                processes: processes
-            })
+            setProcesses(prevProcesses => {
+                const newProcesses = [...prevProcesses];
+                collectionRemove(newProcesses, e.deletedProcess);
+                return newProcesses;
+            });
         });
 
         modeler.on('layerPanel.processSwitched', (e) => {
-            this.setState({
-                selectedProcess: e.selectedProcess
-            })
+            setSelectedProcess(e.selectedProcess);
         });
 
-    };
+        return () => {
+            modeler.off('layerPanel.newProcess');
+            modeler.off('layerPanel.processDeleted');
+            modeler.off('layerPanel.processSwitched');
+        };
+    }, [modeler]);
 
 
-    render() {
-        const {
-            modeler,
-            config
-        } = this.props;
+    const [selectedElements, setSelectedElements] = useState([]);
 
-        const {
-            selectedProcess,
-            processes,
-            isOpenedLayerPanel,
-            isOpenedOptions
-        } = this.state;
+    useEffect(() => {
+        const handleSelectionChanged = (e) => {
+            setSelectedElements(e.newSelection);
+        };
 
+        modeler.on('selection.changed', handleSelectionChanged);
 
-        var selectedElements;
-        modeler.on('selection.changed', (e) => {
-            selectedElements = e.newSelection;
-        });
+        return () => {
+            modeler.off('selection.changed', handleSelectionChanged);
+        };
+    }, [modeler]);
 
-        var nodeLogic = {
-            openNodes: [],
-            activeKey: null,
+    const switchProcess = useCallback((process) => {
+        const modeling = modeler.get('modeling');
+        if (selectedProcess && process.id === selectedProcess.id) {
+            return;
         }
+        modeling.switchProcess(process);
+    }, [modeler, selectedProcess]);
 
-        function switchProcess(process) {
-            const modeling = modeler.get('modeling');
-            if (process.id === selectedProcess.id) {
-                return;
-            }
-            modeling.switchProcess(process);
+    const getNodeLogic = useCallback(() => {
+        if (!selectedProcess) return { openNodes: [], activeKey: null };
+
+        let tmp = selectedProcess;
+        let structure = [];
+        while (!(is(tmp, 'fpb:Project'))) {
+            structure.unshift(tmp.id);
+            tmp = tmp.businessObject.parent;
         }
-
-        function getNodeLogic() {
-            let tmp = selectedProcess;
-            let structure = [];
-            while (!(is(tmp, 'fpb:Project'))) {
-                structure.unshift(tmp.id)
-                tmp = tmp.businessObject.parent;
-
-            }
-            let openNodes = []
-            let entry = structure[0];
-            openNodes.push(entry)
-            for (let i = 1; i < structure.length; i++) {
-                entry += '/' + structure[i]
-                openNodes.push(entry)
-            }
-            nodeLogic.openNodes = openNodes;
-            nodeLogic.activeKey = openNodes[openNodes.length - 1];
-
+        let openNodes = [];
+        let entry = structure[0];
+        openNodes.push(entry);
+        for (let i = 1; i < structure.length; i++) {
+            entry += '/' + structure[i];
+            openNodes.push(entry);
         }
+        return {
+            openNodes: openNodes,
+            activeKey: openNodes[openNodes.length - 1]
+        };
+    }, [selectedProcess]);
 
-        function createTreeStructure(parent) {
-            let nodes = [];
-            processes.forEach((process) => {
-                if (process.businessObject.parent == parent) {
-                    let name;
-                    if (process.businessObject.isDecomposedProcessOperator != null) {
-                        if (process.businessObject.isDecomposedProcessOperator.name) {
-                            name = process.businessObject.isDecomposedProcessOperator.name;
-                            if (name.length > 10) {
-                                name = name.substring(0, 10) + "...";
-                            }
-
-                        } else {
-                            name = 'unnamed'
+    const createTreeStructure = useCallback((parent) => {
+        let nodes = [];
+        processes.forEach((process) => {
+            if (process.businessObject.parent === parent) {
+                let name;
+                if (process.businessObject.isDecomposedProcessOperator != null) {
+                    if (process.businessObject.isDecomposedProcessOperator.name) {
+                        name = process.businessObject.isDecomposedProcessOperator.name;
+                        if (name.length > 10) {
+                            name = name.substring(0, 10) + "...";
                         }
+                    } else {
+                        name = 'unnamed';
                     }
-                    nodes.push({
+                }
+                nodes.push({
+                    key: process.id,
+                    label: name,
+                    process: process,
+                    nodes: createTreeStructure(process)
+                });
+            }
+        });
+        return nodes;
+    }, [processes]);
+
+    const renderLayerOverview = useCallback(() => {
+        if (processes.length > 0) {
+            const treeData = [];
+            let superProcess;
+            processes.forEach((process) => {
+                if (is(process.businessObject.parent, 'fpb:Project')) {
+                    superProcess = {
                         key: process.id,
-                        label: name,
+                        label: process.businessObject.parent.name,
                         process: process,
                         nodes: createTreeStructure(process)
-                    })
+                    };
+                    collectionAdd(treeData, superProcess);
                 }
-            })
-            return nodes;
-        }
-
-
-        function renderLayerOverview() {
-            if (processes.length > 0) {
-                const treeData = [];
-                let superProcess;
-                processes.forEach((process) => {
-                    if (is(process.businessObject.parent, 'fpb:Project')) {
-                        superProcess = {
-                            key: process.id,
-                            label: process.businessObject.parent.name,
-                            process: process,
-                            nodes: createTreeStructure(process)
-                        }
-                        collectionAdd(treeData, superProcess);
-                    }
-                })
-                getNodeLogic();
-                return (<TreeMenu data={treeData}
+            });
+            const nodeLogic = getNodeLogic();
+            return (
+                <TreeMenu 
+                    data={treeData}
                     debounceTime={125}
                     hasSearch
                     initialOpenNodes={nodeLogic.openNodes}
                     activeKey={nodeLogic.activeKey}
                     onClickItem={(e) => {
-                        switchProcess(e.process)
+                        switchProcess(e.process);
                     }}
                     resetOpenNodesOnDataUpdate={false}>
-                </TreeMenu>)
-            }
-            return (<div></div>)
-        };
-        let tooltipsOptions = 'Show Options';
-        if(isOpenedOptions){
-            tooltipsOptions = 'Hide Options';
+                </TreeMenu>
+            );
         }
-        let isOpenedLayerButton = <FontAwesomeIcon icon={faFolder} size="lg" />
-        let tooltipsTextLayer = 'Open Process Overview';
-        if (isOpenedLayerPanel) {
-            isOpenedLayerButton = <FontAwesomeIcon icon={faFolderOpen} size="lg" />
-            tooltipsTextLayer = 'Close Process Overview';
-        };
+        return <div></div>;
+    }, [processes, createTreeStructure, getNodeLogic, switchProcess]);
 
+    const tooltipsOptions = isOpenedOptions ? 'Hide Options' : 'Show Options';
+    const isOpenedLayerButton = isOpenedLayerPanel ? 
+        <FontAwesomeIcon icon="folder-open" size="lg" /> : 
+        <FontAwesomeIcon icon="folder" size="lg" />;
+    const tooltipsTextLayer = isOpenedLayerPanel ? 'Close Process Overview' : 'Open Process Overview';
 
-        return (
-            <div className="layerPanel">
-                <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId1`}>
-                    {tooltipsOptions}
-                </Tooltip>}>
-                    <Button onClick={() => this.setState({ isOpenedOptions: !isOpenedOptions })} variant="secondary-outline"><FontAwesomeIcon icon={faEllipsisV} size="lg" /></Button>
-                </OverlayTrigger>
-                <Collapse isOpened={isOpenedOptions}>
-                        <Import modeler={modeler} />
-                        <DownloadOptions modeler={modeler} processes={processes} selectedProcess={selectedProcess} selectedElements={selectedElements} />       
-                </Collapse>
-                {processes.length > 1 && <div>
+    return (
+        <div className="layerPanel">
+            <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId1`}>
+                {tooltipsOptions}
+            </Tooltip>}>
+                <Button 
+                    onClick={() => setIsOpenedOptions(!isOpenedOptions)} 
+                    variant="secondary-outline"
+                >
+                    <FontAwesomeIcon icon="ellipsis-vertical" size="lg" />
+                </Button>
+            </OverlayTrigger>
+            <Collapse isOpened={isOpenedOptions}>
+                <Import modeler={modeler} />
+                <DownloadOptions 
+                    modeler={modeler} 
+                    processes={processes} 
+                    selectedProcess={selectedProcess} 
+                    selectedElements={selectedElements} 
+                />       
+            </Collapse>
+            {processes.length > 1 && (
+                <div>
                     <div className="layerPanel-ProcessOverview-Config">
                         <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId`}>
                             {tooltipsTextLayer}
                         </Tooltip>}>
-                            <Button id="openLayerButton" variant="secondary-outline" onClick={() => this.setState({ isOpenedLayerPanel: !isOpenedLayerPanel })}>{isOpenedLayerButton}</Button>
+                            <Button 
+                                id="openLayerButton" 
+                                variant="secondary-outline" 
+                                onClick={() => setIsOpenedLayerPanel(!isOpenedLayerPanel)}
+                            >
+                                {isOpenedLayerButton}
+                            </Button>
                         </OverlayTrigger>
                     </div>
                     <Collapse isOpened={isOpenedLayerPanel}>
-                        <div className="layerPanel-ProcessOverview-Content" >
+                        <div className="layerPanel-ProcessOverview-Content">
                             {renderLayerOverview()}
                         </div>
                     </Collapse>
                 </div>
-                }
-            </div>
-        );
-    }
+            )}
+        </div>
+    );
 };
+
+export default memo(LayerPanel);

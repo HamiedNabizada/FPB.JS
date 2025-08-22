@@ -29,7 +29,7 @@ FpbFactory.prototype._ensureId = function (element) {
         //element.id = this._model.ids.nextPrefixed(prefix, element);
 
         // UUID4 -> Random UUID ( https://www.npmjs.com/package/uuid )
-        const uuidv4 = require('uuid/v4');
+        const { v4: uuidv4 } = require('uuid');
         element.id = uuidv4();
     }
 };

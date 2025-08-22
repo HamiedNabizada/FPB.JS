@@ -4,7 +4,7 @@ import {
     assign
   } from 'min-dash';
   
-  import Moddle from 'moddle';
+  import { Moddle } from 'moddle';
     
   export default function FpbjsModdle(packages, options) {
     Moddle.call(this, packages, options);

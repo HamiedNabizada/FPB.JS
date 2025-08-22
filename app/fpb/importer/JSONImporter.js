@@ -13,17 +13,33 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
     this._fpbFactory = fpbFactory;
     this._elementFactory = elementFactory;
     this._processes = new Array();
+    
+    // Error handling function
+    this._showError = (message, details = null) => {
+        this._eventBus.fire('import.error', { message, details });
+    };
 
     this._eventBus.on('FPBJS.import', (event) => {
-        let data = event.data;
-        let project = this.constructProjectDefinition(data);
-        if (project) {
-            this.buildProcesses(data, project);
-            this._eventBus.fire('dataStore.addedProjectDefinition', {
-                projectDefinition: project
-            })
+        try {
+            let data = event.data;
+            let project = this.constructProjectDefinition(data);
+            if (!project) {
+                // Project construction failed, error already shown
+                return;
+            }
+            
+            if (project) {
+                const buildSuccess = this.buildProcesses(data, project);
+                if (!buildSuccess) {
+                    // Build process failed, error already shown
+                    return;
+                }
+                
+                this._eventBus.fire('dataStore.addedProjectDefinition', {
+                    projectDefinition: project
+                })
 
-            fpbjs.setProjectDefinition(project);
+                fpbjs.setProjectDefinition(project);
             this._processes.forEach(pr => {
                 if (typeof pr.process.businessObject.parent === 'string' || pr.process.businessObject.parent instanceof String) {
                     pr.process.businessObject.parent = this._processes.find(proc => {
@@ -76,8 +92,13 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                 })
                 modeling.switchProcess(project.entryPoint);
             }, 2000)
+            }
+        } catch (error) {
+            this._showError(
+                'Import failed unexpectedly',
+                `An unexpected error occurred during import: ${error.message}`
+            );
         }
-
     });
 
 }
@@ -104,8 +125,10 @@ JSONImporter.prototype.constructProjectDefinition = function (data) {
         }
     }
     if (!project) {
-        // TODO: ModelFeedback werfen
-        window.alert("no Project Defintion")
+        this._showError(
+            'Invalid file format: No project definition found',
+            'The imported file does not contain a valid FPB.JS project structure. Please ensure the file was exported from FPB.JS.'
+        );
     }
     return project;
 }
@@ -113,10 +136,11 @@ JSONImporter.prototype.constructProjectDefinition = function (data) {
 JSONImporter.prototype.buildProcesses = function (data, projectDefinition) {
     for (let process of data) {
         if (process.process && !process.elementVisualInformation) {
-            // VisualInformation fehlt
-            // TODO: ModelFeedback werfen
-            window.alert("noVisualInformation");
-            break;
+            this._showError(
+                'Incomplete data: Visual information missing',
+                `Process "${process.process.id}" is missing visual information required for proper display. The file may be corrupted or incomplete.`
+            );
+            return false; // Return false to indicate failure
         }
         else if (process.process && process.elementVisualInformation && process.elementDataInformation) {
             let pro = process.process;
@@ -145,12 +169,18 @@ JSONImporter.prototype.buildProcesses = function (data, projectDefinition) {
             })
         }
     }
+    return true; // Return true to indicate success
 }
 
 JSONImporter.prototype.filterElements = function (id, eVI, eDI, process, parent, no) {
     let dataInformation;
     let visualInformation;
     let type;
+    
+    console.log(`JSONImporter: filterElements - Looking for element ID: ${id}`);
+    console.log(`JSONImporter: filterElements - Available eDI IDs:`, eDI.map(el => el.id));
+    console.log(`JSONImporter: filterElements - Available eVI IDs:`, eVI.map(el => el.id));
+    
     for (let el of eDI) {
         if (id === el.id) {
             dataInformation = el;
@@ -166,6 +196,10 @@ JSONImporter.prototype.filterElements = function (id, eVI, eDI, process, parent,
             break;
         }
     };
+    
+    console.log(`JSONImporter: filterElements - Found dataInformation:`, dataInformation ? 'YES' : 'NO');
+    console.log(`JSONImporter: filterElements - Found visualInformation:`, visualInformation ? 'YES' : 'NO');
+    console.log(`JSONImporter: filterElements - Element type:`, type);
 
     if (type === 'fpb:SystemLimit') {
         this.buildSystemLimit(visualInformation, dataInformation, process, eVI, eDI, no);
@@ -198,6 +232,17 @@ JSONImporter.prototype.buildSystemLimit = function (vI, dI, process, eVI, eDI, n
 }
 
 JSONImporter.prototype.buildSystemLimitShapes = function (vI, dI, process, systemLimit, no) {
+    console.log('JSONImporter: buildSystemLimitShapes called with:');
+    console.log('  vI (visual):', vI);
+    console.log('  dI (data):', dI);
+    console.log('  vI is undefined?', vI === undefined);
+    console.log('  dI is undefined?', dI === undefined);
+    
+    if (vI === undefined) {
+        console.log('JSONImporter: ERROR - vI is undefined!');
+        throw new Error('Visual information is undefined in buildSystemLimitShapes');
+    }
+    
     let shape = this._elementFactory.create('shape', {
         type: vI.type,
         id: vI.id,

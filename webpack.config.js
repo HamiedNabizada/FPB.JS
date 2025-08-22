@@ -1,55 +1,104 @@
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const path = require('path');
 
-module.exports = {
-  entry: {
-    bundle: ['./app/app.js']
-  },
-  output: {
-    path: __dirname + '/public',
-    filename: 'app.js'
-  },
-  module: {
-    rules: [
-      {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            plugins: [ '@babel/plugin-transform-react-jsx'  ]
-          }
-        }
-      },
-      {
-        oneOf: [
-          {
-            test: /\.css$/,
-            use: [
-              { loader: 'style-loader' },
-              { loader: 'css-loader' }
-            ]
-          },
-          {
-            test: /\.fpbjs$/,
-            use: 'raw-loader',
-          },
-          {
-            exclude: /\.(js|html|json)$/,
-            loader: 'file-loader',
+module.exports = (env, argv) => {
+  const isProduction = argv.mode === 'production';
+  const shouldAnalyze = argv.analyze;
+
+  return {
+    entry: {
+      bundle: ['./app/app.js']
+    },
+    output: {
+      path: path.join(__dirname, 'dist/web'),
+      filename: isProduction ? '[name].[contenthash].js' : '[name].js',
+      chunkFilename: isProduction ? '[name].[contenthash].chunk.js' : '[name].chunk.js',
+      clean: true
+    },
+    module: {
+      rules: [
+        {
+          test: /\.js$/,
+          exclude: /node_modules/,
+          use: {
+            loader: 'babel-loader',
             options: {
-              name: 'static/media/[name].[hash:8].[ext]',
+              presets: ['@babel/preset-env', '@babel/preset-react']
             }
           }
-        ]
+        },
+        {
+          test: /\.css$/,
+          use: [
+            'style-loader',
+            'css-loader'
+          ]
+        },
+        {
+          test: /\.fpbjs$/,
+          type: 'asset/source'
+        },
+        {
+          test: /\.(png|jpe?g|gif|svg|eot|ttf|woff|woff2)$/,
+          type: 'asset/resource',
+          generator: {
+            filename: 'static/media/[name].[hash:8][ext]'
+          }
+        }
+      ]
+    },
+    optimization: {
+      moduleIds: 'deterministic',
+      runtimeChunk: 'single',
+      splitChunks: {
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+          diagrams: {
+            test: /[\\/]node_modules[\\/](diagram-js|moddle|ids)[\\/]/,
+            name: 'diagrams',
+            chunks: 'all',
+            priority: 10,
+          },
+          react: {
+            test: /[\\/]node_modules[\\/](react|react-dom|react-bootstrap)[\\/]/,
+            name: 'react',
+            chunks: 'all',
+            priority: 20,
+          }
+        }
       }
-    ]
-  },
-  plugins: [
-    new CopyWebpackPlugin([
-      { from: '**/*', to: 'css', context: '../assets' },
-      { from: '**/*.{html,css}', context: 'app' }
-    ])
-  ],
-  mode: 'development',
-  devtool: 'source-map'
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        template: './app/index.html',
+        filename: 'index.html',
+        inject: 'body'
+      }),
+      new CopyWebpackPlugin({
+        patterns: [
+          { from: 'css/diagram-js.css', context: 'app', to: '../css/diagram-js.css' },
+          { from: 'css/fpbjs.css', context: 'app', to: '../css/fpbjs.css' },
+          { from: 'fpb/**/*.css', context: 'app', to: '../css/' },
+          { from: 'favicon.*', context: 'app', to: '.' }
+        ]
+      }),
+      ...(shouldAnalyze ? [new BundleAnalyzerPlugin()] : [])
+    ],
+    mode: isProduction ? 'production' : 'development',
+    devtool: isProduction ? 'source-map' : 'eval-source-map',
+    devServer: {
+      static: {
+        directory: path.join(__dirname, 'dist/web'),
+      },
+      compress: true,
+      port: 3001,
+      open: true
+    }
+  };
 };

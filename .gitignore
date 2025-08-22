@@ -1,3 +1,16 @@
 node_modules
 public
 package-lock.json
+
+# Temporary files (npm package development)
+tmp/
+
+# NPM package files
+dist/
+*.tgz
+
+# Build artifacts
+.cache/
+
+# Claude development files
+.claude/
