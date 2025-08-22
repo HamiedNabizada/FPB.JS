@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = (env, argv) => {
   const isProduction = argv.mode === 'production';
@@ -12,7 +13,6 @@ module.exports = (env, argv) => {
         filename: 'fpbjs.js',
         library: 'FpbJS',
         libraryTarget: 'umd',
-        libraryExport: 'default',
         globalObject: 'this',
         clean: false,
         chunkLoadingGlobal: 'webpackChunkFpbJS',
@@ -73,6 +73,27 @@ module.exports = (env, argv) => {
           root: 'ReactDOM'
         }
       },
+      plugins: [
+        new webpack.BannerPlugin({
+          banner: `
+// Node.js compatibility polyfills - must run before webpack runtime
+if (typeof global !== 'undefined' && typeof document === 'undefined') {
+  global.document = { baseURI: '' };
+  global.self = { location: { href: '' } };
+}`,
+          raw: true,
+          entryOnly: false
+        }),
+        new webpack.DefinePlugin({
+          'typeof document': JSON.stringify('undefined'),
+          'typeof window': JSON.stringify('undefined'), 
+          'typeof self': JSON.stringify('undefined'),
+          'document.baseURI': '(typeof document !== "undefined" ? document.baseURI : "")',
+          'self.location.href': '(typeof self !== "undefined" ? self.location.href : "")',
+          'document': '(typeof document !== "undefined" ? document : undefined)',
+          'self': '(typeof self !== "undefined" ? self : undefined)'
+        })
+      ],
       mode: isProduction ? 'production' : 'development',
       devtool: isProduction ? 'source-map' : 'eval-source-map'
     },
@@ -137,6 +158,27 @@ module.exports = (env, argv) => {
         'react': 'react',
         'react-dom': 'react-dom'
       },
+      plugins: [
+        new webpack.BannerPlugin({
+          banner: `
+// Node.js compatibility polyfills - must run before webpack runtime
+if (typeof global !== 'undefined' && typeof document === 'undefined') {
+  global.document = { baseURI: '' };
+  global.self = { location: { href: '' } };
+}`,
+          raw: true,
+          entryOnly: false
+        }),
+        new webpack.DefinePlugin({
+          'typeof document': JSON.stringify('undefined'),
+          'typeof window': JSON.stringify('undefined'), 
+          'typeof self': JSON.stringify('undefined'),
+          'document.baseURI': '(typeof document !== "undefined" ? document.baseURI : "")',
+          'self.location.href': '(typeof self !== "undefined" ? self.location.href : "")',
+          'document': '(typeof document !== "undefined" ? document : undefined)',
+          'self': '(typeof self !== "undefined" ? self : undefined)'
+        })
+      ],
       mode: isProduction ? 'production' : 'development',
       devtool: isProduction ? 'source-map' : 'eval-source-map'
     }
