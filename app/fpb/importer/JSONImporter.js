@@ -1,9 +1,19 @@
 import { is } from '../help/utils';
-
 import {
     add as collectionAdd,
     remove as collectionRemove
 } from 'diagram-js/lib/util/Collections';
+
+// Import our new utilities and constants
+import { FPB_TYPES, TYPE_GROUPS, IMPORT_TIMING, IMPORT_EVENTS } from './ImportConstants';
+import { 
+    ArrayUtils, 
+    TypeUtils, 
+    LookupUtils, 
+    VisualUtils, 
+    ValidationUtils 
+} from './ImportUtils';
+import { ErrorHandler } from './ImportErrors';
 
 export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFactory, elementFactory) {
     this._eventBus = eventBus;
@@ -12,46 +22,55 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
     this._fpbjs = fpbjs;
     this._fpbFactory = fpbFactory;
     this._elementFactory = elementFactory;
-    this._processes = new Array();
+    this._processes = [];
     
-    // Error handling function
+    // Initialize error handler with improved error handling
+    this._errorHandler = new ErrorHandler(eventBus);
+    
+    // Deprecated: Keep for backward compatibility but use ErrorHandler instead
     this._showError = (message, details = null) => {
-        this._eventBus.fire('import.error', { message, details });
+        this._eventBus.fire(IMPORT_EVENTS.IMPORT_ERROR, { message, details });
     };
 
-    this._eventBus.on('FPBJS.import', (event) => {
+    this._eventBus.on(IMPORT_EVENTS.IMPORT_REQUEST, (event) => {
         try {
-            let data = event.data;
-            if (!data || !Array.isArray(data)) {
-                console.error('JSONImporter: Invalid data structure - expected array');
+            const data = event.data;
+            
+            // Validate data structure using utilities
+            const dataValidation = ValidationUtils.validateImportData(data);
+            if (!dataValidation.isValid) {
+                this._errorHandler.handleDataStructureError(
+                    'Invalid import data structure',
+                    dataValidation.error
+                );
                 return;
             }
-            let project = this.constructProjectDefinition(data);
+            const project = this.constructProjectDefinition(data);
             if (!project) {
                 return;
             }
             
-            if (project) {
-                const buildSuccess = this.buildProcesses(data, project);
-                if (!buildSuccess) {
-                    return;
-                }
-                
-                this._eventBus.fire('dataStore.addedProjectDefinition', {
-                    projectDefinition: project
-                })
+            const buildSuccess = this.buildProcesses(data, project);
+            if (!buildSuccess) {
+                return;
+            }
+            
+            this._eventBus.fire(IMPORT_EVENTS.PROJECT_ADDED, {
+                projectDefinition: project
+            });
 
-                fpbjs.setProjectDefinition(project);
+            fpbjs.setProjectDefinition(project);
+            
             this._processes.forEach(pr => {
-                if (typeof pr.process.businessObject.parent === 'string' || pr.process.businessObject.parent instanceof String) {
+                if (TypeUtils.isStringLike(pr.process.businessObject.parent)) {
                     pr.process.businessObject.parent = this._processes.find(proc => {
                         return proc.id === pr.process.businessObject.parent;
                     }).process
                 };
                 if (pr.process.businessObject.consistsOfProcesses.length > 0) {
-                    let tmpArray = new Array();
+                    let tmpArray = [];
                     pr.process.businessObject.consistsOfProcesses.forEach((e) => {
-                        if (typeof e === 'string' || e instanceof String) {
+                        if (TypeUtils.isStringLike(e)) {
                             let subProcess = this._processes.find((sP) => {
                                 return sP.process.id === e;
                             }).process
@@ -80,25 +99,21 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
             setTimeout(() => {
                 this._processes.forEach((pr, index) => {
                     if (pr.process) {
-                        this._eventBus.fire('dataStore.newProcess', {
+                        this._eventBus.fire(IMPORT_EVENTS.NEW_PROCESS, {
                             newProcess: pr.process,
                             parentProcess: null
-                        })
+                        });
                         // Event feuern für LayerPanel
-                        this._eventBus.fire('layerPanel.newProcess', {
+                        this._eventBus.fire(IMPORT_EVENTS.LAYER_PANEL_NEW_PROCESS, {
                             newProcess: pr.process,
                             parentProcess: null
-                        })
+                        });
                     }
-                })
+                });
                 modeling.switchProcess(project.entryPoint);
-            }, 2000)
-            }
+            }, IMPORT_TIMING.UI_INITIALIZATION_DELAY);
         } catch (error) {
-            this._showError(
-                'Import failed unexpectedly',
-                `An unexpected error occurred during import: ${error.message}`
-            );
+            this._errorHandler.handleError(error);
         }
     });
 
@@ -114,61 +129,71 @@ JSONImporter.$inject = [
 
 
 JSONImporter.prototype.constructProjectDefinition = function (data) {
-    let project;
-    for (let dat of data) {
-        if (dat.$type && dat.$type === 'fpb:Project') {
-            project = this._fpbFactory.create('fpb:Project', {
-                name: dat.name,
-                targetNamespace: dat.targetNamespace,
-                entryPoint: dat.entryPoint
-            });
-            break;
-        }
-    }
-    if (!project) {
-        this._showError(
+    // Use utility for validation
+    const projectValidation = ValidationUtils.validateProjectDefinition(data);
+    if (!projectValidation.isValid) {
+        this._errorHandler.handleProjectDefinitionError(
             'Invalid file format: No project definition found',
             'The imported file does not contain a valid FPB.JS project structure. Please ensure the file was exported from FPB.JS.'
         );
+        return null;
     }
+
+    const projectData = projectValidation.project;
+    const project = this._fpbFactory.create(FPB_TYPES.PROJECT, {
+        name: projectData.name,
+        targetNamespace: projectData.targetNamespace,
+        entryPoint: projectData.entryPoint
+    });
+
     return project;
-}
+};
 
 JSONImporter.prototype.buildProcesses = function (data, projectDefinition) {
-    for (let process of data) {
-        if (process.process && !process.elementVisualInformation) {
-            this._showError(
+    for (const process of data) {
+        // Skip non-process entries
+        if (!process.process) {
+            continue;
+        }
+
+        // Validate process data completeness
+        const processValidation = ValidationUtils.validateProcessData(process);
+        if (!processValidation.isValid) {
+            this._errorHandler.handleVisualInformationError(
                 'Incomplete data: Visual information missing',
-                `Process "${process.process.id}" is missing visual information required for proper display. The file may be corrupted or incomplete.`
+                `Process "${process.process.id}" is missing ${processValidation.error}. The file may be corrupted or incomplete.`
             );
-            return false; // Return false to indicate failure
+            return false;
         }
-        else if (process.process && process.elementVisualInformation && process.elementDataInformation) {
-            let pro = process.process;
-            let eVI = process.elementVisualInformation;
-            let eDI = process.elementDataInformation;
 
-            let process_rootElement = this._elementFactory.create('root',
-                {
-                    type: 'fpb:Process',
-                    id: pro.id,
+        const pro = process.process;
+        const eVI = process.elementVisualInformation;
+        const eDI = process.elementDataInformation;
 
-                });
-            process_rootElement.businessObject.parent = pro.parent;
-            if (pro.id === projectDefinition.entryPoint) {
-                projectDefinition.entryPoint = process_rootElement;
-                process_rootElement.businessObject.parent = projectDefinition;
-            };
-
-            let no = this._processes.push({ id: pro.id, process: process_rootElement, updateElements: [] });
-            // Zunächst IDs im Process abspeichern
-            process_rootElement.businessObject.consistsOfProcesses = pro.consistsOfProcesses;
-            process_rootElement.businessObject.isDecomposedProcessOperator = pro.isDecomposedProcessOperator;
-
-            pro.elementsContainer.forEach((id) => {
-                this.filterElements(id, eVI, eDI, process_rootElement, process_rootElement, no);
-            })
+        const process_rootElement = this._elementFactory.create('root', {
+            type: FPB_TYPES.PROCESS,
+            id: pro.id,
+        });
+        
+        process_rootElement.businessObject.parent = pro.parent;
+        if (pro.id === projectDefinition.entryPoint) {
+            projectDefinition.entryPoint = process_rootElement;
+            process_rootElement.businessObject.parent = projectDefinition;
         }
+
+        const no = this._processes.push({ 
+            id: pro.id, 
+            process: process_rootElement, 
+            updateElements: [] 
+        });
+        
+        // Zunächst IDs im Process abspeichern
+        process_rootElement.businessObject.consistsOfProcesses = pro.consistsOfProcesses;
+        process_rootElement.businessObject.isDecomposedProcessOperator = pro.isDecomposedProcessOperator;
+
+        pro.elementsContainer.forEach((id) => {
+            this.filterElements(id, eVI, eDI, process_rootElement, process_rootElement, no);
+        });
     }
     return true; // Return true to indicate success
 }
@@ -227,9 +252,14 @@ JSONImporter.prototype.buildSystemLimit = function (vI, dI, process, eVI, eDI, n
 }
 
 JSONImporter.prototype.buildSystemLimitShapes = function (vI, dI, process, systemLimit, no) {
-    if (vI === undefined) {
-        console.error(`JSONImporter: Missing visual information for element ${dI?.id || 'unknown'} - using fallback position`);
-        vI = { x: 100 + Math.random() * 400, y: 100 + Math.random() * 300, width: 50, height: 50, type: dI ? dI.$type : 'unknown' };
+    if (!vI) {
+        this._errorHandler.logWarning(
+            `Missing visual information for element ${dI?.id || 'unknown'} - using fallback position`
+        );
+        vI = VisualUtils.createFallbackVisualInfo(
+            dI?.id || 'unknown', 
+            dI?.$type || 'unknown'
+        );
     }
     
     let shape = this._elementFactory.create('shape', {
@@ -386,21 +416,19 @@ JSONImporter.prototype.buildCharacteristics = function (bO, char) {
 
 JSONImporter.prototype.updateDepedencies = function (container, element) {
     if (!element || !element.businessObject) {
-        console.warn('JSONImporter: updateDepedencies called with invalid element');
+        this._errorHandler.logWarning('updateDepedencies called with invalid element');
         return;
     }
     
-    if (is(element, 'fpb:Flow')) {
+    if (is(element, FPB_TYPES.FLOW)) {
         let source;
         let target;
-        if (typeof element.businessObject.sourceRef === 'string' || element.businessObject.sourceRef instanceof String) {
+        if (TypeUtils.isStringLike(element.businessObject.sourceRef)) {
             source = container.find((el) => {
                 return el && el.id === element.businessObject.sourceRef
             });
             if (source && source.businessObject) {
-                if (!Array.isArray(source.businessObject.outgoing)) {
-                    source.businessObject.outgoing = [source.businessObject.outgoing];
-                };
+                source.businessObject.outgoing = ArrayUtils.ensureArray(source.businessObject.outgoing);
                 collectionRemove(source.businessObject.outgoing, element.id);
                 collectionAdd(source.businessObject.outgoing, element.businessObject);
                 element.businessObject.sourceRef = source.businessObject;
@@ -409,14 +437,12 @@ JSONImporter.prototype.updateDepedencies = function (container, element) {
             }
 
         };
-        if (typeof element.businessObject.targetRef === 'string' || element.businessObject.targetRef instanceof String) {
+        if (TypeUtils.isStringLike(element.businessObject.targetRef)) {
             target = container.find((el) => {
                 return el && el.id === element.businessObject.targetRef
             });
             if (target && target.businessObject) {
-                if (!Array.isArray(target.businessObject.incoming)) {
-                    target.businessObject.incoming = [target.businessObject.incoming];
-                }
+                target.businessObject.incoming = ArrayUtils.ensureArray(target.businessObject.incoming);
                 collectionRemove(target.businessObject.incoming, element.id);
                 collectionAdd(target.businessObject.incoming, element.businessObject);
                 element.businessObject.targetRef = target.businessObject;
@@ -426,7 +452,7 @@ JSONImporter.prototype.updateDepedencies = function (container, element) {
         };
         if (element.businessObject.inTandemWith) {
             element.businessObject.inTandemWith.forEach((tandemFlow) => {
-                if (typeof tandemFlow === 'string' || tandemFlow instanceof String) {
+                if (TypeUtils.isStringLike(tandemFlow)) {
                     let partner = container.find((partner) => {
                         if (partner.id === tandemFlow) {
                             collectionRemove(partner.businessObject.inTandemWith, element.id);
@@ -444,37 +470,32 @@ JSONImporter.prototype.updateDepedencies = function (container, element) {
             })
 
         }
-        if (source && is(source, 'fpb:State')) {
+        if (source && TYPE_GROUPS.STATES.some(type => is(source, type))) {
             collectionRemove(source.businessObject.isAssignedTo, target.businessObject.id);
             collectionAdd(source.businessObject.isAssignedTo, target.businessObject);
         }
-        if (target && is(target, 'fpb:State')) {
+        if (target && TYPE_GROUPS.STATES.some(type => is(target, type))) {
             collectionRemove(target.businessObject.isAssignedTo, source.businessObject.id);
             collectionAdd(target.businessObject.isAssignedTo, source.businessObject);
         }
-        if ((source && is(source, 'fpb:ProcessOperator')) || (target && is(target, 'fpb:ProcessOperator'))) {
-            if ((source && is(source, 'fpb:TechnicalResource')) || (target && is(target, 'fpb:TechnicalResource'))) {
+        if ((source && is(source, FPB_TYPES.PROCESS_OPERATOR)) || (target && is(target, FPB_TYPES.PROCESS_OPERATOR))) {
+            if ((source && is(source, FPB_TYPES.TECHNICAL_RESOURCE)) || (target && is(target, FPB_TYPES.TECHNICAL_RESOURCE))) {
                 if (source && source.businessObject) {
-                    if (!Array.isArray(source.businessObject.isAssignedTo)) {
-                        source.businessObject.isAssignedTo = [source.businessObject.isAssignedTo];
-                    }
+                    source.businessObject.isAssignedTo = ArrayUtils.ensureArray(source.businessObject.isAssignedTo);
                     collectionRemove(source.businessObject.isAssignedTo, target.businessObject.id);
                     collectionAdd(source.businessObject.isAssignedTo, target.businessObject);
                 }
                 if (target && target.businessObject) {
-                    if (!Array.isArray(target.businessObject.isAssignedTo)) {
-                        target.businessObject.isAssignedTo = [target.businessObject.isAssignedTo];
-                    }
+                    target.businessObject.isAssignedTo = ArrayUtils.ensureArray(target.businessObject.isAssignedTo);
                     collectionRemove(target.businessObject.isAssignedTo, source.businessObject.id);
                     collectionAdd(target.businessObject.isAssignedTo, source.businessObject);
                 }
             }
         }
     }
-    if (is(element, 'fpb:ProcessOperator')) {
+    if (is(element, FPB_TYPES.PROCESS_OPERATOR)) {
         if (element.businessObject.decomposedView) {
-
-            if (typeof element.businessObject.decomposedView === 'string' || element.businessObject.decomposedView instanceof String) {
+            if (TypeUtils.isStringLike(element.businessObject.decomposedView)) {
                 let process = this._processes.find((pr) => {
                     return pr.process.id === element.businessObject.decomposedView;
                 }).process;
