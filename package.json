@@ -74,6 +74,7 @@
     "downloadjs": "^1.4.7",
     "ids": "^1.0.5",
     "inherits": "^2.0.4",
+    "jsdom": "^26.1.0",
     "moddle": "^7.2.0",
     "moddle-xml": "^11.0.0",
     "react-bootstrap": "^2.10.10",

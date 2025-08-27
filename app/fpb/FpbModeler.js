@@ -366,7 +366,7 @@ FpbModeler.prototype.saveSVG = function (options, done) {
             defs + contents +
             '</svg>';
     } catch (e) {
-        console.log(e)
+        console.error('SVG generation failed:', e);
         err = e;
     }
 

@@ -11,7 +11,6 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import Container from 'react-bootstrap/Container';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import XMLExporter from '../../exporter/XMLExporter';
 
 const DownloadOptions = memo(({ modeler, processes, selectedProcess, selectedElements }) => {
     return (
@@ -68,7 +67,7 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
 
     const eventBus = modeler.get('eventBus');
     eventBus.on(eventName, (e) => {
-        console.log(e);
+        // Event listener for export events
     });
 
     function download(dataStr, fileExtension = exportFormat) {
@@ -100,8 +99,20 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                 return undefined;
             }
         }
+        
+        // Helper function to extract ID from various object structures
+        const extractId = (item) => {
+            if (typeof item === 'string') return item;
+            if (!item) return item;
+            // Check for different ID properties
+            return item.id || item.uniqueIdent || item.$id || item;
+        };
+        
         switch (name) {
             case 'entryPoint':
+                // Single reference - extract ID
+                return extractId(val);
+                
             case 'elementsContainer':
             case 'consistsOfStates':
             case 'consistsOfProcessOperator':
@@ -110,35 +121,35 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
             case 'isAssignedTo':
             case 'incoming':
             case 'outgoing':
+                // Array references - extract IDs from each element
                 if (Array.isArray(val)) {
-                    let arr = [];
-                    val.forEach((el) => {
-                        arr.push(el.id)
-                    })
-                    return arr;
+                    return val.map(el => extractId(el));
                 }
-                if (val.id) {
-                    return val.id;
-                }
+                return extractId(val);
+                
             case 'sourceRef':
             case 'targetRef':
             case 'decomposedView':
             case 'parent':
             case 'consistsOfSystemLimit':
-                return val.id;
+                // Single references - extract ID
+                return extractId(val);
+                
             case 'isDecomposedProcessOperator':
-                if (val === null) {
+                if (val === null || val === undefined) {
                     return null;
-                } else {
-                    return val.id;
                 }
+                return extractId(val);
+                
             case 'di':
             case 'children':
             case 'labels':
             case 'ProjectAssignment':
             case 'TemporaryFlowHint':
                 return undefined;
-            default: return val;
+                
+            default: 
+                return val;
         }
     }
 
@@ -164,20 +175,14 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
         }
 
         try {
-            console.log('DownloadOptions: Export data format:', typeof data);
-            console.log('DownloadOptions: Export data structure:', data);
-            console.log('DownloadOptions: Is array:', Array.isArray(data));
             
-            // Export based on format selection
+            // Export based on format selection (only JSON supported)
             if (exportFormat === 'json') {
                 dataEdited = JSON.stringify(data, replacer, 4);
                 contentType = "data:text/json;charset=utf-8,";
-            } else if (exportFormat === 'xml') {
-                const xmlExporter = new XMLExporter();
-                dataEdited = xmlExporter.exportToXML(data, { 
-                    informationLevel: informationLevel 
-                });
-                contentType = "data:text/xml;charset=utf-8,";
+            } else {
+                console.error('Unsupported export format:', exportFormat);
+                return;
             }
 
             dataStr = contentType + encodeURIComponent(dataEdited);
@@ -298,13 +303,6 @@ const Forms_Format = memo(function Forms_Format(props) {
                                 id="formatJSON"
                                 value="json"
                                 defaultChecked
-                            />
-                            <Form.Check
-                                type="radio"
-                                label="XML"
-                                name="exportFormat"
-                                id="formatXML"
-                                value="xml"
                             />
                         </Col>
                     </Form.Group>

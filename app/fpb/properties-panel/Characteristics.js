@@ -1,7 +1,6 @@
 import React from "react";
 
 export default function Characteristics(test) {
-    console.log(test)
     return (
         <div className="characteristics-properties" key={test.category.uniqueIdent}>
             <span>{test.category.uniqueIdent}</span>

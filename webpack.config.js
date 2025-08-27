@@ -93,9 +93,16 @@ module.exports = (env, argv) => {
     mode: isProduction ? 'production' : 'development',
     devtool: isProduction ? 'source-map' : 'eval-source-map',
     devServer: {
-      static: {
-        directory: path.join(__dirname, 'dist/web'),
-      },
+      static: [
+        {
+          directory: path.join(__dirname, 'dist/web'),
+          publicPath: '/'
+        },
+        {
+          directory: path.join(__dirname, 'app/css'),
+          publicPath: '/css'
+        }
+      ],
       compress: true,
       port: 3001,
       open: true

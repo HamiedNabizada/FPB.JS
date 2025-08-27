@@ -22,16 +22,18 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
     this._eventBus.on('FPBJS.import', (event) => {
         try {
             let data = event.data;
+            if (!data || !Array.isArray(data)) {
+                console.error('JSONImporter: Invalid data structure - expected array');
+                return;
+            }
             let project = this.constructProjectDefinition(data);
             if (!project) {
-                // Project construction failed, error already shown
                 return;
             }
             
             if (project) {
                 const buildSuccess = this.buildProcesses(data, project);
                 if (!buildSuccess) {
-                    // Build process failed, error already shown
                     return;
                 }
                 
@@ -76,8 +78,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
             })
             // Timeout notwendig, damit restliche Komponenten erst fertig geladen sind, bevor importiert wird.
             setTimeout(() => {
-
-                this._processes.forEach(pr => {
+                this._processes.forEach((pr, index) => {
                     if (pr.process) {
                         this._eventBus.fire('dataStore.newProcess', {
                             newProcess: pr.process,
@@ -177,9 +178,6 @@ JSONImporter.prototype.filterElements = function (id, eVI, eDI, process, parent,
     let visualInformation;
     let type;
     
-    console.log(`JSONImporter: filterElements - Looking for element ID: ${id}`);
-    console.log(`JSONImporter: filterElements - Available eDI IDs:`, eDI.map(el => el.id));
-    console.log(`JSONImporter: filterElements - Available eVI IDs:`, eVI.map(el => el.id));
     
     for (let el of eDI) {
         if (id === el.id) {
@@ -197,9 +195,6 @@ JSONImporter.prototype.filterElements = function (id, eVI, eDI, process, parent,
         }
     };
     
-    console.log(`JSONImporter: filterElements - Found dataInformation:`, dataInformation ? 'YES' : 'NO');
-    console.log(`JSONImporter: filterElements - Found visualInformation:`, visualInformation ? 'YES' : 'NO');
-    console.log(`JSONImporter: filterElements - Element type:`, type);
 
     if (type === 'fpb:SystemLimit') {
         this.buildSystemLimit(visualInformation, dataInformation, process, eVI, eDI, no);
@@ -232,15 +227,9 @@ JSONImporter.prototype.buildSystemLimit = function (vI, dI, process, eVI, eDI, n
 }
 
 JSONImporter.prototype.buildSystemLimitShapes = function (vI, dI, process, systemLimit, no) {
-    console.log('JSONImporter: buildSystemLimitShapes called with:');
-    console.log('  vI (visual):', vI);
-    console.log('  dI (data):', dI);
-    console.log('  vI is undefined?', vI === undefined);
-    console.log('  dI is undefined?', dI === undefined);
-    
     if (vI === undefined) {
-        console.log('JSONImporter: ERROR - vI is undefined!');
-        throw new Error('Visual information is undefined in buildSystemLimitShapes');
+        console.error(`JSONImporter: Missing visual information for element ${dI?.id || 'unknown'} - using fallback position`);
+        vI = { x: 100 + Math.random() * 400, y: 100 + Math.random() * 300, width: 50, height: 50, type: dI ? dI.$type : 'unknown' };
     }
     
     let shape = this._elementFactory.create('shape', {
@@ -338,6 +327,29 @@ JSONImporter.prototype.buildCharacteristics = function (bO, char) {
         })
         return validityLimits;
     }
+    
+    const addActualValues = (values) => {
+        // Handle both array and single object formats
+        if (Array.isArray(values)) {
+            // If it's an array, take the first element or return null if empty
+            const firstValue = values.length > 0 ? values[0] : null;
+            if (firstValue && firstValue.$type) {
+                return this._fpbFactory.create(firstValue.$type, {
+                    value: firstValue.value,
+                    unit: firstValue.unit
+                });
+            }
+            return null;
+        } else if (values && values.$type) {
+            // Handle single object format
+            return this._fpbFactory.create(values.$type, {
+                value: values.value,
+                unit: values.unit
+            });
+        }
+        return null;
+    }
+    
     char.forEach(ch => {
         let type = ch.$type;
         if (type === 'fpbch:Characteristics') {
@@ -358,10 +370,7 @@ JSONImporter.prototype.buildCharacteristics = function (bO, char) {
                         unit: ch.descriptiveElement.setpointValue.unit
                     }),
                     validityLimits: addValidityLimits(ch.descriptiveElement.validityLimits),
-                    actualValues: this._fpbFactory.create(ch.descriptiveElement.actualValues.$type, {
-                        value: ch.descriptiveElement.actualValues.value,
-                        unit: ch.descriptiveElement.actualValues.unit
-                    }),
+                    actualValues: addActualValues(ch.descriptiveElement.actualValues),
                 }),
                 relationalElement: this._fpbFactory.create(ch.relationalElement.$type, {
                     view: ch.relationalElement.view,
@@ -376,35 +385,44 @@ JSONImporter.prototype.buildCharacteristics = function (bO, char) {
 }
 
 JSONImporter.prototype.updateDepedencies = function (container, element) {
+    if (!element || !element.businessObject) {
+        console.warn('JSONImporter: updateDepedencies called with invalid element');
+        return;
+    }
+    
     if (is(element, 'fpb:Flow')) {
         let source;
         let target;
         if (typeof element.businessObject.sourceRef === 'string' || element.businessObject.sourceRef instanceof String) {
             source = container.find((el) => {
-                return el.id === element.businessObject.sourceRef
+                return el && el.id === element.businessObject.sourceRef
             });
-            if (!Array.isArray(source.outgoing)) {
-                source.businessObject.outgoing = [source.businessObject.outgoing];
-            };
-            collectionRemove(source.businessObject.outgoing, element.id);
-            collectionAdd(source.businessObject.outgoing, element.businessObject);
-            element.businessObject.sourceRef = source.businessObject;
-            //source.outgoing = element;
-            element.source = source;
+            if (source && source.businessObject) {
+                if (!Array.isArray(source.businessObject.outgoing)) {
+                    source.businessObject.outgoing = [source.businessObject.outgoing];
+                };
+                collectionRemove(source.businessObject.outgoing, element.id);
+                collectionAdd(source.businessObject.outgoing, element.businessObject);
+                element.businessObject.sourceRef = source.businessObject;
+                //source.outgoing = element;
+                element.source = source;
+            }
 
         };
         if (typeof element.businessObject.targetRef === 'string' || element.businessObject.targetRef instanceof String) {
-            target = element.businessObject.targetRef = container.find((el) => {
-                return el.id === element.businessObject.targetRef
+            target = container.find((el) => {
+                return el && el.id === element.businessObject.targetRef
             });
-            if (!Array.isArray(target.businessObject.incoming)) {
-                target.businessObject.incoming = [target.businessObject.incoming];
+            if (target && target.businessObject) {
+                if (!Array.isArray(target.businessObject.incoming)) {
+                    target.businessObject.incoming = [target.businessObject.incoming];
+                }
+                collectionRemove(target.businessObject.incoming, element.id);
+                collectionAdd(target.businessObject.incoming, element.businessObject);
+                element.businessObject.targetRef = target.businessObject;
+                //target.incoming = element;
+                element.target = target;
             }
-            collectionRemove(target.businessObject.incoming, element.id);
-            collectionAdd(target.businessObject.incoming, element.businessObject);
-            element.businessObject.targetRef = target.businessObject;
-            //target.incoming = element;
-            element.target = target;
         };
         if (element.businessObject.inTandemWith) {
             element.businessObject.inTandemWith.forEach((tandemFlow) => {
@@ -426,26 +444,30 @@ JSONImporter.prototype.updateDepedencies = function (container, element) {
             })
 
         }
-        if (is(source, 'fpb:State')) {
+        if (source && is(source, 'fpb:State')) {
             collectionRemove(source.businessObject.isAssignedTo, target.businessObject.id);
             collectionAdd(source.businessObject.isAssignedTo, target.businessObject);
         }
-        if (is(target, 'fpb:State')) {
+        if (target && is(target, 'fpb:State')) {
             collectionRemove(target.businessObject.isAssignedTo, source.businessObject.id);
             collectionAdd(target.businessObject.isAssignedTo, source.businessObject);
         }
-        if (is(source, 'fpb:ProcessOperator') || is(target, 'fpb:ProcessOperator')) {
-            if (is(source, 'fpb:TechnicalResource') || is(target, 'fpb:TechnicalResource')) {
-                if (!Array.isArray(source.businessObject.isAssignedTo)) {
-                    source.businessObject.isAssignedTo = [source.businessObject.isAssignedTo];
+        if ((source && is(source, 'fpb:ProcessOperator')) || (target && is(target, 'fpb:ProcessOperator'))) {
+            if ((source && is(source, 'fpb:TechnicalResource')) || (target && is(target, 'fpb:TechnicalResource'))) {
+                if (source && source.businessObject) {
+                    if (!Array.isArray(source.businessObject.isAssignedTo)) {
+                        source.businessObject.isAssignedTo = [source.businessObject.isAssignedTo];
+                    }
+                    collectionRemove(source.businessObject.isAssignedTo, target.businessObject.id);
+                    collectionAdd(source.businessObject.isAssignedTo, target.businessObject);
                 }
-                if (!Array.isArray(target.businessObject.isAssignedTo)) {
-                    target.businessObject.isAssignedTo = [target.businessObject.isAssignedTo];
+                if (target && target.businessObject) {
+                    if (!Array.isArray(target.businessObject.isAssignedTo)) {
+                        target.businessObject.isAssignedTo = [target.businessObject.isAssignedTo];
+                    }
+                    collectionRemove(target.businessObject.isAssignedTo, source.businessObject.id);
+                    collectionAdd(target.businessObject.isAssignedTo, source.businessObject);
                 }
-                collectionRemove(source.businessObject.isAssignedTo, target.businessObject.id);
-                collectionAdd(source.businessObject.isAssignedTo, target.businessObject);
-                collectionRemove(target.businessObject.isAssignedTo, source.businessObject.id);
-                collectionAdd(target.businessObject.isAssignedTo, source.businessObject);
             }
         }
     }
