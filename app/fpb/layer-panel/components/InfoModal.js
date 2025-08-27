@@ -9,40 +9,10 @@ import Col from 'react-bootstrap/Col';
 import Nav from 'react-bootstrap/Nav';
 import Tab from 'react-bootstrap/Tab';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { keyboardShortcuts, getCtrlKey } from '../constants/keyboardShortcuts';
 
 const InfoModal = ({ show, onHide }) => {
   const [activeKey, setActiveKey] = useState('about');
-  
-  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-  const ctrlKey = isMac ? '⌘' : 'Ctrl';
-
-  const shortcuts = [
-    {
-      category: 'Zoom & Navigation',
-      items: [
-        { keys: [`${ctrlKey}++`], description: 'Zoom in' },
-        { keys: [`${ctrlKey}+-`], description: 'Zoom out' },
-        { keys: [`${ctrlKey}+0`], description: 'Reset zoom' },
-        { keys: [`${ctrlKey}+Arrow Keys`], description: 'Pan canvas' },
-        { keys: ['Space + Mouse'], description: 'Hand tool (drag canvas)' }
-      ]
-    },
-    {
-      category: 'Element Movement',
-      items: [
-        { keys: ['Arrow Keys'], description: 'Move selected elements (1px)' },
-        { keys: ['Shift+Arrow Keys'], description: 'Move selected elements (10px)' },
-        { keys: ['Escape'], description: 'Cancel current operation' }
-      ]
-    },
-    {
-      category: 'Canvas Panning',
-      items: [
-        { keys: [`${ctrlKey}+Shift+Arrow Keys`], description: 'Fast canvas pan (200px)' },
-        { keys: [`${ctrlKey}+Arrow Keys`], description: 'Slow canvas pan (50px)' }
-      ]
-    }
-  ];
 
   const renderKeyBadge = (key) => (
     <Badge key={key} bg="secondary" className="me-1">
@@ -118,7 +88,7 @@ const InfoModal = ({ show, onHide }) => {
                       Use these keyboard shortcuts to navigate:
                     </p>
 
-                    {shortcuts.map((section, index) => (
+                    {keyboardShortcuts.map((section, index) => (
                       <div key={index} className="mb-4">
                         <h6 className="mb-2">
                           <FontAwesomeIcon icon="folder" className="me-2" />

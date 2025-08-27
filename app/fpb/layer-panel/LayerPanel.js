@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, memo } from 'react';
 import Button from 'react-bootstrap/Button';
 
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -9,11 +9,8 @@ import Import from './features/Import';
 import DownloadOptions from './features/DownloadOptions';
 import InfoModal from './components/InfoModal';
 import ProcessTreeView from './components/ProcessTreeView';
-
-import {
-    add as collectionAdd,
-    remove as collectionRemove
-} from 'diagram-js/lib/util/Collections';
+import { useProcessManagement } from './hooks/useProcessManagement';
+import { useSelectedElements } from './hooks/useSelectedElements';
 
 
 // Icons
@@ -22,63 +19,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import './LayerPanel.css'
 
 const LayerPanel = ({ modeler, config }) => {
-    const [selectedProcess, setSelectedProcess] = useState(null);
-    const [processes, setProcesses] = useState([]);
     const [isOpenedLayerPanel, setIsOpenedLayerPanel] = useState(false);
     const [isOpenedOptions, setIsOpenedOptions] = useState(false);
     const [showInfoModal, setShowInfoModal] = useState(false);
 
-    useEffect(() => {
-        modeler.on('layerPanel.newProcess', (e) => {
-            setProcesses(prevProcesses => {
-                const newProcesses = [...prevProcesses];
-                collectionAdd(newProcesses, e.newProcess);
-                return newProcesses;
-            });
-            setSelectedProcess(e.newProcess);
-        });
-
-        modeler.on('layerPanel.processDeleted', (e) => {
-            setProcesses(prevProcesses => {
-                const newProcesses = [...prevProcesses];
-                collectionRemove(newProcesses, e.deletedProcess);
-                return newProcesses;
-            });
-        });
-
-        modeler.on('layerPanel.processSwitched', (e) => {
-            setSelectedProcess(e.selectedProcess);
-        });
-
-        return () => {
-            modeler.off('layerPanel.newProcess');
-            modeler.off('layerPanel.processDeleted');
-            modeler.off('layerPanel.processSwitched');
-        };
-    }, [modeler]);
-
-
-    const [selectedElements, setSelectedElements] = useState([]);
-
-    useEffect(() => {
-        const handleSelectionChanged = (e) => {
-            setSelectedElements(e.newSelection);
-        };
-
-        modeler.on('selection.changed', handleSelectionChanged);
-
-        return () => {
-            modeler.off('selection.changed', handleSelectionChanged);
-        };
-    }, [modeler]);
-
-    const switchProcess = useCallback((process) => {
-        const modeling = modeler.get('modeling');
-        if (selectedProcess && process.id === selectedProcess.id) {
-            return;
-        }
-        modeling.switchProcess(process);
-    }, [modeler, selectedProcess]);
+    const { selectedProcess, processes, switchProcess } = useProcessManagement(modeler);
+    const selectedElements = useSelectedElements(modeler);
 
 
     const tooltipsOptions = isOpenedOptions ? 'Hide Options' : 'Show Options';
