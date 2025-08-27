@@ -78,9 +78,9 @@
     "jsdom": "^26.1.0",
     "moddle": "^7.2.0",
     "moddle-xml": "^11.0.0",
+    "react-arborist": "^3.4.3",
     "react-bootstrap": "^2.10.10",
     "react-collapse": "^5.1.1",
-    "react-simple-tree-menu": "^1.1.18",
     "uuid": "^11.1.0"
   }
 }

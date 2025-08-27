@@ -16,6 +16,8 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons/faTimes';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons/faSpinner';
 import { faKeyboard } from '@fortawesome/free-solid-svg-icons/faKeyboard';
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons/faInfoCircle';
+import { faCaretDown } from '@fortawesome/free-solid-svg-icons/faCaretDown';
+import { faCaretRight } from '@fortawesome/free-solid-svg-icons/faCaretRight';
 
 library.add(
   faAnglesRight,
@@ -34,5 +36,7 @@ library.add(
   faTimes,
   faSpinner,
   faKeyboard,
-  faInfoCircle
+  faInfoCircle,
+  faCaretDown,
+  faCaretRight
 );

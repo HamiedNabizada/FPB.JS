@@ -1,81 +1,97 @@
 import { is } from '../../help/utils';
 
 /**
- * Calculates the node logic for tree expansion based on the selected process
- * @param {Object} selectedProcess - The currently selected process
- * @returns {Object} Object containing openNodes array and activeKey
+ * Extracts and formats the display name for a process
+ * @param {Object} process - The process object
+ * @param {number} maxLength - Maximum length before truncation
+ * @returns {string} Formatted process name
  */
-export const getNodeLogic = (selectedProcess) => {
-    if (!selectedProcess) return { openNodes: [], activeKey: null };
-
-    let tmp = selectedProcess;
-    let structure = [];
-    while (!(is(tmp, 'fpb:Project'))) {
-        structure.unshift(tmp.id);
-        tmp = tmp.businessObject.parent;
+const getProcessDisplayName = (process, maxLength = 25) => {
+    if (is(process.businessObject.parent, 'fpb:Project')) {
+        return process.businessObject.parent.name;
     }
-    let openNodes = [];
-    let entry = structure[0];
-    openNodes.push(entry);
-    for (let i = 1; i < structure.length; i++) {
-        entry += '/' + structure[i];
-        openNodes.push(entry);
-    }
-    return {
-        openNodes: openNodes,
-        activeKey: openNodes[openNodes.length - 1]
-    };
-};
-
-/**
- * Creates a tree structure for processes with the given parent
- * @param {Object} parent - The parent process
- * @param {Array} processes - Array of all processes
- * @returns {Array} Array of tree nodes
- */
-export const createTreeStructure = (parent, processes) => {
-    let nodes = [];
-    processes.forEach((process) => {
-        if (process.businessObject.parent === parent) {
-            let name;
-            if (process.businessObject.isDecomposedProcessOperator != null) {
-                if (process.businessObject.isDecomposedProcessOperator.name) {
-                    name = process.businessObject.isDecomposedProcessOperator.name;
-                    if (name.length > 10) {
-                        name = name.substring(0, 10) + "...";
-                    }
-                } else {
-                    name = 'unnamed';
-                }
+    
+    if (process.businessObject.isDecomposedProcessOperator != null) {
+        if (process.businessObject.isDecomposedProcessOperator.name) {
+            let name = process.businessObject.isDecomposedProcessOperator.name;
+            if (name.length > maxLength) {
+                name = name.substring(0, maxLength) + "...";
             }
-            nodes.push({
-                key: process.id,
-                label: name,
-                process: process,
-                nodes: createTreeStructure(process, processes)
-            });
+            return name;
+        } else {
+            return 'unnamed';
         }
-    });
-    return nodes;
+    }
+    
+    return 'Process';
 };
 
 /**
- * Creates the tree data structure for the process overview
+ * Creates tree data structure for React Arborist
  * @param {Array} processes - Array of all processes
- * @returns {Array} Array of tree data for TreeMenu component
+ * @returns {Array} Array of tree data for Arborist component
  */
-export const createTreeData = (processes) => {
-    const treeData = [];
+export const createArboristTreeData = (processes) => {
+    const buildChildrenForProcess = (parentProcess, allProcesses) => {
+        const children = [];
+        allProcesses.forEach((process) => {
+            if (process.businessObject.parent === parentProcess) {
+                const child = {
+                    id: process.id,
+                    name: getProcessDisplayName(process),
+                    process: process,
+                    children: buildChildrenForProcess(process, allProcesses)
+                };
+                children.push(child);
+            }
+        });
+        return children;
+    };
+
+    const rootNodes = [];
     processes.forEach((process) => {
         if (is(process.businessObject.parent, 'fpb:Project')) {
-            const superProcess = {
-                key: process.id,
-                label: process.businessObject.parent.name,
+            const rootNode = {
+                id: process.id,
+                name: getProcessDisplayName(process),
                 process: process,
-                nodes: createTreeStructure(process, processes)
+                children: buildChildrenForProcess(process, processes)
             };
-            treeData.push(superProcess);
+            rootNodes.push(rootNode);
         }
     });
-    return treeData;
+
+    return rootNodes;
+};
+
+/**
+ * Gets the path of process IDs that need to be opened to show the selected process
+ * @param {Object} selectedProcess - The currently selected process
+ * @param {Array} processes - Array of all processes
+ * @returns {Array} Array of process IDs that should be open
+ */
+export const getPathToProcess = (selectedProcess, processes) => {
+    if (!selectedProcess) return [];
+    
+    const path = [];
+    let current = selectedProcess;
+    
+    // Gehe den Baum nach oben bis zum Root
+    while (current && !is(current.businessObject.parent, 'fpb:Project')) {
+        // Finde den Parent-Prozess
+        const parent = processes.find(p => p === current.businessObject.parent);
+        if (parent) {
+            path.unshift(parent.id); // Am Anfang hinzufügen (Root zuerst)
+            current = parent;
+        } else {
+            break;
+        }
+    }
+    
+    // Root-Prozess auch hinzufügen
+    if (current && is(current.businessObject.parent, 'fpb:Project')) {
+        path.unshift(current.id);
+    }
+    
+    return path;
 };
