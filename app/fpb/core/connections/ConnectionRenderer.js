@@ -56,7 +56,6 @@ export class ConnectionRenderer {
    * Renders an FPB Flow connection (with arrow at end)
    */
   drawFlow(parentGfx, element) {
-    const pathData = this.createPathFromConnection(element);
     const attrs = {
       strokeLinejoin: 'round',
       markerEnd: this.markerManager.getMarker(
@@ -68,7 +67,7 @@ export class ConnectionRenderer {
       strokeWidth: STROKE_WIDTHS.CONNECTION
     };
 
-    return this.drawPath(parentGfx, pathData, attrs);
+    return svgAppend(parentGfx, createLine(element.waypoints, attrs));
   }
 
   /**
