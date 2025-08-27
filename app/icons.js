@@ -14,6 +14,8 @@ import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons/faEllipsis
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons/faExclamationTriangle';
 import { faTimes } from '@fortawesome/free-solid-svg-icons/faTimes';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons/faSpinner';
+import { faKeyboard } from '@fortawesome/free-solid-svg-icons/faKeyboard';
+import { faInfoCircle } from '@fortawesome/free-solid-svg-icons/faInfoCircle';
 
 library.add(
   faAnglesRight,
@@ -30,5 +32,7 @@ library.add(
   faEllipsisVertical,
   faExclamationTriangle,
   faTimes,
-  faSpinner
+  faSpinner,
+  faKeyboard,
+  faInfoCircle
 );

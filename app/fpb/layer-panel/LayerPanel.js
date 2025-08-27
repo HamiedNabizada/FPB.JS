@@ -9,7 +9,8 @@ import Col from 'react-bootstrap/Col';
 import TreeMenu from 'react-simple-tree-menu'
 
 import Import from './features/Import';
-import DownloadOptions from './features/DownloadOptions'
+import DownloadOptions from './features/DownloadOptions';
+import InfoModal from './components/InfoModal';
 
 import { is } from '../help/utils';
 
@@ -29,6 +30,7 @@ const LayerPanel = ({ modeler, config }) => {
     const [processes, setProcesses] = useState([]);
     const [isOpenedLayerPanel, setIsOpenedLayerPanel] = useState(false);
     const [isOpenedOptions, setIsOpenedOptions] = useState(false);
+    const [showInfoModal, setShowInfoModal] = useState(false);
 
     useEffect(() => {
         modeler.on('layerPanel.newProcess', (e) => {
@@ -212,6 +214,24 @@ const LayerPanel = ({ modeler, config }) => {
                     </Collapse>
                 </div>
             )}
+            
+            <div className="mt-3">
+                <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id="tooltip-info">
+                    Show information and help
+                </Tooltip>}>
+                    <Button 
+                        onClick={() => setShowInfoModal(true)} 
+                        variant="secondary-outline"
+                    >
+                        <FontAwesomeIcon icon="info-circle" size="lg" />
+                    </Button>
+                </OverlayTrigger>
+            </div>
+            
+            <InfoModal 
+                show={showInfoModal} 
+                onHide={() => setShowInfoModal(false)} 
+            />
         </div>
     );
 };
