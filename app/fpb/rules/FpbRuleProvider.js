@@ -39,28 +39,47 @@ FpbRuleProvider.prototype.init = function () {
   });
 
   function canCreate(shape, target, position) {
+    console.log('🏗️ [DEBUG] === canCreate called ===');
+    console.log('  📐 Shape:', shape?.type, shape?.id);
+    console.log('  🎯 Target:', target?.type, target?.id); 
+    console.log('  📍 Position:', position?.x + ',' + position?.y);
+    
     if (!target) {
+      console.log('  ❌ BLOCKING: No target specified');
       return false;
     }
 
     if (isLabel(target)) {
+      console.log('  🏷️ Target is label - returning null');
       return null;
     }
 
 
     if (isAny(shape, ELEMENT_GROUPS.STATES)) {
+      console.log('🔄 [DEBUG] State element placement check');
+      console.log('  📐 State shape:', shape?.type);
+      console.log('  🎯 Target:', target?.type);
       if (is(target, ELEMENT_TYPES.SYSTEM_LIMIT)) {
-        return checkIfItsWithinSystemLimits(shape, target, position)
+        console.log('  ✅ Target is SystemLimit - checking bounds...');
+        const result = checkIfItsWithinSystemLimits(shape, target, position);
+        console.log('  🎯 SystemLimit bounds check result:', result ? 'ALLOWED' : 'BLOCKED');
+        return result;
       }
       else {
+        console.log('  ❌ BLOCKING: Target is not SystemLimit');
         return false;
       }
     }
 
     if (is(shape, ELEMENT_TYPES.PROCESS_OPERATOR)) {
+      console.log('⚙️ [DEBUG] ProcessOperator placement check');
+      console.log('  📐 ProcessOperator shape:', shape?.type);
+      console.log('  🎯 Target:', target?.type);
       if (is(target, ELEMENT_TYPES.SYSTEM_LIMIT)) {
+        console.log('  ✅ Target is SystemLimit - ALLOWING ProcessOperator placement');
         return true;
       } else {
+        console.log('  ❌ BLOCKING: Target is not SystemLimit');
         return false;
       }
     };

@@ -1,11 +1,23 @@
 import { is } from '../help/utils';
-
-import { getBusinessObjectFromElementsContainer, noOfUsageConnections, getElementsFromElementsContainer } from '../help/helpUtils'
-
-import { assign, some, filter } from 'min-dash';
-
-import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
+import { getBusinessObjectFromElementsContainer, noOfUsageConnections } from '../help/helpUtils';
+import { assign } from 'min-dash';
 import translate from 'diagram-js/lib/i18n/translate/translate';
+
+// Import our new constants and utilities
+import { 
+  ELEMENT_TYPES, 
+  CONTEXT_PAD_ICONS, 
+  ENTRY_GROUPS, 
+  ENTRY_IDS, 
+  TOOLTIP_KEYS,
+  FLOW_TYPES 
+} from './ContextPadConstants';
+import { 
+  ContextHelper, 
+  ConnectionUtils, 
+  ElementValidationUtils, 
+  ElementTypeUtils 
+} from './ContextPadUtils';
 
 
 export default function FpbContextPadProvider(
@@ -23,6 +35,10 @@ export default function FpbContextPadProvider(
   this._canvas = canvas;
   this._rules = fpbRuleProvider;
   this._translate = translate;
+  
+  // Initialize context helper for element lookups
+  this._contextHelper = new ContextHelper(canvas);
+  
   if (config.autoPlace !== false) {
     this._autoPlace = injector.get('autoPlace', false);
   }
@@ -45,66 +61,25 @@ FpbContextPadProvider.$inject = [
 
 
 FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
-  var connect = this._connect;
-
-  var modeling = this._modeling;
-  var canvas = this._canvas;
-  var process = canvas.getRootElement();
-  try {
-    // Try Catch für den unwahrscheinlichen Fall, dass jemand eine TR als erstes platziert
-    var systemLimit = getElementsFromElementsContainer(process.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
-    var processOperators = getElementsFromElementsContainer(systemLimit.businessObject.elementsContainer, 'fpb:ProcessOperator');
-    var states = getElementsFromElementsContainer(systemLimit.businessObject.elementsContainer, 'fpb:State')
-    var technicalResources = getBusinessObjectFromElementsContainer(process.businessObject.elementsContainer, 'fpb:TechnicalResource')
-  } catch (error) {
-    
-  }
+  const connect = this._connect;
+  const modeling = this._modeling;
+  
+  // Get process context using helper
+  const context = this._contextHelper.getProcessContext();
+  const { process, systemLimit, processOperators, states, technicalResources } = context;
 
   function removeElement() {
     modeling.removeElements([element]);
   }
 
   function startConnect(event, element, autoActivate) {
-    if (is(element, 'fpb:Object')) {
-      let hint;
-      let className;
-      // Unterscheidung ob Verbindung über MouseClick oder Touch
-      if (event.type == 'click' || event.type == 'dragstart') {
-        className = event.srcElement.className;
-      } else {
-        className = event.srcEvent.srcElement.className;
-      }
-      // legt fest, welcher Flow Type ausgewählt wurde und speichert diese Information.
-      if (className.search('parallel') !== -1) {
-        hint = 'Parallel'
-      }
-      else if (className.search('alternative') !== -1) {
-        hint = 'Alternative'
-      }
-      else if (className.search('usage') !== -1) {
-        hint = 'Usage'
-      }
-      else {
-        hint = 'Flow'
-      }
+    // Determine flow hint from event using utility
+    const hint = ConnectionUtils.getFlowHintFromEvent(event);
+    element.TemporaryFlowHint = hint;
 
-
-      element.TemporaryFlowHint = hint;
-
-      let sourcePos = getMid(element);
-      if (is(element, 'fpb:State')) {
-        sourcePos.y += element.width / 2;
-      }
-      else {
-        sourcePos.x += element.width / 2;
-      }
-
-      connect.start(event, element, sourcePos, autoActivate);
-    } else {
-      let sourcePos = getMid(element);
-      sourcePos.x -= element.width / 2;
-      connect.start(event, element, sourcePos, autoActivate);
-    }
+    // Calculate source position using utility
+    const sourcePos = ConnectionUtils.getConnectionSourcePosition(element);
+    connect.start(event, element, sourcePos, autoActivate);
   };
 
   function compose(event, element) {
@@ -114,112 +89,61 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
     modeling.decomposeProcessOperator(element);
   }
 
-  // Prüft ob schon ein Alternative oder ParallelFlow existiert
-  function anyOutgoingFlowOfType(element, type) {
-    for (const flow of element.outgoing) {
-      if (flow.type === type) {
-        return false;
-      }
-    }
-    return true;
-  };
+  // Helper functions using utilities
+  const anyOutgoingFlowOfType = (element, type) => ElementValidationUtils.anyOutgoingFlowOfType(element, type);
+  const noOfElementsUnderTheSource = (source, container, minDistance) => ElementValidationUtils.countElementsUnderSource(source, container, minDistance);
+  const technicalResourcesAvailable = (source, technicalResources) => ElementValidationUtils.technicalResourcesAvailable(source, technicalResources);
 
 
-  // prüft ob ausreichend Elemente für eine Bestimme Verbindung da sind
-  function noOfElementsUnderTheSource(source, container, minDistance) {
-    let i = 0;
-
-    if (container.length == 0) {
-      return i;
-    };
-    // Nur Elemente berücksichtigen, die noch nicht miteinander verbunden sind
-    let notConnectedElements = [];
-    container.forEach((element) => {
-      if (!some(element.incoming, function (c) {
-        return c.businessObject.sourceRef.id == source.id
-      })) {
-        notConnectedElements.push(element);
-      }
-    })
-    notConnectedElements.forEach((element) => {
-
-      //  if (element.di.bounds.y > (source.y + minDistance)) {
-      if (element.y > (source.y + minDistance)) {
-        i++
-      }
-    })
-    return i;
-  };
-
-  // TODO: Gleiches für TechnicalResources
-  function technicalResourcesAvailable(source, technicalResources) {
-    if (technicalResources.length == 0) {
-      return false;
-    };
-    if (source.businessObject.isAssignedTo.length == 0) {
-      return true;
-    };
-
-    let freeTechnicalResources = filter(technicalResources, function (tR) {
-      return tR.isAssignedTo.id != source.id;
-    });
-    if (freeTechnicalResources.length > 0) {
-      return true;
-    }
-    return false;
-  }
-
-
-  var pad = {};
-  // Entfernen von fpbjs Präfix für Tooltip Anzeige auf Icon
-  let elementType;
-  if (element.type) {
-    elementType = element.type.replace('fpb:', '');
-  }
-  // Kein ContextPad für Labels
-  if (element.type === 'label') {
+  const pad = {};
+  
+  // Get clean element type for tooltips using utility
+  const elementType = ElementTypeUtils.getCleanElementType(element);
+  
+  // No ContextPad for labels
+  if (element.type === ELEMENT_TYPES.LABEL) {
     return pad;
   }
 
-  // Delete für alle Types
+  // Delete entry for all element types
   assign(pad, {
-    'delete': {
-      group: 'edit',
-      className: 'context-pad-icon-remove',
-      title: translate('Remove {type}', { type: elementType }),
+    [ENTRY_IDS.DELETE]: {
+      group: ENTRY_GROUPS.EDIT,
+      className: CONTEXT_PAD_ICONS.REMOVE,
+      title: translate(TOOLTIP_KEYS.REMOVE, { type: elementType }),
       action: {
         click: removeElement,
         dragstart: removeElement
       }
     }
   });
-  // ContextPad für Product, Information und Energy
-  if (is(element, 'fpb:State')) {
-    // Solange kein Outgoing Flow angelegt ist + mindestens 1 ProcessOperator unterhalb des States ist: alle drei Verbindungen anbieten
-    if (element.outgoing.length == 0 && noOfElementsUnderTheSource(element, processOperators, 50) > 0) {
+  // ContextPad for States (Product, Information, Energy)
+  if (is(element, ELEMENT_TYPES.STATE)) {
+    // Show all connection types if no outgoing flows and ProcessOperators available below
+    if (element.outgoing.length === 0 && noOfElementsUnderTheSource(element, processOperators) > 0) {
       assign(pad, {
-        'connect': {
-          group: 'edit',
-          className: 'context-pad-icon-fpbconnection',
-          title: translate('Connect {type} with ProcessOperator', { type: elementType }),
+        [ENTRY_IDS.CONNECT]: {
+          group: ENTRY_GROUPS.EDIT,
+          className: CONTEXT_PAD_ICONS.CONNECT,
+          title: translate(TOOLTIP_KEYS.CONNECT_WITH_PROCESS_OPERATOR, { type: elementType }),
           action: {
             click: startConnect,
             dragstart: startConnect
           }
         },
-        'connect_parallel': {
-          group: 'edit',
-          className: 'context-pad-icon-fpbparallelconnection',
-          title: translate('Parallel used {type}', { type: elementType }),
+        [ENTRY_IDS.CONNECT_PARALLEL]: {
+          group: ENTRY_GROUPS.EDIT,
+          className: CONTEXT_PAD_ICONS.PARALLEL_CONNECTION,
+          title: translate(TOOLTIP_KEYS.PARALLEL_USED, { type: elementType }),
           action: {
             click: startConnect,
             dragstart: startConnect
           }
         },
-        'connect_alternative': {
-          group: 'edit',
-          className: 'context-pad-icon-fpbalternativeconnection',
-          title: translate('Alternative Process'),
+        [ENTRY_IDS.CONNECT_ALTERNATIVE]: {
+          group: ENTRY_GROUPS.EDIT,
+          className: CONTEXT_PAD_ICONS.ALTERNATIVE_CONNECTION,
+          title: translate(TOOLTIP_KEYS.ALTERNATIVE_PROCESS),
           action: {
             click: startConnect,
             dragstart: startConnect
@@ -227,15 +151,14 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
         }
       });
     }
-    // Sobald ein Outgoing Flow existiert, wird nur noch entweder Alternative und/oder Parallel angezeigt
-    // if (element.outgoing.length > 0 && anyOutgoingFlowOfType(element, 'fpbjs:AlternativeFlow')) {
-    if (element.outgoing.length > 0 && noOfElementsUnderTheSource(element, processOperators, 50) > 0) {
-      if (anyOutgoingFlowOfType(element, 'fpb:AlternativeFlow')) {
+    // Show additional flow types when outgoing flows exist
+    if (element.outgoing.length > 0 && noOfElementsUnderTheSource(element, processOperators) > 0) {
+      if (anyOutgoingFlowOfType(element, FLOW_TYPES.ALTERNATIVE_FLOW)) {
         assign(pad, {
-          'connect_parallel': {
-            group: 'edit',
-            className: 'context-pad-icon-fpbparallelconnection',
-            title: translate('Parallel used {type}', { type: elementType }),
+          [ENTRY_IDS.CONNECT_PARALLEL]: {
+            group: ENTRY_GROUPS.EDIT,
+            className: CONTEXT_PAD_ICONS.PARALLEL_CONNECTION,
+            title: translate(TOOLTIP_KEYS.PARALLEL_USED, { type: elementType }),
             action: {
               click: startConnect,
               dragstart: startConnect
@@ -243,12 +166,12 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
           }
         });
       }
-      if (anyOutgoingFlowOfType(element, 'fpb:ParallelFlow')) {
+      if (anyOutgoingFlowOfType(element, FLOW_TYPES.PARALLEL_FLOW)) {
         assign(pad, {
-          'connect_alternative': {
-            group: 'edit',
-            className: 'context-pad-icon-fpbalternativeconnection',
-            title: translate('Alternative Flow'),
+          [ENTRY_IDS.CONNECT_ALTERNATIVE]: {
+            group: ENTRY_GROUPS.EDIT,
+            className: CONTEXT_PAD_ICONS.ALTERNATIVE_CONNECTION,
+            title: translate(TOOLTIP_KEYS.ALTERNATIVE_FLOW),
             action: {
               click: startConnect,
               dragstart: startConnect
@@ -256,51 +179,47 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
           }
         });
       }
-
-
-
     }
   };
-  // ProcessOperator, Keine Flow Bedingungen, alle Arten werden angezeigt.
-  // if (is(element, 'fpbjs:ProcessOperator')) {
-  if (is(element, 'fpb:ProcessOperator')) {
-    if (noOfElementsUnderTheSource(element, states, 50) > 0) {
+  // ProcessOperator - no flow conditions, all types are shown
+  if (is(element, ELEMENT_TYPES.PROCESS_OPERATOR)) {
+    if (noOfElementsUnderTheSource(element, states) > 0) {
       assign(pad, {
-        'connect': {
-          group: 'edit',
-          className: 'context-pad-icon-fpbconnection',
-          title: translate('Connect {type} with Product, Energy or Information', { type: elementType }),
+        [ENTRY_IDS.CONNECT]: {
+          group: ENTRY_GROUPS.EDIT,
+          className: CONTEXT_PAD_ICONS.CONNECT,
+          title: translate(TOOLTIP_KEYS.CONNECT_WITH_STATES, { type: elementType }),
           action: {
             click: startConnect,
             dragstart: startConnect
           }
         },
-        'connect_parallel': {
-          group: 'edit',
-          className: 'context-pad-icon-fpbparallelconnection',
-          title: translate('Parallel Process'),
+        [ENTRY_IDS.CONNECT_PARALLEL]: {
+          group: ENTRY_GROUPS.EDIT,
+          className: CONTEXT_PAD_ICONS.PARALLEL_CONNECTION,
+          title: translate(TOOLTIP_KEYS.PARALLEL_PROCESS),
           action: {
             click: startConnect,
             dragstart: startConnect
           }
         },
-        'connect_alternative': {
-          group: 'edit',
-          className: 'context-pad-icon-fpbalternativeconnection',
-          title: translate('Alternative Process'),
+        [ENTRY_IDS.CONNECT_ALTERNATIVE]: {
+          group: ENTRY_GROUPS.EDIT,
+          className: CONTEXT_PAD_ICONS.ALTERNATIVE_CONNECTION,
+          title: translate(TOOLTIP_KEYS.ALTERNATIVE_PROCESS),
           action: {
             click: startConnect,
             dragstart: startConnect
           }
         }
-      })
+      });
     }
     if (technicalResourcesAvailable(element, technicalResources)) {
       assign(pad, {
-        'connect_usage': {
-          group: 'edit',
-          className: 'context-pad-icon-fpbusage',
-          title: translate('Connect Process Operator with a Technical Resource'),
+        [ENTRY_IDS.CONNECT_USAGE]: {
+          group: ENTRY_GROUPS.EDIT,
+          className: CONTEXT_PAD_ICONS.USAGE,
+          title: translate(TOOLTIP_KEYS.CONNECT_PROCESS_OPERATOR_WITH_TR),
           action: {
             click: startConnect,
             dragstart: startConnect
@@ -308,65 +227,62 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
         }
       });
     }
-    // Decompose Button nur anzeigen, wenn ProcessOperator mindestens einen Input und einen Output hat.
-    if (((element.incoming.length - noOfUsageConnections(element.incoming)) > 0) &&
-      ((element.outgoing.length - noOfUsageConnections(element.outgoing)) > 0)) {
+    // Show decompose button only if ProcessOperator has at least one input and one output
+    if (ElementTypeUtils.canDecompose(element, noOfUsageConnections)) {
       assign(pad, {
-        'decompose': {
-          group: 'edit',
-          className: 'context-pad-icon-fpbdecompose',
-          title: translate('Decompose this ProcessOperator'),
+        [ENTRY_IDS.DECOMPOSE]: {
+          group: ENTRY_GROUPS.EDIT,
+          className: CONTEXT_PAD_ICONS.DECOMPOSE,
+          title: translate(TOOLTIP_KEYS.DECOMPOSE_PROCESS_OPERATOR),
           action: {
             click: decompose
           }
         }
-      })
+      });
     }
 
   };
-  // TechnicalResource hat Möglichkeit Usage Flow anzulegen
-  if (is(element, 'fpb:TechnicalResource')) {
+  // TechnicalResource can create Usage flows
+  if (is(element, ELEMENT_TYPES.TECHNICAL_RESOURCE)) {
     assign(pad, {
-      'connect_usage': {
-        group: 'edit',
-        className: 'context-pad-icon-fpbusage',
-        title: translate('Connect Technical Resource with a Process Operator'),
+      [ENTRY_IDS.CONNECT_USAGE]: {
+        group: ENTRY_GROUPS.EDIT,
+        className: CONTEXT_PAD_ICONS.USAGE,
+        title: translate(TOOLTIP_KEYS.CONNECT_TR_WITH_PROCESS_OPERATOR),
         action: {
           click: startConnect,
           dragstart: startConnect
         }
       }
     });
-
-
-  };
-  // Über SystemLimit besteht Möglichkeit für Compose
-  //TODO: Überprüfung ob StateShapes auf Systemgrenze liegen
-  if (is(element, 'fpb:SystemLimit')) {
+  }
+  // SystemLimit provides compose/switch functionality
+  //TODO: Check if StateShapes lie on system boundary
+  if (is(element, ELEMENT_TYPES.SYSTEM_LIMIT)) {
     if (process.businessObject.isDecomposedProcessOperator) {
       assign(pad, {
-        'compose': {
-          group: 'edit',
-          className: 'context-pad-icon-fpbswitchup',
-          title: translate('Switch to parent process'),
+        [ENTRY_IDS.COMPOSE]: {
+          group: ENTRY_GROUPS.EDIT,
+          className: CONTEXT_PAD_ICONS.SWITCH_UP,
+          title: translate(TOOLTIP_KEYS.SWITCH_TO_PARENT),
           action: {
             click: compose
           }
         }
-      })
+      });
     } else {
       assign(pad, {
-        'compose': {
-          group: 'edit',
-          className: 'context-pad-icon-fpbcompose',
-          title: translate('Compose SystemLimit'),
+        [ENTRY_IDS.COMPOSE]: {
+          group: ENTRY_GROUPS.EDIT,
+          className: CONTEXT_PAD_ICONS.COMPOSE,
+          title: translate(TOOLTIP_KEYS.COMPOSE_SYSTEM_LIMIT),
           action: {
             click: compose
           }
         }
-      })
+      });
     }
-  };
+  }
   return pad
 };
 
