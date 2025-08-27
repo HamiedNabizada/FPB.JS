@@ -8,34 +8,37 @@
  * Checks if a shape can be placed within SystemLimit boundaries
  */
 export function checkIfItsWithinSystemLimits(shape, target, position) {
-  console.log('🔍 [DEBUG] checkIfItsWithinSystemLimits called');
-  console.log('  📐 Shape:', shape?.type, shape?.width + 'x' + shape?.height);
-  console.log('  🎯 Target (SystemLimit):', target?.type, target?.width + 'x' + target?.height, 'at', target?.x + ',' + target?.y);
-  console.log('  📍 Desired position:', position?.x + ',' + position?.y);
+  const DEBUG = process.env.NODE_ENV === 'development';
   
-  // RESTORED: Original working logic with center-based coordinates and OR logic
+  if (DEBUG) {
+    console.log('RuleUtils: checkIfItsWithinSystemLimits', {
+      shape: { type: shape?.type, size: `${shape?.width}x${shape?.height}` },
+      target: { type: target?.type, size: `${target?.width}x${target?.height}`, pos: `${target?.x},${target?.y}` },
+      position: `${position?.x},${position?.y}`
+    });
+  }
+  
   const limit_x_1 = target.x - target.width / 2;
   const limit_x_2 = target.x + target.width / 2;
-  const limit_y_1 = target.y - target.height / 2; // Note: Original had typo "heigth" but we keep "height"
+  const limit_y_1 = target.y - target.height / 2;
   const limit_y_2 = target.y + target.height / 2;
-  
-  console.log('  📏 SystemLimit bounds:', 'x1=' + limit_x_1, 'x2=' + limit_x_2, 'y1=' + limit_y_1, 'y2=' + limit_y_2);
 
   const shape_x_1 = position.x - shape.width / 2;
   const shape_x_2 = position.x + shape.width / 2;
   const shape_y_1 = position.y - shape.height / 2;
   const shape_y_2 = position.y + shape.height / 2;
-  
-  console.log('  📏 Shape bounds at position:', 'x1=' + shape_x_1, 'x2=' + shape_x_2, 'y1=' + shape_y_1, 'y2=' + shape_y_2);
 
-  // RESTORED: Original OR logic (was incorrectly changed to AND)
   const xWithin = shape_x_1 >= limit_x_1 || shape_x_2 <= limit_x_2;
   const yWithin = shape_y_1 >= limit_y_1 || shape_y_2 <= limit_y_2;
   const isWithin = xWithin && yWithin;
   
-  console.log('  ✅ X within bounds:', xWithin, '(', shape_x_1, '>=', limit_x_1, '||', shape_x_2, '<=', limit_x_2, ')');
-  console.log('  ✅ Y within bounds:', yWithin, '(', shape_y_1, '>=', limit_y_1, '||', shape_y_2, '<=', limit_y_2, ')');
-  console.log('  🎯 Result:', isWithin ? 'ALLOWED' : 'BLOCKED');
+  if (DEBUG && !isWithin) {
+    console.warn('SystemLimit bounds check failed', {
+      targetBounds: { x1: limit_x_1, x2: limit_x_2, y1: limit_y_1, y2: limit_y_2 },
+      shapeBounds: { x1: shape_x_1, x2: shape_x_2, y1: shape_y_1, y2: shape_y_2 },
+      xWithin, yWithin
+    });
+  }
 
   return isWithin;
 }
