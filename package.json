@@ -71,6 +71,7 @@
     "bootstrap": "^5.3.7",
     "diagram-js": "^15.3.0",
     "diagram-js-direct-editing": "^3.2.0",
+    "diagram-js-grid": "^1.1.0",
     "downloadjs": "^1.4.7",
     "ids": "^1.0.5",
     "inherits": "^2.0.4",

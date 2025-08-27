@@ -9,7 +9,6 @@ import Col from 'react-bootstrap/Col';
 import TreeMenu from 'react-simple-tree-menu'
 
 import Import from './features/Import';
-
 import DownloadOptions from './features/DownloadOptions'
 
 import { is } from '../help/utils';
@@ -189,7 +188,7 @@ const LayerPanel = ({ modeler, config }) => {
                     processes={processes} 
                     selectedProcess={selectedProcess} 
                     selectedElements={selectedElements} 
-                />       
+                />
             </Collapse>
             {processes.length > 1 && (
                 <div>

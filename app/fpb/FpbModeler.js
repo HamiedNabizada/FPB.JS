@@ -38,6 +38,10 @@ import SelectionModule from 'diagram-js/lib/features/selection';
 import OverlaysModule from 'diagram-js/lib/features/overlays';
 import AutoResize from 'diagram-js/lib/features/auto-resize';
 
+// Grid functionality
+import GridModule from 'diagram-js-grid';
+import GridSnappingModule from 'diagram-js/lib/features/grid-snapping';
+
 // Fpb Specific Module 
 import FpbCoreModule from './core'
 import LabelEditingModule from './label';
@@ -45,6 +49,7 @@ import ContextPadModule from './context-pad';
 import PaletteModule from './palette';
 import ModelingModule from './modeling';
 import JsonImporter from './importer';
+import ServicesModule from './services';
 
 
 var DEFAULT_OPTIONS = {
@@ -113,12 +118,15 @@ FpbModeler.prototype._modules = [
     TranslateModule,
     SelectionModule,
     OverlaysModule,
+    GridModule,
+    GridSnappingModule,
     FpbCoreModule,
     LabelEditingModule,
     ContextPadModule,
     PaletteModule,
     ModelingModule,
     JsonImporter,
+    ServicesModule,
     AutoResize
 ];
 

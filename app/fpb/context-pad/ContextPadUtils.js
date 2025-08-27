@@ -165,7 +165,7 @@ export class ElementValidationUtils {
 
     // Check if there are unassigned technical resources
     const freeTechnicalResources = filter(technicalResources, tr => {
-      return tr.isAssignedTo.id !== source.id;
+      return !tr.isAssignedTo || !tr.isAssignedTo.id || tr.isAssignedTo.id !== source.id;
     });
 
     return freeTechnicalResources.length > 0;
