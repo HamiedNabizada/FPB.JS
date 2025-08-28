@@ -9,6 +9,7 @@ import Import from './features/Import';
 import DownloadOptions from './features/DownloadOptions';
 import InfoModal from './components/InfoModal';
 import ProcessTreeView from './components/ProcessTreeView';
+import ThemeToggle from './components/ThemeToggle';
 import { useProcessManagement } from './hooks/useProcessManagement';
 import { useSelectedElements } from './hooks/useSelectedElements';
 
@@ -53,6 +54,7 @@ const LayerPanel = ({ modeler, config }) => {
                     selectedProcess={selectedProcess} 
                     selectedElements={selectedElements} 
                 />
+                <ThemeToggle />
             </Collapse>
             {processes.length > 1 && (
                 <div>

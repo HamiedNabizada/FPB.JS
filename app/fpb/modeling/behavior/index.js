@@ -3,6 +3,7 @@ import ModelingFeedback from './ModelingFeedback';
 import DataBehavior from './DataBehavior'
 import ReplaceConnectionBehavior from './ReplaceConnectionBehavior';
 import SystemLimitSmartResizeHandler from './SystemLimitSmartResizeHandler';
+import SystemLimitDropFeedbackBlocker from './SystemLimitDropFeedbackBlocker';
 import FpbFactory from '../FpbFactory';
 
 export default {
@@ -11,7 +12,8 @@ export default {
     'labelBehavior',
     'replaceConnectionBehavior',
     'dataBehavior',
-    'systemLimitSmartResizeHandler'
+    'systemLimitSmartResizeHandler',
+    'systemLimitDropFeedbackBlocker'
   ],
   __depends__: [
     FpbFactory
@@ -20,5 +22,6 @@ export default {
   labelBehavior: ['type', LabelBehavior],
   replaceConnectionBehavior: [ 'type', ReplaceConnectionBehavior ],
   dataBehavior: ['type', DataBehavior],
-  systemLimitSmartResizeHandler: ['type', SystemLimitSmartResizeHandler]
+  systemLimitSmartResizeHandler: ['type', SystemLimitSmartResizeHandler],
+  systemLimitDropFeedbackBlocker: ['type', SystemLimitDropFeedbackBlocker]
 };

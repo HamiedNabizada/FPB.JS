@@ -1,0 +1,526 @@
+/* Dark Mode Theme System for FPB.js */
+
+:root {
+  /* Light Theme Colors */
+  --fpb-bg-primary: #ffffff;
+  --fpb-bg-secondary: #FAFAFA;
+  --fpb-bg-canvas: #ffffff;
+  --fpb-border-color: #CCC;
+  --fpb-text-primary: #333333;
+  --fpb-text-secondary: #666666;
+  --fpb-text-muted: #999999;
+  
+  /* Panel backgrounds */
+  --fpb-panel-bg: #FAFAFA;
+  --fpb-panel-border: #CCC;
+  
+  /* Tooltip colors */
+  --fpb-tooltip-bg: #000000;
+  --fpb-tooltip-text: #ffffff;
+  
+  /* Button and interaction colors */
+  --fpb-button-bg: #ffffff;
+  --fpb-button-border: #ccc;
+  --fpb-button-hover: #f5f5f5;
+  
+  /* Selection colors */
+  --fpb-selection-border: #d53032;
+  
+  /* Card and modal backgrounds */
+  --fpb-card-bg: #ffffff;
+  --fpb-modal-bg: #ffffff;
+  --fpb-input-bg: #ffffff;
+  --fpb-input-border: #ccc;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  /* Dark Theme Colors */
+  --fpb-bg-primary: #1a1a1a;
+  --fpb-bg-secondary: #2d2d2d;
+  --fpb-bg-canvas: #2d2d2d;
+  --fpb-border-color: #404040;
+  --fpb-text-primary: #e0e0e0;
+  --fpb-text-secondary: #b0b0b0;
+  --fpb-text-muted: #808080;
+  
+  /* Panel backgrounds */
+  --fpb-panel-bg: #2d2d2d;
+  --fpb-panel-border: #404040;
+  
+  /* Tooltip colors */
+  --fpb-tooltip-bg: #444444;
+  --fpb-tooltip-text: #ffffff;
+  
+  /* Button and interaction colors */
+  --fpb-button-bg: #3a3a3a;
+  --fpb-button-border: #555555;
+  --fpb-button-hover: #4a4a4a;
+  
+  /* Selection colors */
+  --fpb-selection-border: #ff6b6d;
+  
+  /* Card and modal backgrounds */
+  --fpb-card-bg: #3a3a3a;
+  --fpb-modal-bg: #2d2d2d;
+  --fpb-input-bg: #3a3a3a;
+  --fpb-input-border: #555555;
+}
+
+/* Apply theme variables to existing elements */
+
+/* Body and main containers */
+body {
+  background-color: var(--fpb-bg-primary);
+  color: var(--fpb-text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.fpb-wrapper {
+  background-color: var(--fpb-bg-primary);
+}
+
+/* Canvas background */
+#modeler-container,
+.djs-container {
+  background-color: var(--fpb-bg-canvas) !important;
+}
+
+/* Panels */
+#properties-container,
+#layer-container {
+  background: var(--fpb-panel-bg) !important;
+  border-left: solid 1px var(--fpb-panel-border) !important;
+  color: var(--fpb-text-primary);
+}
+
+/* Tooltips */
+.tooltiptext {
+  background-color: var(--fpb-tooltip-bg) !important;
+  color: var(--fpb-tooltip-text) !important;
+}
+
+/* Borders */
+.oneline {
+  border: solid 1px var(--fpb-button-border) !important;
+  color: var(--fpb-text-primary);
+}
+
+.oneline-selected {
+  border: solid 1px var(--fpb-selection-border) !important;
+  color: var(--fpb-text-primary);
+}
+
+/* Bootstrap overrides for dark mode */
+[data-theme="dark"] .modal-content {
+  background-color: var(--fpb-modal-bg);
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .card {
+  background-color: var(--fpb-card-bg);
+  border-color: var(--fpb-border-color);
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .form-control {
+  background-color: var(--fpb-input-bg);
+  border-color: var(--fpb-input-border);
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .form-control:focus {
+  background-color: var(--fpb-input-bg);
+  border-color: var(--fpb-selection-border);
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+  color: var(--fpb-text-muted);
+  opacity: 0.8;
+}
+
+[data-theme="dark"] input::placeholder {
+  color: var(--fpb-text-muted);
+  opacity: 0.8;
+}
+
+/* InfoModal specific dark mode styling */
+[data-theme="dark"] .modal-content .text-dark {
+  color: var(--fpb-text-primary) !important;
+}
+
+[data-theme="dark"] .modal-content .text-muted {
+  color: var(--fpb-text-secondary) !important;
+}
+
+[data-theme="dark"] .modal-content p.text-muted {
+  color: var(--fpb-text-secondary) !important;
+}
+
+[data-theme="dark"] .modal-content .bg-light {
+  background-color: var(--fpb-button-hover) !important;
+}
+
+[data-theme="dark"] .modal-content .table {
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .modal-content .table th {
+  background-color: var(--fpb-bg-secondary);
+  color: var(--fpb-text-primary);
+  border-color: var(--fpb-border-color);
+}
+
+[data-theme="dark"] .modal-content .table td {
+  background-color: var(--fpb-bg-primary);
+  color: var(--fpb-text-primary);
+  border-color: var(--fpb-border-color);
+}
+
+[data-theme="dark"] .modal-content .table-striped tbody tr:nth-of-type(odd) td {
+  background-color: var(--fpb-bg-secondary);
+}
+
+[data-theme="dark"] .modal-content .badge {
+  background-color: var(--fpb-button-bg) !important;
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .modal-content a {
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .modal-content a:hover {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .btn {
+  background-color: var(--fpb-button-bg);
+  border-color: var(--fpb-button-border);
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .btn:hover {
+  background-color: var(--fpb-button-hover);
+  color: var(--fpb-text-primary);
+}
+
+
+/* Smooth transitions for theme switching */
+* {
+  transition: background-color 0.3s ease, 
+              border-color 0.3s ease, 
+              color 0.3s ease;
+}
+
+/* Diagram-js specific dark mode adjustments */
+[data-theme="dark"] .djs-palette {
+  background: var(--fpb-panel-bg);
+  border-color: var(--fpb-border-color);
+}
+
+[data-theme="dark"] .djs-palette .entry {
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .djs-palette .entry:hover {
+  background: var(--fpb-button-hover);
+}
+
+[data-theme="dark"] .djs-context-pad {
+  background: var(--fpb-panel-bg);
+  border-color: var(--fpb-border-color);
+}
+
+[data-theme="dark"] .djs-context-pad .entry:hover {
+  background: var(--fpb-button-hover);
+}
+
+/* SVG Canvas and Elements Dark Mode */
+[data-theme="dark"] .djs-container svg {
+  background: var(--fpb-bg-canvas) !important;
+}
+
+[data-theme="dark"] .viewport {
+  background: var(--fpb-bg-canvas) !important;
+}
+
+/* Preview and drag elements */
+[data-theme="dark"] .djs-drag-preview {
+  background: var(--fpb-bg-canvas) !important;
+}
+
+[data-theme="dark"] .djs-shape {
+  background: var(--fpb-bg-canvas) !important;
+}
+
+/* Temporary/preview shapes during drag */
+[data-theme="dark"] .djs-dragger {
+  background: var(--fpb-bg-canvas) !important;
+}
+
+[data-theme="dark"] .djs-dragger .djs-visual {
+  background: var(--fpb-bg-canvas) !important;
+}
+
+/* Don't override element fills - only target specific cases if needed */
+
+/* Canvas background via SVG */
+[data-theme="dark"] .djs-container .viewport {
+  background-color: var(--fpb-bg-canvas) !important;
+}
+
+/* Drag ghost elements */
+[data-theme="dark"] .djs-overlay {
+  background: var(--fpb-bg-canvas) !important;
+}
+
+/* Make sure dragged elements have dark background */
+[data-theme="dark"] .djs-drag-group {
+  background: var(--fpb-bg-canvas) !important;
+}
+
+[data-theme="dark"] .djs-drag-group rect {
+  fill: var(--fpb-bg-canvas) !important;
+}
+
+/* Selection and hover overlays */
+[data-theme="dark"] .djs-outline {
+  stroke: var(--fpb-selection-border) !important;
+}
+
+[data-theme="dark"] .hover {
+  stroke: var(--fpb-text-secondary) !important;
+}
+
+/* Text labels - white in dark mode, black in light mode */
+[data-theme="dark"] text {
+  fill: #ffffff !important;
+  stroke: none !important;
+  stroke-width: 0 !important;
+}
+
+[data-theme="light"] text {
+  fill: #000000 !important;
+  stroke: none !important;
+  stroke-width: 0 !important;
+}
+
+/* Connection lines - make flows and usages white in dark mode, black in light mode */
+[data-theme="dark"] .djs-connection path {
+  stroke: #ffffff !important;
+}
+
+[data-theme="light"] .djs-connection path {
+  stroke: #000000 !important;
+}
+
+/* Specifically target FPB flows and usages */
+[data-theme="dark"] .djs-connection[data-element-id*="Flow"] path,
+[data-theme="dark"] .djs-connection[data-element-id*="Usage"] path {
+  stroke: #ffffff !important;
+}
+
+[data-theme="light"] .djs-connection[data-element-id*="Flow"] path,
+[data-theme="light"] .djs-connection[data-element-id*="Usage"] path {
+  stroke: #000000 !important;
+}
+
+/* Arrow markers should also be white - comprehensive targeting */
+[data-theme="dark"] .djs-connection marker path,
+[data-theme="dark"] .djs-connection marker polygon,
+[data-theme="dark"] defs marker path,
+[data-theme="dark"] defs marker polygon,
+[data-theme="dark"] marker path,
+[data-theme="dark"] marker polygon,
+[data-theme="dark"] svg defs marker path,
+[data-theme="dark"] svg defs marker polygon {
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Target all SVG markers in dark mode */
+[data-theme="dark"] svg marker > * {
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Target markers by ID patterns (FPB likely uses specific marker IDs) */
+[data-theme="dark"] marker[id*="arrow"] path,
+[data-theme="dark"] marker[id*="arrow"] polygon,
+[data-theme="dark"] marker[id*="end"] path,
+[data-theme="dark"] marker[id*="end"] polygon,
+[data-theme="dark"] marker[id*="start"] path,
+[data-theme="dark"] marker[id*="start"] polygon {
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* SystemLimit dashed borders - keep default behavior (user prefers black for distinction) */
+
+/* Grid styling for dark mode - try multiple selectors to catch the grid */
+[data-theme="dark"] .djs-grid {
+  opacity: 0.1 !important;
+}
+
+[data-theme="dark"] .djs-grid circle {
+  fill: #666666 !important;
+  opacity: 0.3 !important;
+}
+
+/* Try targeting grid pattern elements directly */
+[data-theme="dark"] pattern circle {
+  fill: #444444 !important;
+  opacity: 0.2 !important;
+}
+
+[data-theme="dark"] pattern[id*="grid"] circle,
+[data-theme="dark"] pattern[id*="dot"] circle {
+  fill: #555555 !important;
+  opacity: 0.15 !important;
+}
+
+/* Target SVG defs patterns */
+[data-theme="dark"] defs pattern circle {
+  fill: #444444 !important;
+  opacity: 0.2 !important;
+}
+
+/* Grid background styling */
+[data-theme="dark"] rect[fill^="url(#grid"],
+[data-theme="dark"] rect[fill^="url(#dot"] {
+  opacity: 0.1 !important;
+}
+
+/* Alternative: hide grid completely in dark mode if too distracting */
+/* [data-theme="dark"] .djs-grid,
+[data-theme="dark"] pattern[id*="grid"],
+[data-theme="dark"] pattern[id*="dot"],
+[data-theme="dark"] rect[fill^="url(#grid"],
+[data-theme="dark"] rect[fill^="url(#dot"] {
+  display: none !important;
+} */
+
+/* Tooltips and overlays */
+[data-theme="dark"] .djs-tooltip {
+  background: var(--fpb-tooltip-bg) !important;
+  color: var(--fpb-tooltip-text) !important;
+}
+
+/* Fix for all drop feedback in dark mode */
+
+/* Legal drop feedback (green) */
+[data-theme="dark"] .djs-shape.connect-ok .djs-visual > :nth-child(1) {
+  fill: #1a3d1a !important; /* dark green instead of light green */
+}
+
+/* Illegal drop feedback (red) */
+[data-theme="dark"] .djs-shape.connect-not-ok .djs-visual > :nth-child(1),
+[data-theme="dark"] .djs-shape.drop-not-ok .djs-visual > :nth-child(1) {
+  fill: #3d1a1a !important; /* dark red instead of light red */
+}
+
+/* New parent feedback (blue) */
+[data-theme="dark"] .djs-shape.new-parent .djs-visual > :nth-child(1) {
+  fill: #1a1a3d !important; /* dark blue instead of light blue */
+}
+
+/* Frame/SystemLimit specific - keep transparent but show colored border */
+[data-theme="dark"] .djs-frame.connect-ok .djs-visual > :nth-child(1) {
+  fill: none !important; /* Keep SystemLimit transparent */
+  stroke: #4ade80 !important; /* green border for allowed */
+}
+
+[data-theme="dark"] .djs-frame.connect-not-ok .djs-visual > :nth-child(1),
+[data-theme="dark"] .djs-frame.drop-not-ok .djs-visual > :nth-child(1) {
+  stroke: #ff6b6d !important; /* red border for not allowed */
+  fill: none !important; /* Keep SystemLimit transparent */
+}
+
+[data-theme="dark"] .djs-frame.new-parent .djs-visual > :nth-child(1) {
+  fill: none !important; /* Keep SystemLimit transparent */
+  stroke: #60a5fa !important; /* blue border for new parent */
+}
+
+[data-theme="dark"] svg.drop-not-ok {
+  background: #2a1f1f !important; /* dark red canvas background */
+}
+
+[data-theme="dark"] svg.new-parent {
+  background: #1f1f2a !important; /* dark blue */
+}
+
+/* Fix white flash when dropping - try all possible combinations */
+[data-theme="dark"] .djs-shape.drop-ok .djs-visual > :nth-child(1),
+[data-theme="dark"] .djs-frame.drop-ok .djs-visual > :nth-child(1),
+[data-theme="dark"] .djs-shape.drop-ok .djs-visual rect,
+[data-theme="dark"] .djs-frame.drop-ok .djs-visual rect {
+  fill: var(--fpb-bg-canvas) !important;
+  background: var(--fpb-bg-canvas) !important;
+}
+
+/* Target SystemLimit specifically during drop */
+[data-theme="dark"] .djs-shape.drop-ok,
+[data-theme="dark"] .djs-frame.drop-ok {
+  background: var(--fpb-bg-canvas) !important;
+}
+
+/* More aggressive drop-ok targeting */
+[data-theme="dark"] .drop-ok .djs-visual rect,
+[data-theme="dark"] .drop-ok rect {
+  fill: var(--fpb-bg-canvas) !important;
+}
+
+/* Canvas drop zone background */
+[data-theme="dark"] svg.drop-ok {
+  background: var(--fpb-bg-canvas) !important;
+}
+
+/* SystemLimit specific drop feedback fix - more targeted approach */
+[data-theme="dark"] .djs-element[data-element-id*="SystemLimit"] rect {
+  fill: none !important;
+}
+
+[data-theme="dark"] .djs-shape[data-element-id*="SystemLimit"] rect,
+[data-theme="dark"] .djs-frame[data-element-id*="SystemLimit"] rect {
+  fill: none !important;
+}
+
+/* Override white fills specifically for SystemLimit during all states */
+[data-theme="dark"] [data-element-id*="SystemLimit"] rect[fill="white"],
+[data-theme="dark"] [data-element-id*="SystemLimit"] rect[fill="#ffffff"],
+[data-theme="dark"] [data-element-id*="SystemLimit"] rect[fill="#FFFFFF"] {
+  fill: none !important;
+}
+
+/* Container background during drop - but keep SystemLimit transparent */
+[data-theme="dark"] [data-element-id*="SystemLimit"] *[style*="background: white"],
+[data-theme="dark"] [data-element-id*="SystemLimit"] *[style*="background:#ffffff"] {
+  background: transparent !important;
+}
+
+/* Very specific: SystemLimit rects should never have any fill */
+[data-theme="dark"] g[data-element-id*="SystemLimit"] rect {
+  fill: none !important;
+  background: transparent !important;
+}
+
+/* Only target drag preview elements, not actual diagram elements */
+[data-theme="dark"] .djs-shape-preview rect {
+  fill: var(--fpb-bg-canvas) !important;
+}
+
+/* Create shape preview during drag from palette */
+[data-theme="dark"] .djs-drag-preview rect {
+  fill: var(--fpb-bg-canvas) !important;
+}
+
+/* Force canvas background for all diagram containers */
+[data-theme="dark"] .djs-container {
+  background: var(--fpb-bg-canvas) !important;
+}
+
+[data-theme="dark"] .djs-container canvas {
+  background: var(--fpb-bg-canvas) !important;
+}

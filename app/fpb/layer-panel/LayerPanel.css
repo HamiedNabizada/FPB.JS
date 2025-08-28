@@ -167,3 +167,87 @@ padding-top: 3px;
     border-radius: 3px;
     border: 1px solid #ccc;
   }
+
+/* Dark mode styles for LayerPanel */
+[data-theme="dark"] .layerPanel {
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .layerPanel-ProcessOverview-Content {
+  border-top: solid 1px var(--fpb-border-color);
+}
+
+[data-theme="dark"] .tree-item {
+  color: var(--fpb-text-primary);
+  border-bottom: 0.5px solid var(--fpb-border-color);
+}
+
+[data-theme="dark"] .tree-item--active {
+  background: var(--fpb-button-hover);
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .search {
+  background: var(--fpb-input-bg);
+  color: var(--fpb-text-primary);
+  border: 1px solid var(--fpb-input-border);
+}
+
+[data-theme="dark"] .inputfile + label {
+  background: var(--fpb-button-bg);
+  border: 0.5px solid var(--fpb-button-border);
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .inputfile:focus + label,
+[data-theme="dark"] .inputfile + label:hover {
+  background-color: var(--fpb-button-hover);
+}
+
+[data-theme="dark"] .examples {
+  background: var(--fpb-button-bg);
+  border: 0.5px solid var(--fpb-button-border);
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .examples:hover {
+  background-color: var(--fpb-button-hover);
+}
+
+/* React Arborist dark mode */
+[data-theme="dark"] .arborist-node {
+  color: var(--fpb-text-primary);
+  background: transparent;
+}
+
+[data-theme="dark"] .arborist-node:hover {
+  background-color: var(--fpb-button-hover);
+}
+
+[data-theme="dark"] .arborist-node--selected {
+  background-color: var(--fpb-button-bg);
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .arborist-node--selected:hover {
+  background-color: var(--fpb-button-hover);
+}
+
+[data-theme="dark"] .arborist-toggle {
+  color: var(--fpb-text-secondary);
+}
+
+[data-theme="dark"] .arborist-toggle:hover {
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .arborist-tree-container {
+  border: 1px solid var(--fpb-border-color);
+  background: var(--fpb-panel-bg);
+}
+
+[data-theme="dark"] .arborist-search {
+  background: var(--fpb-input-bg);
+  border: 1px solid var(--fpb-input-border);
+  color: var(--fpb-text-primary);
+}
