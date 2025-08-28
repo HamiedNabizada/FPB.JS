@@ -36,7 +36,7 @@ import ResizeModule from 'diagram-js/lib/features/resize';
 import TranslateModule from 'diagram-js/lib/i18n/translate';
 import SelectionModule from 'diagram-js/lib/features/selection';
 import OverlaysModule from 'diagram-js/lib/features/overlays';
-import AutoResize from 'diagram-js/lib/features/auto-resize';
+// import AutoResize from 'diagram-js/lib/features/auto-resize'; // Disabled - allows free SystemLimit resize
 
 // Grid functionality
 import GridModule from 'diagram-js-grid';
@@ -126,8 +126,8 @@ FpbModeler.prototype._modules = [
     PaletteModule,
     ModelingModule,
     JsonImporter,
-    ServicesModule,
-    AutoResize
+    ServicesModule
+    // AutoResize - disabled to allow free SystemLimit resize
 ];
 
 FpbModeler.prototype._createContainer = function (options) {
