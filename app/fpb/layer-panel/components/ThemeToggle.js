@@ -5,21 +5,17 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 
 const ThemeToggle = () => {
+    // Initialize theme state based on current theme (already set by app.js)
     const [isDarkMode, setIsDarkMode] = useState(() => {
-        // Check localStorage for saved theme preference
-        const savedTheme = localStorage.getItem('fpb-theme');
-        if (savedTheme) {
-            return savedTheme === 'dark';
-        }
-        // Check system preference
-        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        return currentTheme === 'dark';
     });
 
     useEffect(() => {
-        // Apply theme to document
-        document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
-        // Save preference to localStorage
-        localStorage.setItem('fpb-theme', isDarkMode ? 'dark' : 'light');
+        // Update theme when user toggles
+        const targetTheme = isDarkMode ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', targetTheme);
+        localStorage.setItem('fpb-theme', targetTheme);
         
         // Fix white flash during drag/drop in dark mode
         if (isDarkMode) {

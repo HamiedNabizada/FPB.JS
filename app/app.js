@@ -8,6 +8,23 @@ import configFile from './config';
 
 import './icons';
 
+// Initialize theme on app startup
+(() => {
+  // Check if theme is already set (to prevent override)
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  if (!currentTheme) {
+    // Check localStorage for saved theme preference
+    const savedTheme = localStorage.getItem('fpb-theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    } else {
+      // Default to light mode
+      document.documentElement.setAttribute('data-theme', 'light');
+      localStorage.setItem('fpb-theme', 'light');
+    }
+  }
+})();
+
 
 // Div Id (#container) von index.html abholen
 var container = document.querySelector('#modeler-container');
