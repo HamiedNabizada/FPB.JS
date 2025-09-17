@@ -1,6 +1,18 @@
-import {
-  assign
-} from 'min-dash';
+import { assign } from 'min-dash';
+
+// Import constants and utilities
+import { 
+  FPB_ELEMENTS, 
+  PALETTE_GROUPS, 
+  PALETTE_ENTRY_IDS, 
+  TOOL_ICONS, 
+  TOOLTIP_KEYS 
+} from './PaletteConstants';
+import { 
+  PaletteActionBuilder, 
+  FpbElementBuilder, 
+  ToolActionHandlers 
+} from './PaletteUtils';
 
 export default function FpbPaletteProvider(create, elementFactory, lassoTool,
   palette, spaceTool, handTool, translate) {
@@ -27,89 +39,49 @@ FpbPaletteProvider.$inject = [
 
 
 FpbPaletteProvider.prototype.getPaletteEntries = function () {
+  const create = this._create;
+  const elementFactory = this._elementFactory;
+  const spaceTool = this._spaceTool;
+  const lassoTool = this._lassoTool;
+  const handTool = this._handTool;
+  const translate = this._translate;
 
-  var actions = {},
-    create = this._create,
-    elementFactory = this._elementFactory,
-    spaceTool = this._spaceTool,
-    lassoTool = this._lassoTool,
-    handTool = this._handTool,
-    translate = this._translate;
-  function createAction(type, group, className, title, options) {
-
-    function createListener(event) {
-      var shape = elementFactory.createShape(assign({ type: type }, options));
-      create.start(event, shape);
-    }
-
-    var shortType = type.replace(/^fpb:/, '');
-    return {
-      group: group,
-      className: className,
-      title: title || 'Create ' + shortType,
-      action: {
-        dragstart: createListener,
-        click: createListener
-      }
-    };
-  }
-
-  assign(actions, {
-    'fpb-systemlimit': createAction(
-      'fpb:SystemLimit', 'fpb', 'icon-fpb-systemlimit', translate('Add System Limit')
-    ),
-    'fpb-product': createAction(
-      'fpb:Product', 'fpb', 'icon-fpb-product', translate('Add Product')
-    ),
-    'fpb-energy': createAction(
-      'fpb:Energy', 'fpb', 'icon-fpb-energy', translate('Add Energy')
-    ),
-    'fpb-information': createAction(
-      'fpb:Information', 'fpb', 'icon-fpb-information', translate('Add Information')
-    ),
-    'fpb-processoperator': createAction(
-      'fpb:ProcessOperator', 'fpb', 'icon-fpb-processoperator', translate('Add Process Operator')
-    ),
-    'fpb-technicalresource': createAction(
-      'fpb:TechnicalResource', 'fpb', 'icon-fpb-technicalresource', translate('Add Technical Resource')
-    ),
-
-    'tool-separator': {
-      group: 'tools',
-      separator: true
-    },
-
-    'lasso-tool': {
-      group: 'tools',
-      className: 'palette-icon-lasso-tool',
-      title: translate('Activate Lasso Tool'),
-      action: {
-        click: function (event) {
-          lassoTool.activateSelection(event);
-        }
-      }
-    },
-    'space-tool': {
-      group: 'tools',
-      className: 'palette-icon-space-tool',
-      title: translate('Activate the create/remove space tool'),
-      action: {
-        click: function (event) {
-          spaceTool.activateSelection(event);
-        }
-      }
-    },
-    'hand-tool': {
-      group: 'tools',
-      className: 'palette-icon-hand-tool',
-      title: translate('Activate the hand tool'),
-      action: {
-        click: function (event) {
-          handTool.activateHand(event);
-        }
-      }
-    }
-  }
+  // Build FPB element entries using utility
+  const fpbElements = FpbElementBuilder.buildElementEntries(
+    FPB_ELEMENTS, 
+    create, 
+    elementFactory, 
+    translate
   );
-  return actions;
+
+  // Build tool entries using action builder
+  const toolEntries = {
+    [PALETTE_ENTRY_IDS.TOOL_SEPARATOR]: PaletteActionBuilder.createSeparator(
+      PALETTE_GROUPS.TOOLS
+    ),
+    
+    [PALETTE_ENTRY_IDS.LASSO_TOOL]: PaletteActionBuilder.createToolAction(
+      PALETTE_GROUPS.TOOLS,
+      TOOL_ICONS.LASSO,
+      translate(TOOLTIP_KEYS.ACTIVATE_LASSO),
+      ToolActionHandlers.createLassoHandler(lassoTool)
+    ),
+    
+    [PALETTE_ENTRY_IDS.SPACE_TOOL]: PaletteActionBuilder.createToolAction(
+      PALETTE_GROUPS.TOOLS,
+      TOOL_ICONS.SPACE,
+      translate(TOOLTIP_KEYS.ACTIVATE_SPACE),
+      ToolActionHandlers.createSpaceHandler(spaceTool)
+    ),
+    
+    [PALETTE_ENTRY_IDS.HAND_TOOL]: PaletteActionBuilder.createToolAction(
+      PALETTE_GROUPS.TOOLS,
+      TOOL_ICONS.HAND,
+      translate(TOOLTIP_KEYS.ACTIVATE_HAND),
+      ToolActionHandlers.createHandHandler(handTool)
+    )
+  };
+
+  // Combine all entries
+  return assign({}, fpbElements, toolEntries);
 };

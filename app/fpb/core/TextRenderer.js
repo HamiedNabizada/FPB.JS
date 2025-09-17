@@ -1,103 +1,114 @@
-import { assign } from 'min-dash';
-import { isLabel } from '../help/utils';
-
+/**
+ * Text Renderer - Refactored
+ * 
+ * Modernized text rendering with improved modularity and error handling
+ */
 import TextUtil from 'diagram-js/lib/util/Text';
-
-var DEFAULT_FONT_SIZE = 15;
-var LINE_HEIGHT_RATIO = 1.2;
-
+import { StyleManager } from './text/StyleManager';
+import { DimensionCalculator } from './text/DimensionCalculator';
 
 export default function TextRenderer(config) {
-
-  var defaultStyle = assign({
-    fontFamily: 'Arial, sans-serif',
-    fontSize: DEFAULT_FONT_SIZE,
-    fontWeight: 'normal',
-    lineHeight: LINE_HEIGHT_RATIO
-  }, config && config.defaultStyle || {});
-
-  var fontSize = parseInt(defaultStyle.fontSize, 10) - 1;
-  var externalStyle = assign({}, defaultStyle, {
-    fontSize: fontSize
-  }, config && config.externalStyle || {});
-
-  var textUtil = new TextUtil({
-    style: defaultStyle
+  // Initialize components
+  this.styleManager = new StyleManager(config);
+  this.textUtil = new TextUtil({
+    style: this.styleManager.getDefaultStyle()
   });
+  this.dimensionCalculator = new DimensionCalculator(this.textUtil, this.styleManager);
 
   /**
-   * Get the new bounds of an externally rendered,
-   * layouted label.
-   *
-   * @param  {Bounds} bounds
-   * @param  {String} text
-   *
-   * @return {Bounds}
+   * Get the new bounds of an externally rendered, layouted label.
+   * 
+   * @param {Bounds} bounds - The bounds object
+   * @param {String} text - The text content
+   * @return {Bounds} Calculated bounds for external label
    */
-  this.getExternalLabelBounds = function (bounds, text) {
-    let targetElement;
-    if(isLabel(bounds)){
-      targetElement = bounds.labelTarget;
-    }
-    var layoutedDimensions = textUtil.getDimensions(text, {
-      box: {
-        width: 90,
-        height: 30,
-        x: bounds.width / 2 + bounds.x,
-        y: bounds.height / 2 + bounds.y
-      },
-
-      style: externalStyle
-    });
-    // resize label shape to fit label text
-    return {
-      x: Math.round(targetElement.x - layoutedDimensions.width),
-      y: Math.round(targetElement.y -  layoutedDimensions.height),
-      width: Math.ceil(layoutedDimensions.width),
-      height: Math.ceil(layoutedDimensions.height)
-    };
+  this.getExternalLabelBounds = function(bounds, text) {
+    return this.dimensionCalculator.calculateExternalLabelBounds(bounds, text);
   };
-  this.getInternalLabelPadding = function (element, text) {
 
-    var layoutedDimensions = textUtil.getDimensions(text, {
-      box: {
-        width: element.width,
-        height: element.height,
-        x: element.x,
-        y: element.y
-      },
-      style: defaultStyle
-    });
-    return Math.ceil(layoutedDimensions.height);
-  }
-
+  /**
+   * Calculate internal label padding based on text dimensions.
+   * 
+   * @param {Object} element - The element containing the label
+   * @param {String} text - The text content
+   * @return {Number} Calculated padding height
+   */
+  this.getInternalLabelPadding = function(element, text) {
+    return this.dimensionCalculator.calculateInternalLabelPadding(element, text);
+  };
 
   /**
    * Create a layouted text element.
-   *
-   * @param {String} text
-   * @param {Object} [options]
-   *
-   * @return {SVGElement} rendered text
+   * 
+   * @param {String} text - The text content
+   * @param {Object} [options] - Text rendering options
+   * @return {SVGElement} Rendered text element
    */
-  this.createText = function (text, options) {
-    return textUtil.createText(text, options || {});
+  this.createText = function(text, options = {}) {
+    try {
+      return this.textUtil.createText(text, options);
+    } catch (error) {
+      console.error('TextRenderer: Error creating text element:', error);
+      // Return empty text element as fallback
+      return this.textUtil.createText('', options);
+    }
   };
 
   /**
    * Get default text style.
+   * 
+   * @return {Object} Default style configuration
    */
-  this.getDefaultStyle = function () {
-    return defaultStyle;
+  this.getDefaultStyle = function() {
+    return this.styleManager.getDefaultStyle();
   };
 
   /**
    * Get the external text style.
+   * 
+   * @return {Object} External style configuration
    */
-  this.getExternalStyle = function () {
-    return externalStyle;
+  this.getExternalStyle = function() {
+    return this.styleManager.getExternalStyle();
   };
 
+  /**
+   * Update text renderer configuration.
+   * 
+   * @param {Object} newConfig - New configuration to merge
+   */
+  this.updateConfig = function(newConfig) {
+    this.styleManager.updateConfig(newConfig);
+    
+    // Reinitialize TextUtil with updated style
+    this.textUtil = new TextUtil({
+      style: this.styleManager.getDefaultStyle()
+    });
+    
+    // Update dimension calculator reference
+    this.dimensionCalculator = new DimensionCalculator(this.textUtil, this.styleManager);
+  };
+
+  /**
+   * Validate text content and element parameters.
+   * 
+   * @param {String} text - Text to validate
+   * @param {Object} element - Element to validate  
+   * @return {Boolean} True if valid
+   */
+  this.validateParameters = function(text, element) {
+    if (typeof text !== 'string') {
+      console.warn('TextRenderer: Text parameter should be a string, got:', typeof text);
+      return false;
+    }
+    
+    if (element && (!element.width || !element.height)) {
+      console.warn('TextRenderer: Element should have width and height properties');
+      return false;
+    }
+    
+    return true;
+  };
 }
 
 TextRenderer.$inject = [

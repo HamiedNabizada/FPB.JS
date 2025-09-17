@@ -96,6 +96,7 @@
     <xs:element name="systemLimit">
         <xs:complexType>
             <xs:attribute name="id" type="xs:string"/>
+            <xs:attribute name="name" type="xs:string"/>
         </xs:complexType>
     </xs:element>
     <!-- Merkmale -->
@@ -233,6 +234,7 @@
                                 </xs:complexType>
                             </xs:element>
                         </xs:sequence>
+                        <xs:attribute name="id" type="xs:string"/>
                     </xs:complexType>
                 </xs:element>
             </xs:sequence>

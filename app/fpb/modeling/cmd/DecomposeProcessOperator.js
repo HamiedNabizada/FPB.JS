@@ -45,7 +45,6 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
 
     // Falls ProcessOperator bereits dekomponiert gewesen ist
     if (processOperator.businessObject.decomposedView) {
-        console.log("DECIMPOSED VIEW")
         isDecomposed = true;
         decomposedProcess = processOperator.businessObject.decomposedView;
         systemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
@@ -133,7 +132,6 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
         if (state.position === 'incoming') {
             if (state.state.outgoing.length > 0) {
                 state.state.outgoing.forEach(function (connection) {
-                    console.log(connection)
                     // Flows anpassen
                     connection.waypoints[0].x = sizesAndPositions.incomings.start_x + 25;
                     try {

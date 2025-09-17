@@ -1,14 +1,18 @@
 import inherits from 'inherits';
-
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
+import { some } from 'min-dash';
 
 import { getElementsFromElementsContainer } from '../help/helpUtils';
-
 import { is, isAny, isLabel } from '../help/utils';
-import {
-  some
 
-} from 'min-dash';
+// Import our new constants and utilities
+import { ELEMENT_TYPES, ELEMENT_GROUPS, FLOW_HINTS, RULE_PRIORITIES } from './RuleConstants';
+import { 
+  checkIfItsWithinSystemLimits, 
+  moveOnTechnicalResource, 
+  getConnectionType,
+  areAlreadyConnected 
+} from './RuleUtils';
 
 export default function FpbRuleProvider(eventBus, canvas) {
 
@@ -19,26 +23,34 @@ export default function FpbRuleProvider(eventBus, canvas) {
 
 
 }
-var HIGH_PRIORITY = 1500;
+
 FpbRuleProvider.$inject = ['eventBus', 'canvas'];
 
 inherits(FpbRuleProvider, RuleProvider);
 
 
 FpbRuleProvider.prototype.init = function () {
-  var canvas = this._canvas;
-  var eventBus = this._eventBus;
+  const canvas = this._canvas;
+  const eventBus = this._eventBus;
 
-
-  this.addRule('shape.create', HIGH_PRIORITY, function (context) {
-    var target = context.target,
-      shape = context.shape,
-      position = context.position;
+  this.addRule('shape.create', RULE_PRIORITIES.HIGH, (context) => {
+    const { target, shape, position } = context;
     return canCreate(shape, target, position);
   });
 
   function canCreate(shape, target, position) {
+    const DEBUG = process.env.NODE_ENV === 'development';
+    
+    if (DEBUG) {
+      console.log('FpbRuleProvider.canCreate', {
+        shape: shape?.type,
+        target: target?.type,
+        position: position ? `${position.x},${position.y}` : 'none'
+      });
+    }
+    
     if (!target) {
+      if (DEBUG) console.warn('canCreate: No target specified');
       return false;
     }
 
@@ -47,53 +59,53 @@ FpbRuleProvider.prototype.init = function () {
     }
 
 
-    if (isAny(shape, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
-      if (is(target, 'fpb:SystemLimit')) {
-        return checkIfItsWithinSystemLimits(shape, target, position)
-      }
-      else {
+    if (isAny(shape, ELEMENT_GROUPS.STATES)) {
+      if (is(target, ELEMENT_TYPES.SYSTEM_LIMIT)) {
+        return checkIfItsWithinSystemLimits(shape, target, position);
+      } else {
+        if (DEBUG) console.warn('State element requires SystemLimit target');
         return false;
       }
     }
 
-    if (is(shape, 'fpb:ProcessOperator')) {
-      if (is(target, 'fpb:SystemLimit')) {
+    if (is(shape, ELEMENT_TYPES.PROCESS_OPERATOR)) {
+      if (is(target, ELEMENT_TYPES.SYSTEM_LIMIT)) {
         return true;
       } else {
+        if (DEBUG) console.warn('ProcessOperator requires SystemLimit target');
         return false;
       }
     };
-    if (is(shape, 'fpb:TechnicalResource')) {
-      if (is(target, 'fpb:SystemLimit')) {
+    if (is(shape, ELEMENT_TYPES.TECHNICAL_RESOURCE)) {
+      if (is(target, ELEMENT_TYPES.SYSTEM_LIMIT)) {
         return false;
       }
       else {
         return true;
       }
     };
-    if (is(shape, 'fpb:SystemLimit')) {
-      if (is(target, 'fpb:TechnicalResource')) {
+    if (is(shape, ELEMENT_TYPES.SYSTEM_LIMIT)) {
+      if (is(target, ELEMENT_TYPES.TECHNICAL_RESOURCE)) {
         return false;
       }
       else {
-        let process = canvas.getRootElement();
-        if (is(process, 'fpb:Process')) {
-          let technicalResources = getElementsFromElementsContainer(process.businessObject.elementsContainer, 'fpb:TechnicalResource');
-          if (technicalResources.length == 0) {
+        const process = canvas.getRootElement();
+        if (is(process, ELEMENT_TYPES.PROCESS)) {
+          const technicalResources = getElementsFromElementsContainer(process.businessObject.elementsContainer, ELEMENT_TYPES.TECHNICAL_RESOURCE);
+          if (technicalResources.length === 0) {
             return true;
           } else {
-            let technincalResource;
+            let technicalResource;
             if (some(technicalResources, (tr) => {
               if (moveOnTechnicalResource(shape, tr, position)) {
-                technincalResource = tr;
+                technicalResource = tr;
                 return true;
               }
-
             })) {
               eventBus.fire('illegalCreate', {
                 movedElement: shape,
-                targetElement: technincalResource,
-                position: { x: technincalResource.x + technincalResource.width / 2, y: technincalResource.y + technincalResource.height / 2 }
+                targetElement: technicalResource,
+                position: { x: technicalResource.x + technicalResource.width / 2, y: technicalResource.y + technicalResource.height / 2 }
               })
               return false;
             } else {
@@ -111,86 +123,71 @@ FpbRuleProvider.prototype.init = function () {
     }
   };
 
-  this.addRule('connection.create', HIGH_PRIORITY, function (context) {
-    var source = context.source,
-      target = context.target;
+  this.addRule('connection.create', RULE_PRIORITIES.HIGH, (context) => {
+    const { source, target } = context;
     return canConnect(source, target);
   });
 
-  this.addRule('connection.reconnectStart', HIGH_PRIORITY, function (context) {
-    var connection = context.connection,
-      source = context.hover || context.source,
-      target = connection.target;
-
+  this.addRule('connection.reconnectStart', RULE_PRIORITIES.HIGH, (context) => {
+    const { connection } = context;
+    const source = context.hover || context.source;
+    const target = connection.target;
     return canConnect(source, target, connection);
   });
 
-  this.addRule('connection.reconnectEnd', HIGH_PRIORITY, function (context) {
-    var connection = context.connection,
-      source = connection.source,
-      target = context.hover || context.target;
-
+  this.addRule('connection.reconnectEnd', RULE_PRIORITIES.HIGH, (context) => {
+    const { connection } = context;
+    const source = connection.source;
+    const target = context.hover || context.target;
     return canConnect(source, target, connection);
   });
 
-  this.addRule('shape.resize', function (context) {
-    var shape = context.shape;
+  this.addRule('shape.resize', (context) => {
+    const { shape } = context;
     // Nur die Größe der SystemGrenze darf geändert werden
-    if (is(shape, 'fpb:SystemLimit')) {
-      return true;
-    }
-    else {
-      return false;
-    }
+    return is(shape, ELEMENT_TYPES.SYSTEM_LIMIT);
   });
 
-  this.addRule('elements.move', function (context) {
-    var target = context.target,
-      shapes = context.shapes,
-      position = context.position;
-    return canMove(shapes, target, position)
+  this.addRule('elements.move', (context) => {
+    const { target, shapes, position } = context;
+    return canMove(shapes, target, position);
   });
 
-  function canMove(elements, target, position) {
+  const canMove = (elements, target, position) => {
     // allow default move check to start move operation
     if (!target) {
       return true;
     }
-    return elements.every(function (element) {
-      return canDrop(element, target, position);
-    });
-  }
+    return elements.every(element => canDrop(element, target, position));
+  };
 
   /**
- * Can an element be dropped into the target element
- *
- * @return {Boolean}
- */
-  function canDrop(element, target, position) {
+   * Can an element be dropped into the target element
+   */
+  const canDrop = (element, target, position) => {
     if (is(element, 'label')) {
       return false;
     }
 
-    if (is(element, 'fpb:SystemLimit')) {
-      if (is(target, 'fpb:TechnicalResource')) {
+    if (is(element, ELEMENT_TYPES.SYSTEM_LIMIT)) {
+      if (is(target, ELEMENT_TYPES.TECHNICAL_RESOURCE)) {
         return false;
       }
-      let process = canvas.getRootElement();
-      let technicalResources = getElementsFromElementsContainer(process.businessObject.elementsContainer, 'fpb:TechnicalResource');
-      if (technicalResources.length == 0) {
+      const process = canvas.getRootElement();
+      const technicalResources = getElementsFromElementsContainer(process.businessObject.elementsContainer, ELEMENT_TYPES.TECHNICAL_RESOURCE);
+      if (technicalResources.length === 0) {
         return true;
       } else {
-        let technincalResource;
+        let technicalResource;
         if (some(technicalResources, (tr) => {
           if (moveOnTechnicalResource(element, tr, position)) {
-            technincalResource = tr;
+            technicalResource = tr;
             return true;
           }
-
         })) {
           eventBus.fire('illegalMove', {
             movedElement: element,
-            targetElement: technincalResource,
+            targetElement: technicalResource,
             position: { x: element.x + element.width / 2, y: element.y + element.height / 2 }
           })
           return false;
@@ -201,14 +198,14 @@ FpbRuleProvider.prototype.init = function () {
 
     };
     // Nur Droppen innerhalb der Systemgrenze.
-    if (isLabel(element) || isAny(element, ['fpb:Product', 'fpb:Energy', 'fpb:Information', 'fpb:ProcessOperator'])) {
+    if (isLabel(element) || isAny(element, ELEMENT_GROUPS.INSIDE_SYSTEM_LIMIT)) {
       if (element.parent) {
         return target === element.parent;
       }
     };
     // TechnicalResource darf nicht innerhalb der SystemGrenzen gedropped werden.
-    if (is(element, 'fpb:TechnicalResource')) {
-      if (!isAny(target, ['fpb:SystemLimit', 'fpb:Product', 'fpb:Energy', 'fpb:Information', 'fpb:ProcessOperator'])) {
+    if (is(element, ELEMENT_TYPES.TECHNICAL_RESOURCE)) {
+      if (!isAny(target, [ELEMENT_TYPES.SYSTEM_LIMIT, ...ELEMENT_GROUPS.STATES, ELEMENT_TYPES.PROCESS_OPERATOR])) {
         return true;
       }
       else {
@@ -218,118 +215,52 @@ FpbRuleProvider.prototype.init = function () {
 
   }
 
-  // Prüft ob Product, Energy, Information oder ProcessOperator innerhalb der Systemgrenzen liegt.
-  function checkIfItsWithinSystemLimits(shape, target, position) {
-    let limit_x_1 = target.x - target.width / 2;
-    let limit_x_2 = target.x + target.width / 2;
-    let limit_y_1 = target.y - target.heigth / 2;
-    let limit_y_2 = target.y + target.height / 2;
-
-    let shape_x_1 = position.x - shape.width / 2;
-    let shape_x_2 = position.x + shape.width / 2;
-    let shape_y_1 = position.y - shape.height / 2;
-    let shape_y_2 = position.y + shape.height / 2;
-
-    if (shape_x_1 >= limit_x_1 || shape_x_2 <= limit_x_2) {
-      if (shape_y_1 >= limit_y_1 || shape_y_2 <= limit_y_2) {
-        return true;
-      }
-    }
-    else {
-      return false;
-    }
-  };
-
-  // Prüft ob SystemLimit auf eine technische Ressource verschoben/erstellt wird
-  function moveOnTechnicalResource(systemLimit, technicalResource, position) {
-    let x1 = position.x - systemLimit.width / 2;
-    let x2 = position.x + systemLimit.width / 2;
-    let y1 = position.y - systemLimit.height / 2;
-    let y2 = position.y + systemLimit.height / 2;
-    let errorX = technicalResource.x;
-    let errorY = technicalResource.y + technicalResource.height / 2;
-    if (position.x > technicalResource.x) {
-      // Annhäherung von rechts
-      errorX += technicalResource.width;
-    }
-
-    if ((x1 <= errorX) && (errorX <= x2)) {
-      if ((y1 <= errorY) && (errorY <= y2)) {
-        return true;
-      }
-    }
-    return false;
-
-  }
 };
 
 
 
 function canConnect(source, target) {
   // Keine Connections zu Label
-  if (target.type === 'label') {
+  if (target.type === ELEMENT_TYPES.LABEL) {
     return;
   }
+  
   // Keine Connection zwischen Shapes, zwischen denen schon eine Verbindung besteht
-  let allReadyConnected = some(source.outgoing, function (c) {
-    return c.businessObject.targetRef.id === target.id
-  });
-  if (allReadyConnected) {
+  if (areAlreadyConnected(source, target)) {
     return;
   }
+  
   // Verbindung States mit ProcessOperator
-  if (isAny(source, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
-    if (is(target, 'fpb:ProcessOperator')) {
-      // Gewählter Flow Type ist in TemporaraFlowHint hinterlegt
-      if (source.TemporaryFlowHint) {
-        if (source.TemporaryFlowHint === 'Parallel') {
-          return { type: 'fpb:ParallelFlow' }
-        };
-        if (source.TemporaryFlowHint === 'Alternative') {
-          return { type: 'fpb:AlternativeFlow' }
-        }
-      };
-      return { type: 'fpb:Flow' };
+  if (isAny(source, ELEMENT_GROUPS.STATES)) {
+    if (is(target, ELEMENT_TYPES.PROCESS_OPERATOR)) {
+      return getConnectionType(source, source.TemporaryFlowHint);
     }
-    else {
-      return;
-    }
+    return;
   }
+  
   // Verbindung ProcessOperator
-  if (is(source, 'fpb:ProcessOperator')) {
+  if (is(source, ELEMENT_TYPES.PROCESS_OPERATOR)) {
     // mit States
-    if (isAny(target, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
-      if (source.TemporaryFlowHint) {
-        if (source.TemporaryFlowHint === 'Parallel') {
-          return { type: 'fpb:ParallelFlow' }
-        };
-        if (source.TemporaryFlowHint === 'Alternative') {
-          return { type: 'fpb:AlternativeFlow' }
-        }
-      };
-      return { type: 'fpb:Flow' };
+    if (isAny(target, ELEMENT_GROUPS.STATES)) {
+      return getConnectionType(source, source.TemporaryFlowHint);
     }
     // mit TechnicalResource
-    else if (is(target, 'fpb:TechnicalResource')) {
-      if (source.TemporaryFlowHint === 'Usage') {
-        return { type: 'fpb:Usage' }; // Nur Rückgabe des Usage Edge, wenn dieser auch ausgewählt wurde!
+    else if (is(target, ELEMENT_TYPES.TECHNICAL_RESOURCE)) {
+      if (source.TemporaryFlowHint === FLOW_HINTS.USAGE) {
+        return { type: ELEMENT_TYPES.USAGE };
       }
-      else {
-        return
-      };
-    }
-    else {
       return;
     }
-  };
-  // Verbindung TechnicalResource mit ProcessOperator
-  if (is(source, 'fpb:TechnicalResource') && is(target, 'fpb:ProcessOperator')) {
-    return { type: 'fpb:Usage' };
-  }
-  else {
     return;
   }
-};
+  
+  // Verbindung TechnicalResource mit ProcessOperator
+  if (is(source, ELEMENT_TYPES.TECHNICAL_RESOURCE) && is(target, ELEMENT_TYPES.PROCESS_OPERATOR)) {
+    return { type: ELEMENT_TYPES.USAGE };
+  }
+  
+  return;
+}
 
 FpbRuleProvider.prototype.canConnect = canConnect;
 

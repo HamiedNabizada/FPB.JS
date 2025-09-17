@@ -11,7 +11,7 @@ export function isFpb(element) {
 
 export function is(element, type) {
   var bo = getBusinessObject(element);
-  return bo && (typeof bo.$instanceOf === 'function') && bo.$instanceOf(type);
+  return bo && bo.$instanceOf && (typeof bo.$instanceOf === 'function') && bo.$instanceOf(type);
 }
 
 

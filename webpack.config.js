@@ -84,6 +84,7 @@ module.exports = (env, argv) => {
         patterns: [
           { from: 'css/diagram-js.css', context: 'app', to: '../css/diagram-js.css' },
           { from: 'css/fpbjs.css', context: 'app', to: '../css/fpbjs.css' },
+          { from: 'css/dark-mode.css', context: 'app', to: '../css/dark-mode.css' },
           { from: 'fpb/**/*.css', context: 'app', to: '../css/' },
           { from: 'favicon.*', context: 'app', to: '.' }
         ]
@@ -93,9 +94,16 @@ module.exports = (env, argv) => {
     mode: isProduction ? 'production' : 'development',
     devtool: isProduction ? 'source-map' : 'eval-source-map',
     devServer: {
-      static: {
-        directory: path.join(__dirname, 'dist/web'),
-      },
+      static: [
+        {
+          directory: path.join(__dirname, 'dist/web'),
+          publicPath: '/'
+        },
+        {
+          directory: path.join(__dirname, 'app/css'),
+          publicPath: '/css'
+        }
+      ],
       compress: true,
       port: 3001,
       open: true

@@ -1,6 +1,6 @@
 {
     "name": "FPB",
-    "uri": "http://www.hsu-ifa.de/fpbjs",
+    "uri": "http://www.vdivde.de/3682",
     "associations": [],
     "types": [
         {
@@ -15,7 +15,7 @@
                 {
                     "name": "targetNamespace",
                     "isAttr": true,
-                    "default": "http://www.hsu-ifa.de/fpbjs",
+                    "default": "http://www.vdivde.de/3682",
                     "type": "String"
                 },
                 {
@@ -279,19 +279,146 @@
                     "isAttr": true
                 },
                 {
-                    "name": "referenceTo",
-                    "type": "BaseElement",
-                    "isAttr": true,
-                    "isMany": true,
-                    "isReference": true
-                },
-                {
                     "name": "versionNumber",
                     "type": "String",
                     "isAttr": true
                 },
                 {
                     "name": "revisionNumber",
+                    "type": "String",
+                    "isAttr": true
+                },
+                {
+                    "name": "references",
+                    "type": "References"
+                }
+            ]
+        },
+        {
+            "name": "References",
+            "properties": [
+                {
+                    "name": "reference",
+                    "type": "Reference",
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "Reference",
+            "properties": [
+                {
+                    "name": "id",
+                    "type": "String",
+                    "isAttr": true
+                }
+            ]
+        },
+        {
+            "name": "Assignments",
+            "properties": [
+                {
+                    "name": "assigned",
+                    "type": "Assigned",
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "Assigned",
+            "properties": [
+                {
+                    "name": "id",
+                    "type": "String",
+                    "isAttr": true
+                }
+            ]
+        },
+        {
+            "name": "FlowContainer",
+            "properties": [
+                {
+                    "name": "flow",
+                    "type": "FlowReference",
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "FlowReference",
+            "properties": [
+                {
+                    "name": "id",
+                    "type": "String",
+                    "isAttr": true
+                },
+                {
+                    "name": "flowType",
+                    "type": "String",
+                    "isAttr": true
+                }
+            ]
+        },
+        {
+            "name": "Flows",
+            "properties": [
+                {
+                    "name": "flow",
+                    "type": "FlowConnection",
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "FlowConnection",
+            "properties": [
+                {
+                    "name": "entry",
+                    "type": "FlowEntry",
+                    "isMany": true
+                },
+                {
+                    "name": "exit",
+                    "type": "FlowExit",
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "FlowEntry",
+            "properties": [
+                {
+                    "name": "id",
+                    "type": "String",
+                    "isAttr": true
+                }
+            ]
+        },
+        {
+            "name": "FlowExit",
+            "properties": [
+                {
+                    "name": "id",
+                    "type": "String",
+                    "isAttr": true
+                }
+            ]
+        },
+        {
+            "name": "Usages",
+            "properties": [
+                {
+                    "name": "usage",
+                    "type": "UsageReference",
+                    "isMany": true
+                }
+            ]
+        },
+        {
+            "name": "UsageReference",
+            "properties": [
+                {
+                    "name": "id",
                     "type": "String",
                     "isAttr": true
                 }

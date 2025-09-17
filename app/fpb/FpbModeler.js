@@ -36,7 +36,11 @@ import ResizeModule from 'diagram-js/lib/features/resize';
 import TranslateModule from 'diagram-js/lib/i18n/translate';
 import SelectionModule from 'diagram-js/lib/features/selection';
 import OverlaysModule from 'diagram-js/lib/features/overlays';
-import AutoResize from 'diagram-js/lib/features/auto-resize';
+// import AutoResize from 'diagram-js/lib/features/auto-resize'; // Disabled - allows free SystemLimit resize
+
+// Grid functionality
+import GridModule from 'diagram-js-grid';
+import GridSnappingModule from 'diagram-js/lib/features/grid-snapping';
 
 // Fpb Specific Module 
 import FpbCoreModule from './core'
@@ -45,6 +49,7 @@ import ContextPadModule from './context-pad';
 import PaletteModule from './palette';
 import ModelingModule from './modeling';
 import JsonImporter from './importer';
+import ServicesModule from './services';
 
 
 var DEFAULT_OPTIONS = {
@@ -113,13 +118,16 @@ FpbModeler.prototype._modules = [
     TranslateModule,
     SelectionModule,
     OverlaysModule,
+    GridModule,
+    GridSnappingModule,
     FpbCoreModule,
     LabelEditingModule,
     ContextPadModule,
     PaletteModule,
     ModelingModule,
     JsonImporter,
-    AutoResize
+    ServicesModule
+    // AutoResize - disabled to allow free SystemLimit resize
 ];
 
 FpbModeler.prototype._createContainer = function (options) {
@@ -347,12 +355,46 @@ FpbModeler.prototype.saveSVG = function (options, done) {
 
     try {
         var canvas = this.get('canvas');
+        
+        // Find the layer that contains visible content
+        var activeLayer = null;
+        Object.keys(canvas._layers).forEach(function(layerName) {
+            var layer = canvas._layers[layerName];
+            if (layer.group && layer.group.children && layer.group.children.length > 0) {
+                var style = window.getComputedStyle(layer.group);
+                if (style.display !== 'none' && layer.visible !== false) {
+                    activeLayer = layer;
+                }
+            }
+        });
+        
+        var contentNode = activeLayer ? activeLayer.group : canvas.getDefaultLayer();
+        var defsNode = domQuery('defs', canvas._svg);
 
-        var contentNode = canvas.getDefaultLayer(),
-            defsNode = domQuery('defs', canvas._svg);
-
-        var contents = innerSVG(contentNode),
-            defs = defsNode ? '<defs>' + innerSVG(defsNode) + '</defs>' : '';
+        var contents = innerSVG(contentNode);
+        
+        // Fix SVG paths without fill="none" to prevent black fills
+        contents = contents.replace(/<path([^>]*?)style="([^"]*?)"([^>]*?)>/g, function(match, before, styleContent, after) {
+            // Only add fill="none" if no fill is specified and it's not a hit detection path
+            if (!styleContent.includes('fill:') && !match.includes('djs-hit')) {
+                var newStyle = styleContent + (styleContent.endsWith(';') ? '' : ';') + ' fill: none;';
+                return '<path' + before + 'style="' + newStyle + '"' + after + '>';
+            }
+            return match;
+        });
+        
+        // Clean defs from grid patterns
+        var cleanDefs = '';
+        if (defsNode) {
+            var defsClone = defsNode.cloneNode(true);
+            var gridPatterns = defsClone.querySelectorAll('pattern[id*="djs-grid-pattern"]');
+            Array.prototype.forEach.call(gridPatterns, function(pattern) {
+                if (pattern.parentNode) {
+                    pattern.parentNode.removeChild(pattern);
+                }
+            });
+            cleanDefs = '<defs>' + innerSVG(defsClone) + '</defs>';
+        }
 
         var bbox = contentNode.getBBox();
 
@@ -363,10 +405,10 @@ FpbModeler.prototype.saveSVG = function (options, done) {
             '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ' +
             'width="' + bbox.width + '" height="' + bbox.height + '" ' +
             'viewBox="' + bbox.x + ' ' + bbox.y + ' ' + bbox.width + ' ' + bbox.height + '" version="1.1">' +
-            defs + contents +
+            cleanDefs + contents +
             '</svg>';
     } catch (e) {
-        console.log(e)
+        console.error('SVG generation failed:', e);
         err = e;
     }
 
