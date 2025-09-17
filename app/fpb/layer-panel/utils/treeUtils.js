@@ -32,24 +32,32 @@ const getProcessDisplayName = (process, maxLength = 25) => {
  * @returns {Array} Array of tree data for Arborist component
  */
 export const createArboristTreeData = (processes) => {
+    // Create a map of processes by ID for faster lookup
+    const processMap = new Map();
+    processes.forEach(process => {
+        processMap.set(process.id, process);
+    });
+
     const buildChildrenForProcess = (parentProcess, allProcesses) => {
         const children = [];
-        allProcesses.forEach((process) => {
-            if (process.businessObject.parent === parentProcess) {
+
+        if (parentProcess.businessObject.consistsOfProcesses) {
+            parentProcess.businessObject.consistsOfProcesses.forEach(childProcess => {
                 const child = {
-                    id: process.id,
-                    name: getProcessDisplayName(process),
-                    process: process,
-                    children: buildChildrenForProcess(process, allProcesses)
+                    id: childProcess.id,
+                    name: getProcessDisplayName(childProcess),
+                    process: childProcess,
+                    children: buildChildrenForProcess(childProcess, allProcesses)
                 };
                 children.push(child);
-            }
-        });
+            });
+        }
         return children;
     };
 
     const rootNodes = [];
     processes.forEach((process) => {
+        // Check if this is a root process (parent is Project)
         if (is(process.businessObject.parent, 'fpb:Project')) {
             const rootNode = {
                 id: process.id,

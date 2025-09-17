@@ -110,7 +110,20 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                         });
                     }
                 });
-                modeling.switchProcess(project.entryPoint);
+                // Switch to main process with additional error handling
+                try {
+                    console.log('🔄 JSONImporter: Switching to main process:', project.entryPoint);
+                    console.log('🔍 JSONImporter: project.entryPoint type:', typeof project.entryPoint, 'has businessObject:', !!project.entryPoint?.businessObject);
+                    if (project.entryPoint?.businessObject) {
+                        console.log('🔍 JSONImporter: businessObject elementsContainer:', project.entryPoint.businessObject.elementsContainer);
+                    }
+                    modeling.switchProcess(project.entryPoint);
+                    console.log('✅ JSONImporter: Process switch completed');
+                } catch (error) {
+                    console.error('❌ JSONImporter: Process switch failed:', error);
+                    console.log('🔍 JSONImporter: project.entryPoint at error time:', project.entryPoint);
+                    // Don't throw - just log the error and continue
+                }
             }, IMPORT_TIMING.UI_INITIALIZATION_DELAY);
         } catch (error) {
             this._errorHandler.handleError(error);
@@ -411,7 +424,8 @@ JSONImporter.prototype.buildCharacteristics = function (bO, char) {
             collectionAdd(characteristics, characteristic);
         }
     });
-    bO.characteristics = characteristics;
+    // Use proper diagram-js property setting for characteristics
+    bO.set('characteristics', characteristics);
 }
 
 JSONImporter.prototype.updateDepedencies = function (container, element) {

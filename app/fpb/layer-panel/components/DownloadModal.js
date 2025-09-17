@@ -11,6 +11,7 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import Container from 'react-bootstrap/Container';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import XMLMapper from '../../xml/XMLMapper.js';
 
 const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedElements }) => {
     const [show, setShow] = useState(false);
@@ -138,7 +139,7 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
         }
     }
 
-    function go() {
+    async function go() {
         eventBus.fire('dataStore.updateAll', {});
         let data;
         let dataStr;
@@ -161,10 +162,15 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
 
         try {
             
-            // Export based on format selection (only JSON supported)
+            // Export based on format selection
             if (exportFormat === 'json') {
                 dataEdited = JSON.stringify(data, replacer, 4);
                 contentType = "data:text/json;charset=utf-8,";
+            } else if (exportFormat === 'xml') {
+                // Convert to XML format
+                const xmlMapper = new XMLMapper();
+                dataEdited = await xmlMapper.convertToXML(data);
+                contentType = "data:text/xml;charset=utf-8,";
             } else {
                 console.error('Unsupported export format:', exportFormat);
                 return;
@@ -289,6 +295,27 @@ const Forms_Format = memo(function Forms_Format(props) {
                                 value="json"
                                 defaultChecked
                             />
+                            <div>
+                                <Form.Check
+                                    type="radio"
+                                    label="XML (Beta)"
+                                    name="exportFormat"
+                                    id="formatXML"
+                                    value="xml"
+                                />
+                                <div style={{fontSize: '11px', color: '#6c757d', marginTop: '2px', marginLeft: '20px'}}>
+                                    Based on: <a
+                                        href="https://www.researchgate.net/publication/361951781_Vorschlag_fur_eine_XML-Reprasentation_der_Formalisierten_Prozessbeschreibung_nach_VDIVDE_3682"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{color: '#007bff', textDecoration: 'none'}}
+                                        onMouseOver={(e) => e.target.style.textDecoration = 'underline'}
+                                        onMouseOut={(e) => e.target.style.textDecoration = 'none'}
+                                    >
+                                        Vorschlag für eine XML-Repräsentation der Formalisierten Prozessbeschreibung nach VDI/VDE 3682
+                                    </a>
+                                </div>
+                            </div>
                         </Col>
                     </Form.Group>
                 </fieldset>
