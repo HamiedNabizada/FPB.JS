@@ -540,10 +540,10 @@ const Characteristics = (props) => {
                             <Form.Group as={Col} controlId="pp_characteristics_descriptiveElement_actualValues">
                               <Form.Label>Actual Values</Form.Label>
                               <InputGroup>
-                                <Form.Control placeholder="value" defaultValue={characteristics[no].descriptiveElement.actualValues.value} onChange={(event) => {
+                                <Form.Control placeholder="value" defaultValue={characteristics[no].descriptiveElement.actualValues?.value || ''} onChange={(event) => {
                                   updateCharacteristics('descriptiveElement', 'actualValues', event.target.value, 'value')
                                 }} />
-                                <Form.Control placeholder="unit" defaultValue={characteristics[no].descriptiveElement.setpointValue.unit} onChange={(event) => {
+                                <Form.Control placeholder="unit" defaultValue={characteristics[no].descriptiveElement.actualValues?.unit || ''} onChange={(event) => {
                                   updateCharacteristics('descriptiveElement', 'actualValues', event.target.value, 'unit')
                                 }} />
                               </InputGroup>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema elementFormDefault="qualified" targetNamespace="http://www.fpbjs.net/visual"
+    xmlns:visual="http://www.fpbjs.net/visual"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    
+    <xs:annotation>
+        <xs:documentation>
+            FPB.js Visual Extension Schema for VDI/VDE 3682
+            Tool-specific visual layout information for diagram elements
+        </xs:documentation>
+    </xs:annotation>
+    
+    <!-- Visual positioning attributes for all diagram elements -->
+    <xs:attribute name="x" type="xs:double">
+        <xs:annotation>
+            <xs:documentation>X-coordinate position in the diagram canvas</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+    
+    <xs:attribute name="y" type="xs:double">
+        <xs:annotation>
+            <xs:documentation>Y-coordinate position in the diagram canvas</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+    
+    <xs:attribute name="width" type="xs:double">
+        <xs:annotation>
+            <xs:documentation>Width of the visual element</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+    
+    <xs:attribute name="height" type="xs:double">
+        <xs:annotation>
+            <xs:documentation>Height of the visual element</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+    
+    <!-- Optional visual styling attributes -->
+    <xs:attribute name="visible" type="xs:boolean" default="true">
+        <xs:annotation>
+            <xs:documentation>Visibility state of the element</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+    
+    <xs:attribute name="collapsed" type="xs:boolean" default="false">
+        <xs:annotation>
+            <xs:documentation>Collapse state for hierarchical elements</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+    
+    <!-- Flow-specific visual attributes -->
+    <xs:attribute name="waypoints" type="xs:string">
+        <xs:annotation>
+            <xs:documentation>Comma-separated list of x,y coordinates for flow routing</xs:documentation>
+        </xs:annotation>
+    </xs:attribute>
+    
+</xs:schema>

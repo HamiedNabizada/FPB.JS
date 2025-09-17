@@ -11,6 +11,7 @@ import Alert from 'react-bootstrap/Alert';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useError } from '../../context/ErrorContext';
+import XMLMapper from '../../xml/XMLMapper.js';
 
 const ImportModal = memo(({ modeler }) => {
     const [show, setShow] = useState(false);
@@ -23,7 +24,7 @@ const ImportModal = memo(({ modeler }) => {
     const fileLabelRef = useRef();
 
     const eventBus = modeler.get('eventBus');
-    const defaultText = 'Import a local stored FPB.JS JSON file';
+    const defaultText = 'Import a local stored FPB.js JSON file or XML file';
     let fileReader;
     
     useEffect(() => {
@@ -40,19 +41,40 @@ const ImportModal = memo(({ modeler }) => {
         };
     }, [eventBus, showError]);
 
-    const handleFileRead = (e) => {
+    const handleFileRead = async (e) => {
         try {
             const fileContent = fileReader.result;
             
-            const parsedData = JSON.parse(fileContent);
-            setFileData(parsedData);
-            setFileType('json');
+            // Auto-detect file type using the mapper
+            const detectedType = XMLMapper.detectFileType(fileContent);
+            
+            if (detectedType === 'fpb-json') {
+                // Handle JSON format
+                const parsedData = JSON.parse(fileContent);
+                setFileData(parsedData);
+                setFileType('json');
+            } else if (detectedType === 'vdi-xml') {
+                // Handle XML format
+                const xmlMapper = new XMLMapper();
+                const convertedData = await xmlMapper.convertFromXML(fileContent);
+                setFileData(convertedData);
+                setFileType('xml');
+            } else {
+                // Try to parse as JSON as fallback
+                try {
+                    const parsedData = JSON.parse(fileContent);
+                    setFileData(parsedData);
+                    setFileType('json');
+                } catch (jsonError) {
+                    throw new Error('File format not recognized. Please select a valid FPB.js JSON file or XML file.');
+                }
+            }
             
         } catch (error) {
-            console.error('Import: JSON parsing failed:', error);
+            console.error('Import: File parsing failed:', error);
             showError(
-                'Invalid JSON file',
-                `The selected file contains invalid JSON data: ${error.message}`
+                'Invalid file format',
+                `The selected file could not be parsed: ${error.message}`
             );
             setIsImporting(false);
             setFileData(null);
@@ -66,10 +88,12 @@ const ImportModal = memo(({ modeler }) => {
             
             if (fileName.endsWith('.json')) {
                 detectedFileType = 'json';
+            } else if (fileName.endsWith('.xml')) {
+                detectedFileType = 'xml';
             } else {
                 showError(
                     'Invalid file type',
-                    'Please select a valid JSON (.json) file'
+                    'Please select a valid JSON (.json) or XML (.xml) file'
                 );
                 return;
             }
@@ -164,7 +188,7 @@ const ImportModal = memo(({ modeler }) => {
                             <input type="file"
                                 id='file'
                                 className='inputfile'
-                                accept='.json'
+                                accept='.json,.xml'
                                 onChange={e => handleFileChosen(e.target.files[0])} />
 
                             <label htmlFor="file" ref={fileLabelRef} className="fileLabel"> 

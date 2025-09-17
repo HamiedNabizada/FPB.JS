@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema elementFormDefault="qualified" targetNamespace="http://www.vdivde.de/3682"
+    vc:minVersion="1.1" xmlns:fpb="http://www.vdivde.de/3682"
+    xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="project">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="fpb:projectInformation"/>
+                <xs:element maxOccurs="unbounded" minOccurs="1" ref="fpb:process"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="projectInformation">
+        <xs:annotation>
+            <xs:documentation>Meta information about the project</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:attribute name="entryPoint" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>Defines the process of the highest hierarchical
+                        level</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:anyAttribute>
+                <xs:annotation>
+                    <xs:documentation>further project informations</xs:documentation>
+                </xs:annotation>
+            </xs:anyAttribute>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="process">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="fpb:systemLimit"/>
+                <xs:element name="states">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element maxOccurs="unbounded" minOccurs="2" ref="fpb:state"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="processOperators">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element maxOccurs="unbounded" minOccurs="1"
+                                ref="fpb:processOperator"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="technicalResources">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element maxOccurs="unbounded" minOccurs="0"
+                                ref="fpb:technicalResource"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element ref="fpb:flowContainer"/>
+            </xs:sequence>
+            <xs:attribute name="id" type="xs:string"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="state">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="fpb:identification"/>
+                <xs:element ref="fpb:characteristics"/>
+                <xs:element ref="fpb:assignments"/>
+                <xs:element ref="fpb:flows"/>
+            </xs:sequence>
+            <xs:attribute name="stateType" type="fpb:stateType"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="processOperator">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="fpb:identification"/>
+                <xs:element ref="fpb:characteristics"/>
+                <xs:element ref="fpb:assignments"/>
+                <xs:element ref="fpb:flows"/>
+                <xs:element ref="fpb:usages"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="technicalResource">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="fpb:identification"/>
+                <xs:element ref="fpb:characteristics"/>
+                <xs:element ref="fpb:assignments"/>
+                <xs:element ref="fpb:usages"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="systemLimit">
+        <xs:complexType>
+            <xs:attribute name="id" type="xs:string"/>
+            <xs:attribute name="name" type="xs:string"/>
+        </xs:complexType>
+    </xs:element>
+    <!-- Merkmale -->
+    <xs:element name="identification">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="references">
+                    <xs:annotation>
+                        <xs:documentation>                             references to products,
+                            energy, information, process operators, technical resources (e.g. DIN V
+                            19259, AFI, NE 100) and the system
+                        </xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element maxOccurs="unbounded" minOccurs="0" name="reference">
+                                <xs:complexType>
+                                    <xs:attribute name="id">
+                                        <xs:annotation>
+                                            <xs:documentation>ID of the referenced
+                                                object</xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute name="uniqueIdent" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>unique identification ("Code")</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="longName" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>long name ("preferred name" or "Synonymous
+                        name")</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="shortName" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>short name ("Coded name")</xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="versionNumber" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>                         A new version is created when a
+                        change in the expression of the attributes of an object occurs.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="revisionNumber" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>                         The revision number describes an
+                        accredited version.                     </xs:documentation>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:anyAttribute>
+                <xs:annotation>
+                    <xs:documentation>further identifying attributes</xs:documentation>
+                </xs:annotation>
+            </xs:anyAttribute>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="characteristics">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" minOccurs="0" name="characteristic">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element maxOccurs="1" minOccurs="1" ref="fpb:identification"/>
+                            <xs:element name="descriptiveElement">
+                                <xs:complexType>
+                                    <xs:attribute name="valueDeterminationProcess" type="xs:string"/>
+                                    <xs:attribute name="representivity" type="xs:string"/>
+                                    <xs:attribute name="setpointValue" type="xs:string"/>
+                                    <xs:attribute name="validityLimits" type="xs:string"/>
+                                    <xs:attribute name="actualValues" type="xs:string"/>
+                                    <xs:anyAttribute/>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="relationalElement">
+                                <xs:complexType>
+                                    <xs:attribute name="view" type="xs:string"/>
+                                    <xs:attribute name="model" type="xs:string"/>
+                                    <xs:attribute name="regulationsForRelationalGeneration"
+                                        type="xs:string"/>
+                                    <xs:anyAttribute/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="assignments">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" minOccurs="0" name="assigned">
+                    <xs:complexType>
+                        <xs:attribute name="id" type="xs:string"/>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="flowContainer">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" minOccurs="0" name="flow">
+                    <xs:complexType>
+                        <xs:attribute name="id" type="xs:string"/>
+                        <xs:attribute name="flowType" type="fpb:flowType"/>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="flows">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" minOccurs="0" name="flow">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element maxOccurs="unbounded" minOccurs="0" name="entry">
+                                <xs:complexType>
+                                    <xs:attribute name="id" type="xs:string"/>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element maxOccurs="unbounded" minOccurs="0" name="exit">
+                                <xs:complexType>
+                                    <xs:attribute name="id" type="xs:string"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                        <xs:attribute name="id" type="xs:string"/>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="usages">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" minOccurs="0" name="usage">
+                    <xs:annotation>
+                        <xs:documentation>                             Contains the ID of the
+                            instance of the usage connection
+                        </xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:attribute name="id" type="xs:string"/>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <!-- Enumerations -->
+    <xs:simpleType name="flowType">
+        <xs:annotation>
+            <xs:documentation>Enumeration: Flows can be from type "flow", "alternativeFlow",
+                "parallelFlow", "usage"</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="flow"/>
+            <xs:enumeration value="alternativeFlow"/>
+            <xs:enumeration value="parallelFlow"/>
+            <xs:enumeration value="usage"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="stateType">
+        <xs:annotation>
+            <xs:documentation>Enumeration: States can be from type "product", "energy" or
+                "information"</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="product"/>
+            <xs:enumeration value="energy"/>
+            <xs:enumeration value="information"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>
