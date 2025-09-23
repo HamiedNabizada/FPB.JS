@@ -1,6 +1,6 @@
 {
   "name": "fpbjs",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "JavaScript library for creating formalized process descriptions according to VDI/VDE 3682. Includes both a complete standalone web application and React library for integration.",
   "main": "dist/fpbjs.js",
   "module": "dist/fpbjs.esm.js",
@@ -81,6 +81,7 @@
     "react-arborist": "^3.4.3",
     "react-bootstrap": "^2.10.10",
     "react-collapse": "^5.1.1",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "xmldom": "^0.6.0"
   }
 }

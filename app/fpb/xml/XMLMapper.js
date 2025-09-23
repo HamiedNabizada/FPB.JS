@@ -1812,10 +1812,16 @@ class XMLMapper {
         identificationXml.setAttribute('uniqueIdent', element.id);
         if (identification.longName) identificationXml.setAttribute('longName', identification.longName);
 
+<<<<<<< HEAD
         // Use identification.shortName if available, otherwise fall back to element.name
         // Both should have the same content, but prioritize identification.shortName
         const shortName = identification.shortName !== undefined ? identification.shortName : (element.name || '');
         if (shortName !== null) identificationXml.setAttribute('shortName', shortName);
+=======
+        // Use element.name as fallback for shortName if identification.shortName is not available
+        const shortName = identification.shortName || element.name;
+        if (shortName) identificationXml.setAttribute('shortName', shortName);
+>>>>>>> release/v1.1.0
 
         if (identification.versionNumber) identificationXml.setAttribute('versionNumber', identification.versionNumber);
         if (identification.revisionNumber) identificationXml.setAttribute('revisionNumber', identification.revisionNumber);
