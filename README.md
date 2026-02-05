@@ -40,6 +40,16 @@ docker run -p 8080:8080 fpbjs
 
 Open `0.0.0.0:8080` in your browser.
 
+## NPM Package
+
+FPB.JS is also available as an NPM package for integration into your own projects.
+
+```bash
+npm install fpbjs
+```
+
+[View on NPM](https://www.npmjs.com/package/fpbjs)
+
 ## Citation
 
 If you use FPB.JS in your research, please cite:
