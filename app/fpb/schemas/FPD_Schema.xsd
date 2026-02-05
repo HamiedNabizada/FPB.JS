@@ -22,87 +22,122 @@
                         level</xs:documentation>
                 </xs:annotation>
             </xs:attribute>
-            <xs:anyAttribute>
+            <xs:anyAttribute namespace="##other">
                 <xs:annotation>
-                    <xs:documentation>further project informations</xs:documentation>
+                    <xs:documentation>further project informations (e.g., visual extension attributes)</xs:documentation>
                 </xs:annotation>
             </xs:anyAttribute>
         </xs:complexType>
     </xs:element>
     <xs:element name="process">
         <xs:complexType>
-            <xs:sequence>
+            <xs:all>
                 <xs:element ref="fpb:systemLimit"/>
                 <xs:element name="states">
                     <xs:complexType>
-                        <xs:sequence>
+                        <xs:all>
                             <xs:element maxOccurs="unbounded" minOccurs="2" ref="fpb:state"/>
-                        </xs:sequence>
+                        </xs:all>
                     </xs:complexType>
                 </xs:element>
                 <xs:element name="processOperators">
                     <xs:complexType>
-                        <xs:sequence>
+                        <xs:all>
                             <xs:element maxOccurs="unbounded" minOccurs="1"
                                 ref="fpb:processOperator"/>
-                        </xs:sequence>
+                        </xs:all>
                     </xs:complexType>
                 </xs:element>
                 <xs:element name="technicalResources">
                     <xs:complexType>
-                        <xs:sequence>
+                        <xs:all>
                             <xs:element maxOccurs="unbounded" minOccurs="0"
                                 ref="fpb:technicalResource"/>
-                        </xs:sequence>
+                        </xs:all>
                     </xs:complexType>
                 </xs:element>
                 <xs:element ref="fpb:flowContainer"/>
-            </xs:sequence>
+            </xs:all>
             <xs:attribute name="id" type="xs:string"/>
         </xs:complexType>
+        <!-- Referential integrity: flowContainer defines flows, flows/flow references them -->
+        <xs:key name="flowDefinitionKey">
+            <xs:annotation>
+                <xs:documentation>Each flow in flowContainer must have a unique ID within this process</xs:documentation>
+            </xs:annotation>
+            <xs:selector xpath="fpb:flowContainer/fpb:flow"/>
+            <xs:field xpath="@id"/>
+        </xs:key>
+        <xs:keyref name="flowReferenceKeyref" refer="fpb:flowDefinitionKey">
+            <xs:annotation>
+                <xs:documentation>flows/flow/@id must reference an existing flowContainer/flow/@id</xs:documentation>
+            </xs:annotation>
+            <xs:selector xpath=".//fpb:flows/fpb:flow"/>
+            <xs:field xpath="@id"/>
+        </xs:keyref>
     </xs:element>
     <xs:element name="state">
         <xs:complexType>
-            <xs:sequence>
+            <xs:all>
                 <xs:element ref="fpb:identification"/>
                 <xs:element ref="fpb:characteristics"/>
                 <xs:element ref="fpb:assignments"/>
                 <xs:element ref="fpb:flows"/>
-            </xs:sequence>
+            </xs:all>
             <xs:attribute name="stateType" type="fpb:stateType"/>
+            <xs:anyAttribute namespace="##other">
+                <xs:annotation>
+                    <xs:documentation>Allows visual extension attributes (e.g., visual:x, visual:y)</xs:documentation>
+                </xs:annotation>
+            </xs:anyAttribute>
         </xs:complexType>
     </xs:element>
     <xs:element name="processOperator">
         <xs:complexType>
-            <xs:sequence>
+            <xs:all>
                 <xs:element ref="fpb:identification"/>
                 <xs:element ref="fpb:characteristics"/>
                 <xs:element ref="fpb:assignments"/>
                 <xs:element ref="fpb:flows"/>
                 <xs:element ref="fpb:usages"/>
-            </xs:sequence>
+            </xs:all>
+            <xs:anyAttribute namespace="##other">
+                <xs:annotation>
+                    <xs:documentation>Allows visual extension attributes (e.g., visual:x, visual:y)</xs:documentation>
+                </xs:annotation>
+            </xs:anyAttribute>
         </xs:complexType>
     </xs:element>
     <xs:element name="technicalResource">
         <xs:complexType>
-            <xs:sequence>
+            <xs:all>
                 <xs:element ref="fpb:identification"/>
                 <xs:element ref="fpb:characteristics"/>
                 <xs:element ref="fpb:assignments"/>
                 <xs:element ref="fpb:usages"/>
-            </xs:sequence>
+            </xs:all>
+            <xs:anyAttribute namespace="##other">
+                <xs:annotation>
+                    <xs:documentation>Allows visual extension attributes (e.g., visual:x, visual:y)</xs:documentation>
+                </xs:annotation>
+            </xs:anyAttribute>
         </xs:complexType>
     </xs:element>
     <xs:element name="systemLimit">
         <xs:complexType>
             <xs:attribute name="id" type="xs:string"/>
             <xs:attribute name="name" type="xs:string"/>
+            <xs:anyAttribute namespace="##other">
+                <xs:annotation>
+                    <xs:documentation>Allows visual extension attributes (e.g., visual:x, visual:y)</xs:documentation>
+                </xs:annotation>
+            </xs:anyAttribute>
         </xs:complexType>
     </xs:element>
     <!-- Merkmale -->
     <xs:element name="identification">
         <xs:complexType>
-            <xs:sequence>
+            <xs:all>
                 <xs:element name="references">
                     <xs:annotation>
                         <xs:documentation>                             references to products,
@@ -111,7 +146,7 @@
                         </xs:documentation>
                     </xs:annotation>
                     <xs:complexType>
-                        <xs:sequence>
+                        <xs:all>
                             <xs:element maxOccurs="unbounded" minOccurs="0" name="reference">
                                 <xs:complexType>
                                     <xs:attribute name="id">
@@ -122,10 +157,10 @@
                                     </xs:attribute>
                                 </xs:complexType>
                             </xs:element>
-                        </xs:sequence>
+                        </xs:all>
                     </xs:complexType>
                 </xs:element>
-            </xs:sequence>
+            </xs:all>
             <xs:attribute name="uniqueIdent" type="xs:string">
                 <xs:annotation>
                     <xs:documentation>unique identification ("Code")</xs:documentation>
@@ -155,19 +190,19 @@
                         accredited version.                     </xs:documentation>
                 </xs:annotation>
             </xs:attribute>
-            <xs:anyAttribute>
+            <xs:anyAttribute namespace="##other">
                 <xs:annotation>
-                    <xs:documentation>further identifying attributes</xs:documentation>
+                    <xs:documentation>further identifying attributes (e.g., visual extension attributes)</xs:documentation>
                 </xs:annotation>
             </xs:anyAttribute>
         </xs:complexType>
     </xs:element>
     <xs:element name="characteristics">
         <xs:complexType>
-            <xs:sequence>
+            <xs:all>
                 <xs:element maxOccurs="unbounded" minOccurs="0" name="characteristic">
                     <xs:complexType>
-                        <xs:sequence>
+                        <xs:all>
                             <xs:element maxOccurs="1" minOccurs="1" ref="fpb:identification"/>
                             <xs:element name="descriptiveElement">
                                 <xs:complexType>
@@ -188,61 +223,116 @@
                                     <xs:anyAttribute/>
                                 </xs:complexType>
                             </xs:element>
-                        </xs:sequence>
+                        </xs:all>
                     </xs:complexType>
                 </xs:element>
-            </xs:sequence>
+            </xs:all>
         </xs:complexType>
     </xs:element>
     <xs:element name="assignments">
         <xs:complexType>
-            <xs:sequence>
+            <xs:all>
                 <xs:element maxOccurs="unbounded" minOccurs="0" name="assigned">
                     <xs:complexType>
                         <xs:attribute name="id" type="xs:string"/>
                     </xs:complexType>
                 </xs:element>
-            </xs:sequence>
+            </xs:all>
         </xs:complexType>
     </xs:element>
     <xs:element name="flowContainer">
+        <xs:annotation>
+            <xs:documentation>
+                Registry of all flow connections within this process.
+                Each flow represents a directed connection between process elements.
+                The actual source/target binding is defined in the flows element of each state/processOperator.
+            </xs:documentation>
+        </xs:annotation>
         <xs:complexType>
-            <xs:sequence>
+            <xs:all>
                 <xs:element maxOccurs="unbounded" minOccurs="0" name="flow">
+                    <xs:annotation>
+                        <xs:documentation>Definition of a single flow connection.</xs:documentation>
+                    </xs:annotation>
                     <xs:complexType>
-                        <xs:attribute name="id" type="xs:string"/>
+                        <xs:attribute name="id" type="xs:string" use="required">
+                            <xs:annotation>
+                                <xs:documentation>Unique identifier for this flow, referenced by flows/flow/@id</xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
                         <xs:attribute name="flowType" type="fpb:flowType"/>
+                        <xs:anyAttribute namespace="##other">
+                            <xs:annotation>
+                                <xs:documentation>Allows visual extension attributes (e.g., visual:waypoints)</xs:documentation>
+                            </xs:annotation>
+                        </xs:anyAttribute>
                     </xs:complexType>
                 </xs:element>
-            </xs:sequence>
+            </xs:all>
         </xs:complexType>
     </xs:element>
     <xs:element name="flows">
+        <xs:annotation>
+            <xs:documentation>
+                Defines how flows connect to this element (state, processOperator).
+                References flows defined in flowContainer and specifies their entry/exit points.
+            </xs:documentation>
+        </xs:annotation>
         <xs:complexType>
-            <xs:sequence>
+            <xs:all>
                 <xs:element maxOccurs="unbounded" minOccurs="0" name="flow">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Binding of a flow to source and target elements.
+                            The @id references a flow defined in flowContainer.
+                        </xs:documentation>
+                    </xs:annotation>
                     <xs:complexType>
-                        <xs:sequence>
+                        <xs:all>
                             <xs:element maxOccurs="unbounded" minOccurs="0" name="entry">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Target element where this flow terminates (flow goes INTO this element).
+                                        For flowType="usage": bidirectional endpoint, order with exit is interchangeable.
+                                    </xs:documentation>
+                                </xs:annotation>
                                 <xs:complexType>
-                                    <xs:attribute name="id" type="xs:string"/>
+                                    <xs:attribute name="id" type="xs:string">
+                                        <xs:annotation>
+                                            <xs:documentation>ID of the target element (state or processOperator)</xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
                                 </xs:complexType>
                             </xs:element>
                             <xs:element maxOccurs="unbounded" minOccurs="0" name="exit">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Source element where this flow originates (flow comes OUT of this element).
+                                        For flowType="usage": bidirectional endpoint, order with entry is interchangeable.
+                                    </xs:documentation>
+                                </xs:annotation>
                                 <xs:complexType>
-                                    <xs:attribute name="id" type="xs:string"/>
+                                    <xs:attribute name="id" type="xs:string">
+                                        <xs:annotation>
+                                            <xs:documentation>ID of the source element (state or processOperator)</xs:documentation>
+                                        </xs:annotation>
+                                    </xs:attribute>
                                 </xs:complexType>
                             </xs:element>
-                        </xs:sequence>
-                        <xs:attribute name="id" type="xs:string"/>
+                        </xs:all>
+                        <xs:attribute name="id" type="xs:string">
+                            <xs:annotation>
+                                <xs:documentation>Reference to flowContainer/flow/@id</xs:documentation>
+                            </xs:annotation>
+                        </xs:attribute>
                     </xs:complexType>
                 </xs:element>
-            </xs:sequence>
+            </xs:all>
         </xs:complexType>
     </xs:element>
     <xs:element name="usages">
         <xs:complexType>
-            <xs:sequence>
+            <xs:all>
                 <xs:element maxOccurs="unbounded" minOccurs="0" name="usage">
                     <xs:annotation>
                         <xs:documentation>                             Contains the ID of the
@@ -253,7 +343,7 @@
                         <xs:attribute name="id" type="xs:string"/>
                     </xs:complexType>
                 </xs:element>
-            </xs:sequence>
+            </xs:all>
         </xs:complexType>
     </xs:element>
     <!-- Enumerations -->

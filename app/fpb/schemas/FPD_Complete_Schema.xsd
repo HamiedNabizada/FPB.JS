@@ -4,32 +4,25 @@
     xmlns:visual="http://www.fpbjs.net/visual"
     xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
     xmlns:xs="http://www.w3.org/2001/XMLSchema">
-    
+
     <xs:annotation>
         <xs:documentation>
-            Complete FPD Schema - VDI/VDE 3682 Standard with Visual Extension References
-            Imports visual attributes but keeps standard structure intact
-            Version: 1.0 (Draft for Standardization)
+            FPD Complete Schema - VDI/VDE 3682 with Visual Extension
+
+            Combines:
+            - FPD_Schema.xsd (VDI/VDE 3682 base schema)
+            - FPD_Visual_Extension.xsd (tool-specific layout attributes)
+
+            Use this schema for validating XML instances that include visual:* attributes.
+            Use FPD_Schema.xsd alone for pure standard compliance.
         </xs:documentation>
     </xs:annotation>
-    
+
     <!-- Import visual extension schema -->
-    <xs:import namespace="http://www.fpbjs.net/visual" 
+    <xs:import namespace="http://www.fpbjs.net/visual"
                schemaLocation="FPD_Visual_Extension.xsd"/>
-    
+
     <!-- Include the base standard schema -->
     <xs:include schemaLocation="FPD_Schema.xsd"/>
-    
-    <!-- 
-        The base schema elements are now available and can be referenced
-        Visual attributes from the imported namespace can be used via visual: prefix
-        
-        Usage in XML instances:
-        <fpb:state stateType="product" 
-                   visual:x="100" visual:y="200" 
-                   visual:width="150" visual:height="75">
-            ...
-        </fpb:state>
-    -->
-    
+
 </xs:schema>
