@@ -1,104 +1,59 @@
 # FPB.JS
 
-Offenes, webbasiertes Werkzeug für die Formalisierte Prozessbeschreibung nach VDI 3682.
+A web-based modeling tool for Formalized Process Descriptions according to VDI/VDE 3682.
 
-[VDI 3682](#vdi-3682---formalisierte-prozessbeschreibungen) | [Inbetriebnahme](#inbetriebnahme-von-fpbjs) | [Wiki](https://github.com/HamiedNabizada/FPB.JS/wiki) | [Demo](http://demo.fpbjs.net/)
+[Documentation](./docs/) | [Wiki](https://github.com/HamiedNabizada/FPB.JS/wiki) | [Demo](http://demo.fpbjs.net/)
 
-## Beta-Disclaimer
+## About
 
-Please note that you are accessing the Beta Version of FPB.JS which is in the process of being tested before its official release. The sole purpose of this BETA Version is to conduct testing and obtain feedback.
- 
-FPB.JS does not give any warranties, whether express or implied, as to the suitability or usability of the software or any of its content.
- 
-FPB.JS will not be liable for any loss, whether such loss is direct, indirect, special or consequential, suffered by any party as a result of their use of the beta software, its content and functionalities.
- 
-If you encounter errors, glitches, lack of functionality or other problems with the beta software, please post this in the [Issue section](https://github.com/HamiedNabizada/FPB.JS/issues) of this repository.
+FPB.JS enables engineers and researchers to create, edit, and export process models following the VDI/VDE 3682 standard. The tool supports the complete modeling workflow including process decomposition, parallel and alternative flows, and technical resource assignments.
 
-## VDI 3682 - Formalisierte Prozessbeschreibungen
+For details on VDI/VDE 3682 and its notation, see [VDI 3682 Overview](./docs/VDI3682.md).
 
-Die Richtlinie stellt ein Vorgehensmodell vor, mit dessen Hilfe Prozesse universell grafisch beschrieben und informationstechnisch erfasst werden können. Während aller Phasen (Planung, Realisierung, Inbetriebsetzung, Wartung, etc.) des Engineerings wird dadurch ein eindeutiges, gewerkeübergreifendes Prozessverständnis erreicht.
-Im ersten Teil der Richtlinie wird eine einfache Symbolik, sowie zulässige Beziehungen zwischen diesen eingeführt. 
- 
-| <img src="./docs/images/0_Symbole.png" height="300" />| 
-|:--:|
-| *Symbole der grafischen Prozessbeschreibung* |
+## Features
 
-Zustandsbeschreibende Symbole (Produkt, Information, Energie) sind dabei mittels gerichteter Kanten (Flüssen) mit Prozessoperatoren verbunden, die einen Zustand ante in einen Zustand post überführen. Die Zustandsumwandlung geschieht dabei durch die Verwendung von technischen Ressourcen. In der grafischen Notation ist diese Beziehung durch einen gestrichelten Doppelpfeil (Nutzung) dargestellt. Ein gestrichelter Rahmen definiert die Systemgrenze des dargstellten Prozesses. 
+- **Visual Modeling** – Drag & drop interface for Products, Energy, Information, Process Operators, and Technical Resources
+- **Process Hierarchy** – Decompose and compose process operators into sub-processes
+- **Parallel & Alternative Flows** – Model concurrent and alternative process paths
+- **XML Import/Export** – VDI 3682 compliant XML format
+- **SVG Export** – Export diagrams for documentation
 
+## Quick Start
 
-| <img src="./docs/images/1_Prozess.png" height="300" /> |
-|:--:|
-| *Beispielprozess: Herstellung eines Pneumatik-Zylinders ( aus [1] )* | 
+### Local Installation
 
-Durch Dekomposition der Prozessoperatoren lassen sich detailliertere Beschreibungen der Prozessschritte ableiten und der gesamte Prozess strukturieren:
+Requires [Node.js](https://nodejs.org/)
 
-| <img src="./docs/images/2_ProzessDecomposed.png" height="600" /> |
-|:--:|
-| *Dekomponierte Proessansicht des Prozessoperators.( aus [1] )* | 
+```bash
+npm install
+npm run dev-local
+```
 
-Die Darstellung von alternativen und parallelen Prozessabläufen wird von der Richtlinie wie folgt vorgesehen:
+Open `localhost:8080` in your browser.
 
-| Parallel   |      Alternativ      |  Beschreibung |
-|:----------:|:-------------:|------|
-| <img src="./docs/images/3_parallel1.png" height="100" /> | <img src="./docs/images/4_alternativ3.png" height="100" /> | Parallele / Alternative Prozessschritte mit einem zugeführten Produkt |
-| <img src="./docs/images/3_parallel2.png" height="100" />| <img src="./docs/images/4_alternativ4.png" height="100" /> | Parallele / Alternative Prozessschritte mit einem entstehenden Produkt |
-| <img src="./docs/images/3_parallel3.png" height="100" /> | <img src="./docs/images/4_alternativ1.png" height="100" /> | Parallel / Alternativ zugeführte Produkte in einen Prozessschritt |
-| <img src="./docs/images/3_parallel4.png" height="100" />  | <img src="./docs/images/4_alternativ2.png" height="100" /> | Parallel / Alternativ entsehende Produkte aus einem Prozessschritt | 
+### Docker
 
+```bash
+docker build -t fpbjs .
+docker run -p 8080:8080 fpbjs
+```
 
-## Inbetriebnahme von FPB.JS
-Es gibt zwei Varianten, wie man FPB.JS in Betrieb nehmen kann. Es kann lokal auf dem Rechner oder innerhalb eines Container installiert werden. Beide Varianten werden im Folgenden beschrieben.
+Open `0.0.0.0:8080` in your browser.
 
-### Voraussetzungen für die lokale Installation
-Für die Inbetriebnahme von FPB.JS im Development Mode wird
-[Node.JS](https://nodejs.org/en/) benötigt. Außerdem empfiehlt es sich, eine IDE wie [Visual Studio Code](https://code.visualstudio.com/) für das Ausführen der Commands zum Installieren / Starten von FPB.JS im Development Mode zu verwenden. Dies ist jedoch nicht zwingend notwendig und geht in gleicher Weise auch über die Eingabeaufforderung Ihres Betriebssystems.
+## Citation
 
-### Vorgehen zur lokalen Installation
-1) Clonen oder [Downloaden](https://github.com/HamiedNabizada/FPB.JS/archive/master.zip) Sie sich dieses Repository. Wenn Sie sich das Repository heruntergeladen haben, dann müssen Sie die zip-komprimierte Datei auf Ihrem lokalen Speicher entpacken.  
-2) Navigieren Sie entweder in der Eingabeaufforderung Ihres Betriebssystems oder im Terminal Ihrer IDE zum Stammordner der FPB.JS Kopie.
-3) Führen Sie zur Installation den Command:
+If you use FPB.JS in your research, please cite:
 
-   `npm install`
-   
-   aus, dies installiert alle softwareseitigen Abhängigkeiten von FPB.JS: 
-4) Zum Starten führen Sie im Terminal den Command:
+> Nabizada, H.; Köcher, A.; Hildebrandt, C.; Fay, A. (2020). **Offenes, webbasiertes Werkzeug zur Informationsmodellierung mit formalisierter Prozessbeschreibung**. In *Automation 2020* (pp. 443-454). VDI Verlag.
 
-   `npm run dev-local`  
-   
-   aus. Durch das Aufrufen von 
-   
-   `localhost:8080` 
-   
-   in Ihrem Webbrowser haben Sie Zugriff auf die Benutzeroberfläche von FPB.JS.
+[View on ResearchGate](https://www.researchgate.net/publication/340949576_Offenes_webbasiertes_Werkzeug_zur_Informationsmodellierung_mit_Formalisierter_Prozessbeschreibung)
 
+## Disclaimer
 
-### Voraussetzungen für die Erstellung eines Container Image
-Zur Erstellung des Container Image und zum Betrieb des Containers wird Docker benötigt. 
+This software is provided as-is for testing and feedback purposes. No warranties, express or implied, are given regarding suitability or usability. The authors are not liable for any loss resulting from use of this software.
 
-### Erstellung eines Container Image
-
-Navigieren Sie entweder in der Eingabeaufforderung Ihres Betriebssystems oder im Terminal Ihrer IDE zum Stammordner der FPB.JS Kopie. Erstellen die ein Container Image mit:
-
- `docker build  -t fpb_js:0.0.1 .`
-
-
-Anschließend kann der Container mit 
-
- `docker run -p 8080:8080 fpb_js:0.0.1`
-
-gestartet werden. Durch das Aufrufen von 
-   
-   `0.0.0.0:8080` 
-   
-in Ihrem Webbrowser haben Sie Zugriff auf die Benutzeroberfläche von FPB.JS.
-
-
-## Nutzung von FPB.JS
-Wie Sie FPB.JS nutzen können, wird im Wiki dieses GitHub Repositories erläutert:
-[Wiki](https://github.com/HamiedNabizada/FPB.JS/wiki)
+Found a bug? [Open an issue](https://github.com/HamiedNabizada/FPB.JS/issues)
 
 ## License
-[MIT](https://raw.githubusercontent.com/HamiedNabizada/FPB.JS/master/LICENSE)
 
-## Literatur
-[1] Fay, A., Hoang, X. L., Diedrich, C., Dubovy, M., Eck, C., Hildebrandt, C., Scholz, A., Schröder, T. u. Wiegand, R.: Abschlussbericht – SemAnz40. Vorhandene Standards als semantische Basis für die Anwendung von Industrie 4.0. Hamburg: Helmut-Schmidt-Universität / Universität der Bundeswehr Hamburg 2018
+[MIT](./LICENSE)
