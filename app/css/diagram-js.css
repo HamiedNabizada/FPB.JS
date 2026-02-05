@@ -2,9 +2,19 @@
  * outline styles
  */
 
-.djs-outline {
+.djs-outline,
+.djs-selection-outline {
   fill: none;
+  shape-rendering: geometricPrecision;
+  stroke-width: 2px;
+}
+
+.djs-outline {
   visibility: hidden;
+}
+
+.djs-selection-outline {
+  stroke: hsl(205, 100%, 50%);
 }
 
 .djs-element.hover .djs-outline,
