@@ -1,17 +1,17 @@
 import { assign } from 'min-dash';
 
 // Import constants and utilities
-import { 
-  FPB_ELEMENTS, 
-  PALETTE_GROUPS, 
-  PALETTE_ENTRY_IDS, 
-  TOOL_ICONS, 
-  TOOLTIP_KEYS 
+import {
+  FPB_ELEMENTS,
+  PALETTE_GROUPS,
+  PALETTE_ENTRY_IDS,
+  TOOL_ICONS,
+  TOOLTIP_KEYS
 } from './PaletteConstants';
-import { 
-  PaletteActionBuilder, 
-  FpbElementBuilder, 
-  ToolActionHandlers 
+import {
+  PaletteActionBuilder,
+  FpbElementBuilder,
+  ToolActionHandlers
 } from './PaletteUtils';
 
 export default function FpbPaletteProvider(create, elementFactory, lassoTool,
@@ -48,9 +48,9 @@ FpbPaletteProvider.prototype.getPaletteEntries = function () {
 
   // Build FPB element entries using utility
   const fpbElements = FpbElementBuilder.buildElementEntries(
-    FPB_ELEMENTS, 
-    create, 
-    elementFactory, 
+    FPB_ELEMENTS,
+    create,
+    elementFactory,
     translate
   );
 
@@ -59,21 +59,21 @@ FpbPaletteProvider.prototype.getPaletteEntries = function () {
     [PALETTE_ENTRY_IDS.TOOL_SEPARATOR]: PaletteActionBuilder.createSeparator(
       PALETTE_GROUPS.TOOLS
     ),
-    
+
     [PALETTE_ENTRY_IDS.LASSO_TOOL]: PaletteActionBuilder.createToolAction(
       PALETTE_GROUPS.TOOLS,
       TOOL_ICONS.LASSO,
       translate(TOOLTIP_KEYS.ACTIVATE_LASSO),
       ToolActionHandlers.createLassoHandler(lassoTool)
     ),
-    
+
     [PALETTE_ENTRY_IDS.SPACE_TOOL]: PaletteActionBuilder.createToolAction(
       PALETTE_GROUPS.TOOLS,
       TOOL_ICONS.SPACE,
       translate(TOOLTIP_KEYS.ACTIVATE_SPACE),
       ToolActionHandlers.createSpaceHandler(spaceTool)
     ),
-    
+
     [PALETTE_ENTRY_IDS.HAND_TOOL]: PaletteActionBuilder.createToolAction(
       PALETTE_GROUPS.TOOLS,
       TOOL_ICONS.HAND,

@@ -17,7 +17,8 @@ export const ELEMENT_TYPES = {
 // Palette Groups
 export const PALETTE_GROUPS = {
   FPB: 'fpb',
-  TOOLS: 'tools'
+  TOOLS: 'tools',
+  ALIGN: 'align'
 };
 
 // Icon Classes for FPB Elements
@@ -32,9 +33,18 @@ export const ELEMENT_ICONS = {
 
 // Tool Icon Classes
 export const TOOL_ICONS = {
+  SELECT: 'palette-icon-select-tool',
   LASSO: 'palette-icon-lasso-tool',
   SPACE: 'palette-icon-space-tool',
-  HAND: 'palette-icon-hand-tool'
+  HAND: 'palette-icon-hand-tool',
+  ALIGN_LEFT: 'palette-icon-align-left',
+  ALIGN_CENTER: 'palette-icon-align-center',
+  ALIGN_RIGHT: 'palette-icon-align-right',
+  ALIGN_TOP: 'palette-icon-align-top',
+  ALIGN_MIDDLE: 'palette-icon-align-middle',
+  ALIGN_BOTTOM: 'palette-icon-align-bottom',
+  DISTRIBUTE_HORIZONTAL: 'palette-icon-distribute-horizontal',
+  DISTRIBUTE_VERTICAL: 'palette-icon-distribute-vertical'
 };
 
 // Palette Entry IDs
@@ -49,9 +59,21 @@ export const PALETTE_ENTRY_IDS = {
   
   // Tools
   TOOL_SEPARATOR: 'tool-separator',
+  SELECT_TOOL: 'select-tool',
   LASSO_TOOL: 'lasso-tool',
   SPACE_TOOL: 'space-tool',
-  HAND_TOOL: 'hand-tool'
+  HAND_TOOL: 'hand-tool',
+
+  // Align Tools
+  ALIGN_SEPARATOR: 'align-separator',
+  ALIGN_LEFT: 'align-left',
+  ALIGN_CENTER: 'align-center',
+  ALIGN_RIGHT: 'align-right',
+  ALIGN_TOP: 'align-top',
+  ALIGN_MIDDLE: 'align-middle',
+  ALIGN_BOTTOM: 'align-bottom',
+  DISTRIBUTE_HORIZONTAL: 'distribute-horizontal',
+  DISTRIBUTE_VERTICAL: 'distribute-vertical'
 };
 
 // Translation Keys
@@ -65,9 +87,20 @@ export const TOOLTIP_KEYS = {
   ADD_TECHNICAL_RESOURCE: 'Add Technical Resource',
   
   // Tools
+  ACTIVATE_SELECT: 'Activate Select Tool',
   ACTIVATE_LASSO: 'Activate Lasso Tool',
   ACTIVATE_SPACE: 'Activate the create/remove space tool',
-  ACTIVATE_HAND: 'Activate the hand tool'
+  ACTIVATE_HAND: 'Activate the hand tool',
+
+  // Align Tools
+  ALIGN_LEFT: 'Align Left',
+  ALIGN_CENTER: 'Align Center',
+  ALIGN_RIGHT: 'Align Right',
+  ALIGN_TOP: 'Align Top',
+  ALIGN_MIDDLE: 'Align Middle',
+  ALIGN_BOTTOM: 'Align Bottom',
+  DISTRIBUTE_HORIZONTAL: 'Distribute Horizontally',
+  DISTRIBUTE_VERTICAL: 'Distribute Vertically'
 };
 
 // FPB Element Configuration
