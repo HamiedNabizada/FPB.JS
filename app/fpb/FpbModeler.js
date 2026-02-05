@@ -355,20 +355,10 @@ FpbModeler.prototype.saveSVG = function (options, done) {
 
     try {
         var canvas = this.get('canvas');
-        
-        // Find the layer that contains visible content
-        var activeLayer = null;
-        Object.keys(canvas._layers).forEach(function(layerName) {
-            var layer = canvas._layers[layerName];
-            if (layer.group && layer.group.children && layer.group.children.length > 0) {
-                var style = window.getComputedStyle(layer.group);
-                if (style.display !== 'none' && layer.visible !== false) {
-                    activeLayer = layer;
-                }
-            }
-        });
-        
-        var contentNode = activeLayer ? activeLayer.group : canvas.getDefaultLayer();
+
+        // Get the root element's layer which contains all visible content
+        var rootElement = canvas.getRootElement();
+        var contentNode = canvas.getGraphics(rootElement);
         var defsNode = domQuery('defs', canvas._svg);
 
         var contents = innerSVG(contentNode);
@@ -400,7 +390,7 @@ FpbModeler.prototype.saveSVG = function (options, done) {
 
         svg =
             '<?xml version="1.0" encoding="utf-8"?>\n' +
-            '<!-- created with bpmn-js / http://bpmn.io -->\n' +
+            '<!-- created with fpb.js / https://github.com/HamiedNabizada/FPB.JS -->\n' +
             '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' +
             '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ' +
             'width="' + bbox.width + '" height="' + bbox.height + '" ' +
