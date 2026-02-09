@@ -11,9 +11,11 @@ import {
   hasExternalLabel,
   isLabel,
   getBusinessObject,
-  is
+  is,
+  isAny
 } from '../../help/utils';
 import { isEmptyText } from '../utils/LabelUtils';
+import { getElementsFromElementsContainer, getElementById, checkIfOnSystemBorder } from '../../help/helpUtils';
 
 const NULL_DIMENSIONS = {
   width: 0,
@@ -84,13 +86,18 @@ UpdateLabelHandler.prototype.postExecute = function(ctx) {
 
   // Handle ProcessOperator-specific logic
   this._handleProcessOperatorUpdate(element);
-  
+
   // Update business object identification
   this._updateBusinessObjectIdentification(element, ctx.newLabel);
-  
+
   // Handle State element resizing
   if (is(element, 'fpb:State')) {
     this._handleStateElementResize(element, label, newBounds);
+  }
+
+  // Szenario 7 & 8: Bidirectional state name synchronization
+  if (isAny(element, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
+    this._handleStateNameSync(element, newLabel);
   }
 };
 
@@ -155,21 +162,99 @@ UpdateLabelHandler.prototype._updateBusinessObjectIdentification = function(elem
 UpdateLabelHandler.prototype._handleStateElementResize = function(element, label, newBounds) {
   const businessObject = getBusinessObject(label);
   const text = businessObject.name;
-  
+
   // Don't resize without text
   if (!text) {
     return;
   }
-  
+
   // Calculate new bounds if not provided
   let calculatedBounds = newBounds;
   if (typeof newBounds === 'undefined') {
     calculatedBounds = this._textRenderer.getExternalLabelBounds(label, text);
   }
-  
+
   // Resize label if bounds are available
   // Setting newBounds to false or null disables resize operation
   if (calculatedBounds) {
     this._modeling.resizeShape(label, calculatedBounds, NULL_DIMENSIONS);
+  }
+};
+
+/**
+ * Szenario 7 & 8: Bidirectional state name synchronization
+ * - When state renamed on parent: sync to child layers
+ * - When boundary state renamed on child: sync to parent layer
+ */
+UpdateLabelHandler.prototype._handleStateNameSync = function(element, newLabel) {
+  const process = this._canvas.getRootElement();
+  const stateId = element.businessObject.id;
+
+  // Szenario 7: State on parent layer renamed - sync to child layers
+  // Find all ProcessOperators connected to this state that have decomposed views
+  if (element.businessObject.isAssignedTo) {
+    element.businessObject.isAssignedTo.forEach(processOperator => {
+      if (processOperator.decomposedView) {
+        const childProcess = processOperator.decomposedView;
+        const childSystemLimit = getElementsFromElementsContainer(
+          childProcess.businessObject.elementsContainer,
+          'fpb:SystemLimit'
+        )[0];
+
+        if (childSystemLimit && childSystemLimit.businessObject.elementsContainer) {
+          const stateInChild = getElementById(
+            childSystemLimit.businessObject.elementsContainer,
+            stateId
+          );
+
+          if (stateInChild && stateInChild.businessObject) {
+            // Update name on child layer
+            stateInChild.businessObject.name = newLabel;
+            if (stateInChild.businessObject.identification) {
+              stateInChild.businessObject.identification.shortName = newLabel;
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Szenario 8: Boundary state on child layer renamed - sync to parent layer
+  if (process.businessObject.isDecomposedProcessOperator) {
+    const systemLimit = getElementsFromElementsContainer(
+      process.businessObject.elementsContainer,
+      'fpb:SystemLimit'
+    )[0];
+
+    if (systemLimit) {
+      const borderPosition = checkIfOnSystemBorder(systemLimit, element);
+
+      // Only sync if state is on boundary
+      if (borderPosition === 'onUpperBorder' || borderPosition === 'onBottomBorder') {
+        const parentProcess = process.businessObject.parent;
+
+        if (parentProcess) {
+          const parentSystemLimit = getElementsFromElementsContainer(
+            parentProcess.businessObject.elementsContainer,
+            'fpb:SystemLimit'
+          )[0];
+
+          if (parentSystemLimit && parentSystemLimit.businessObject.elementsContainer) {
+            const stateInParent = getElementById(
+              parentSystemLimit.businessObject.elementsContainer,
+              stateId
+            );
+
+            if (stateInParent && stateInParent.businessObject) {
+              // Update name on parent layer
+              stateInParent.businessObject.name = newLabel;
+              if (stateInParent.businessObject.identification) {
+                stateInParent.businessObject.identification.shortName = newLabel;
+              }
+            }
+          }
+        }
+      }
+    }
   }
 };
