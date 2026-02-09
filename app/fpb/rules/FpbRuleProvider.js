@@ -153,6 +153,29 @@ FpbRuleProvider.prototype.init = function () {
     return canMove(shapes, target, position);
   });
 
+  // Szenario 14: SystemLimit auf Child-Layer darf nicht gelöscht werden
+  this.addRule('elements.delete', RULE_PRIORITIES.HIGH, (context) => {
+    const { elements } = context;
+
+    const process = canvas.getRootElement();
+    const isChildLayer = process && process.businessObject && process.businessObject.isDecomposedProcessOperator;
+
+    if (isChildLayer) {
+      // Prüfen ob eines der zu löschenden Elemente ein SystemLimit ist
+      const hasSystemLimit = elements.some(element => is(element, ELEMENT_TYPES.SYSTEM_LIMIT));
+
+      if (hasSystemLimit) {
+        // Fehlermeldung anzeigen
+        eventBus.fire('illegalDelete', {
+          message: 'Die Systemgrenze auf einem Child-Layer kann nicht gelöscht werden. Sie ist mit dem übergeordneten ProcessOperator verknüpft.'
+        });
+        return false;
+      }
+    }
+
+    return true;
+  });
+
   const canMove = (elements, target, position) => {
     // allow default move check to start move operation
     if (!target) {

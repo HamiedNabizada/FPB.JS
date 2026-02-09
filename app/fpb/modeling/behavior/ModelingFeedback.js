@@ -47,6 +47,13 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
         let msg = translate('You are not allowed to place a {src} on a {target}', { src: source, target: target });
         showError(event.position, msg)
     });
+
+    // Szenario 14: Fehlermeldung wenn SystemLimit auf Child-Layer gelöscht werden soll
+    eventBus.on(['illegalDelete'], function (event) {
+        let canvasViewbox = canvas.viewbox();
+        let msg = event.message || translate('This element cannot be deleted.');
+        showError({ x: canvasViewbox.x + canvasViewbox.width / 2 - 150, y: canvasViewbox.y + 100 }, msg, 4000);
+    });
     eventBus.on(['toolTips.decomposedProcessOperator'], function (event) {
         let command = event.command;
         let processOperator = event.processOperator;
