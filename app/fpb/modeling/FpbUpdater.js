@@ -1,6 +1,6 @@
 import inherits from 'inherits';
 
-import { getElementsFromElementsContainer, getElementById } from '../help/helpUtils';
+import { getElementsFromElementsContainer, getElementById, createStateShapeForNewLayer, checkIfOnSystemBorder } from '../help/helpUtils';
 
 import {
   pick,
@@ -41,6 +41,162 @@ export default function FpbUpdater(
   this._eventBus = eventBus;
 
   var self = this;
+
+  // Handler für Szenario 4 & 6: State auf Grenze erstellt/verschoben - Bestätigung
+  eventBus.on('confirmation.confirmed', function(event) {
+    if (event.action && (event.action.type === 'move_to_boundary' || event.action.type === 'create_on_boundary')) {
+      var element = event.action.element;
+      var borderPosition = event.action.borderPosition;
+      var processRootElement = event.action.processRootElement;
+
+      // Parent-Layer aktualisieren (State + Connection erstellen)
+      var parentProcessOperator = processRootElement.businessObject.isDecomposedProcessOperator;
+      var parentProcess = processRootElement.businessObject.parent;
+
+      if (parentProcess) {
+        var parentSystemLimit = getElementsFromElementsContainer(
+          parentProcess.businessObject.elementsContainer,
+          'fpb:SystemLimit'
+        )[0];
+
+        if (parentSystemLimit) {
+          // Prüfe ob State bereits auf Parent-Layer existiert
+          var existingParentState = getElementById(
+            parentSystemLimit.businessObject.elementsContainer,
+            element.businessObject.id
+          );
+
+          if (!existingParentState) {
+            // State auf Parent-Layer erstellen
+            var parentStateShape = createStateShapeForNewLayer(
+              elementFactory,
+              element.businessObject.$type,
+              element.businessObject
+            );
+            collectionAdd(parentProcess.businessObject.consistsOfStates, parentStateShape.businessObject);
+            collectionAdd(parentSystemLimit.businessObject.elementsContainer, parentStateShape);
+
+            // Position neben dem ProcessOperator setzen
+            var parentPOShape = getElementById(
+              parentSystemLimit.businessObject.elementsContainer,
+              parentProcessOperator.id
+            );
+            if (parentPOShape) {
+              if (borderPosition === 'onUpperBorder') {
+                parentStateShape.x = parentPOShape.x + (parentPOShape.width / 2) - 25;
+                parentStateShape.y = parentPOShape.y - 100;
+              } else {
+                parentStateShape.x = parentPOShape.x + (parentPOShape.width / 2) - 25;
+                parentStateShape.y = parentPOShape.y + parentPOShape.height + 50;
+              }
+            }
+            existingParentState = parentStateShape;
+          }
+
+          // Connection zwischen State und ProcessOperator auf Parent-Layer erstellen
+          var connectionExists = false;
+          var parentPOShape = getElementById(
+            parentSystemLimit.businessObject.elementsContainer,
+            parentProcessOperator.id
+          );
+
+          if (existingParentState.outgoing) {
+            existingParentState.outgoing.forEach(function(flow) {
+              if (flow.businessObject.targetRef === parentProcessOperator) {
+                connectionExists = true;
+              }
+            });
+          }
+          if (existingParentState.incoming) {
+            existingParentState.incoming.forEach(function(flow) {
+              if (flow.businessObject.sourceRef === parentProcessOperator) {
+                connectionExists = true;
+              }
+            });
+          }
+
+          if (!connectionExists && parentPOShape) {
+            // Berechne waypoints
+            var sourceShape = borderPosition === 'onUpperBorder' ? existingParentState : parentPOShape;
+            var targetShape = borderPosition === 'onUpperBorder' ? parentPOShape : existingParentState;
+
+            var sourceCenter = {
+              x: sourceShape.x + (sourceShape.width || 50) / 2,
+              y: sourceShape.y + (sourceShape.height || 50) / 2
+            };
+            var targetCenter = {
+              x: targetShape.x + (targetShape.width || 50) / 2,
+              y: targetShape.y + (targetShape.height || 50) / 2
+            };
+
+            var newFlow = elementFactory.createConnection({
+              type: 'fpb:Flow',
+              source: sourceShape,
+              target: targetShape,
+              waypoints: [sourceCenter, targetCenter]
+            });
+
+            collectionAdd(parentSystemLimit.businessObject.elementsContainer, newFlow);
+
+            // BusinessObject-Referenzen setzen
+            if (borderPosition === 'onUpperBorder') {
+              newFlow.businessObject.sourceRef = existingParentState.businessObject;
+              newFlow.businessObject.targetRef = parentProcessOperator;
+              if (!existingParentState.businessObject.outgoing) existingParentState.businessObject.outgoing = [];
+              if (!parentProcessOperator.incoming) parentProcessOperator.incoming = [];
+              collectionAdd(existingParentState.businessObject.outgoing, newFlow.businessObject);
+              collectionAdd(parentProcessOperator.incoming, newFlow.businessObject);
+            } else {
+              newFlow.businessObject.sourceRef = parentProcessOperator;
+              newFlow.businessObject.targetRef = existingParentState.businessObject;
+              if (!parentProcessOperator.outgoing) parentProcessOperator.outgoing = [];
+              if (!existingParentState.businessObject.incoming) existingParentState.businessObject.incoming = [];
+              collectionAdd(parentProcessOperator.outgoing, newFlow.businessObject);
+              collectionAdd(existingParentState.businessObject.incoming, newFlow.businessObject);
+            }
+
+            // Shape-Referenzen setzen
+            if (borderPosition === 'onUpperBorder') {
+              if (!existingParentState.outgoing) existingParentState.outgoing = [];
+              if (!parentPOShape.incoming) parentPOShape.incoming = [];
+              collectionAdd(existingParentState.outgoing, newFlow);
+              collectionAdd(parentPOShape.incoming, newFlow);
+            } else {
+              if (!parentPOShape.outgoing) parentPOShape.outgoing = [];
+              if (!existingParentState.incoming) existingParentState.incoming = [];
+              collectionAdd(parentPOShape.outgoing, newFlow);
+              collectionAdd(existingParentState.incoming, newFlow);
+            }
+
+            // isAssignedTo aktualisieren
+            if (!existingParentState.businessObject.isAssignedTo) existingParentState.businessObject.isAssignedTo = [];
+            collectionAdd(existingParentState.businessObject.isAssignedTo, parentProcessOperator);
+          }
+        }
+      }
+    }
+  });
+
+  // Handler für Szenario 6: State zur Grenze verschoben - Ablehnung
+  // Handler für Szenario 4 & 6: State auf Grenze erstellt/verschoben - Ablehnung
+  eventBus.on('confirmation.cancelled', function(event) {
+    if (event.action && event.action.type === 'move_to_boundary') {
+      var element = event.action.element;
+      var oldPosition = event.action.oldPosition;
+
+      // State zurück zur alten Position verschieben
+      var deltaX = oldPosition.x - element.x;
+      var deltaY = oldPosition.y - element.y;
+      modeling.moveShape(element, { x: deltaX, y: deltaY });
+    }
+
+    if (event.action && event.action.type === 'create_on_boundary') {
+      var element = event.action.element;
+
+      // State löschen, da er nicht auf der Grenze bleiben darf ohne Parent-Verbindung
+      modeling.removeElements([element]);
+    }
+  });
 
   // connection cropping //////////////////////
 
@@ -299,6 +455,27 @@ FpbUpdater.prototype.updateProcessInformation = function (command, context, oldP
       collectionAdd(processSystemLimit.businessObject.elementsContainer, element);
       if (is(element, 'fpb:State')) {
         collectionAdd(process_rootElement.businessObject.consistsOfStates, element.businessObject);
+
+        // Szenario 4: Wenn State auf Systemgrenze eines Child-Layers platziert wird,
+        // Bestätigungsdialog anzeigen
+        if (process_rootElement.businessObject.isDecomposedProcessOperator) {
+          var borderPosition = checkIfOnSystemBorder(processSystemLimit, element);
+          if (borderPosition === 'onUpperBorder' || borderPosition === 'onBottomBorder') {
+            // Bestätigungsdialog anzeigen
+            this._eventBus.fire('confirmation.required', {
+              title: 'Confirm boundary placement',
+              message: 'This state will become an input/output of the parent process operator.',
+              details: 'The state will be created on the parent process and connected to the process operator.',
+              isBlocked: false,
+              action: {
+                type: 'create_on_boundary',
+                element: element,
+                borderPosition: borderPosition,
+                processRootElement: process_rootElement
+              }
+            });
+          }
+        }
       } else {
         collectionAdd(process_rootElement.businessObject.consistsOfProcessOperator, element.businessObject);
       };
@@ -323,6 +500,119 @@ FpbUpdater.prototype.updateProcessInformation = function (command, context, oldP
       collectionRemove(processSystemLimit.businessObject.elementsContainer, element);
       if (is(element, 'fpb:State')) {
         collectionRemove(process_rootElement.businessObject.consistsOfStates, element.businessObject);
+
+        // Layer-Konsistenz: State-Löschung auf Child-Layer propagieren
+        // Finde alle ProcessOperatoren die mit diesem State verbunden waren und dekomponiert sind
+        var connectedDecomposedProcesses = [];
+        element.businessObject.isAssignedTo?.forEach(function(processOperator) {
+          if (processOperator.decomposedView) {
+            connectedDecomposedProcesses.push(processOperator.decomposedView);
+          }
+        });
+
+        // Rekursiv durch alle Child-Layer gehen und den State dort auch löschen
+        while (connectedDecomposedProcesses.length > 0) {
+          var childProcess = connectedDecomposedProcesses.shift();
+          var childSystemLimit = getElementsFromElementsContainer(childProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+          if (childSystemLimit && childSystemLimit.businessObject.elementsContainer) {
+            var stateInChild = getElementById(childSystemLimit.businessObject.elementsContainer, element.businessObject.id);
+            if (stateInChild) {
+              // Flows des States im Child-Layer löschen
+              if (stateInChild.outgoing) {
+                stateInChild.outgoing.forEach(function(flow) {
+                  collectionRemove(childSystemLimit.businessObject.elementsContainer, flow);
+                  if (flow.businessObject.targetRef) {
+                    collectionRemove(flow.businessObject.targetRef.incoming, flow.businessObject);
+                    // Falls das Ziel auch dekomponiert ist, weiter nach unten propagieren
+                    if (flow.businessObject.targetRef.decomposedView) {
+                      connectedDecomposedProcesses.push(flow.businessObject.targetRef.decomposedView);
+                    }
+                  }
+                });
+              }
+              if (stateInChild.incoming) {
+                stateInChild.incoming.forEach(function(flow) {
+                  collectionRemove(childSystemLimit.businessObject.elementsContainer, flow);
+                  if (flow.businessObject.sourceRef) {
+                    collectionRemove(flow.businessObject.sourceRef.outgoing, flow.businessObject);
+                    // Falls die Quelle auch dekomponiert ist, weiter nach unten propagieren
+                    if (flow.businessObject.sourceRef.decomposedView) {
+                      connectedDecomposedProcesses.push(flow.businessObject.sourceRef.decomposedView);
+                    }
+                  }
+                });
+              }
+              // State aus Child-Layer entfernen
+              collectionRemove(childSystemLimit.businessObject.elementsContainer, stateInChild);
+              collectionRemove(childProcess.businessObject.consistsOfStates, stateInChild.businessObject);
+            }
+          }
+        }
+
+        // Layer-Konsistenz: Nur die Connection auf dem Parent-Layer entfernen (State bleibt!)
+        if (process_rootElement.businessObject.isDecomposedProcessOperator) {
+          var parentProcessOperator = process_rootElement.businessObject.isDecomposedProcessOperator;
+          var parentProcess = process_rootElement.businessObject.parent;
+
+          if (parentProcess) {
+            var parentSystemLimit = getElementsFromElementsContainer(
+              parentProcess.businessObject.elementsContainer,
+              'fpb:SystemLimit'
+            )[0];
+
+            if (parentSystemLimit) {
+              var parentState = getElementById(
+                parentSystemLimit.businessObject.elementsContainer,
+                element.businessObject.id
+              );
+
+              // Finde das ProcessOperator-Shape auf dem Parent-Layer
+              var parentProcessOperatorShape = getElementById(
+                parentSystemLimit.businessObject.elementsContainer,
+                parentProcessOperator.id
+              );
+
+              if (parentState) {
+                // Nur die Connections zum/vom ProcessOperator entfernen, State bleibt!
+                var flowsToRemove = [];
+                if (parentState.outgoing) {
+                  parentState.outgoing.forEach(function(flow) {
+                    if (flow.businessObject.targetRef === parentProcessOperator) {
+                      flowsToRemove.push(flow);
+                    }
+                  });
+                }
+                if (parentState.incoming) {
+                  parentState.incoming.forEach(function(flow) {
+                    if (flow.businessObject.sourceRef === parentProcessOperator) {
+                      flowsToRemove.push(flow);
+                    }
+                  });
+                }
+
+                flowsToRemove.forEach(function(flow) {
+                  // Entferne aus elementsContainer
+                  collectionRemove(parentSystemLimit.businessObject.elementsContainer, flow);
+
+                  // Entferne businessObject-Referenzen
+                  collectionRemove(parentState.businessObject.outgoing, flow.businessObject);
+                  collectionRemove(parentState.businessObject.incoming, flow.businessObject);
+                  collectionRemove(parentProcessOperator.outgoing, flow.businessObject);
+                  collectionRemove(parentProcessOperator.incoming, flow.businessObject);
+                  collectionRemove(parentState.businessObject.isAssignedTo, parentProcessOperator);
+
+                  // Entferne Shape-Referenzen (wichtig für Layer-Wechsel!)
+                  collectionRemove(parentState.outgoing, flow);
+                  collectionRemove(parentState.incoming, flow);
+                  if (parentProcessOperatorShape) {
+                    collectionRemove(parentProcessOperatorShape.outgoing, flow);
+                    collectionRemove(parentProcessOperatorShape.incoming, flow);
+                  }
+                });
+              }
+            }
+          }
+        }
       } else {
         collectionRemove(process_rootElement.businessObject.consistsOfProcessOperator, element.businessObject);
         // Falls ProcessOperator dekomponiert gewesen ist
@@ -347,7 +637,7 @@ FpbUpdater.prototype.updateProcessInformation = function (command, context, oldP
     if (isAny(element, ['fpb:TechnicalResource', 'fpb:SystemLimit'])) {
       collectionRemove(process_rootElement.businessObject.elementsContainer, element);
       if (is(element, 'fpb:SystemLimit')) {
-        // TODO: Harte Konsequenzen, sollte evtl noch dreifach bestätigt werden, bevor man SystemLimit löschen kann. 
+        // TODO: Harte Konsequenzen, sollte evtl noch dreifach bestätigt werden, bevor man SystemLimit löschen kann.
         process_rootElement.businessObject.consistsOfSystemLimit = null;
         process_rootElement.businessObject.consistsOfStates = [];
         process_rootElement.businessObject.consistsOfProcesses = [];
@@ -363,15 +653,56 @@ FpbUpdater.prototype.updateProcessInformation = function (command, context, oldP
     if (isAny(element, ['fpb:State', 'fpb:ProcessOperator'])) {
       var processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
       var elementFromElementsContainer = getElementById(processSystemLimit.businessObject.elementsContainer, element.businessObject.id);
-      // Sonst gibts Probleme wenn zwischen den Layern geswitched wird 
+      // Sonst gibts Probleme wenn zwischen den Layern geswitched wird
       collectionRemove(processSystemLimit.businessObject.elementsContainer, elementFromElementsContainer);
       collectionAdd(processSystemLimit.businessObject.elementsContainer, element)
     };
     if (isAny(element, ['fpb:SystemLimit', 'fpb:TechnicalResource'])) {
       var elementFromElementsContainer = getElementById(process_rootElement.businessObject.elementsContainer, element.businessObject.id);
-      // Sonst gibts Probleme wenn zwischen den Layern geswitched wird 
+      // Sonst gibts Probleme wenn zwischen den Layern geswitched wird
       collectionRemove(process_rootElement.businessObject.elementsContainer, elementFromElementsContainer);
       collectionAdd(process_rootElement.businessObject.elementsContainer, element)
+    }
+
+    // Szenario 6: Interner State wird zur Systemgrenze verschoben
+    if (isAny(element, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
+      if (process_rootElement.businessObject.isDecomposedProcessOperator) {
+        var processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+
+        if (processSystemLimit && context.delta) {
+          // Berechne alte Position
+          var oldX = element.x - context.delta.x;
+          var oldY = element.y - context.delta.y;
+          var oldElement = { x: oldX, y: oldY, width: element.width, height: element.height };
+
+          // Prüfe ob State vorher NICHT auf der Grenze war
+          var wasOnBorder = checkIfOnSystemBorder(processSystemLimit, oldElement);
+          var isNowOnBorder = checkIfOnSystemBorder(processSystemLimit, element);
+
+          // Nur wenn State von innen zur Grenze verschoben wurde
+          if (!wasOnBorder && (isNowOnBorder === 'onUpperBorder' || isNowOnBorder === 'onBottomBorder')) {
+            var eventBus = this._eventBus;
+            var modeling = this._modeling;
+            var elementFactory = this._elementFactory;
+            var borderPosition = isNowOnBorder;
+
+            // Bestätigungsdialog anzeigen
+            eventBus.fire('confirmation.required', {
+              title: 'Confirm boundary placement',
+              message: 'This state will become an input/output of the parent process operator.',
+              details: 'The state will be created on the parent process and connected to the process operator.',
+              isBlocked: false,
+              action: {
+                type: 'move_to_boundary',
+                element: element,
+                oldPosition: { x: oldX, y: oldY },
+                borderPosition: borderPosition,
+                processRootElement: process_rootElement
+              }
+            });
+          }
+        }
+      }
     }
   }
   // ------------------- Shape.move
@@ -401,6 +732,44 @@ FpbUpdater.prototype.updateProcessInformation = function (command, context, oldP
           command: 'newStateConnected',
           processOperator: processOperatorShape
         })
+
+        // Layer-Konsistenz: State auf Child-Layer erstellen wenn noch nicht vorhanden
+        var decomposedProcess = processOperatorShape.businessObject.decomposedView;
+        var childSystemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+        if (childSystemLimit && childSystemLimit.businessObject.elementsContainer) {
+          var existingStateInChild = getElementById(childSystemLimit.businessObject.elementsContainer, stateShape.businessObject.id);
+          if (!existingStateInChild) {
+            // State auf Child-Layer erstellen
+            var newStateShape = createStateShapeForNewLayer(this._elementFactory, stateShape.businessObject.$type, stateShape.businessObject);
+            collectionAdd(decomposedProcess.businessObject.consistsOfStates, newStateShape.businessObject);
+            collectionAdd(childSystemLimit.businessObject.elementsContainer, newStateShape);
+
+            // Position basierend auf Richtung (incoming/outgoing) setzen
+            var isIncoming = is(context.source, 'fpb:State'); // State → ProcessOperator = incoming
+            var stateWidth = 50;
+            var stateSpacing = 20;
+
+            // Zähle bereits vorhandene States auf der jeweiligen Grenze
+            var existingStatesOnBorder = 0;
+            var targetY = isIncoming
+              ? childSystemLimit.y - 25  // Obere Grenze
+              : childSystemLimit.y + childSystemLimit.height - 25;  // Untere Grenze
+
+            childSystemLimit.businessObject.elementsContainer.forEach(function(el) {
+              if (isAny(el, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
+                // Prüfe ob State auf der gleichen Grenze liegt (mit Toleranz)
+                if (Math.abs(el.y - targetY) < 30) {
+                  existingStatesOnBorder++;
+                }
+              }
+            });
+
+            // Berechne x-Position: verteile States horizontal
+            var startX = childSystemLimit.x + 50;
+            newStateShape.x = startX + (existingStatesOnBorder * (stateWidth + stateSpacing));
+            newStateShape.y = targetY;
+          }
+        }
       };
 
       if (isAny(element, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {

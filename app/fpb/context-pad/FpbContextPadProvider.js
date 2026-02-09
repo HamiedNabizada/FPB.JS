@@ -1,5 +1,6 @@
-import { is } from '../help/utils';
-import { getBusinessObjectFromElementsContainer, noOfUsageConnections } from '../help/helpUtils';
+import { is, isAny } from '../help/utils';
+import { ELEMENT_GROUPS } from '../rules/RuleConstants';
+import { getBusinessObjectFromElementsContainer, noOfUsageConnections, checkIfOnSystemBorder } from '../help/helpUtils';
 import { assign } from 'min-dash';
 import translate from 'diagram-js/lib/i18n/translate/translate';
 
@@ -35,13 +36,21 @@ export default function FpbContextPadProvider(
   this._canvas = canvas;
   this._rules = fpbRuleProvider;
   this._translate = translate;
-  
+  this._eventBus = eventBus;
+
   // Initialize context helper for element lookups
   this._contextHelper = new ContextHelper(canvas);
-  
+
   if (config.autoPlace !== false) {
     this._autoPlace = injector.get('autoPlace', false);
   }
+
+  // Listener für Bestätigung von Lösch-Aktionen
+  eventBus.on('confirmation.confirmed', function(event) {
+    if (event.action && event.action.type === 'delete' && event.action.element) {
+      modeling.removeElements([event.action.element]);
+    }
+  });
 }
 FpbContextPadProvider.$inject = [
   'config.contextPad',
@@ -63,13 +72,69 @@ FpbContextPadProvider.$inject = [
 FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
   const connect = this._connect;
   const modeling = this._modeling;
-  
+  const eventBus = this._eventBus;
+  const self = this;
+
   // Get process context using helper
   const context = this._contextHelper.getProcessContext();
   const { process, systemLimit, processOperators, states, technicalResources } = context;
 
+  /**
+   * Prüft, ob das Löschen eines Elements Layer-übergreifende Konsequenzen hat
+   */
+  function hasLayerConsequences(element) {
+    // ProcessOperator mit decomposed Layer
+    if (is(element, ELEMENT_TYPES.PROCESS_OPERATOR)) {
+      const bo = element.businessObject;
+      if (bo && bo.isDecomposed) {
+        return {
+          type: 'decomposed_process_operator',
+          message: 'This process operator contains a decomposed layer. Deleting it will also remove all elements in the subordinate layer.',
+          details: 'The entire subordinate process will be deleted.'
+        };
+      }
+    }
+
+    // State auf SystemGrenze in einem decomposed Layer
+    if (isAny(element, ELEMENT_GROUPS.STATES)) {
+      if (process && process.businessObject && process.businessObject.isDecomposedProcessOperator) {
+        // Prüfen ob der State auf der SystemGrenze liegt
+        if (systemLimit) {
+          const borderCheck = checkIfOnSystemBorder(systemLimit, element);
+          if (borderCheck === 'onUpperBorder' || borderCheck === 'onBottomBorder') {
+            return {
+              type: 'boundary_state',
+              message: 'This state is connected to the parent layer.',
+              details: 'Deleting this boundary state will also remove the corresponding connection on the parent layer.'
+            };
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
   function removeElement() {
-    modeling.removeElements([element]);
+    const consequences = hasLayerConsequences(element);
+
+    if (consequences) {
+      // Request confirmation for layer consequences
+      eventBus.fire('confirmation.required', {
+        title: 'Confirm deletion',
+        message: consequences.message,
+        details: consequences.details,
+        isBlocked: false,
+        action: {
+          type: 'delete',
+          element: element,
+          consequenceType: consequences.type
+        }
+      });
+    } else {
+      // Direkt löschen ohne Bestätigung
+      modeling.removeElements([element]);
+    }
   }
 
   function startConnect(event, element, autoActivate) {

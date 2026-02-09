@@ -2,7 +2,7 @@ import inherits from 'inherits';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { some } from 'min-dash';
 
-import { getElementsFromElementsContainer } from '../help/helpUtils';
+import { getElementsFromElementsContainer, checkIfOnSystemBorder } from '../help/helpUtils';
 import { is, isAny, isLabel } from '../help/utils';
 
 // Import our new constants and utilities
@@ -39,8 +39,8 @@ FpbRuleProvider.prototype.init = function () {
   });
 
   function canCreate(shape, target, position) {
-    const DEBUG = process.env.NODE_ENV === 'development';
-    
+    const DEBUG = false; // Logging deaktiviert
+
     if (DEBUG) {
       console.log('FpbRuleProvider.canCreate', {
         shape: shape?.type,
@@ -48,7 +48,7 @@ FpbRuleProvider.prototype.init = function () {
         position: position ? `${position.x},${position.y}` : 'none'
       });
     }
-    
+
     if (!target) {
       if (DEBUG) console.warn('canCreate: No target specified');
       return false;
@@ -167,6 +167,30 @@ FpbRuleProvider.prototype.init = function () {
   const canDrop = (element, target, position) => {
     if (is(element, 'label')) {
       return false;
+    }
+
+    // Grenz-States auf Child-Layern dürfen nicht von der Systemgrenze wegbewegt werden
+    if (isAny(element, ELEMENT_GROUPS.STATES)) {
+      const process = canvas.getRootElement();
+      if (process && process.businessObject && process.businessObject.isDecomposedProcessOperator) {
+        // Wir sind auf einem Child-Layer - SystemLimit Shape finden
+        const systemLimitShape = process.children.find(child => is(child, ELEMENT_TYPES.SYSTEM_LIMIT));
+
+        if (systemLimitShape) {
+          const currentBorder = checkIfOnSystemBorder(systemLimitShape, element);
+          // Wenn der State aktuell auf der Grenze liegt, Verschieben komplett verbieten
+          if (currentBorder === 'onUpperBorder' || currentBorder === 'onBottomBorder') {
+            // Berechne wie weit der State bewegt werden soll
+            const deltaY = position.y - (element.y + element.height / 2);
+            const tolerance = 5; // Kleine Bewegungen erlauben (für Layout-Anpassungen)
+
+            if (Math.abs(deltaY) > tolerance) {
+              // State würde signifikant bewegt werden - verbieten
+              return false;
+            }
+          }
+        }
+      }
     }
 
     if (is(element, ELEMENT_TYPES.SYSTEM_LIMIT)) {

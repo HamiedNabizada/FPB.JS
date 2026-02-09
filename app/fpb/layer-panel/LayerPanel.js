@@ -8,10 +8,12 @@ import Collapse from 'react-collapse';
 import Import from './features/Import';
 import DownloadOptions from './features/DownloadOptions';
 import InfoModal from './components/InfoModal';
+import ConfirmationModal from './components/ConfirmationModal';
 import ProcessTreeView from './components/ProcessTreeView';
 import ThemeToggle from './components/ThemeToggle';
 import { useProcessManagement } from './hooks/useProcessManagement';
 import { useSelectedElements } from './hooks/useSelectedElements';
+import { useConfirmation } from './hooks/useConfirmation';
 
 
 // Icons
@@ -26,6 +28,7 @@ const LayerPanel = ({ modeler, config }) => {
 
     const { selectedProcess, processes, switchProcess } = useProcessManagement(modeler);
     const selectedElements = useSelectedElements(modeler);
+    const { showConfirmation, confirmationData, handleConfirm, handleCancel } = useConfirmation(modeler);
 
 
     const tooltipsOptions = isOpenedOptions ? 'Hide Options' : 'Show Options';
@@ -96,9 +99,19 @@ const LayerPanel = ({ modeler, config }) => {
                 </OverlayTrigger>
             </div>
             
-            <InfoModal 
-                show={showInfoModal} 
-                onHide={() => setShowInfoModal(false)} 
+            <InfoModal
+                show={showInfoModal}
+                onHide={() => setShowInfoModal(false)}
+            />
+
+            <ConfirmationModal
+                show={showConfirmation}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+                title={confirmationData?.title}
+                message={confirmationData?.message}
+                details={confirmationData?.details}
+                isBlocked={confirmationData?.isBlocked}
             />
         </div>
     );
