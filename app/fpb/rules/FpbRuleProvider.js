@@ -153,7 +153,9 @@ FpbRuleProvider.prototype.init = function () {
     return canMove(shapes, target, position);
   });
 
-  // Szenario 14: SystemLimit auf Child-Layer darf nicht gelöscht werden
+  // Szenario 14/12: SystemLimit auf Child-Layer löschen = Dekomposition rückgängig machen
+  // Die eigentliche Logik (Bestätigungsdialog + Navigation) ist in FpbUpdater.js
+  // Hier erlauben wir das Löschen, aber feuern ein Event für den Bestätigungsdialog
   this.addRule('elements.delete', RULE_PRIORITIES.HIGH, (context) => {
     const { elements } = context;
 
@@ -161,14 +163,15 @@ FpbRuleProvider.prototype.init = function () {
     const isChildLayer = process && process.businessObject && process.businessObject.isDecomposedProcessOperator;
 
     if (isChildLayer) {
-      // Prüfen ob eines der zu löschenden Elemente ein SystemLimit ist
-      const hasSystemLimit = elements.some(element => is(element, ELEMENT_TYPES.SYSTEM_LIMIT));
+      const systemLimitElement = elements.find(element => is(element, ELEMENT_TYPES.SYSTEM_LIMIT));
 
-      if (hasSystemLimit) {
-        // Fehlermeldung anzeigen
-        eventBus.fire('illegalDelete', {
-          message: 'Die Systemgrenze auf einem Child-Layer kann nicht gelöscht werden. Sie ist mit dem übergeordneten ProcessOperator verknüpft.'
+      if (systemLimitElement) {
+        // Event für Bestätigungsdialog feuern - FpbContextPadProvider oder LayerPanel reagiert darauf
+        eventBus.fire('systemLimit.deleteRequested', {
+          systemLimit: systemLimitElement,
+          process: process
         });
+        // Blockieren - die eigentliche Löschung wird nach Bestätigung durchgeführt
         return false;
       }
     }

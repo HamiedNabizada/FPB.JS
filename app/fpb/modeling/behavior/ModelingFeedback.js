@@ -48,11 +48,19 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
         showError(event.position, msg)
     });
 
-    // Szenario 14: Fehlermeldung wenn SystemLimit auf Child-Layer gelöscht werden soll
+    // Fehlermeldung für blockierte Löschungen
     eventBus.on(['illegalDelete'], function (event) {
         let canvasViewbox = canvas.viewbox();
         let msg = event.message || translate('This element cannot be deleted.');
         showError({ x: canvasViewbox.x + canvasViewbox.width / 2 - 150, y: canvasViewbox.y + 100 }, msg, 4000);
+    });
+
+    // Scenario 14/12: Feedback after decomposition removal
+    eventBus.on(['toolTips.decompositionRemoved'], function (event) {
+        let canvasViewbox = canvas.viewbox();
+        let poName = event.processOperator?.name || 'ProcessOperator';
+        let msg = translate('The decomposition of "{po}" has been removed.', { po: poName });
+        showTipp(msg, { x: canvasViewbox.x + 10, y: canvasViewbox.height - 200 });
     });
     eventBus.on(['toolTips.decomposedProcessOperator'], function (event) {
         let command = event.command;

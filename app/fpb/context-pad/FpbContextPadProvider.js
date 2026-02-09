@@ -112,6 +112,19 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
       }
     }
 
+    // SystemLimit auf Child-Layer löschen = Dekomposition rückgängig machen
+    if (is(element, ELEMENT_TYPES.SYSTEM_LIMIT)) {
+      if (process && process.businessObject && process.businessObject.isDecomposedProcessOperator) {
+        const parentPO = process.businessObject.isDecomposedProcessOperator;
+        const poName = parentPO.name || 'ProcessOperator';
+        return {
+          type: 'remove_decomposition',
+          message: 'Deleting the system limit will remove the entire decomposition of ProcessOperator "' + poName + '".',
+          details: 'You will be redirected to the parent process. All elements in this process will be deleted.'
+        };
+      }
+    }
+
     return null;
   }
 
@@ -121,14 +134,17 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
     if (consequences) {
       // Request confirmation for layer consequences
       eventBus.fire('confirmation.required', {
-        title: 'Confirm deletion',
+        title: consequences.type === 'remove_decomposition' ? 'Remove Decomposition?' : 'Confirm deletion',
         message: consequences.message,
         details: consequences.details,
         isBlocked: false,
         action: {
-          type: 'delete',
+          type: consequences.type === 'remove_decomposition' ? 'remove_decomposition' : 'delete',
           element: element,
-          consequenceType: consequences.type
+          consequenceType: consequences.type,
+          // For remove_decomposition, include process info
+          process: consequences.type === 'remove_decomposition' ? process : undefined,
+          parentProcessOperator: consequences.type === 'remove_decomposition' ? process.businessObject.isDecomposedProcessOperator : undefined
         }
       });
     } else {

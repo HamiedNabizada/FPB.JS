@@ -196,6 +196,69 @@ export default function FpbUpdater(
       // State löschen, da er nicht auf der Grenze bleiben darf ohne Parent-Verbindung
       modeling.removeElements([element]);
     }
+
+    // Szenario 14/12: SystemLimit löschen abgelehnt - nichts tun
+    // (Die Löschung wurde bereits in FpbRuleProvider blockiert)
+  });
+
+  // Szenario 14/12: SystemLimit löschen angefordert - Bestätigungsdialog anzeigen
+  eventBus.on('systemLimit.deleteRequested', function(event) {
+    var systemLimit = event.systemLimit;
+    var process = event.process;
+    var parentProcessOperator = process.businessObject.isDecomposedProcessOperator;
+
+    var processOperatorName = parentProcessOperator ? parentProcessOperator.name || 'ProcessOperator' : 'ProcessOperator';
+
+    // Bestätigungsdialog anfordern
+    eventBus.fire('confirmation.required', {
+      title: 'Remove Decomposition?',
+      message: 'Deleting the system limit will remove the entire decomposition of ProcessOperator "' + processOperatorName + '".',
+      details: 'You will be redirected to the parent process. All elements in this process will be deleted.',
+      isBlocked: false,
+      action: {
+        type: 'remove_decomposition',
+        systemLimit: systemLimit,
+        process: process,
+        parentProcessOperator: parentProcessOperator
+      }
+    });
+  });
+
+  // Szenario 14/12: Dekomposition entfernen bestätigt
+  eventBus.on('confirmation.confirmed', function(event) {
+    if (event.action && event.action.type === 'remove_decomposition') {
+      var childProcessShape = event.action.process;
+      var parentProcessOperator = event.action.parentProcessOperator;
+      var parentProcessShape = childProcessShape?.businessObject?.parent;
+
+      if (childProcessShape && parentProcessOperator && parentProcessShape) {
+        // 1. Zum Parent-Layer navigieren (bevor wir den Child-Process entfernen)
+        modeling.switchProcess(parentProcessShape);
+
+        // 2. decomposedView vom ProcessOperator entfernen
+        parentProcessOperator.decomposedView = null;
+
+        // 3. Events feuern für DataStore und LayerPanel (expect Shape, not BusinessObject!)
+        eventBus.fire('dataStore.processDeleted', {
+          deletedProcess: childProcessShape
+        });
+        eventBus.fire('layerPanel.processDeleted', {
+          deletedProcess: childProcessShape
+        });
+
+        // 4. Den Child-Process aus consistsOfProcesses des Parent entfernen
+        collectionRemove(parentProcessShape.businessObject.consistsOfProcesses, childProcessShape);
+
+        // 5. Referenzen im Child-Process aufräumen
+        childProcessShape.businessObject.isDecomposedProcessOperator = null;
+        childProcessShape.businessObject.parent = null;
+
+        // 6. Feedback anzeigen
+        eventBus.fire('toolTips.decompositionRemoved', {
+          processOperator: parentProcessOperator
+        });
+      }
+    }
   });
 
   // connection cropping //////////////////////
