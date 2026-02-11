@@ -20,6 +20,7 @@ import { faCaretDown } from '@fortawesome/free-solid-svg-icons/faCaretDown';
 import { faCaretRight } from '@fortawesome/free-solid-svg-icons/faCaretRight';
 import { faSun } from '@fortawesome/free-solid-svg-icons/faSun';
 import { faMoon } from '@fortawesome/free-solid-svg-icons/faMoon';
+import { faCheck } from '@fortawesome/free-solid-svg-icons/faCheck';
 
 library.add(
   faAnglesRight,
@@ -42,5 +43,6 @@ library.add(
   faCaretDown,
   faCaretRight,
   faSun,
-  faMoon
+  faMoon,
+  faCheck
 );

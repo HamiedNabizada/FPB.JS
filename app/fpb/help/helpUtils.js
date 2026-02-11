@@ -34,16 +34,17 @@ export function createStateShapeForNewLayer(elementFactory, type, businessObject
  */
 
 export function checkIfOnSystemBorder(systemLimit, state) {
-    let upperBorder_1 = systemLimit.y - state.height + 1;
-    let upperBorder_2 = systemLimit.y + state.height - 1;
+    // Toleranz: State-Mitte muss nahe der SystemLimit-Kante sein
+    // Ein State "auf der Grenze" hat seine Mitte auf der Kante (±30 Pixel Toleranz)
+    const tolerance = 30;
+    const stateCenter = state.y + (state.height || 50) / 2;
+    const upperEdge = systemLimit.y;
+    const bottomEdge = systemLimit.y + systemLimit.height;
 
-    let bottomBorder_1 = systemLimit.y + systemLimit.height - state.height + 1;
-    let bottomBorder_2 = systemLimit.y + systemLimit.height + state.height - 1;
-
-    if (state.y >= upperBorder_1 && state.y <= upperBorder_2) {
+    if (Math.abs(stateCenter - upperEdge) <= tolerance) {
         return 'onUpperBorder';
-    };
-    if (state.y >= bottomBorder_1 && state.y <= bottomBorder_2) {
+    }
+    if (Math.abs(stateCenter - bottomEdge) <= tolerance) {
         return 'onBottomBorder';
     }
     return '';

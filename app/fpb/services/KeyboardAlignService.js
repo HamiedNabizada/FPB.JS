@@ -53,6 +53,12 @@ export default class KeyboardAlignService {
    */
   _handleKeyDown(event) {
     const key = this._getKeyCombo(event);
+
+    // Skip if key combo couldn't be determined
+    if (!key) {
+      return;
+    }
+
     const shortcut = this._shortcuts[key];
 
     if (shortcut) {
@@ -72,6 +78,11 @@ export default class KeyboardAlignService {
     if (event.ctrlKey || event.metaKey) parts.push('ctrl');
     if (event.shiftKey) parts.push('shift');
     if (event.altKey) parts.push('alt');
+
+    // Guard against undefined key (can happen with some browser events)
+    if (!event.key) {
+      return null;
+    }
 
     const key = event.key.toLowerCase();
     parts.push(key);
