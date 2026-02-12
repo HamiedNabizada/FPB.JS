@@ -194,6 +194,343 @@ export class ModelerPage {
     await this.connectElements(sourcePos, 'connect_usage', targetPos);
   }
 
+  /**
+   * Verbindet ein Element (type-based) mit einem Ziel (position-based).
+   * Nützlich wenn die Quell-Position unzuverlässig ist.
+   *
+   * @param {string} sourceType - z.B. 'fpb:Energy'
+   * @param {number} sourceIndex - 0-basiert
+   * @param {string} connectionType - 'connect' | 'connect_usage'
+   * @param {Object} targetPos - Position des Ziel-Elements {x, y}
+   */
+  async connectByType(sourceType, sourceIndex, connectionType, targetPos) {
+    await this.openContextPadByType(sourceType, sourceIndex);
+    await this.clickContextPadAction(connectionType);
+    await this.page.waitForTimeout(200);
+    await this.clickCanvasAt(targetPos);
+    await this.page.waitForTimeout(500);
+  }
+
+  // ============================================
+  // Decompose / Compose (Layer-Navigation)
+  // ============================================
+
+  /**
+   * Dekomponiert einen ProcessOperator via Context-Pad
+   */
+  async decomposeAt(position) {
+    await this.openContextPadAt(position);
+    await this.clickContextPadAction('decompose');
+    await this.page.waitForTimeout(1000);
+  }
+
+  /**
+   * Compose (zurück zum Parent-Layer) via Context-Pad auf SystemLimit
+   */
+  async composeAt(position) {
+    await this.openContextPadAt(position);
+    await this.clickContextPadAction('compose');
+    await this.page.waitForTimeout(1000);
+  }
+
+  /**
+   * Compose zurück zum Parent-Layer via SystemLimit (type-based).
+   * Zuverlässiger als position-based, da SystemLimit-IDs UUIDs sind.
+   */
+  async composeToParent() {
+    await this.clickByType('fpb:SystemLimit');
+    await this.page.waitForSelector(this.selectors.contextPad, {
+      state: 'visible',
+      timeout: 5000,
+    });
+    await this.clickContextPadAction('compose');
+    await this.page.waitForTimeout(1000);
+  }
+
+  /**
+   * Dekomponiert den n-ten ProcessOperator via interner API (type-based).
+   */
+  async decomposeByType(index = 0) {
+    await this.clickByType('fpb:ProcessOperator', index);
+    await this.page.waitForSelector(this.selectors.contextPad, {
+      state: 'visible',
+      timeout: 5000,
+    });
+    await this.clickContextPadAction('decompose');
+    await this.page.waitForTimeout(1000);
+  }
+
+  // ============================================
+  // Confirmation Modal
+  // ============================================
+
+  /**
+   * Wartet auf den Bestätigungsdialog und bestätigt
+   */
+  async confirmModal() {
+    await this.page.waitForSelector('.modal.show', { timeout: 5000 });
+    await this.page.locator('.modal.show .btn-danger').click();
+    await this.page.waitForTimeout(500);
+  }
+
+  /**
+   * Wartet auf den Bestätigungsdialog und bricht ab
+   */
+  async cancelModal() {
+    await this.page.waitForSelector('.modal.show', { timeout: 5000 });
+    await this.page.locator('.modal.show .btn-secondary').click();
+    await this.page.waitForTimeout(500);
+  }
+
+  /**
+   * Prüft ob ein Modal sichtbar ist
+   */
+  async isModalVisible() {
+    return await this.page.locator('.modal.show').isVisible();
+  }
+
+  /**
+   * Liest den Modal-Titel
+   */
+  async getModalTitle() {
+    return await this.page.locator('.modal.show .modal-title').textContent();
+  }
+
+  // ============================================
+  // Layer Panel
+  // ============================================
+
+  /**
+   * Öffnet das Layer-Panel (falls geschlossen)
+   */
+  async openLayerPanel() {
+    const panel = this.page.locator('.layerPanel');
+    if (!await panel.isVisible()) {
+      await this.page.locator('#openLayerButton').click();
+      await this.page.waitForTimeout(300);
+    }
+  }
+
+  /**
+   * Wechselt zum Layer mit dem angegebenen Namen
+   */
+  async switchToLayer(layerName) {
+    await this.openLayerPanel();
+    await this.page.locator('.arborist-node-content').filter({ hasText: layerName }).click();
+    await this.page.waitForTimeout(1000);
+  }
+
+  // ============================================
+  // Delete via Context-Pad (Position-based)
+  // ============================================
+
+  /**
+   * Löscht ein Element an einer Canvas-Position via Context-Pad
+   */
+  async deleteAt(position) {
+    await this.openContextPadAt(position);
+    await this.clickContextPadAction('delete');
+    await this.page.waitForTimeout(500);
+  }
+
+  /**
+   * Löscht das n-te Element eines bestimmten Typs via Context-Pad
+   * @param {string} type - z.B. 'fpb:Product', 'fpb:ProcessOperator'
+   * @param {number} index - 0-basiert
+   */
+  async deleteByType(type, index = 0) {
+    await this.clickByType(type, index);
+    await this.page.waitForSelector(this.selectors.contextPad, {
+      state: 'visible',
+      timeout: 5000,
+    });
+    await this.clickContextPadAction('delete');
+    await this.page.waitForTimeout(500);
+  }
+
+  // ============================================
+  // Element Access by Type (DOM-based)
+  // ============================================
+
+  /**
+   * Klickt auf das n-te Element eines bestimmten Typs.
+   * Nutzt interne Selection-API für zuverlässiges Selektieren + Context-Pad.
+   */
+  async clickByType(type, index = 0) {
+    // Element finden und per Selection-API selektieren
+    const found = await this.page.evaluate(({ type, index }) => {
+      const canvas = window.fpbjs.get('canvas');
+      const root = canvas.getRootElement();
+      const allElements = [];
+
+      function collectElements(parent) {
+        if (parent.children) {
+          for (const child of parent.children) {
+            allElements.push(child);
+            collectElements(child);
+          }
+        }
+      }
+      collectElements(root);
+
+      const matching = allElements.filter(e => e.type === type);
+      const element = matching[index];
+      if (!element) return false;
+
+      // Selection-API nutzen → triggert selection.changed → Context-Pad erscheint
+      const selection = window.fpbjs.get('selection');
+      selection.select(element);
+
+      // EventBus directClick simulieren für Context-Pad
+      const eventBus = window.fpbjs.get('eventBus');
+      eventBus.fire('element.click', { element });
+
+      return true;
+    }, { type, index });
+
+    if (!found) {
+      throw new Error(`Element of type ${type} at index ${index} not found`);
+    }
+
+    await this.page.waitForTimeout(300);
+  }
+
+  /**
+   * Öffnet Context-Pad für das n-te Element eines Typs
+   */
+  async openContextPadByType(type, index = 0) {
+    await this.clickByType(type, index);
+    await this.page.waitForSelector(this.selectors.contextPad, {
+      state: 'visible',
+      timeout: 5000,
+    });
+  }
+
+  /**
+   * Gibt Context-Pad Actions für das n-te Element eines Typs zurück
+   */
+  async getContextPadActionsByType(type, index = 0) {
+    await this.openContextPadByType(type, index);
+    return await this._readContextPadActions();
+  }
+
+  // ============================================
+  // Context-Pad Inspection
+  // ============================================
+
+  /**
+   * Gibt alle verfügbaren Context-Pad Actions zurück (position-based)
+   */
+  async getContextPadActions(position) {
+    await this.openContextPadAt(position);
+    return await this._readContextPadActions();
+  }
+
+  /**
+   * Liest die aktuell sichtbaren Context-Pad Actions
+   */
+  async _readContextPadActions() {
+    const entries = await this.page.locator(`${this.selectors.contextPad} .entry`).all();
+    const actions = [];
+    for (const entry of entries) {
+      const action = await entry.getAttribute('data-action');
+      if (action) actions.push(action);
+    }
+    return actions;
+  }
+
+  // ============================================
+  // Connection Access by Index (via internal API)
+  // ============================================
+
+  /**
+   * Klickt auf die n-te Connection auf dem aktuellen Layer.
+   * Sucht rekursiv in allen Kindern (Connections können in SystemLimit sein).
+   */
+  async clickConnectionByIndex(index = 0) {
+    const found = await this.page.evaluate((idx) => {
+      const canvas = window.fpbjs.get('canvas');
+      const root = canvas.getRootElement();
+      const connections = [];
+
+      function collectConnections(parent) {
+        if (parent.children) {
+          for (const child of parent.children) {
+            if (child.waypoints) {
+              connections.push(child);
+            }
+            collectConnections(child);
+          }
+        }
+      }
+      collectConnections(root);
+
+      const conn = connections[idx];
+      if (!conn) return false;
+
+      const selection = window.fpbjs.get('selection');
+      selection.select(conn);
+
+      const eventBus = window.fpbjs.get('eventBus');
+      eventBus.fire('element.click', { element: conn });
+
+      return true;
+    }, index);
+
+    if (!found) {
+      throw new Error(`Connection at index ${index} not found`);
+    }
+
+    await this.page.waitForTimeout(300);
+  }
+
+  /**
+   * Löscht die n-te Connection via Context-Pad
+   */
+  async deleteConnectionByIndex(index = 0) {
+    await this.clickConnectionByIndex(index);
+    await this.page.waitForSelector(this.selectors.contextPad, {
+      state: 'visible',
+      timeout: 5000,
+    });
+    await this.clickContextPadAction('delete');
+    await this.page.waitForTimeout(500);
+  }
+
+  // ============================================
+  // Element Counting
+  // ============================================
+
+  async countShapes() {
+    return await this.page.locator('.djs-element.djs-shape').count();
+  }
+
+  async countConnections() {
+    return await this.page.locator('.djs-connection').count();
+  }
+
+  // ============================================
+  // Label Editing
+  // ============================================
+
+  /**
+   * Doppelklickt auf eine Position und gibt einen neuen Namen ein
+   */
+  async renameElementAt(position, newName) {
+    const canvas = this.page.locator(this.selectors.canvas).first();
+    await canvas.dblclick({ position });
+    await this.page.waitForTimeout(300);
+
+    // Direct-Editing textarea/input finden
+    const editBox = this.page.locator('.djs-direct-editing-content');
+    await editBox.waitFor({ state: 'visible', timeout: 3000 });
+    await editBox.fill(newName);
+
+    // Bestätigen via Klick außerhalb
+    await canvas.click({ position: { x: 10, y: 10 } });
+    await this.page.waitForTimeout(300);
+  }
+
   // ============================================
   // Keyboard Actions
   // ============================================
