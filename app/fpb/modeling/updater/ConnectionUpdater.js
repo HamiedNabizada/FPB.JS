@@ -291,11 +291,11 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
     collectionRemove(context.source.businessObject.isAssignedTo, context.target.businessObject);
     collectionRemove(context.target.businessObject.isAssignedTo, context.source.businessObject);
     collectionRemove(process_rootElement.businessObject.elementsContainer, connection);
-    try {
+    if (context.source.businessObject.outgoing) {
       collectionRemove(context.source.businessObject.outgoing, connection.businessObject);
+    }
+    if (context.target.businessObject.incoming) {
       collectionRemove(context.target.businessObject.incoming, connection.businessObject);
-    } catch (error) {
-      // Intentionally empty: outgoing/incoming may not exist for TechnicalResource connections
     }
   }
 };

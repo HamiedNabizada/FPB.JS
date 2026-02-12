@@ -134,16 +134,15 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
                 state.state.outgoing.forEach(function (connection) {
                     // Flows anpassen
                     connection.waypoints[0].x = sizesAndPositions.incomings.start_x + 25;
-                    try {
-                        connection.businessObject.di.waypoint[0].x = sizesAndPositions.incomings.start_x + 25;
-                    } catch (error) {
+                    var diWaypoints = connection.businessObject.di?.waypoint;
+                    if (diWaypoints?.[0]) {
+                        diWaypoints[0].x = sizesAndPositions.incomings.start_x + 25;
                     }
                     // Für Flows mit Knick
                     if (connection.waypoints.length === 4) {
                         connection.waypoints[1].x = sizesAndPositions.incomings.start_x + 25;
-                        try {
-                            connection.businessObject.di.waypoint[1].x = sizesAndPositions.incomings.start_x + 25;
-                        } catch (error) {
+                        if (diWaypoints?.[1]) {
+                            diWaypoints[1].x = sizesAndPositions.incomings.start_x + 25;
                         }
                     }
                 })
@@ -157,21 +156,17 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
                 state.state.incoming.forEach(function (connection) {
                     // Flows anpassen
                     connection.waypoints[0].x = sizesAndPositions.outgoings.start_x + 25;
-                    try {
-                        connection.businessObject.di.waypoint[0].x = sizesAndPositions.outgoings.start_x + 25;
-                    } catch (error) {
-
+                    var diWaypoints = connection.businessObject.di?.waypoint;
+                    if (diWaypoints?.[0]) {
+                        diWaypoints[0].x = sizesAndPositions.outgoings.start_x + 25;
                     }
 
                     // Flows mit Knick
                     if (connection.waypoints.length === 4) {
                         connection.waypoints[1].x = sizesAndPositions.outgoings.start_x + 25;
-                        try {
-                            connection.businessObject.di.waypoint[1].x = sizesAndPositions.outgoings.start_x + 25;
-                        } catch (error) {
-
+                        if (diWaypoints?.[1]) {
+                            diWaypoints[1].x = sizesAndPositions.outgoings.start_x + 25;
                         }
-
                     }
                 })
             }

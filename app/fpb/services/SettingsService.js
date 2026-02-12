@@ -114,6 +114,7 @@ export default class SettingsService {
       localStorage.removeItem(test);
       return true;
     } catch (error) {
+      // Standard localStorage feature detection – returning false is intentional
       return false;
     }
   }
