@@ -13,16 +13,23 @@ import SpaceToolModule from 'diagram-js/lib/features/space-tool';
 
 import FpbFactory from './FpbFactory';
 import FpbElementFactory from './FpbElementFactory';
-import FpbUpdater from './FpbUpdater';
 import FpbModeling from './FpbModeling';
 import FpbLayouter from './FpbLayouter';
 import CroppingConnectionDocking from 'diagram-js/lib/layout/CroppingConnectionDocking';
+
+import ConfirmationHandler from './updater/ConfirmationHandler';
+import ShapeUpdater from './updater/ShapeUpdater';
+import ConnectionUpdater from './updater/ConnectionUpdater';
+import DiUpdater from './updater/DiUpdater';
 
 
 export default {
   __init__: [
     'modeling',
-    'fpbUpdater'
+    'confirmationHandler',
+    'shapeUpdater',
+    'connectionUpdater',
+    'diUpdater'
   ],
   __depends__: [
     BehaviorModule,
@@ -37,7 +44,10 @@ export default {
   ],
 
   fpbFactory: [ 'type', FpbFactory ],
-  fpbUpdater: [ 'type', FpbUpdater ],
+  confirmationHandler: [ 'type', ConfirmationHandler ],
+  shapeUpdater: [ 'type', ShapeUpdater ],
+  connectionUpdater: [ 'type', ConnectionUpdater ],
+  diUpdater: [ 'type', DiUpdater ],
   elementFactory: [ 'type', FpbElementFactory ],
   modeling: [ 'type', FpbModeling ],
   layouter: [ 'type', FpbLayouter ],
