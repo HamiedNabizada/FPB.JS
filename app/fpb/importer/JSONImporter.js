@@ -67,7 +67,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                         return proc.id === pr.process.businessObject.parent;
                     }).process
                 };
-                if (pr.process.businessObject.consistsOfProcesses.length > 0) {
+                if (pr.process.businessObject.consistsOfProcesses && pr.process.businessObject.consistsOfProcesses.length > 0) {
                     let tmpArray = [];
                     pr.process.businessObject.consistsOfProcesses.forEach((e) => {
                         if (TypeUtils.isStringLike(e)) {
@@ -301,7 +301,7 @@ JSONImporter.prototype.buildSystemLimitShapes = function (vI, dI, process, syste
     if (vI.type === 'fpb:Product' || vI.type === 'fpb:Energy' || vI.type === 'fpb:Information') {
         collectionAdd(process.businessObject.consistsOfStates, shape.businessObject);
     }
-    if (shape.businessObject.incoming.length > 0 || shape.businessObject.outgoing.length > 0 || shape.businessObject.isAssignedTo.length > 0) {
+    if ((shape.businessObject.incoming && shape.businessObject.incoming.length > 0) || (shape.businessObject.outgoing && shape.businessObject.outgoing.length > 0) || (shape.businessObject.isAssignedTo && shape.businessObject.isAssignedTo.length > 0)) {
         this._processes[no - 1].updateElements.push(shape)
     }
 }

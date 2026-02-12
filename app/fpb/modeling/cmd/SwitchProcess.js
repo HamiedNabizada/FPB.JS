@@ -25,7 +25,7 @@ SwitchProcess.prototype.preExecute = function (context) {
     let processShapes = [];
     let stateShapes = [];
     let systemlimit;
-    process.businessObject.elementsContainer.forEach(element => {
+    (process.businessObject.elementsContainer || []).forEach(element => {
         if (is(element, 'fpb:Flow')) {
             processFlows.push(element);
         }

@@ -171,7 +171,7 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
             ? childSystemLimit.y - 25  // Obere Grenze
             : childSystemLimit.y + childSystemLimit.height - 25;  // Untere Grenze
 
-          childSystemLimit.businessObject.elementsContainer.forEach(function(el) {
+          (childSystemLimit.businessObject.elementsContainer || []).forEach(function(el) {
             if (isAny(el, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
               if (Math.abs(el.y - targetY) < 30) {
                 existingStatesOnBorder++;
@@ -188,14 +188,14 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
 
     if (isAny(element, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
       var replaceFlow;
-      context.source.outgoing.forEach(function (flow) {
+      (context.source.outgoing || []).forEach(function (flow) {
         if (!isAny(flow, ['fpb:ParallelFlow', 'fpb:AlternativeFlow', 'fpb:Usage'])) {
           replaceFlow = getElementById(processSystemLimit.businessObject.elementsContainer, flow.id);
         }
       });
       // Falls noch ein normaler Flow existieren würde, wird zunächst im ReplaceConnectionBehavior dieser ausgetauscht
       if (!replaceFlow) {
-        context.source.outgoing.forEach(function (flow) {
+        (context.source.outgoing || []).forEach(function (flow) {
           if (flow !== element && isAny(flow, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
             if (!flow.businessObject.inTandemWith) {
               flow.businessObject.inTandemWith = [];
@@ -254,7 +254,11 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
         var decomposedProcessSystemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
         var stateInDecomposedProcess = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, stateShape.id);
 
-        stateInDecomposedProcess.outgoing.forEach(function (flow) {
+        if (!stateInDecomposedProcess) {
+          continue;
+        }
+
+        (stateInDecomposedProcess.outgoing || []).forEach(function (flow) {
           var flowElement = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, flow.id);
           collectionRemove(decomposedProcessSystemLimit.businessObject.elementsContainer, flowElement);
           collectionRemove(flow.businessObject.targetRef.incoming, flow.businessObject);
@@ -263,7 +267,7 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
           }
         });
 
-        stateInDecomposedProcess.incoming.forEach(function (flow) {
+        (stateInDecomposedProcess.incoming || []).forEach(function (flow) {
           collectionRemove(decomposedProcessSystemLimit.businessObject.elementsContainer, flow);
           collectionRemove(flow.businessObject.sourceRef.outgoing, flow.businessObject);
           if (flow.businessObject.sourceRef.decomposedView) {
@@ -276,11 +280,15 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
     }
 
     if (isAny(element, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
-      context.source.outgoing.forEach(function (flow) {
+      (context.source.outgoing || []).forEach(function (flow) {
         if (flow !== element) {
           if (isAny(flow, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
-            collectionRemove(flow.businessObject.inTandemWith, element);
-            collectionRemove(element.businessObject.inTandemWith, flow);
+            if (flow.businessObject.inTandemWith) {
+              collectionRemove(flow.businessObject.inTandemWith, element);
+            }
+            if (element.businessObject.inTandemWith) {
+              collectionRemove(element.businessObject.inTandemWith, flow);
+            }
           }
         }
       });

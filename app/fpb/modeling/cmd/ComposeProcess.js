@@ -67,7 +67,7 @@ ComposeProcess.prototype.preExecute = function (context) {
         //Prozess hat keinen übergeordneten Prozess
 
         // StateShapes die auf der SystemBorder liegen abholen
-        systemLimitOld.businessObject.elementsContainer.forEach((state) => {
+        (systemLimitOld.businessObject.elementsContainer || []).forEach((state) => {
             if (is(state, 'fpb:State')) {
                 if (checkIfOnSystemBorder(systemLimitOld, state) == 'onUpperBorder') {
                     stateShapes.push({ state: createStateShapeForNewLayer(this._elementFactory, state.type, state.businessObject), position: 'incoming' });

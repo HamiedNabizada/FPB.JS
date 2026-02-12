@@ -78,7 +78,7 @@ export default function DataBehavior(eventBus, fpbjs) {
             let id = processIds.pop();
             processes.forEach((pro) => {
                 if (pro.process && pro.process.id == id) {
-                    pro.process.consistsOfProcesses.forEach((childProcess) => {
+                    (pro.process.consistsOfProcesses || []).forEach((childProcess) => {
                         processIds.push(childProcess.id)
                     });
                     collectionRemove(processes, pro);
