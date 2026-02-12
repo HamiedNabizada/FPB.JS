@@ -105,20 +105,44 @@ export class ModelerPage {
   }
 
   // ============================================
+  // Canvas Position Click
+  // ============================================
+
+  /**
+   * Klickt auf eine Position im Canvas (z.B. um ein Element zu selektieren)
+   */
+  async clickCanvasAt(position) {
+    const canvas = this.page.locator(this.selectors.canvas).first();
+    await canvas.click({ position });
+    await this.page.waitForTimeout(300);
+  }
+
+  // ============================================
   // Context Pad
   // ============================================
+
+  /**
+   * Klickt auf ein Element an einer Canvas-Position und wartet auf Context-Pad
+   */
+  async openContextPadAt(position) {
+    await this.clickCanvasAt(position);
+    await this.page.waitForSelector(this.selectors.contextPad, {
+      state: 'visible',
+      timeout: 5000,
+    });
+  }
 
   async openContextPad(elementName) {
     await this.clickElement(elementName);
     await this.page.waitForSelector(this.selectors.contextPad, {
       state: 'visible',
-      timeout: 2000,
+      timeout: 5000,
     });
   }
 
   async clickContextPadAction(action) {
     const button = this.page.locator(
-      `${this.selectors.contextPad} [data-action="${action}"]`
+      `${this.selectors.contextPad} .entry[data-action="${action}"]`
     );
     await button.click();
   }
@@ -127,6 +151,47 @@ export class ModelerPage {
     await this.openContextPad(elementName);
     await this.clickContextPadAction('delete');
     await this.page.waitForTimeout(200);
+  }
+
+  // ============================================
+  // Connections
+  // ============================================
+
+  /**
+   * Verbindet zwei Elemente über Context-Pad:
+   * 1. Klick auf Quell-Element → Context-Pad öffnet
+   * 2. Klick auf Connection-Button im Context-Pad
+   * 3. Klick auf Ziel-Element → Verbindung erstellt
+   *
+   * @param {Object} sourcePos - Position des Quell-Elements {x, y}
+   * @param {string} connectionType - 'connect' | 'connect_parallel' | 'connect_alternative' | 'connect_usage'
+   * @param {Object} targetPos - Position des Ziel-Elements {x, y}
+   */
+  async connectElements(sourcePos, connectionType, targetPos) {
+    // 1. Quell-Element anklicken → Context-Pad erscheint
+    await this.openContextPadAt(sourcePos);
+
+    // 2. Connection-Button im Context-Pad klicken
+    await this.clickContextPadAction(connectionType);
+    await this.page.waitForTimeout(200);
+
+    // 3. Ziel-Element anklicken → Verbindung wird erstellt
+    await this.clickCanvasAt(targetPos);
+    await this.page.waitForTimeout(500);
+  }
+
+  /**
+   * Erstellt eine Flow-Verbindung (Standard)
+   */
+  async connectWithFlow(sourcePos, targetPos) {
+    await this.connectElements(sourcePos, 'connect', targetPos);
+  }
+
+  /**
+   * Erstellt eine Usage-Verbindung
+   */
+  async connectWithUsage(sourcePos, targetPos) {
+    await this.connectElements(sourcePos, 'connect_usage', targetPos);
   }
 
   // ============================================
