@@ -11,8 +11,8 @@ export class ModelerPage {
 
     // Selektoren für wichtige UI-Elemente
     this.selectors = {
-      canvas: '#modeler-container .djs-container',
-      svg: '#modeler-container svg.djs-svg',
+      canvas: '.djs-container',
+      svg: '.djs-container svg',
       palette: '.djs-palette',
       contextPad: '.djs-context-pad',
       propertiesPanel: '#properties-container',
@@ -26,50 +26,54 @@ export class ModelerPage {
 
   async goto() {
     await this.page.goto('/');
-    await this.page.waitForSelector(this.selectors.svg, {
+    // Warten auf die Palette (wird schneller geladen als SVG)
+    await this.page.waitForSelector(this.selectors.palette, {
       state: 'visible',
-      timeout: 10000,
+      timeout: 30000,
     });
-    // Kurz warten bis alles gerendert ist
-    await this.page.waitForTimeout(500);
+    // Kurz warten bis der Canvas vollständig gerendert ist
+    await this.page.waitForTimeout(1000);
   }
 
   // ============================================
   // Element Creation
   // ============================================
 
+  async createSystemLimit(position) {
+    await this.clickPaletteAndPlace('Add System Limit', position);
+  }
+
   async createProduct(position) {
-    await this.dragFromPalette('create.fpb-product', position);
+    await this.clickPaletteAndPlace('Add Product', position);
   }
 
   async createEnergy(position) {
-    await this.dragFromPalette('create.fpb-energy', position);
+    await this.clickPaletteAndPlace('Add Energy', position);
   }
 
   async createInformation(position) {
-    await this.dragFromPalette('create.fpb-information', position);
+    await this.clickPaletteAndPlace('Add Information', position);
   }
 
   async createProcessOperator(position) {
-    await this.dragFromPalette('create.fpb-processoperator', position);
+    await this.clickPaletteAndPlace('Add Process Operator', position);
   }
 
   async createTechnicalResource(position) {
-    await this.dragFromPalette('create.fpb-technicalresource', position);
+    await this.clickPaletteAndPlace('Add Technical Resource', position);
   }
 
-  async dragFromPalette(action, position) {
-    const paletteEntry = this.page.locator(
-      `${this.selectors.palette} [data-action="${action}"]`
-    );
-    const canvas = this.page.locator(this.selectors.canvas);
+  async clickPaletteAndPlace(label, position) {
+    // Klicke auf den Palette-Eintrag per Text
+    const paletteEntry = this.page.getByTitle(label);
+    await paletteEntry.click();
 
-    await paletteEntry.dragTo(canvas, {
-      targetPosition: position,
-    });
+    // Klicke auf den Canvas an der gewünschten Position
+    const canvas = this.page.locator(this.selectors.canvas).first();
+    await canvas.click({ position });
 
     // Warten bis Element erstellt
-    await this.page.waitForTimeout(200);
+    await this.page.waitForTimeout(300);
   }
 
   // ============================================
@@ -184,7 +188,7 @@ export class ModelerPage {
   }
 
   async takeCanvasScreenshot(name) {
-    const canvas = this.page.locator(this.selectors.canvas);
+    const canvas = this.page.locator(this.selectors.canvas).first();
     await canvas.screenshot({
       path: `tests/e2e/screenshots/${name}.png`,
     });

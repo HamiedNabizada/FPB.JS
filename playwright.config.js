@@ -23,7 +23,7 @@ export default defineConfig({
   // Globale Einstellungen
   use: {
     // URL der Anwendung
-    baseURL: 'http://localhost:8080',
+    baseURL: 'http://localhost:3001',
 
     // Screenshots bei Fehler
     screenshot: 'only-on-failure',
@@ -49,7 +49,7 @@ export default defineConfig({
   // Dev-Server automatisch starten
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:8080',
+    url: 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },

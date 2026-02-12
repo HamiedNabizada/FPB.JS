@@ -13,3 +13,8 @@ dist/
 
 # Claude development files
 .claude/
+
+# Test results and reports
+test-results/
+playwright-report/
+coverage/
