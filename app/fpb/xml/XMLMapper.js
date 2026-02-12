@@ -59,7 +59,7 @@ class XMLMapper {
 
             return xmlString;
         } catch (error) {
-            console.error('❌ XMLMapper: XML conversion failed:', error);
+            console.error('XMLMapper: XML conversion failed:', error);
             throw error;
         }
     }
@@ -94,7 +94,7 @@ class XMLMapper {
 
             return updatedJsonData;
         } catch (error) {
-            console.error('❌ XMLMapper: JSON conversion failed:', error);
+            console.error('XMLMapper: JSON conversion failed:', error);
             throw error;
         }
     }
@@ -311,7 +311,7 @@ class XMLMapper {
             return result;
 
         } catch (error) {
-            console.error('❌ _convertModdleElementsToProperJSON: Conversion failed:', error);
+            console.error('_convertModdleElementsToProperJSON: Conversion failed:', error);
             throw error;
         }
     }
@@ -394,7 +394,7 @@ class XMLMapper {
             return jsonData;
 
         } catch (error) {
-            console.error('❌ _convertXMLtoJSON: Error converting XML to JSON:', error);
+            console.error('_convertXMLtoJSON: Error converting XML to JSON:', error);
             throw error;
         }
     }
@@ -750,7 +750,7 @@ class XMLMapper {
             sourceRef = processOperatorId;
             targetRef = technicalResourceId;
         } else {
-            console.warn(`⚠️ Could not determine endpoints for usage ${usageId}`);
+            console.warn(`Could not determine endpoints for usage ${usageId}`);
             return;
         }
 
@@ -1589,7 +1589,7 @@ class XMLMapper {
             return this._formatXML(xmlString);
 
         } catch (error) {
-            console.error('❌ _convertJSONtoXML: Error converting JSON to XML:', error);
+            console.error('_convertJSONtoXML: Error converting JSON to XML:', error);
             throw error;
         }
     }

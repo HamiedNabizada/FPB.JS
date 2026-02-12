@@ -22,8 +22,6 @@ export default function SystemLimitSmartResizeHandler(eventBus) {
       return;
     }
 
-    // console.log('🎯 SystemLimit resize init - storing original bounds');
-
     // Store original bounds before diagram-js modifies them
     resizeState.set(shape.id, {
       originalBounds: {
@@ -59,7 +57,6 @@ export default function SystemLimitSmartResizeHandler(eventBus) {
 
         if (!state.startMousePos) {
           state.startMousePos = { x: currentX, y: currentY };
-          // console.log('🎯 Recording start mouse position', { x: currentX, y: currentY });
         } else {
           const deltaX = currentX - state.startMousePos.x;
           const deltaY = currentY - state.startMousePos.y;
@@ -71,34 +68,22 @@ export default function SystemLimitSmartResizeHandler(eventBus) {
             if (!state.resizeDirection) {
               if (absDeltaX > absDeltaY * 2) {
                 state.resizeDirection = 'horizontal';
-                // console.log('🎯 Detected HORIZONTAL resize intention');
               } else if (absDeltaY > absDeltaX * 2) {
                 state.resizeDirection = 'vertical';
-                // console.log('🎯 Detected VERTICAL resize intention');
               } else {
                 state.resizeDirection = 'both';
-                // console.log('🎯 Detected DIAGONAL resize intention');
               }
             }
           }
 
           if (absDeltaX > 10 || absDeltaY > 10) {
             state.hasSignificantChange = true;
-            // console.log('🎯 Significant mouse movement detected', {
-            //   deltaX, deltaY, moveCount: state.moveEventCount,
-            //   direction: state.resizeDirection
-            // });
-          } else {
-            // console.log('🎯 Minor mouse movement', { deltaX, deltaY, moveCount: state.moveEventCount });
           }
         }
       } else {
         // Fallback: If we get more than 3 move events, assume user is dragging
         if (state.moveEventCount > 3) {
           state.hasSignificantChange = true;
-          // console.log('🎯 Multiple move events - assuming user drag', { moveCount: state.moveEventCount });
-        } else {
-          // console.log('🎯 Move event without mouse data', { moveCount: state.moveEventCount });
         }
       }
     }
@@ -115,7 +100,7 @@ export default function SystemLimitSmartResizeHandler(eventBus) {
 
     const state = resizeState.get(shape.id);
     if (!state) {
-      console.warn('🎯 No resize state found for SystemLimit');
+      console.warn('SystemLimitSmartResizeHandler: No resize state found');
       return;
     }
 
@@ -168,7 +153,6 @@ export default function SystemLimitSmartResizeHandler(eventBus) {
       return;
     }
 
-    // console.log('🧹 Cleaning up SystemLimit resize state');
     resizeState.delete(shape.id);
   });
 
@@ -180,7 +164,6 @@ export default function SystemLimitSmartResizeHandler(eventBus) {
       return;
     }
 
-    // console.log('🧹 SystemLimit resize cancelled - cleaning up state');
     resizeState.delete(shape.id);
   });
 }
