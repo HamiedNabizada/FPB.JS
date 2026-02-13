@@ -269,12 +269,13 @@ DecomposeProcessOperator.prototype.postExecute = function (context) {
             }
             modeling.updateLabel(state.state, state.state.businessObject.name);
         }
-        // Wenn auf über-/untergeordneten Layern Shapes hin und herbewegt worden sind, kommt es zu Anzeigefehlern der Connections
-        // Dies lässt sich beheben, wenn das entsprechende Shape etwas bewegt wird, ist aber keine endgültige Lösung
-        // TODO: Function schreiben, die herausfindet, ob Connection richtig platziert worden ist
-        // Notlösung ist zunächst Shapes hin und her zu bewegen
-        modeling.moveShape(state.state, { x: 3, y: 0 })
-        modeling.moveShape(state.state, { x: -3, y: 0 })
+        // Re-layout all connections attached to this state
+        (state.state.incoming || []).forEach(function (connection) {
+            modeling.layoutConnection(connection);
+        });
+        (state.state.outgoing || []).forEach(function (connection) {
+            modeling.layoutConnection(connection);
+        });
 
     })
     processFlows.forEach((flow) => {

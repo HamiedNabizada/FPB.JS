@@ -242,9 +242,13 @@ ComposeProcess.prototype.postExecute = function (context) {
                 modeling.layoutConnection(flow)
             })
 
-            //TODO: Notlösung, siehe Problematik in DecomposeProcessOperator
-            modeling.moveShape(state, { x: -3, y: 0 })
-            modeling.moveShape(state, { x: 3, y: 0 })
+            // Re-layout all connections attached to this state
+            (state.incoming || []).forEach(function (connection) {
+                modeling.layoutConnection(connection);
+            });
+            (state.outgoing || []).forEach(function (connection) {
+                modeling.layoutConnection(connection);
+            });
         })
     }
 
