@@ -30,18 +30,18 @@ DecomposeProcessOperator.$inject = [
 
 // Vorbereitung auf Layerwechsel
 DecomposeProcessOperator.prototype.preExecute = function (context) {
-    var canvas = this._canvas;
-    var elementFactory = this._elementFactory;
+    const canvas = this._canvas;
+    const elementFactory = this._elementFactory;
 
     // Aktueller Prozess, aus dem ein ProcessOperator dekomponiert wird
-    var process = canvas.getRootElement();
-    var isDecomposed = false;
-    var processOperator = context.element;
-    var incomingFlows = processOperator.incoming;
-    var outgoingFlows = processOperator.outgoing;
-    var decomposedProcess;
-    var stateShapes = [];
-    var systemLimit;
+    const process = canvas.getRootElement();
+    let isDecomposed = false;
+    const processOperator = context.element;
+    const incomingFlows = processOperator.incoming;
+    const outgoingFlows = processOperator.outgoing;
+    let decomposedProcess;
+    const stateShapes = [];
+    let systemLimit;
 
     // Falls ProcessOperator bereits dekomponiert gewesen ist
     if (processOperator.businessObject.decomposedView) {
@@ -126,7 +126,7 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
     // Shortname des zu dekomponierenden ProcessOperators als Namen auf die SystemGrenze
     systemLimit.businessObject.name = "SL_" + processOperator.businessObject.name;
     // Positionierung der Shapes berechnen
-    var sizesAndPositions = calculateSizeAndPositions(systemLimit, incomingFlows, outgoingFlows);
+    const sizesAndPositions = calculateSizeAndPositions(systemLimit, incomingFlows, outgoingFlows);
     systemLimit.width = sizesAndPositions.SystemLimitWidth;
     stateShapes.forEach(function (state) {
         if (state.position === 'incoming') {
@@ -134,7 +134,7 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
                 state.state.outgoing.forEach(function (connection) {
                     // Flows anpassen
                     connection.waypoints[0].x = sizesAndPositions.incomings.start_x + 25;
-                    var diWaypoints = connection.businessObject.di?.waypoint;
+                    const diWaypoints = connection.businessObject.di?.waypoint;
                     if (diWaypoints?.[0]) {
                         diWaypoints[0].x = sizesAndPositions.incomings.start_x + 25;
                     }
@@ -156,7 +156,7 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
                 state.state.incoming.forEach(function (connection) {
                     // Flows anpassen
                     connection.waypoints[0].x = sizesAndPositions.outgoings.start_x + 25;
-                    var diWaypoints = connection.businessObject.di?.waypoint;
+                    const diWaypoints = connection.businessObject.di?.waypoint;
                     if (diWaypoints?.[0]) {
                         diWaypoints[0].x = sizesAndPositions.outgoings.start_x + 25;
                     }
@@ -217,14 +217,14 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
 }
 
 DecomposeProcessOperator.prototype.execute = function (context) {
-    var canvas = this._canvas;
+    const canvas = this._canvas;
 
-    var decomposedProcess = context.decomposedProcess;
-    var stateShapes = context.stateShapes;
-    var systemLimit = context.systemLimit;
-    var processShapes = context.processShapes;
-    var processFlows = context.processFlows;
-    var systemLimitFlows = context.systemLimitFlows;
+    const decomposedProcess = context.decomposedProcess;
+    const stateShapes = context.stateShapes;
+    const systemLimit = context.systemLimit;
+    const processShapes = context.processShapes;
+    const processFlows = context.processFlows;
+    const systemLimitFlows = context.systemLimitFlows;
     // Clearen der Canvas und platzieren der Shapes
     canvas._clear();
     canvas.setRootElement(decomposedProcess, true);
@@ -257,10 +257,10 @@ DecomposeProcessOperator.prototype.execute = function (context) {
 
 // Labels updaten / hinzufügen
 DecomposeProcessOperator.prototype.postExecute = function (context) {
-    var modeling = this._modeling;
-    var stateShapes = context.stateShapes;
-    var processFlows = context.processFlows;
-    var systemLimitFlows = context.systemLimitFlows;
+    const modeling = this._modeling;
+    const stateShapes = context.stateShapes;
+    const processFlows = context.processFlows;
+    const systemLimitFlows = context.systemLimitFlows;
     stateShapes.forEach((state) => {
         if (state.state.businessObject.name) {
             if (state.state.labels[0]) {

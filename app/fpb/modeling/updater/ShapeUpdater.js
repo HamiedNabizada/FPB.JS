@@ -36,11 +36,11 @@ export default function ShapeUpdater(
   this._config = config;
   this._eventBus = eventBus;
 
-  var self = this;
+  const self = this;
 
   function onShapeEvent(e) {
-    var context = e.context;
-    var command = e.command;
+    const context = e.context;
+    const command = e.command;
     self._handleShapeCommand(command, context);
   }
 
@@ -67,8 +67,8 @@ ShapeUpdater.$inject = [
 
 
 ShapeUpdater.prototype._handleShapeCommand = function (command, context) {
-  var element = context.shape;
-  var process_rootElement = this._canvas.getRootElement();
+  const element = context.shape;
+  const process_rootElement = this._canvas.getRootElement();
 
   if (isLabel(element)) {
     return;
@@ -95,7 +95,7 @@ ShapeUpdater.prototype._handleCreate = function (element, process_rootElement) {
 
     process_rootElement = this._elementFactory.create('root', { type: 'fpb:Process' });
 
-    var projectDefintion = this._fpbFactory.create('fpb:Project', {
+    const projectDefintion = this._fpbFactory.create('fpb:Project', {
       name: this._config.ProjectDefintion.name,
       targetNamespace: this._config.ProjectDefintion.targetNamespace,
       entryPoint: process_rootElement
@@ -123,7 +123,7 @@ ShapeUpdater.prototype._handleCreate = function (element, process_rootElement) {
 
   // ProcessOperatoren und States werden in den elementsContainer des SystemLimits geschoben
   if (isAny(element, ['fpb:State', 'fpb:ProcessOperator'])) {
-    var processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
     collectionAdd(processSystemLimit.businessObject.elementsContainer, element);
     if (is(element, 'fpb:State')) {
       collectionAdd(process_rootElement.businessObject.consistsOfStates, element.businessObject);
@@ -131,7 +131,7 @@ ShapeUpdater.prototype._handleCreate = function (element, process_rootElement) {
       // Szenario 4: Wenn State auf Systemgrenze eines Child-Layers platziert wird,
       // Bestätigungsdialog anzeigen
       if (process_rootElement.businessObject.isDecomposedProcessOperator) {
-        var borderPosition = checkIfOnSystemBorder(processSystemLimit, element);
+        const borderPosition = checkIfOnSystemBorder(processSystemLimit, element);
         if (borderPosition === 'onUpperBorder' || borderPosition === 'onBottomBorder') {
           this._eventBus.fire('confirmation.required', {
             title: 'Confirm boundary placement',
@@ -165,14 +165,14 @@ ShapeUpdater.prototype._handleCreate = function (element, process_rootElement) {
 ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
   // Gelöschtes Element ist ein State oder ProcessOperator
   if (isAny(element, ['fpb:State', 'fpb:ProcessOperator'])) {
-    var processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
     collectionRemove(processSystemLimit.businessObject.elementsContainer, element);
 
     if (is(element, 'fpb:State')) {
       collectionRemove(process_rootElement.businessObject.consistsOfStates, element.businessObject);
 
       // Layer-Konsistenz: State-Löschung auf Child-Layer propagieren
-      var connectedDecomposedProcesses = [];
+      const connectedDecomposedProcesses = [];
       element.businessObject.isAssignedTo?.forEach(function(processOperator) {
         if (processOperator.decomposedView) {
           connectedDecomposedProcesses.push(processOperator.decomposedView);
@@ -181,10 +181,10 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
 
       // Rekursiv durch alle Child-Layer gehen und den State dort auch löschen
       while (connectedDecomposedProcesses.length > 0) {
-        var childProcess = connectedDecomposedProcesses.shift();
-        var childSystemLimit = getElementsFromElementsContainer(childProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+        const childProcess = connectedDecomposedProcesses.shift();
+        const childSystemLimit = getElementsFromElementsContainer(childProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
         if (childSystemLimit && childSystemLimit.businessObject.elementsContainer) {
-          var stateInChild = getElementById(childSystemLimit.businessObject.elementsContainer, element.businessObject.id);
+          const stateInChild = getElementById(childSystemLimit.businessObject.elementsContainer, element.businessObject.id);
           if (stateInChild) {
             // Flows des States im Child-Layer löschen
             if (stateInChild.outgoing) {
@@ -218,28 +218,28 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
 
       // Layer-Konsistenz: Nur die Connection auf dem Parent-Layer entfernen (State bleibt!)
       if (process_rootElement.businessObject.isDecomposedProcessOperator) {
-        var parentProcessOperator = process_rootElement.businessObject.isDecomposedProcessOperator;
-        var parentProcess = process_rootElement.businessObject.parent;
+        const parentProcessOperator = process_rootElement.businessObject.isDecomposedProcessOperator;
+        const parentProcess = process_rootElement.businessObject.parent;
 
         if (parentProcess) {
-          var parentSystemLimit = getElementsFromElementsContainer(
+          const parentSystemLimit = getElementsFromElementsContainer(
             parentProcess.businessObject.elementsContainer,
             'fpb:SystemLimit'
           )[0];
 
           if (parentSystemLimit) {
-            var parentState = getElementById(
+            const parentState = getElementById(
               parentSystemLimit.businessObject.elementsContainer,
               element.businessObject.id
             );
 
-            var parentProcessOperatorShape = getElementById(
+            const parentProcessOperatorShape = getElementById(
               parentSystemLimit.businessObject.elementsContainer,
               parentProcessOperator.id
             );
 
             if (parentState) {
-              var flowsToRemove = [];
+              const flowsToRemove = [];
               if (parentState.outgoing) {
                 parentState.outgoing.forEach(function(flow) {
                   if (flow.businessObject.targetRef === parentProcessOperator) {
@@ -309,15 +309,15 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
 
 ShapeUpdater.prototype._handleMove = function (element, process_rootElement, context) {
   if (isAny(element, ['fpb:State', 'fpb:ProcessOperator'])) {
-    var processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
-    var elementFromElementsContainer = getElementById(processSystemLimit.businessObject.elementsContainer, element.businessObject.id);
+    const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    const elementFromElementsContainer = getElementById(processSystemLimit.businessObject.elementsContainer, element.businessObject.id);
     // Sonst gibts Probleme wenn zwischen den Layern geswitched wird
     collectionRemove(processSystemLimit.businessObject.elementsContainer, elementFromElementsContainer);
     collectionAdd(processSystemLimit.businessObject.elementsContainer, element);
   }
 
   if (isAny(element, ['fpb:SystemLimit', 'fpb:TechnicalResource'])) {
-    var elementFromElementsContainer = getElementById(process_rootElement.businessObject.elementsContainer, element.businessObject.id);
+    const elementFromElementsContainer = getElementById(process_rootElement.businessObject.elementsContainer, element.businessObject.id);
     collectionRemove(process_rootElement.businessObject.elementsContainer, elementFromElementsContainer);
     collectionAdd(process_rootElement.businessObject.elementsContainer, element);
   }
@@ -325,16 +325,16 @@ ShapeUpdater.prototype._handleMove = function (element, process_rootElement, con
   // Szenario 6: Interner State wird zur Systemgrenze verschoben
   if (isAny(element, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
     if (process_rootElement.businessObject.isDecomposedProcessOperator) {
-      var processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+      const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
 
       if (processSystemLimit && context.delta) {
         // Berechne alte Position
-        var oldX = element.x - context.delta.x;
-        var oldY = element.y - context.delta.y;
-        var oldElement = { x: oldX, y: oldY, width: element.width, height: element.height };
+        const oldX = element.x - context.delta.x;
+        const oldY = element.y - context.delta.y;
+        const oldElement = { x: oldX, y: oldY, width: element.width, height: element.height };
 
-        var wasOnBorder = checkIfOnSystemBorder(processSystemLimit, oldElement);
-        var isNowOnBorder = checkIfOnSystemBorder(processSystemLimit, element);
+        const wasOnBorder = checkIfOnSystemBorder(processSystemLimit, oldElement);
+        const isNowOnBorder = checkIfOnSystemBorder(processSystemLimit, element);
 
         // Nur wenn State von innen zur Grenze verschoben wurde
         if (!wasOnBorder && (isNowOnBorder === 'onUpperBorder' || isNowOnBorder === 'onBottomBorder')) {
@@ -362,7 +362,7 @@ ShapeUpdater.prototype._handleMove = function (element, process_rootElement, con
 
 function ifFpb(fn) {
   return function (event) {
-    var context = event.context,
+    const context = event.context,
       element = context.shape || context.connection;
 
     if (is(element, 'fpb:BaseElement')) {

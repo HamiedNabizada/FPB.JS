@@ -20,7 +20,7 @@ export default function FpbElementFactory(fpbFactory, moddle, translate, fpbjs) 
   this._moddle = moddle;
   this._translate = translate;
   this._fpbjs = fpbjs;
-  var self = this;
+  const self = this;
 }
 
 inherits(FpbElementFactory, BaseElementFactory);
@@ -45,10 +45,10 @@ FpbElementFactory.prototype.create = function (elementType, attrs) {
 
 FpbElementFactory.prototype.createFpbElement = function (elementType, attrs) {
 
-  var size,
-    translate = this._translate;
+  let size;
+  const translate = this._translate;
 
-  var businessObject = attrs.businessObject;
+  let businessObject = attrs.businessObject;
 
 
   if (!businessObject) {

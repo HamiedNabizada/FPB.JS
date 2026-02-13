@@ -312,7 +312,7 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
                               >
                                 <Button variant="secondary" onClick={
                                   () => {
-                                    var copyText = document.getElementById("uniqueIdent_id");
+                                    const copyText = document.getElementById("uniqueIdent_id");
                                     copyText.select();
                                     copyText.setSelectionRange(0, 99999); /*For mobile devices*/
                                     document.execCommand("copy");

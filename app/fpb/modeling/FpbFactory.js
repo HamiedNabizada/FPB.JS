@@ -23,7 +23,7 @@ FpbFactory.prototype._needsId = function (element) {
 };
 
 FpbFactory.prototype._ensureId = function (element) {
-    var prefix = (element.$type || '').replace(/^[^:]*:/g, '') + '_';
+    const prefix = (element.$type || '').replace(/^[^:]*:/g, '') + '_';
     
     if (!element.id && this._needsId(element)) {
         //element.id = this._model.ids.nextPrefixed(prefix, element);
@@ -36,7 +36,7 @@ FpbFactory.prototype._ensureId = function (element) {
 
 
 FpbFactory.prototype.create = function (type, attrs, id) {
-    var element = this._model.create(type, attrs || {});
+    const element = this._model.create(type, attrs || {});
     if(!id){
         this._ensureId(element);
     }else{
@@ -69,7 +69,7 @@ FpbFactory.prototype.createDiBounds = function (bounds) {
 
 
 FpbFactory.prototype.createDiWaypoints = function (waypoints) {
-    var self = this;
+    const self = this;
 
     return map(waypoints, function (pos) {
         return self.createDiWaypoint(pos);

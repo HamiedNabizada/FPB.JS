@@ -19,7 +19,7 @@ Modeling.$inject = [
 ];
 
 Modeling.prototype.getHandlers = function () {
-  var handlers = BaseModeling.prototype.getHandlers.call(this);
+  const handlers = BaseModeling.prototype.getHandlers.call(this);
   handlers['element.updateLabel'] = UpdateLabelHandler;
   handlers['element.updateProperties'] = UpdatePropertiesHandler;
   handlers['processOperator.decompose'] = DecomposeProcessOperator;

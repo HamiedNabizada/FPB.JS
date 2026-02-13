@@ -58,7 +58,7 @@ export function checkIfOnSystemBorder(systemLimit, state) {
  * @param {*} type 
  */
 export function getElementsFromElementsContainer(elementsContainer, type) {
-    var elements = [];
+    const elements = [];
     elementsContainer.forEach(function (element) {
         if (is(element, type)) {
             elements.push(element);
@@ -104,7 +104,7 @@ export function noOfUsageConnections(connectionContainer) {
 
 
 export function getElementById(elementsContainer, id) {
-    var returnElement = null;
+    let returnElement = null;
     elementsContainer.forEach(function (element) {
         if (element.businessObject.id === id) {
             returnElement = element;

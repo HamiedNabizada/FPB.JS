@@ -26,12 +26,12 @@ inherits(FpbLayouter, BaseLayouter);
 FpbLayouter.prototype.layoutConnection = function (connection, hints) {
 
   hints = hints || {};
-  var source = connection.source,
-    target = connection.target,
-    waypoints = connection.waypoints,
-    start = hints.connectionStart,
-    end = hints.connectionEnd;
-  var manhattanOptions,
+  const source = connection.source;
+  const target = connection.target;
+  let waypoints = connection.waypoints;
+  let start = hints.connectionStart;
+  let end = hints.connectionEnd;
+  let manhattanOptions,
     updatedWaypoints;
 
   if (!start) {

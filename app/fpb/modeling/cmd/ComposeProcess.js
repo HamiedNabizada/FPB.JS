@@ -27,16 +27,16 @@ ComposeProcess.$inject = [
 ];
 // Preprocessing
 ComposeProcess.prototype.preExecute = function (context) {
-    var canvas = this._canvas;
-    var systemLimitOld = context.element;
-    var processOld = canvas.getRootElement();
-    var processOperatorNew;
-    var processNew;
-    var systemLimitNew;
-    var technicalResources;
-    var systemLimitFlows;
-    var processFlows;
-    var stateShapes = [];
+    const canvas = this._canvas;
+    const systemLimitOld = context.element;
+    const processOld = canvas.getRootElement();
+    let processOperatorNew;
+    let processNew;
+    let systemLimitNew;
+    let technicalResources;
+    let systemLimitFlows;
+    let processFlows;
+    let stateShapes = [];
 
     if (processOld.businessObject.isDecomposedProcessOperator) {
         // Prozess hat schon ein übergeordneten Prozess
@@ -135,18 +135,18 @@ ComposeProcess.prototype.preExecute = function (context) {
 }
 
 ComposeProcess.prototype.execute = function (context) {
-    var canvas = this._canvas;
-    var systemLimitNew = context.systemLimitNew;
-    var stateShapes = context.stateShapes;
-    var processNew = context.processNew;
+    const canvas = this._canvas;
+    const systemLimitNew = context.systemLimitNew;
+    const stateShapes = context.stateShapes;
+    const processNew = context.processNew;
 
     if (context.command) {
-        var processOperatorNew = context.processOperatorNew;
+        const processOperatorNew = context.processOperatorNew;
 
         canvas._clear();
         canvas.setRootElement(processNew, true);
         // Resetten falls gezoomed und gescrolled wurde
-        var zoomedAndScrolledViewbox = canvas.viewbox();
+        const zoomedAndScrolledViewbox = canvas.viewbox();
         canvas.viewbox({
             x: 0,
             y: 0,
@@ -162,14 +162,14 @@ ComposeProcess.prototype.execute = function (context) {
             canvas.addShape(state.state, systemLimitNew)
         });
     } else {
-        var processFlows = context.processFlows;
-        var technicalResources = context.technicalResources;
-        var systemLimitFlows = context.systemLimitFlows;
+        const processFlows = context.processFlows;
+        const technicalResources = context.technicalResources;
+        const systemLimitFlows = context.systemLimitFlows;
         // Clearen der Canvas und platzieren der Shapes
         canvas._clear();
         canvas.setRootElement(processNew, true);
         // Resetten falls gezoomed und gescrolled wurde
-        var zoomedAndScrolledViewbox = canvas.viewbox();
+        const zoomedAndScrolledViewbox = canvas.viewbox();
         canvas.viewbox({
             x: 0,
             y: 0,
@@ -195,12 +195,12 @@ ComposeProcess.prototype.execute = function (context) {
 };
 
 ComposeProcess.prototype.postExecute = function (context) {
-    var modeling = this._modeling;
+    const modeling = this._modeling;
     // Elemente mit einander verbinden
-    var stateShapes = context.stateShapes;
-    var processOperatorNew = context.processOperatorNew;
-    var systemLimitFlows = context.systemLimitFlows;
-    var processFlows = context.processFlows;
+    const stateShapes = context.stateShapes;
+    const processOperatorNew = context.processOperatorNew;
+    const systemLimitFlows = context.systemLimitFlows;
+    const processFlows = context.processFlows;
 
     if (context.command) {
         stateShapes.forEach((state) => {

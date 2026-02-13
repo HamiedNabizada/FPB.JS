@@ -39,13 +39,13 @@ export default function ConnectionUpdater(
   this._fpbFactory = fpbFactory;
   this._eventBus = eventBus;
 
-  var self = this;
+  const self = this;
 
   // connection business logic (from updateProcessInformation) //////////////////////
 
   function onConnectionEvent(e) {
-    var context = e.context;
-    var command = e.command;
+    const context = e.context;
+    const command = e.command;
     self._handleConnectionCommand(command, context);
   }
 
@@ -109,8 +109,8 @@ ConnectionUpdater.$inject = [
 
 
 ConnectionUpdater.prototype._handleConnectionCommand = function (command, context) {
-  var element = context.connection;
-  var process_rootElement = this._canvas.getRootElement();
+  const element = context.connection;
+  const process_rootElement = this._canvas.getRootElement();
 
   if (isLabel(element)) {
     return;
@@ -129,11 +129,11 @@ ConnectionUpdater.prototype._handleConnectionCommand = function (command, contex
 ConnectionUpdater.prototype._handleCreate = function (element, context, process_rootElement) {
   // Connections zu States
   if (is(context.source, 'fpb:State') || is(context.target, 'fpb:State')) {
-    var processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
     collectionAdd(processSystemLimit.businessObject.elementsContainer, element);
 
-    var stateShape;
-    var processOperatorShape;
+    let stateShape;
+    let processOperatorShape;
     if (is(context.source, 'fpb:State')) {
       stateShape = context.source;
       processOperatorShape = context.target;
@@ -150,24 +150,24 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
       });
 
       // Layer-Konsistenz: State auf Child-Layer erstellen wenn noch nicht vorhanden
-      var decomposedProcess = processOperatorShape.businessObject.decomposedView;
-      var childSystemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+      const decomposedProcess = processOperatorShape.businessObject.decomposedView;
+      const childSystemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
       if (childSystemLimit && childSystemLimit.businessObject.elementsContainer) {
-        var existingStateInChild = getElementById(childSystemLimit.businessObject.elementsContainer, stateShape.businessObject.id);
+        const existingStateInChild = getElementById(childSystemLimit.businessObject.elementsContainer, stateShape.businessObject.id);
         if (!existingStateInChild) {
           // State auf Child-Layer erstellen
-          var newStateShape = createStateShapeForNewLayer(this._elementFactory, stateShape.businessObject.$type, stateShape.businessObject);
+          const newStateShape = createStateShapeForNewLayer(this._elementFactory, stateShape.businessObject.$type, stateShape.businessObject);
           collectionAdd(decomposedProcess.businessObject.consistsOfStates, newStateShape.businessObject);
           collectionAdd(childSystemLimit.businessObject.elementsContainer, newStateShape);
 
           // Position basierend auf Richtung (incoming/outgoing) setzen
-          var isIncoming = is(context.source, 'fpb:State'); // State -> ProcessOperator = incoming
-          var stateWidth = 50;
-          var stateSpacing = 20;
+          const isIncoming = is(context.source, 'fpb:State'); // State -> ProcessOperator = incoming
+          const stateWidth = 50;
+          const stateSpacing = 20;
 
           // Zähle bereits vorhandene States auf der jeweiligen Grenze
-          var existingStatesOnBorder = 0;
-          var targetY = isIncoming
+          let existingStatesOnBorder = 0;
+          const targetY = isIncoming
             ? childSystemLimit.y - 25  // Obere Grenze
             : childSystemLimit.y + childSystemLimit.height - 25;  // Untere Grenze
 
@@ -179,7 +179,7 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
             }
           });
 
-          var startX = childSystemLimit.x + 50;
+          const startX = childSystemLimit.x + 50;
           newStateShape.x = startX + (existingStatesOnBorder * (stateWidth + stateSpacing));
           newStateShape.y = targetY;
         }
@@ -187,7 +187,7 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
     }
 
     if (isAny(element, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
-      var replaceFlow;
+      let replaceFlow;
       (context.source.outgoing || []).forEach(function (flow) {
         if (!isAny(flow, ['fpb:ParallelFlow', 'fpb:AlternativeFlow', 'fpb:Usage'])) {
           replaceFlow = getElementById(processSystemLimit.businessObject.elementsContainer, flow.id);
@@ -224,15 +224,15 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
 
 
 ConnectionUpdater.prototype._handleDelete = function (element, context, process_rootElement) {
-  var connection = element;
+  const connection = element;
 
   // Connections zu States
   if (is(context.source, 'fpb:State') || is(context.target, 'fpb:State')) {
-    var processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
     collectionRemove(processSystemLimit.businessObject.elementsContainer, connection);
 
-    var stateShape;
-    var processOperatorShape;
+    let stateShape;
+    let processOperatorShape;
     if (is(context.source, 'fpb:State')) {
       stateShape = context.source;
       processOperatorShape = context.target;
@@ -248,18 +248,18 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
 
     // Deep Löschen in den Layern darunter
     if (processOperatorShape.businessObject.decomposedView) {
-      var decomposedProcesses = [processOperatorShape.businessObject.decomposedView];
+      const decomposedProcesses = [processOperatorShape.businessObject.decomposedView];
       while (decomposedProcesses.length > 0) {
-        var decomposedProcess = decomposedProcesses.shift();
-        var decomposedProcessSystemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
-        var stateInDecomposedProcess = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, stateShape.id);
+        const decomposedProcess = decomposedProcesses.shift();
+        const decomposedProcessSystemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+        const stateInDecomposedProcess = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, stateShape.id);
 
         if (!stateInDecomposedProcess) {
           continue;
         }
 
         (stateInDecomposedProcess.outgoing || []).forEach(function (flow) {
-          var flowElement = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, flow.id);
+          const flowElement = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, flow.id);
           collectionRemove(decomposedProcessSystemLimit.businessObject.elementsContainer, flowElement);
           collectionRemove(flow.businessObject.targetRef.incoming, flow.businessObject);
           if (flow.businessObject.targetRef.decomposedView) {
@@ -332,7 +332,7 @@ ConnectionUpdater.prototype.updateConnectionWaypoints = function (connection) {
 
 
 ConnectionUpdater.prototype.updateConnection = function (context) {
-  var connection = context.connection,
+  const connection = context.connection,
     businessObject = getBusinessObject(connection),
     newSource = getBusinessObject(connection.source),
     newTarget = getBusinessObject(connection.target);
@@ -340,7 +340,7 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
   // Connections die von Product, Energy oder Information kommen
   if (is(newSource, 'fpb:State')) {
     if (is(newTarget, 'fpb:ProcessOperator')) {
-      var inverseSet = is(businessObject, 'fpb:Flow');
+      const inverseSet = is(businessObject, 'fpb:Flow');
       if (businessObject.sourceRef !== newSource) {
         if (inverseSet) {
           collectionRemove(businessObject.sourceRef && businessObject.sourceRef.get('outgoing'), businessObject);
@@ -371,7 +371,7 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
   if (is(newSource, 'fpb:ProcessOperator')) {
     // TODO: Auslagern in eine Separate Funktion (Dont repeat yourself)
     if (is(newTarget, 'fpb:State')) {
-      var inverseSet = is(businessObject, 'fpb:Flow');
+      const inverseSet = is(businessObject, 'fpb:Flow');
       if (businessObject.sourceRef !== newSource) {
         if (inverseSet) {
           collectionRemove(businessObject.sourceRef && businessObject.sourceRef.get('outgoing'), businessObject);
@@ -399,7 +399,7 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
     }
 
     if (is(newTarget, 'fpb:TechnicalResource')) {
-      var inverseSet = is(businessObject, 'fpb:Usage');
+      const inverseSet = is(businessObject, 'fpb:Usage');
       if (businessObject.sourceRef !== newSource) {
         if (inverseSet) {
           collectionRemove(businessObject.sourceRef && businessObject.sourceRef.get('outgoing'), businessObject);
@@ -435,7 +435,7 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
   // Connection die von TechnicalResource ausgehen
   if (is(newSource, 'fpb:TechnicalResource')) {
     if (is(newTarget, 'fpb:ProcessOperator')) {
-      var inverseSet = is(businessObject, 'fpb:Usage');
+      const inverseSet = is(businessObject, 'fpb:Usage');
       if (businessObject.sourceRef !== newSource) {
         if (inverseSet) {
           collectionRemove(businessObject.sourceRef && businessObject.sourceRef.get('outgoing'), businessObject);
@@ -469,7 +469,7 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
 
 function ifFpb(fn) {
   return function (event) {
-    var context = event.context,
+    const context = event.context,
       element = context.shape || context.connection;
 
     if (is(element, 'fpb:BaseElement')) {

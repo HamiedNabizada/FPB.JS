@@ -34,13 +34,13 @@ export default function DiUpdater(eventBus, fpbFactory, connectionDocking) {
 
   this._fpbFactory = fpbFactory;
 
-  var self = this;
+  const self = this;
 
   // connection cropping //////////////////////
 
   function cropConnection(e) {
-    var context = e.context,
-      connection;
+    const context = e.context;
+    let connection;
 
     if (!context.cropped) {
       connection = context.connection;
@@ -64,7 +64,7 @@ export default function DiUpdater(eventBus, fpbFactory, connectionDocking) {
   // update bounds //////////////////////
 
   function updateBounds(e) {
-    var shape = e.context.shape;
+    const shape = e.context.shape;
 
     if (!is(shape, 'fpb:BaseElement')) {
       return;
@@ -101,7 +101,7 @@ export default function DiUpdater(eventBus, fpbFactory, connectionDocking) {
     'connection.reconnectEnd',
     'connection.reconnectStart'
   ], ifFpb(function (e) {
-    var context = e.context,
+    const context = e.context,
       connection = context.connection,
       businessObject = getBusinessObject(connection),
       oldSource = getBusinessObject(context.oldSource),
@@ -129,7 +129,7 @@ export default function DiUpdater(eventBus, fpbFactory, connectionDocking) {
     'connection.reconnectEnd',
     'connection.reconnectStart'
   ], ifFpb(function (e) {
-    var context = e.context,
+    const context = e.context,
       connection = context.connection,
       businessObject = getBusinessObject(connection),
       newSource = getBusinessObject(connection.source);
@@ -150,15 +150,15 @@ export default function DiUpdater(eventBus, fpbFactory, connectionDocking) {
   // Sets the DI plane parent for any created/moved/deleted shape or connection.
 
   function updateDiParentForElement(e) {
-    var context = e.context;
-    var element = context.shape || context.connection;
+    const context = e.context;
+    const element = context.shape || context.connection;
 
     if (isLabel(element)) {
       return;
     }
 
-    var parentShape = element.parent;
-    var businessObject = element.businessObject,
+    const parentShape = element.parent;
+    const businessObject = element.businessObject,
       parentBusinessObject = parentShape && parentShape.businessObject,
       parentDi = parentBusinessObject && parentBusinessObject.di;
 
@@ -189,7 +189,7 @@ DiUpdater.$inject = [
 
 
 DiUpdater.prototype.updateAttachment = function (context) {
-  var shape = context.shape,
+  const shape = context.shape,
     businessObject = shape.businessObject,
     host = shape.host;
 
@@ -198,11 +198,11 @@ DiUpdater.prototype.updateAttachment = function (context) {
 
 
 DiUpdater.prototype.updateBounds = function (shape) {
-  var di = shape.businessObject.di;
+  const di = shape.businessObject.di;
 
-  var target = isLabel(shape) ? this._getLabel(di) : di;
+  const target = isLabel(shape) ? this._getLabel(di) : di;
 
-  var bounds = target.bounds;
+  let bounds = target.bounds;
 
   if (!bounds) {
     bounds = this._fpbFactory.createDiBounds();
@@ -226,7 +226,7 @@ DiUpdater.prototype.updateDiParent = function (di, parentDi) {
     return;
   }
   try {
-    var planeElements = (parentDi || di.$parent).get('planeElement');
+    const planeElements = (parentDi || di.$parent).get('planeElement');
 
     if (parentDi) {
       planeElements.push(di);
@@ -256,7 +256,7 @@ DiUpdater.prototype._getLabel = function (di) {
  */
 function ifFpb(fn) {
   return function (event) {
-    var context = event.context,
+    const context = event.context,
       element = context.shape || context.connection;
 
     if (is(element, 'fpb:BaseElement')) {

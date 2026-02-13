@@ -2,12 +2,12 @@ import { is, isAny } from '../../help/utils';
 import { checkIfOnSystemBorder } from '../../help/helpUtils';
 
 
-var STATE_NOT_IN_SYSTEMLIMIT = 'Product, energy and information must be on or within the system limit',
-    PO_NOT_IN_SYTEMLIMIT = 'Process operators must be within the system limits.',
-    TR_IN_SYSTEMLIMIT = 'Technical resources must be outside the system limits.',
-    BOUNDARY_STATE_LOCKED = 'This state represents an input/output of the decomposed process operator and must remain on the system boundary.';
+const STATE_NOT_IN_SYSTEMLIMIT = 'Product, energy and information must be on or within the system limit';
+const PO_NOT_IN_SYTEMLIMIT = 'Process operators must be within the system limits.';
+const TR_IN_SYSTEMLIMIT = 'Technical resources must be outside the system limits.';
+const BOUNDARY_STATE_LOCKED = 'This state represents an input/output of the decomposed process operator and must remain on the system boundary.';
 
-var SWITCHINGPROCESS = 'Switching between processes is purely for navigation purposes. The decomposition and composition functionalities are used to transfer changes to higher and lower process levels.'
+const SWITCHINGPROCESS = 'Switching between processes is purely for navigation purposes. The decomposition and composition functionalities are used to transfer changes to higher and lower process levels.'
 
 
 export default function ModelingFeedback(eventBus, tooltips, translate, canvas) {
@@ -91,19 +91,19 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
     })
 
     eventBus.on(['shape.move.rejected', 'create.rejected'], function (event) {
-        var context = event.context,
-            shape = context.shape,
-            target = context.target;
+        const context = event.context;
+        const shape = context.shape;
+        const target = context.target;
 
         // Prüfe ob es ein Grenz-State auf einem Child-Layer ist
         if (isAny(shape, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
-            var process = canvas.getRootElement();
+            const process = canvas.getRootElement();
             if (process && process.businessObject && process.businessObject.isDecomposedProcessOperator) {
-                var systemLimitShape = process.children.find(function(child) {
+                const systemLimitShape = process.children.find(function(child) {
                     return is(child, 'fpb:SystemLimit');
                 });
                 if (systemLimitShape) {
-                    var borderPosition = checkIfOnSystemBorder(systemLimitShape, shape);
+                    const borderPosition = checkIfOnSystemBorder(systemLimitShape, shape);
                     if (borderPosition === 'onUpperBorder' || borderPosition === 'onBottomBorder') {
                         showError(event, translate(BOUNDARY_STATE_LOCKED));
                         return;

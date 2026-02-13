@@ -64,7 +64,7 @@ SwitchProcess.prototype.execute = function (context) {
     canvas._clear();
     canvas.setRootElement(process, true);
     // Resetten falls gezoomed und gescrolled wurde
-    var zoomedAndScrolledViewbox = canvas.viewbox();
+    const zoomedAndScrolledViewbox = canvas.viewbox();
     canvas.viewbox({
         x: 0,
         y: 0,
@@ -94,8 +94,8 @@ SwitchProcess.prototype.postExecute = function (context) {
     let processShapes = context.processShapes;
 
 
-    var modeling = this._modeling;
-    var stateShapes = context.stateShapes;
+    const modeling = this._modeling;
+    const stateShapes = context.stateShapes;
 
     stateShapes.forEach((state) => {
         if (state.state.businessObject.name) {
