@@ -69,10 +69,10 @@ ComposeProcess.prototype.preExecute = function (context) {
         // StateShapes die auf der SystemBorder liegen abholen
         (systemLimitOld.businessObject.elementsContainer || []).forEach((state) => {
             if (is(state, 'fpb:State')) {
-                if (checkIfOnSystemBorder(systemLimitOld, state) == 'onUpperBorder') {
+                if (checkIfOnSystemBorder(systemLimitOld, state) === 'onUpperBorder') {
                     stateShapes.push({ state: createStateShapeForNewLayer(this._elementFactory, state.type, state.businessObject), position: 'incoming' });
                 };
-                if (checkIfOnSystemBorder(systemLimitOld, state) == 'onBottomBorder') {
+                if (checkIfOnSystemBorder(systemLimitOld, state) === 'onBottomBorder') {
                     stateShapes.push({ state: createStateShapeForNewLayer(this._elementFactory, state.type, state.businessObject), position: 'outgoing' });
                 };
             }
@@ -204,12 +204,12 @@ ComposeProcess.prototype.postExecute = function (context) {
 
     if (context.command) {
         stateShapes.forEach((state) => {
-            if (state.position == 'incoming') {
+            if (state.position === 'incoming') {
                 modeling.connect(state.state, processOperatorNew, {
                     type: 'fpb:Flow',
                 });
             }
-            if (state.position == 'outgoing') {
+            if (state.position === 'outgoing') {
                 modeling.connect(processOperatorNew, state.state, {
                     type: 'fpb:Flow',
                 });

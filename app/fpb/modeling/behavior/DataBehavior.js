@@ -33,7 +33,7 @@ export default function DataBehavior(eventBus, fpbjs) {
         let processId = e.processId;
         let processes = this._fpbjs.getProcesses();
         processes.forEach((pro) => {
-            if (pro.process && pro.process.id == processId) {
+            if (pro.process && pro.process.id === processId) {
                 pro.elementDataInformation = [];
                 pro.elementVisualInformation = [];
                 let processElementsContainer = pro.process.elementsContainer;
@@ -77,7 +77,7 @@ export default function DataBehavior(eventBus, fpbjs) {
         while (processIds.length > 0) {
             let id = processIds.pop();
             processes.forEach((pro) => {
-                if (pro.process && pro.process.id == id) {
+                if (pro.process && pro.process.id === id) {
                     (pro.process.consistsOfProcesses || []).forEach((childProcess) => {
                         processIds.push(childProcess.id)
                     });

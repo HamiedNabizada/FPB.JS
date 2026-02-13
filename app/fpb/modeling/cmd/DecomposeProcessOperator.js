@@ -49,10 +49,10 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
         decomposedProcess = processOperator.businessObject.decomposedView;
         systemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
         getElementsFromElementsContainer(systemLimit.businessObject.elementsContainer, 'fpb:State').forEach((state) => {
-            if (checkIfOnSystemBorder(systemLimit, state) == 'onUpperBorder') {
+            if (checkIfOnSystemBorder(systemLimit, state) === 'onUpperBorder') {
                 stateShapes.push({ state: state, position: 'incoming' });
             }
-            if (checkIfOnSystemBorder(systemLimit, state) == 'onBottomBorder') {
+            if (checkIfOnSystemBorder(systemLimit, state) === 'onBottomBorder') {
                 stateShapes.push({ state: state, position: 'outgoing' });
             }
         });

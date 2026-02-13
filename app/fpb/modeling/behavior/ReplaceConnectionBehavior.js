@@ -53,7 +53,7 @@ export default function ReplaceConnectionBehavior(eventBus, modeling) {
                 replaceFlow = flow;
             }
         })
-        if (counter == 1) { // Es existiert nur noch eine Flow Verbindung
+        if (counter === 1) { // Es existiert nur noch eine Flow Verbindung
             replaceSource = replaceFlow.source;
             replaceTarget = replaceFlow.target;
             modeling.removeConnection(replaceFlow);

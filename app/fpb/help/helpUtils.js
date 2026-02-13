@@ -74,7 +74,7 @@ export function getElementsFromElementsContainer(elementsContainer, type) {
 export function getBusinessObjectFromElementsContainer(elementsContainer, type) {
     let elements = getElementsFromElementsContainer(elementsContainer, type);
     let businessObjects = [];
-    if (elements.length == 0) {
+    if (elements.length === 0) {
         return businessObjects;
     }
     elements.forEach((element) => {
@@ -90,7 +90,7 @@ export function getBusinessObjectFromElementsContainer(elementsContainer, type) 
 
 export function noOfUsageConnections(connectionContainer) {
     let no = 0;
-    if (connectionContainer.length == 0) {
+    if (connectionContainer.length === 0) {
         return no;
     }
     connectionContainer.forEach((con) => {

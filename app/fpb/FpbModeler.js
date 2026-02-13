@@ -303,7 +303,7 @@ FpbModeler.prototype.getProcess = function (id) {
     let process;
     this._processes.forEach((pro) => {
         if (pro.process) {
-            if (pro.process.id == id) {
+            if (pro.process.id === id) {
                 process = pro;
             }
         }
@@ -323,7 +323,7 @@ FpbModeler.prototype.getSelectedElements = function (processId) {
     while (elementIds.length > 0) {
         let id = elementIds.pop();
         pro.elementVisualInformation.forEach((vs) => {
-            if (vs.id == id) {
+            if (vs.id === id) {
                 vsInfos.push(vs);
             }
         })

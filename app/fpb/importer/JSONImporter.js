@@ -351,7 +351,7 @@ JSONImporter.prototype.buildCharacteristics = function (bO, char) {
         let validityLimits = [];
         limits.forEach((limit) => {
             let validityLimit;
-            if (limit.$type == 'fpbch:ValidityLimits') {
+            if (limit.$type === 'fpbch:ValidityLimits') {
                 validityLimit = this._fpbFactory.create(limit.$type, {
                     limitType: limit.limitType,
                     from: limit.from,
