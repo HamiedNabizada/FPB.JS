@@ -95,7 +95,7 @@ UpdateLabelHandler.prototype.postExecute = function(ctx) {
     this._handleStateElementResize(element, label, newBounds);
   }
 
-  // Szenario 7 & 8: Bidirectional state name synchronization
+  // Scenario 7 & 8: Bidirectional state name synchronization
   if (isAny(element, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
     this._handleStateNameSync(element, newLabel);
   }
@@ -182,7 +182,7 @@ UpdateLabelHandler.prototype._handleStateElementResize = function(element, label
 };
 
 /**
- * Szenario 7 & 8: Bidirectional state name synchronization
+ * Scenario 7 & 8: Bidirectional state name synchronization
  * - When state renamed on parent: sync to child layers
  * - When boundary state renamed on child: sync to parent layer
  */
@@ -190,7 +190,7 @@ UpdateLabelHandler.prototype._handleStateNameSync = function(element, newLabel) 
   const process = this._canvas.getRootElement();
   const stateId = element.businessObject.id;
 
-  // Szenario 7: State on parent layer renamed - sync to child layers
+  // Scenario 7: State on parent layer renamed - sync to child layers
   // Find all ProcessOperators connected to this state that have decomposed views
   if (element.businessObject.isAssignedTo) {
     element.businessObject.isAssignedTo.forEach(processOperator => {
@@ -219,7 +219,7 @@ UpdateLabelHandler.prototype._handleStateNameSync = function(element, newLabel) 
     });
   }
 
-  // Szenario 8: Boundary state on child layer renamed - sync to parent layer
+  // Scenario 8: Boundary state on child layer renamed - sync to parent layer
   if (process.businessObject.isDecomposedProcessOperator) {
     const systemLimit = getElementsFromElementsContainer(
       process.businessObject.elementsContainer,

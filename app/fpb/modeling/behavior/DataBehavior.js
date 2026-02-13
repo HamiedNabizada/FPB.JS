@@ -73,7 +73,7 @@ export default function DataBehavior(eventBus, fpbjs) {
         let process = e.deletedProcess.businessObject;
         let processIds = [process.id];
         const processes = this._fpbjs.getProcesses();
-        // Löschen des Prozesses und aller damit verbundenen Prozesse
+        // Delete the process and all associated processes
         while (processIds.length > 0) {
             let id = processIds.pop();
             processes.forEach((pro) => {

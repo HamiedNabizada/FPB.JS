@@ -60,10 +60,10 @@ SwitchProcess.prototype.execute = function (context) {
     let stateShapes = context.stateShapes;
     let systemLimit = context.systemLimit;
     let canvas = this._canvas;
-    // Clearen der Canvas und platzieren der Shapes
+    // Clear the canvas and place the shapes
     canvas._clear();
     canvas.setRootElement(process, true);
-    // Resetten falls gezoomed und gescrolled wurde
+    // Reset in case the view was zoomed and scrolled
     const zoomedAndScrolledViewbox = canvas.viewbox();
     canvas.viewbox({
         x: 0,
@@ -71,7 +71,7 @@ SwitchProcess.prototype.execute = function (context) {
         width: zoomedAndScrolledViewbox.outer.width,
         height: zoomedAndScrolledViewbox.outer.height
     });
-    // Das sollte failsafe sein
+    // This should be fail-safe
     canvas.addShape(systemLimit, process);
     processShapes.forEach(element => {
         canvas.addShape(element, process)

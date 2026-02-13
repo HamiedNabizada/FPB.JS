@@ -14,14 +14,14 @@ import {
  */
 export default function ConfirmationHandler(eventBus, modeling, elementFactory) {
 
-  // Szenario 4 & 6: State auf Grenze erstellt/verschoben - Bestätigung
+  // Scenario 4 & 6: State created/moved on boundary - confirmation
   eventBus.on('confirmation.confirmed', function(event) {
     if (event.action && (event.action.type === 'move_to_boundary' || event.action.type === 'create_on_boundary')) {
       const element = event.action.element;
       const borderPosition = event.action.borderPosition;
       const processRootElement = event.action.processRootElement;
 
-      // Parent-Layer aktualisieren (State + Connection erstellen)
+      // Update parent layer (create State + Connection)
       const parentProcessOperator = processRootElement.businessObject.isDecomposedProcessOperator;
       const parentProcess = processRootElement.businessObject.parent;
 
@@ -32,14 +32,14 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory) 
         )[0];
 
         if (parentSystemLimit) {
-          // Prüfe ob State bereits auf Parent-Layer existiert
+          // Check if state already exists on parent layer
           let existingParentState = getElementById(
             parentSystemLimit.businessObject.elementsContainer,
             element.businessObject.id
           );
 
           if (!existingParentState) {
-            // State auf Parent-Layer erstellen
+            // Create state on parent layer
             const parentStateShape = createStateShapeForNewLayer(
               elementFactory,
               element.businessObject.$type,
@@ -48,7 +48,7 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory) 
             collectionAdd(parentProcess.businessObject.consistsOfStates, parentStateShape.businessObject);
             collectionAdd(parentSystemLimit.businessObject.elementsContainer, parentStateShape);
 
-            // Position neben dem ProcessOperator setzen
+            // Set position next to the ProcessOperator
             const parentPOShape = getElementById(
               parentSystemLimit.businessObject.elementsContainer,
               parentProcessOperator.id
@@ -65,7 +65,7 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory) 
             existingParentState = parentStateShape;
           }
 
-          // Connection zwischen State und ProcessOperator auf Parent-Layer erstellen
+          // Create connection between State and ProcessOperator on parent layer
           let connectionExists = false;
           const parentPOShape = getElementById(
             parentSystemLimit.businessObject.elementsContainer,
@@ -88,7 +88,7 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory) 
           }
 
           if (!connectionExists && parentPOShape) {
-            // Berechne waypoints
+            // Calculate waypoints
             const sourceShape = borderPosition === 'onUpperBorder' ? existingParentState : parentPOShape;
             const targetShape = borderPosition === 'onUpperBorder' ? parentPOShape : existingParentState;
 
@@ -110,7 +110,7 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory) 
 
             collectionAdd(parentSystemLimit.businessObject.elementsContainer, newFlow);
 
-            // BusinessObject-Referenzen setzen
+            // Set BusinessObject references
             if (borderPosition === 'onUpperBorder') {
               newFlow.businessObject.sourceRef = existingParentState.businessObject;
               newFlow.businessObject.targetRef = parentProcessOperator;
@@ -127,7 +127,7 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory) 
               collectionAdd(existingParentState.businessObject.incoming, newFlow.businessObject);
             }
 
-            // Shape-Referenzen setzen
+            // Set shape references
             if (borderPosition === 'onUpperBorder') {
               if (!existingParentState.outgoing) existingParentState.outgoing = [];
               if (!parentPOShape.incoming) parentPOShape.incoming = [];
@@ -140,7 +140,7 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory) 
               collectionAdd(existingParentState.incoming, newFlow);
             }
 
-            // isAssignedTo aktualisieren
+            // Update isAssignedTo
             if (!existingParentState.businessObject.isAssignedTo) existingParentState.businessObject.isAssignedTo = [];
             collectionAdd(existingParentState.businessObject.isAssignedTo, parentProcessOperator);
           }
@@ -149,14 +149,14 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory) 
     }
   });
 
-  // Szenario 6: State zur Grenze verschoben - Ablehnung
-  // Szenario 4: State auf Grenze erstellt - Ablehnung
+  // Scenario 6: State moved to boundary - rejection
+  // Scenario 4: State created on boundary - rejection
   eventBus.on('confirmation.cancelled', function(event) {
     if (event.action && event.action.type === 'move_to_boundary') {
       const element = event.action.element;
       const oldPosition = event.action.oldPosition;
 
-      // State zurück zur alten Position verschieben
+      // Move state back to old position
       const deltaX = oldPosition.x - element.x;
       const deltaY = oldPosition.y - element.y;
       modeling.moveShape(element, { x: deltaX, y: deltaY });
@@ -165,15 +165,15 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory) 
     if (event.action && event.action.type === 'create_on_boundary') {
       const element = event.action.element;
 
-      // State löschen, da er nicht auf der Grenze bleiben darf ohne Parent-Verbindung
+      // Delete state, as it must not remain on the boundary without parent connection
       modeling.removeElements([element]);
     }
 
-    // Szenario 14/12: SystemLimit löschen abgelehnt - nichts tun
-    // (Die Löschung wurde bereits in FpbRuleProvider blockiert)
+    // Scenario 14/12: SystemLimit deletion rejected - do nothing
+    // (The deletion was already blocked in FpbRuleProvider)
   });
 
-  // Szenario 14/12: SystemLimit löschen angefordert - Bestätigungsdialog anzeigen
+  // Scenario 14/12: SystemLimit deletion requested - show confirmation dialog
   eventBus.on('systemLimit.deleteRequested', function(event) {
     const systemLimit = event.systemLimit;
     const process = event.process;
@@ -181,7 +181,7 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory) 
 
     const processOperatorName = parentProcessOperator ? parentProcessOperator.name || 'ProcessOperator' : 'ProcessOperator';
 
-    // Bestätigungsdialog anfordern
+    // Request confirmation dialog
     eventBus.fire('confirmation.required', {
       title: 'Remove Decomposition?',
       message: 'Deleting the system limit will remove the entire decomposition of ProcessOperator "' + processOperatorName + '".',
@@ -196,7 +196,7 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory) 
     });
   });
 
-  // Szenario 14/12: Dekomposition entfernen bestätigt
+  // Scenario 14/12: Remove decomposition confirmed
   eventBus.on('confirmation.confirmed', function(event) {
     if (event.action && event.action.type === 'remove_decomposition') {
       const childProcessShape = event.action.process;
@@ -204,13 +204,13 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory) 
       const parentProcessShape = childProcessShape?.businessObject?.parent;
 
       if (childProcessShape && parentProcessOperator && parentProcessShape) {
-        // 1. Zum Parent-Layer navigieren (bevor wir den Child-Process entfernen)
+        // 1. Navigate to parent layer (before removing the child process)
         modeling.switchProcess(parentProcessShape);
 
-        // 2. decomposedView vom ProcessOperator entfernen
+        // 2. Remove decomposedView from ProcessOperator
         parentProcessOperator.decomposedView = null;
 
-        // 3. Events feuern für DataStore und LayerPanel (expect Shape, not BusinessObject!)
+        // 3. Fire events for DataStore and LayerPanel (expect Shape, not BusinessObject!)
         eventBus.fire('dataStore.processDeleted', {
           deletedProcess: childProcessShape
         });
@@ -218,14 +218,14 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory) 
           deletedProcess: childProcessShape
         });
 
-        // 4. Den Child-Process aus consistsOfProcesses des Parent entfernen
+        // 4. Remove the child process from the parent's consistsOfProcesses
         collectionRemove(parentProcessShape.businessObject.consistsOfProcesses, childProcessShape);
 
-        // 5. Referenzen im Child-Process aufräumen
+        // 5. Clean up references in the child process
         childProcessShape.businessObject.isDecomposedProcessOperator = null;
         childProcessShape.businessObject.parent = null;
 
-        // 6. Feedback anzeigen
+        // 6. Show feedback
         eventBus.fire('toolTips.decompositionRemoved', {
           processOperator: parentProcessOperator
         });

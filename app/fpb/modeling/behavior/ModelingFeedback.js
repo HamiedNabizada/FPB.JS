@@ -48,7 +48,7 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
         showError(event.position, msg)
     });
 
-    // Fehlermeldung für blockierte Löschungen
+    // Error message for blocked deletions
     eventBus.on(['illegalDelete'], function (event) {
         let canvasViewbox = canvas.viewbox();
         let msg = event.message || translate('This element cannot be deleted.');
@@ -95,7 +95,7 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
         const shape = context.shape;
         const target = context.target;
 
-        // Prüfe ob es ein Grenz-State auf einem Child-Layer ist
+        // Check if it is a boundary state on a child layer
         if (isAny(shape, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
             const process = canvas.getRootElement();
             if (process && process.businessObject && process.businessObject.isDecomposedProcessOperator) {

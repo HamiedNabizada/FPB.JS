@@ -45,7 +45,7 @@ export default function FpbContextPadProvider(
     this._autoPlace = injector.get('autoPlace', false);
   }
 
-  // Listener für Bestätigung von Lösch-Aktionen
+  // Listener for confirmation of delete actions
   eventBus.on('confirmation.confirmed', function(event) {
     if (event.action && event.action.type === 'delete' && event.action.element) {
       modeling.removeElements([event.action.element]);
@@ -80,7 +80,7 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
   const { process, systemLimit, processOperators, states, technicalResources } = context;
 
   /**
-   * Prüft, ob das Löschen eines Elements Layer-übergreifende Konsequenzen hat
+   * Checks if deleting an element has cross-layer consequences
    */
   function hasLayerConsequences(element) {
     // ProcessOperator mit decomposed Layer
@@ -95,10 +95,10 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
       }
     }
 
-    // State auf SystemGrenze in einem decomposed Layer
+    // State on system boundary in a decomposed layer
     if (isAny(element, ELEMENT_GROUPS.STATES)) {
       if (process && process.businessObject && process.businessObject.isDecomposedProcessOperator) {
-        // Prüfen ob der State auf der SystemGrenze liegt
+        // Check if the state lies on the system boundary
         if (systemLimit) {
           const borderCheck = checkIfOnSystemBorder(systemLimit, element);
           if (borderCheck === 'onUpperBorder' || borderCheck === 'onBottomBorder') {
@@ -112,7 +112,7 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
       }
     }
 
-    // SystemLimit auf Child-Layer löschen = Dekomposition rückgängig machen
+    // Deleting SystemLimit on child layer = undoing decomposition
     if (is(element, ELEMENT_TYPES.SYSTEM_LIMIT)) {
       if (process && process.businessObject && process.businessObject.isDecomposedProcessOperator) {
         const parentPO = process.businessObject.isDecomposedProcessOperator;
@@ -148,7 +148,7 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
         }
       });
     } else {
-      // Direkt löschen ohne Bestätigung
+      // Delete directly without confirmation
       modeling.removeElements([element]);
     }
   }

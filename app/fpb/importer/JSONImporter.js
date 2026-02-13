@@ -95,7 +95,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
 
 
             })
-            // Timeout notwendig, damit restliche Komponenten erst fertig geladen sind, bevor importiert wird.
+            // Timeout required so remaining components finish loading before import.
             setTimeout(() => {
                 this._processes.forEach((pr, index) => {
                     if (pr.process) {
@@ -103,7 +103,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                             newProcess: pr.process,
                             parentProcess: null
                         });
-                        // Event feuern für LayerPanel
+                        // Fire event for LayerPanel
                         this._eventBus.fire(IMPORT_EVENTS.LAYER_PANEL_NEW_PROCESS, {
                             newProcess: pr.process,
                             parentProcess: null
@@ -192,7 +192,7 @@ JSONImporter.prototype.buildProcesses = function (data, projectDefinition) {
             updateElements: [] 
         });
         
-        // Zunächst IDs im Process abspeichern
+        // First store IDs in the Process
         process_rootElement.businessObject.consistsOfProcesses = pro.consistsOfProcesses;
         process_rootElement.businessObject.isDecomposedProcessOperator = pro.isDecomposedProcessOperator;
 

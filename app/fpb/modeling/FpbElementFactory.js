@@ -112,7 +112,7 @@ FpbElementFactory.prototype.createFpbElement = function (elementType, attrs) {
     }
   }
   if (is(businessObject, 'fpb:SystemLimit')) {
-    // Anlegen einen leeren elementsContainer, falls keiner vorhanden ist
+    // Create an empty elementsContainer if none exists
     if (!businessObject.elementsContainer) {
       businessObject.elementsContainer = [];
     }

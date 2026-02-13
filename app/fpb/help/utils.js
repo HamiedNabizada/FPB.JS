@@ -146,7 +146,7 @@ export function getWaypointsMid(waypoints) {
 
 
 export function getExternalLabelMid(element) {
-  //TODO: Richtige Labelposition finden
+  //TODO: Find the correct label position
 
   return {
     x: element.x - element.width / 2,

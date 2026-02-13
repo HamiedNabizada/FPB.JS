@@ -15,7 +15,7 @@ export default function FpbFactory(moddle) {
 
 FpbFactory.$inject = ['moddle'];
 
-// TODO: Prüfen was wirklich alles eine ID benötigt
+// TODO: Check what actually needs an ID
 FpbFactory.prototype._needsId = function (element) {
     return isAny(element, [
         'fpb:BaseElement'

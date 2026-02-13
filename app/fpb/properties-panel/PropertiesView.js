@@ -9,7 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import React, { useState, useEffect, useCallback, memo } from 'react';
 
-// Bootstrap Komponenten
+// Bootstrap components
 // https://react-bootstrap.github.io/
 import Collapse from 'react-collapse';
 import Accordion from 'react-bootstrap/Accordion';

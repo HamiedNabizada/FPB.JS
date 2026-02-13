@@ -39,19 +39,20 @@ ComposeProcess.prototype.preExecute = function (context) {
     let stateShapes = [];
 
     if (processOld.businessObject.isDecomposedProcessOperator) {
-        // Prozess hat schon ein übergeordneten Prozess
-        // TODO: Schwieriger Fall: 
-        /*Es müsste geprüft werden welche StateShapes neu auf der SystemGrenze liegen und dieses dann im übergeordneten Prozess 
-         an den ProcessOperator hängen. Berechnung dafür wird abartig kompliziert, da freie Plätze ermittelt werden müssen, Systemgrenze angepasst ,
-         und aufgespasst werden muss, dass die Shapes nicht auf irgendwelchen Flows platziert werden. 
-         BottomUp Approach ist somit etwas schwieriger zu gestalten. 
-         Vorrübergehende Lösung für Version1: Semi BottomUp Approach, nur ein Prozess lässt sich auf detailiertesten Level komponieren, danach muss immer vom
-         übergeordneten Prozess zunächst dekomponiert werden 
+        // Process already has a parent process
+        // TODO: Difficult case:
+        /*It would need to be checked which StateShapes are newly on the system boundary and then attach them
+         to the ProcessOperator in the parent process. The calculation for this becomes extremely complex,
+         as free positions need to be determined, the system boundary adjusted,
+         and care must be taken that shapes are not placed on top of existing flows.
+         The bottom-up approach is therefore somewhat harder to implement.
+         Temporary solution for Version1: Semi bottom-up approach, only one process can be composed at the most detailed level,
+         after that decomposition must always start from the parent process first.
         */
         processNew = processOld.businessObject.parent;
         systemLimitNew = getElementsFromElementsContainer(processNew.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
         technicalResources = getElementsFromElementsContainer(processNew.businessObject.elementsContainer, 'fpb:TechnicalResource');
-        // Hier sind auch die ProcessOperators mit drin
+        // This also includes the ProcessOperators
         stateShapes = getElementsFromElementsContainer(systemLimitNew.businessObject.elementsContainer, 'fpb:Object');
         systemLimitFlows = getElementsFromElementsContainer(systemLimitNew.businessObject.elementsContainer, 'fpb:Flow');
         processFlows = getElementsFromElementsContainer(processNew.businessObject.elementsContainer, 'fpb:Flow');
@@ -64,9 +65,9 @@ ComposeProcess.prototype.preExecute = function (context) {
         context.processFlows = processFlows;
 
     } else {
-        //Prozess hat keinen übergeordneten Prozess
+        // Process has no parent process
 
-        // StateShapes die auf der SystemBorder liegen abholen
+        // Retrieve StateShapes that are on the system boundary
         (systemLimitOld.businessObject.elementsContainer || []).forEach((state) => {
             if (is(state, 'fpb:State')) {
                 if (checkIfOnSystemBorder(systemLimitOld, state) === 'onUpperBorder') {
@@ -77,7 +78,7 @@ ComposeProcess.prototype.preExecute = function (context) {
                 };
             }
         })
-        // Neuen Prozess erstellen
+        // Create new process
         processNew = this._elementFactory.create('root', {
             type: 'fpb:Process'
         });
@@ -96,7 +97,7 @@ ComposeProcess.prototype.preExecute = function (context) {
        processNew.businessObject.parent = project;
         processOperatorNew.businessObject.decomposedView = processOld;
 
-        // Namen der SystemGrenze als Bezeichnung für den neuen ProcessOperator
+        // Use the SystemLimit name as label for the new ProcessOperator
         processOperatorNew.businessObject.name = systemLimitOld.businessObject.name
         processOld.businessObject.isDecomposedProcessOperator = processOperatorNew.businessObject;
         collectionAdd(processNew.businessObject.consistsOfProcesses, processOld);
@@ -114,13 +115,13 @@ ComposeProcess.prototype.preExecute = function (context) {
             collectionAdd(processNew.businessObject.consistsOfStates, state.state.businessObject);
         })
 
-        // DefaultPositionierung
+        // Default positioning
         systemLimitNew.x = 350;
         systemLimitNew.y = 50;
 
         computePositions(systemLimitNew, stateShapes, processOperatorNew, 75)
 
-        // Event abfeuern für LayerPanel
+        // Fire event for LayerPanel
         this._eventBus.fire('layerPanel.newProcess', {
             newProcess: processNew,
             parentProcess: processOld
@@ -145,7 +146,7 @@ ComposeProcess.prototype.execute = function (context) {
 
         canvas._clear();
         canvas.setRootElement(processNew, true);
-        // Resetten falls gezoomed und gescrolled wurde
+        // Reset in case the view was zoomed and scrolled
         const zoomedAndScrolledViewbox = canvas.viewbox();
         canvas.viewbox({
             x: 0,
@@ -155,7 +156,7 @@ ComposeProcess.prototype.execute = function (context) {
         });
 
 
-        // Das sollte failsafe sein
+        // This should be fail-safe
         canvas.addShape(systemLimitNew, processNew);
         canvas.addShape(processOperatorNew, systemLimitNew);
         stateShapes.forEach((state) => {
@@ -165,10 +166,10 @@ ComposeProcess.prototype.execute = function (context) {
         const processFlows = context.processFlows;
         const technicalResources = context.technicalResources;
         const systemLimitFlows = context.systemLimitFlows;
-        // Clearen der Canvas und platzieren der Shapes
+        // Clear the canvas and place the shapes
         canvas._clear();
         canvas.setRootElement(processNew, true);
-        // Resetten falls gezoomed und gescrolled wurde
+        // Reset in case the view was zoomed and scrolled
         const zoomedAndScrolledViewbox = canvas.viewbox();
         canvas.viewbox({
             x: 0,
@@ -176,7 +177,7 @@ ComposeProcess.prototype.execute = function (context) {
             width: zoomedAndScrolledViewbox.outer.width,
             height: zoomedAndScrolledViewbox.outer.height
         });
-        // Das sollte failsafe sein
+        // This should be fail-safe
         canvas.addShape(systemLimitNew, processNew);
         technicalResources.forEach(element => {
             canvas.addShape(element, processNew)
@@ -196,7 +197,7 @@ ComposeProcess.prototype.execute = function (context) {
 
 ComposeProcess.prototype.postExecute = function (context) {
     const modeling = this._modeling;
-    // Elemente mit einander verbinden
+    // Connect elements with each other
     const stateShapes = context.stateShapes;
     const processOperatorNew = context.processOperatorNew;
     const systemLimitFlows = context.systemLimitFlows;
@@ -267,7 +268,7 @@ function computePositions(systemLimit, stateShapes, processOperator, deltaX) {
     let noOfOutgoing = stateShapes.reduce((a, c) => c.position === 'outgoing' ? ++a : a, 0);
     let di1 = 0;
     let di2 = 0;
-    // Versetzen des Startpunkts falls nicht gleiche Anzahl
+    // Offset the start point if the counts are not equal
     if (noOfIncoming > noOfOutgoing) {
         di2 = (50 + deltaX) * ((noOfIncoming - noOfOutgoing) / 2)
     }

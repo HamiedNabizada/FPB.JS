@@ -127,7 +127,7 @@ ConnectionUpdater.prototype._handleConnectionCommand = function (command, contex
 
 
 ConnectionUpdater.prototype._handleCreate = function (element, context, process_rootElement) {
-  // Connections zu States
+  // Connections to States
   if (is(context.source, 'fpb:State') || is(context.target, 'fpb:State')) {
     const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
     collectionAdd(processSystemLimit.businessObject.elementsContainer, element);
@@ -149,27 +149,27 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
         processOperator: processOperatorShape
       });
 
-      // Layer-Konsistenz: State auf Child-Layer erstellen wenn noch nicht vorhanden
+      // Layer consistency: Create state on child layer if not already present
       const decomposedProcess = processOperatorShape.businessObject.decomposedView;
       const childSystemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
       if (childSystemLimit && childSystemLimit.businessObject.elementsContainer) {
         const existingStateInChild = getElementById(childSystemLimit.businessObject.elementsContainer, stateShape.businessObject.id);
         if (!existingStateInChild) {
-          // State auf Child-Layer erstellen
+          // Create state on child layer
           const newStateShape = createStateShapeForNewLayer(this._elementFactory, stateShape.businessObject.$type, stateShape.businessObject);
           collectionAdd(decomposedProcess.businessObject.consistsOfStates, newStateShape.businessObject);
           collectionAdd(childSystemLimit.businessObject.elementsContainer, newStateShape);
 
-          // Position basierend auf Richtung (incoming/outgoing) setzen
+          // Set position based on direction (incoming/outgoing)
           const isIncoming = is(context.source, 'fpb:State'); // State -> ProcessOperator = incoming
           const stateWidth = 50;
           const stateSpacing = 20;
 
-          // Zähle bereits vorhandene States auf der jeweiligen Grenze
+          // Count already existing states on the respective boundary
           let existingStatesOnBorder = 0;
           const targetY = isIncoming
-            ? childSystemLimit.y - 25  // Obere Grenze
-            : childSystemLimit.y + childSystemLimit.height - 25;  // Untere Grenze
+            ? childSystemLimit.y - 25  // Upper boundary
+            : childSystemLimit.y + childSystemLimit.height - 25;  // Lower boundary
 
           (childSystemLimit.businessObject.elementsContainer || []).forEach(function(el) {
             if (isAny(el, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
@@ -193,7 +193,7 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
           replaceFlow = getElementById(processSystemLimit.businessObject.elementsContainer, flow.id);
         }
       });
-      // Falls noch ein normaler Flow existieren würde, wird zunächst im ReplaceConnectionBehavior dieser ausgetauscht
+      // If a normal Flow still exists, it will first be replaced in ReplaceConnectionBehavior
       if (!replaceFlow) {
         (context.source.outgoing || []).forEach(function (flow) {
           if (flow !== element && isAny(flow, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
@@ -208,7 +208,7 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
     }
   }
 
-  // Connection zu Technical Resource
+  // Connection to Technical Resource
   if (is(context.source, 'fpb:TechnicalResource') || is(context.target, 'fpb:TechnicalResource')) {
     collectionAdd(process_rootElement.businessObject.elementsContainer, element);
     if (!Array.isArray(context.source.businessObject.isAssignedTo)) {
@@ -226,7 +226,7 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
 ConnectionUpdater.prototype._handleDelete = function (element, context, process_rootElement) {
   const connection = element;
 
-  // Connections zu States
+  // Connections to States
   if (is(context.source, 'fpb:State') || is(context.target, 'fpb:State')) {
     const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
     collectionRemove(processSystemLimit.businessObject.elementsContainer, connection);
@@ -246,7 +246,7 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
     }
     collectionRemove(stateShape.businessObject.isAssignedTo, processOperatorShape.businessObject);
 
-    // Deep Löschen in den Layern darunter
+    // Deep delete in the layers below
     if (processOperatorShape.businessObject.decomposedView) {
       const decomposedProcesses = [processOperatorShape.businessObject.decomposedView];
       while (decomposedProcesses.length > 0) {
@@ -337,7 +337,7 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
     newSource = getBusinessObject(connection.source),
     newTarget = getBusinessObject(connection.target);
 
-  // Connections die von Product, Energy oder Information kommen
+  // Connections originating from Product, Energy or Information
   if (is(newSource, 'fpb:State')) {
     if (is(newTarget, 'fpb:ProcessOperator')) {
       const inverseSet = is(businessObject, 'fpb:Flow');
@@ -367,9 +367,9 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
     }
   }
 
-  // Connections die vom ProcessOperator ausgehen
+  // Connections originating from ProcessOperator
   if (is(newSource, 'fpb:ProcessOperator')) {
-    // TODO: Auslagern in eine Separate Funktion (Dont repeat yourself)
+    // TODO: Extract into a separate function (Don't repeat yourself)
     if (is(newTarget, 'fpb:State')) {
       const inverseSet = is(businessObject, 'fpb:Flow');
       if (businessObject.sourceRef !== newSource) {
@@ -432,7 +432,7 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
     }
   }
 
-  // Connection die von TechnicalResource ausgehen
+  // Connections originating from TechnicalResource
   if (is(newSource, 'fpb:TechnicalResource')) {
     if (is(newTarget, 'fpb:ProcessOperator')) {
       const inverseSet = is(businessObject, 'fpb:Usage');

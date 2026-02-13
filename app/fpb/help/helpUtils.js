@@ -3,10 +3,10 @@ import { is } from './utils';
 
 
 /**
- * Bei Erstellung von neuen Layern wird Kopie von relevanten StateShapes erstellt
- * @param {*} elementFactory 
- * @param {*} type 
- * @param {*} businessObject 
+ * Creates a copy of relevant StateShapes when new layers are created
+ * @param {*} elementFactory
+ * @param {*} type
+ * @param {*} businessObject
  */
 export function createStateShapeForNewLayer(elementFactory, type, businessObject) {
     /*
@@ -28,14 +28,14 @@ export function createStateShapeForNewLayer(elementFactory, type, businessObject
 }
 
 /**
- * Prüft ob State auf der SystemGrenze liegt und wenn ja, auf welcher.
- * @param {*} systemLimit 
- * @param {*} state 
+ * Checks if a state lies on the system boundary and if so, on which one.
+ * @param {*} systemLimit
+ * @param {*} state
  */
 
 export function checkIfOnSystemBorder(systemLimit, state) {
-    // Toleranz: State-Mitte muss nahe der SystemLimit-Kante sein
-    // Ein State "auf der Grenze" hat seine Mitte auf der Kante (±30 Pixel Toleranz)
+    // Tolerance: State center must be close to the SystemLimit edge
+    // A state "on the boundary" has its center on the edge (±30 pixel tolerance)
     const tolerance = 30;
     const stateCenter = state.y + (state.height || 50) / 2;
     const upperEdge = systemLimit.y;
@@ -52,10 +52,9 @@ export function checkIfOnSystemBorder(systemLimit, state) {
 
 
 /**
- * 
- * Funktion um Elemente eines Types aus einem ElementsContainer zu erhalten
- * @param {Array} elementsContainer 
- * @param {*} type 
+ * Retrieves elements of a given type from an elements container
+ * @param {Array} elementsContainer
+ * @param {*} type
  */
 export function getElementsFromElementsContainer(elementsContainer, type) {
     const elements = [];
@@ -67,9 +66,9 @@ export function getElementsFromElementsContainer(elementsContainer, type) {
     return elements;
 }
 /**
- * Funktion um BusinessObjects eines Types aus einem ElementsContainer zu erhalten
- * @param {*} elementsContainer 
- * @param {*} type 
+ * Retrieves BusinessObjects of a given type from an elements container
+ * @param {*} elementsContainer
+ * @param {*} type
  */
 export function getBusinessObjectFromElementsContainer(elementsContainer, type) {
     let elements = getElementsFromElementsContainer(elementsContainer, type);
@@ -84,8 +83,8 @@ export function getBusinessObjectFromElementsContainer(elementsContainer, type) 
 };
 
 /**
- * gibt an wieviele Usage Connections vorhanden sind
- * @param {*} connectionContainer 
+ * Returns the number of Usage connections present
+ * @param {*} connectionContainer
  */
 
 export function noOfUsageConnections(connectionContainer) {

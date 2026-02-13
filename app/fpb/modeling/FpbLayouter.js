@@ -46,12 +46,12 @@ FpbLayouter.prototype.layoutConnection = function (connection, hints) {
   start.y = start.y + source.height / 2;
   end.y = end.y - target.height / 2;
   if (is(connection, 'fpb:Usage')) {
-    // Logik um zu prüfen ob TechnicalResource auf der linken oder rechten Seite gesetzt wurde.
-    // Je nachdem wird Dockingseite des Usage geändert.
+    // Logic to check if TechnicalResource was placed on the left or right side.
+    // The docking side of the Usage is changed accordingly.
     let sourceMid = getMid(source)
     let targetMid = getMid(target)
 
-    if (sourceMid.x > targetMid.x) { // Startelement befindet sich auf der rechten Seite 
+    if (sourceMid.x > targetMid.x) { // Source element is on the right side
       start.x = sourceMid.x - source.width / 2;
       end.x = targetMid.x + target.width / 2;
     } else {
@@ -59,13 +59,13 @@ FpbLayouter.prototype.layoutConnection = function (connection, hints) {
       start.x = sourceMid.x + source.width / 2;
       end.x = targetMid.x - target.width / 2;
     }
-    // y immer in der Mitte;
+    // y always at the center;
     start.y = sourceMid.y;
     end.y = targetMid.y;
     manhattanOptions = {
       preferredLayouts: ['h:h']
     };
-    waypoints = undefined; // Zurücksetzen, behindern sonst die Neugenerierung.
+    waypoints = undefined; // Reset, otherwise they prevent regeneration.
     manhattanOptions = assign(manhattanOptions, hints);
     updatedWaypoints =
       withoutRedundantPoints(
@@ -90,7 +90,7 @@ FpbLayouter.prototype.layoutConnection = function (connection, hints) {
       preferredLayouts: ['v:v']
     };
     manhattanOptions = assign(manhattanOptions, hints);
-    // Soll gleichen Knick haben wie sein Partnerflow
+    // Should have the same bend as its partner flow
 
     updatedWaypoints =
       withoutRedundantPoints(
@@ -104,9 +104,9 @@ FpbLayouter.prototype.layoutConnection = function (connection, hints) {
     if (is(connection, 'fpb:ParallelFlow') && connection.businessObject.inTandemWith[0] && connection.businessObject.inTandemWith[0].di) {
       let partnerWaypoints = connection.businessObject.inTandemWith[0].di.waypoint;
       
-      if (target.y > partnerWaypoints[1].y && updatedWaypoints.length > 2) { // Nur wenn Shape tiefer als Knick platziert ist und Connection einen Knick hat
+      if (target.y > partnerWaypoints[1].y && updatedWaypoints.length > 2) { // Only if shape is placed below the bend and connection has a bend
 
-        if (partnerWaypoints.length > 2) { // Nur wenn Partnershape einen Knick hat
+        if (partnerWaypoints.length > 2) { // Only if partner shape has a bend
           updatedWaypoints[1].y = partnerWaypoints[1].y;
           updatedWaypoints[2].y = partnerWaypoints[2].y;
         }
