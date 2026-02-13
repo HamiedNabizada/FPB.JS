@@ -15,8 +15,7 @@ module.exports = (env, argv) => {
         libraryTarget: 'umd',
         globalObject: 'this',
         clean: false,
-        chunkLoadingGlobal: 'webpackChunkFpbJS',
-        publicPath: ''
+        asyncChunks: false
       },
       module: {
         rules: [
@@ -74,6 +73,7 @@ module.exports = (env, argv) => {
         }
       },
       plugins: [
+        new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
         new webpack.BannerPlugin({
           banner: `
 // Node.js compatibility polyfills - must run before webpack runtime
@@ -86,7 +86,7 @@ if (typeof global !== 'undefined' && typeof document === 'undefined') {
         }),
         new webpack.DefinePlugin({
           'typeof document': JSON.stringify('undefined'),
-          'typeof window': JSON.stringify('undefined'), 
+          'typeof window': JSON.stringify('undefined'),
           'typeof self': JSON.stringify('undefined'),
           'document.baseURI': '(typeof document !== "undefined" ? document.baseURI : "")',
           'self.location.href': '(typeof self !== "undefined" ? self.location.href : "")',
@@ -110,8 +110,7 @@ if (typeof global !== 'undefined' && typeof document === 'undefined') {
           type: 'module'
         },
         clean: false,
-        chunkLoadingGlobal: 'webpackChunkFpbJSESM',
-        publicPath: ''
+        asyncChunks: false
       },
       module: {
         rules: [
@@ -159,6 +158,7 @@ if (typeof global !== 'undefined' && typeof document === 'undefined') {
         'react-dom': 'react-dom'
       },
       plugins: [
+        new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
         new webpack.BannerPlugin({
           banner: `
 // Node.js compatibility polyfills - must run before webpack runtime
@@ -171,7 +171,7 @@ if (typeof global !== 'undefined' && typeof document === 'undefined') {
         }),
         new webpack.DefinePlugin({
           'typeof document': JSON.stringify('undefined'),
-          'typeof window': JSON.stringify('undefined'), 
+          'typeof window': JSON.stringify('undefined'),
           'typeof self': JSON.stringify('undefined'),
           'document.baseURI': '(typeof document !== "undefined" ? document.baseURI : "")',
           'self.location.href': '(typeof self !== "undefined" ? self.location.href : "")',

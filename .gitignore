@@ -18,3 +18,8 @@ dist/
 test-results/
 playwright-report/
 coverage/
+
+# Example build artifacts
+examples/*/node_modules/
+examples/*/dist/
+examples/*/package-lock.json
