@@ -130,6 +130,7 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
   // Connections to States
   if (is(context.source, 'fpb:State') || is(context.target, 'fpb:State')) {
     const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    if (!processSystemLimit) return;
     collectionAdd(processSystemLimit.businessObject.elementsContainer, element);
 
     let stateShape;
@@ -229,6 +230,7 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
   // Connections to States
   if (is(context.source, 'fpb:State') || is(context.target, 'fpb:State')) {
     const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    if (!processSystemLimit) return;
     collectionRemove(processSystemLimit.businessObject.elementsContainer, connection);
 
     let stateShape;
@@ -252,6 +254,7 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
       while (decomposedProcesses.length > 0) {
         const decomposedProcess = decomposedProcesses.shift();
         const decomposedProcessSystemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+        if (!decomposedProcessSystemLimit) continue;
         const stateInDecomposedProcess = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, stateShape.id);
 
         if (!stateInDecomposedProcess) {

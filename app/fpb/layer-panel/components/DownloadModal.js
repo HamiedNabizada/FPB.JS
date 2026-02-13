@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
@@ -90,9 +90,19 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
     };
 
     const eventBus = modeler.get('eventBus');
-    eventBus.on(eventName, (e) => {
-        // Event listener for export events
-    });
+    const eventCallbackRef = useRef(null);
+
+    // Register event listener in useEffect with cleanup to prevent memory leaks
+    useEffect(() => {
+        const handler = (e) => {
+            // Event listener for export events
+        };
+        eventCallbackRef.current = handler;
+        eventBus.on(eventName, handler);
+        return () => {
+            eventBus.off(eventName, handler);
+        };
+    }, [eventBus, eventName]);
 
     function download(dataStr, fileExtension = exportFormat) {
         let tempLink = document.createElement('a');

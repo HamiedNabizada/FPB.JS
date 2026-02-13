@@ -48,6 +48,7 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
         isDecomposed = true;
         decomposedProcess = processOperator.businessObject.decomposedView;
         systemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+        if (!systemLimit) return;
         getElementsFromElementsContainer(systemLimit.businessObject.elementsContainer, 'fpb:State').forEach((state) => {
             if (checkIfOnSystemBorder(systemLimit, state) === 'onUpperBorder') {
                 stateShapes.push({ state: state, position: 'incoming' });

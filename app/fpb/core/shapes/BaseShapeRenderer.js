@@ -41,7 +41,7 @@ export class BaseShapeRenderer {
    */
   renderEmbeddedLabel(parentGfx, element, align = 'center-middle') {
     const semantic = element.businessObject;
-    if (!semantic.name) {
+    if (!semantic.name || !semantic.name.trim()) {
       return;
     }
 

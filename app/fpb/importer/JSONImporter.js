@@ -63,17 +63,22 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
             
             this._processes.forEach(pr => {
                 if (TypeUtils.isStringLike(pr.process.businessObject.parent)) {
-                    pr.process.businessObject.parent = this._processes.find(proc => {
+                    const parentProc = this._processes.find(proc => {
                         return proc.id === pr.process.businessObject.parent;
-                    }).process
+                    });
+                    if (parentProc) {
+                        pr.process.businessObject.parent = parentProc.process;
+                    }
                 };
                 if (pr.process.businessObject.consistsOfProcesses && pr.process.businessObject.consistsOfProcesses.length > 0) {
                     let tmpArray = [];
                     pr.process.businessObject.consistsOfProcesses.forEach((e) => {
                         if (TypeUtils.isStringLike(e)) {
-                            let subProcess = this._processes.find((sP) => {
+                            const found = this._processes.find((sP) => {
                                 return sP.process.id === e;
-                            }).process
+                            });
+                            if (!found) return;
+                            let subProcess = found.process;
                             tmpArray.push({ id: subProcess.id, subProcess: subProcess });
 
                         }
@@ -502,12 +507,14 @@ JSONImporter.prototype.updateDepedencies = function (container, element) {
     if (is(element, FPB_TYPES.PROCESS_OPERATOR)) {
         if (element.businessObject.decomposedView) {
             if (TypeUtils.isStringLike(element.businessObject.decomposedView)) {
-                let process = this._processes.find((pr) => {
+                const foundProc = this._processes.find((pr) => {
                     return pr.process.id === element.businessObject.decomposedView;
-                }).process;
-
-                element.businessObject.decomposedView = process;
-                process.businessObject.isDecomposedProcessOperator = element.businessObject;
+                });
+                if (foundProc) {
+                    let process = foundProc.process;
+                    element.businessObject.decomposedView = process;
+                    process.businessObject.isDecomposedProcessOperator = element.businessObject;
+                }
             }
         }
     }

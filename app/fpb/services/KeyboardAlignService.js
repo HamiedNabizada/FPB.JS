@@ -27,6 +27,10 @@ export default class KeyboardAlignService {
       'ctrl+shift+v': () => this._executeDistribute('vertical')    // Distribute Vertical
     };
 
+    // Store bound reference so it can be removed later
+    this._boundHandleKeyDown = this._handleKeyDown.bind(this);
+    this._containerEl = null;
+
     this._setupKeyboardListener();
   }
 
@@ -39,12 +43,23 @@ export default class KeyboardAlignService {
     this._eventBus.on('canvas.init', () => {
       const container = this._canvas.getContainer();
       if (container) {
-        container.addEventListener('keydown', this._handleKeyDown.bind(this));
+        this._containerEl = container;
+        container.addEventListener('keydown', this._boundHandleKeyDown);
       }
     });
 
     // Also listen globally to document in case canvas doesn't have focus
-    document.addEventListener('keydown', this._handleKeyDown.bind(this));
+    document.addEventListener('keydown', this._boundHandleKeyDown);
+  }
+
+  /**
+   * Remove all event listeners to prevent memory leaks
+   */
+  destroy() {
+    if (this._containerEl) {
+      this._containerEl.removeEventListener('keydown', this._boundHandleKeyDown);
+    }
+    document.removeEventListener('keydown', this._boundHandleKeyDown);
   }
 
   /**

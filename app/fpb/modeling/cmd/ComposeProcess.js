@@ -51,6 +51,7 @@ ComposeProcess.prototype.preExecute = function (context) {
         */
         processNew = processOld.businessObject.parent;
         systemLimitNew = getElementsFromElementsContainer(processNew.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+        if (!systemLimitNew) return;
         technicalResources = getElementsFromElementsContainer(processNew.businessObject.elementsContainer, 'fpb:TechnicalResource');
         // This also includes the ProcessOperators
         stateShapes = getElementsFromElementsContainer(systemLimitNew.businessObject.elementsContainer, 'fpb:Object');

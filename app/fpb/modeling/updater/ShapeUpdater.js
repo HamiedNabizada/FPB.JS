@@ -124,6 +124,7 @@ ShapeUpdater.prototype._handleCreate = function (element, process_rootElement) {
   // ProcessOperators and States are added to the SystemLimit's elementsContainer
   if (isAny(element, ['fpb:State', 'fpb:ProcessOperator'])) {
     const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    if (!processSystemLimit) return;
     collectionAdd(processSystemLimit.businessObject.elementsContainer, element);
     if (is(element, 'fpb:State')) {
       collectionAdd(process_rootElement.businessObject.consistsOfStates, element.businessObject);
@@ -166,6 +167,7 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
   // Deleted element is a State or ProcessOperator
   if (isAny(element, ['fpb:State', 'fpb:ProcessOperator'])) {
     const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    if (!processSystemLimit) return;
     collectionRemove(processSystemLimit.businessObject.elementsContainer, element);
 
     if (is(element, 'fpb:State')) {
@@ -310,10 +312,12 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
 ShapeUpdater.prototype._handleMove = function (element, process_rootElement, context) {
   if (isAny(element, ['fpb:State', 'fpb:ProcessOperator'])) {
     const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
-    const elementFromElementsContainer = getElementById(processSystemLimit.businessObject.elementsContainer, element.businessObject.id);
-    // Otherwise there are issues when switching between layers
-    collectionRemove(processSystemLimit.businessObject.elementsContainer, elementFromElementsContainer);
-    collectionAdd(processSystemLimit.businessObject.elementsContainer, element);
+    if (processSystemLimit) {
+      const elementFromElementsContainer = getElementById(processSystemLimit.businessObject.elementsContainer, element.businessObject.id);
+      // Otherwise there are issues when switching between layers
+      collectionRemove(processSystemLimit.businessObject.elementsContainer, elementFromElementsContainer);
+      collectionAdd(processSystemLimit.businessObject.elementsContainer, element);
+    }
   }
 
   if (isAny(element, ['fpb:SystemLimit', 'fpb:TechnicalResource'])) {
