@@ -22,7 +22,7 @@ import { ELEMENT_TYPES, COLORS } from './FpbConstants';
 
 const RENDERER_IDS = new Ids();
 
-export default function FpbRenderer(eventBus, styles, canvas, textRenderer) {
+export default function FpbRenderer(eventBus, styles, canvas, textRenderer, elementRegistry) {
   BaseRenderer.call(this, eventBus, 2000);
 
   // Initialize core components
@@ -33,16 +33,43 @@ export default function FpbRenderer(eventBus, styles, canvas, textRenderer) {
   // Initialize specialized renderers
   this.stateRenderer = new StateShapeRenderer(styles, textRenderer);
   this.processRenderer = new ProcessShapeRenderer(styles, textRenderer);
-  this.connectionRenderer = new ConnectionRenderer(styles, this.markerManager);
+  this.connectionRenderer = new ConnectionRenderer(styles, this.markerManager, elementRegistry);
 
   // Store references for external label rendering
   this.textRenderer = textRenderer;
   this.styles = styles;
+
+  // Re-render all connections after model changes so crossing bridges update
+  this._elementRegistry = elementRegistry;
+  this._eventBus = eventBus;
+  this._updatingBridges = false;
+
+  var self = this;
+  eventBus.on('commandStack.changed', 100, function() {
+    self._updateCrossingBridges();
+  });
 }
 
 inherits(FpbRenderer, BaseRenderer);
 
-FpbRenderer.$inject = ['eventBus', 'styles', 'canvas', 'textRenderer'];
+FpbRenderer.$inject = ['eventBus', 'styles', 'canvas', 'textRenderer', 'elementRegistry'];
+
+/**
+ * Re-render all connections so crossing bridges reflect current positions.
+ */
+FpbRenderer.prototype._updateCrossingBridges = function() {
+  if (this._updatingBridges) return;
+  this._updatingBridges = true;
+
+  var connections = this._elementRegistry.filter(function(e) { return e.waypoints; });
+  var eventBus = this._eventBus;
+
+  connections.forEach(function(connection) {
+    eventBus.fire('element.changed', { element: connection });
+  });
+
+  this._updatingBridges = false;
+};
 
 /**
  * Determines if this renderer can render the given element
