@@ -152,21 +152,31 @@ export async function createFpbModeler(options = {}) {
       eventBus.fire('FPBJS.import', { data: json });
     },
 
-    importXML(xmlString) {
-      const json = xmlMapper.convertFromXML(xmlString);
+    async importXML(xmlString) {
+      const json = await xmlMapper.convertFromXML(xmlString);
       eventBus.fire('FPBJS.import', { data: json });
     },
 
     toJSON() {
-      return modeler.exportProject();
+      eventBus.fire('dataStore.updateAll', {});
+      return modeler.getProcesses();
     },
 
-    toXML() {
-      return xmlMapper.convertToXML(modeler.exportProject());
+    async toXML() {
+      eventBus.fire('dataStore.updateAll', {});
+      return xmlMapper.convertToXML(modeler.getProcesses());
     },
 
     toSVG() {
-      return modeler.saveSVG();
+      return new Promise((resolve, reject) => {
+        modeler.saveSVG({}, (err, svg) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(svg);
+          }
+        });
+      });
     },
 
     // --- Convenience Methods ---
@@ -195,9 +205,9 @@ export async function createFpbModeler(options = {}) {
     },
 
     switchProcess(id) {
-      const process = modeler.getProcess(id);
-      if (process) {
-        modeling.switchProcess(process);
+      const entry = modeler.getProcess(id);
+      if (entry && entry.process) {
+        modeling.switchProcess(entry.process);
       }
     },
 

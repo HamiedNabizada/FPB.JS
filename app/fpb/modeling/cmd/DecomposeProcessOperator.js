@@ -48,7 +48,10 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
         isDecomposed = true;
         decomposedProcess = processOperator.businessObject.decomposedView;
         systemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
-        if (!systemLimit) return;
+        if (!systemLimit) {
+            context.aborted = true;
+            return;
+        }
         getElementsFromElementsContainer(systemLimit.businessObject.elementsContainer, 'fpb:State').forEach((state) => {
             if (checkIfOnSystemBorder(systemLimit, state) === 'onUpperBorder') {
                 stateShapes.push({ state: state, position: 'incoming' });
@@ -218,6 +221,8 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
 }
 
 DecomposeProcessOperator.prototype.execute = function (context) {
+    if (context.aborted) return;
+
     const canvas = this._canvas;
 
     const decomposedProcess = context.decomposedProcess;
@@ -258,6 +263,8 @@ DecomposeProcessOperator.prototype.execute = function (context) {
 
 // Update / add labels
 DecomposeProcessOperator.prototype.postExecute = function (context) {
+    if (context.aborted) return;
+
     const modeling = this._modeling;
     const stateShapes = context.stateShapes;
     const processFlows = context.processFlows;

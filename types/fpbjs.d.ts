@@ -13,6 +13,8 @@ export type FpbElementType =
   | 'fpb:ProcessOperator'
   | 'fpb:TechnicalResource'
   | 'fpb:SystemLimit'
+  | 'fpb:Process'
+  | 'fpb:ProjectDefinition'
   | 'fpb:Flow'
   | 'fpb:AlternativeFlow'
   | 'fpb:ParallelFlow'
@@ -126,7 +128,7 @@ export interface FpbEventMap {
   /** Selection changed */
   'selection.changed': { newSelection: Element[]; oldSelection: Element[] };
   /** Process layer was switched */
-  'process.switched': { process: any };
+  'process.switched': { selectedProcess: Shape };
 }
 
 /** All known facade event names */
@@ -317,16 +319,16 @@ export interface FpbInstance {
   importJSON(json: FpbProjectData): void;
 
   /** Import a diagram from a VDI 3682 XML string */
-  importXML(xmlString: string): void;
+  importXML(xmlString: string): Promise<void>;
 
-  /** Export the current diagram as a JSON object */
-  toJSON(): FpbProjectData;
+  /** Export the current diagram as a JSON object (array of ProcessEntry) */
+  toJSON(): ProcessEntry[];
 
   /** Export the current diagram as a VDI 3682 XML string */
-  toXML(): string;
+  toXML(): Promise<string>;
 
   /** Export the current diagram as an SVG string */
-  toSVG(): string;
+  toSVG(): Promise<string>;
 
   // --- Viewport ---
 

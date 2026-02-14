@@ -51,7 +51,10 @@ ComposeProcess.prototype.preExecute = function (context) {
         */
         processNew = processOld.businessObject.parent;
         systemLimitNew = getElementsFromElementsContainer(processNew.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
-        if (!systemLimitNew) return;
+        if (!systemLimitNew) {
+            context.aborted = true;
+            return;
+        }
         technicalResources = getElementsFromElementsContainer(processNew.businessObject.elementsContainer, 'fpb:TechnicalResource');
         // This also includes the ProcessOperators
         stateShapes = getElementsFromElementsContainer(systemLimitNew.businessObject.elementsContainer, 'fpb:Object');
@@ -137,6 +140,8 @@ ComposeProcess.prototype.preExecute = function (context) {
 }
 
 ComposeProcess.prototype.execute = function (context) {
+    if (context.aborted) return;
+
     const canvas = this._canvas;
     const systemLimitNew = context.systemLimitNew;
     const stateShapes = context.stateShapes;
@@ -197,6 +202,8 @@ ComposeProcess.prototype.execute = function (context) {
 };
 
 ComposeProcess.prototype.postExecute = function (context) {
+    if (context.aborted) return;
+
     const modeling = this._modeling;
     // Connect elements with each other
     const stateShapes = context.stateShapes;

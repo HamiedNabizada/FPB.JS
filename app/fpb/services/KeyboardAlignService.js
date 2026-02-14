@@ -32,6 +32,11 @@ export default class KeyboardAlignService {
     this._containerEl = null;
 
     this._setupKeyboardListener();
+
+    // Clean up on diagram destroy to prevent memory leaks
+    eventBus.on('diagram.destroy', () => {
+      this.destroy();
+    });
   }
 
   /**
