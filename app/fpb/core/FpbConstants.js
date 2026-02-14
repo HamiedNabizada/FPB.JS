@@ -35,6 +35,12 @@ export const DASH_PATTERNS = {
   USAGE: '10, 12'
 };
 
+export const DECOMPOSITION_INDICATOR = {
+  size: 12,
+  fill: '#FFFFFF',
+  strokeWidth: 1
+};
+
 export const LABEL_CONFIG = {
   defaultWidth: 100,
   padding: {

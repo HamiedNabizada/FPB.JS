@@ -5,7 +5,7 @@
  */
 import { BaseShapeRenderer } from './BaseShapeRenderer';
 import { attr as svgAttr, append as svgAppend, create as svgCreate } from 'tiny-svg';
-import { COLORS, DASH_PATTERNS, STROKE_WIDTHS } from '../FpbConstants';
+import { COLORS, DASH_PATTERNS, STROKE_WIDTHS, DECOMPOSITION_INDICATOR } from '../FpbConstants';
 
 export class ProcessShapeRenderer extends BaseShapeRenderer {
   
@@ -29,7 +29,39 @@ export class ProcessShapeRenderer extends BaseShapeRenderer {
     });
 
     this.renderEmbeddedLabel(parentGfx, element, 'right-top');
+
+    // Decomposition indicator (white triangle bottom-right)
+    if (element.businessObject.decomposedView) {
+      this._renderDecompositionIndicator(parentGfx, element);
+    }
+
     return rect;
+  }
+
+  /**
+   * Renders a small triangle indicating the element has a decomposition
+   * @private
+   */
+  _renderDecompositionIndicator(parentGfx, element) {
+    const { width, height } = element;
+    const size = DECOMPOSITION_INDICATOR.size;
+
+    const indicator = svgCreate('polygon');
+
+    const points = [
+      `${width - size},${height}`,
+      `${width},${height - size}`,
+      `${width},${height}`
+    ].join(' ');
+
+    svgAttr(indicator, {
+      points: points,
+      fill: DECOMPOSITION_INDICATOR.fill,
+      stroke: COLORS.FPB_STROKE,
+      strokeWidth: DECOMPOSITION_INDICATOR.strokeWidth
+    });
+
+    svgAppend(parentGfx, indicator);
   }
 
   /**
