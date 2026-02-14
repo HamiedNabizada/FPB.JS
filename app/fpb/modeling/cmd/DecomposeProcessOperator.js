@@ -275,13 +275,16 @@ DecomposeProcessOperator.prototype.postExecute = function (context) {
             }
             modeling.updateLabel(state.state, state.state.businessObject.name);
         }
-        // Re-layout connections attached to this state (newly created/repositioned)
-        (state.state.incoming || []).forEach(function (connection) {
-            modeling.layoutConnection(connection);
-        });
-        (state.state.outgoing || []).forEach(function (connection) {
-            modeling.layoutConnection(connection);
-        });
+        // Only re-layout connections for newly created/repositioned states,
+        // not for existing shapes (position: '') to preserve user bendpoints
+        if (state.position === 'incoming' || state.position === 'outgoing') {
+            (state.state.incoming || []).forEach(function (connection) {
+                modeling.layoutConnection(connection);
+            });
+            (state.state.outgoing || []).forEach(function (connection) {
+                modeling.layoutConnection(connection);
+            });
+        }
     });
     this._eventBus.fire('layerPanel.processSwitched', {
         selectedProcess: context.decomposedProcess
