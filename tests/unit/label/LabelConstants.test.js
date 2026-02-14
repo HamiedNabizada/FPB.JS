@@ -27,8 +27,8 @@ describe('LabelConstants', () => {
     });
 
     describe('EXTERNAL_LABEL', () => {
-      it('has width of 90', () => {
-        expect(LABEL_CONFIG.EXTERNAL_LABEL.width).toBe(90);
+      it('has width of 150', () => {
+        expect(LABEL_CONFIG.EXTERNAL_LABEL.width).toBe(150);
       });
 
       it('has paddingTop of 7', () => {

@@ -10,7 +10,7 @@ export const TEXT_CONFIG = {
   EXTERNAL_FONT_SIZE_OFFSET: -1,
   
   DEFAULT_LABEL_BOX: {
-    width: 90,
+    width: 150,
     height: 30
   },
   

@@ -13,7 +13,7 @@ export const LABEL_CONFIG = {
 
   // External label dimensions
   EXTERNAL_LABEL: {
-    width: 90,
+    width: 150,
     paddingTop: 7,
     paddingBottom: 4
   },

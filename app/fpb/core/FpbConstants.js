@@ -43,6 +43,7 @@ export const DECOMPOSITION_INDICATOR = {
 
 export const LABEL_CONFIG = {
   defaultWidth: 100,
+  externalLabelWidth: 150,
   padding: {
     default: 5,
     processOperator: {
@@ -69,6 +70,13 @@ export const ELEMENT_TYPES = {
   ALTERNATIVE_FLOW: 'fpb:AlternativeFlow',
   PARALLEL_FLOW: 'fpb:ParallelFlow',
   USAGE: 'fpb:Usage'
+};
+
+export const LABEL_LIMITS = {
+  PROCESS_OPERATOR: { maxLines: 1 },
+  TECHNICAL_RESOURCE: { maxLines: 1 },
+  SYSTEM_LIMIT: { maxLines: 1 },
+  EXTERNAL_LABEL: { maxLines: 3 }
 };
 
 export const MARKER_TYPES = {
