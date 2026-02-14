@@ -132,14 +132,16 @@ FpbRuleProvider.prototype.init = function () {
     const { connection } = context;
     const source = context.hover || context.source;
     const target = connection.target;
-    return canConnect(source, target, connection);
+    if (!source) return false;
+    return canConnect(source, target, connection) || false;
   });
 
   this.addRule('connection.reconnectEnd', RULE_PRIORITIES.HIGH, (context) => {
     const { connection } = context;
     const source = connection.source;
     const target = context.hover || context.target;
-    return canConnect(source, target, connection);
+    if (!target) return false;
+    return canConnect(source, target, connection) || false;
   });
 
   this.addRule('shape.resize', (context) => {
