@@ -163,10 +163,18 @@ export interface ElementDataInfo {
 
 /** A single process entry in the project */
 export interface ProcessEntry {
-  id: string;
   process: Shape;
   elementDataInformation: ElementDataInfo[];
   elementVisualInformation: ElementVisualInfo[];
+}
+
+/** Project definition (fpb:Project business object, first entry in getProcesses()) */
+export interface ProjectDefinition {
+  $type: 'fpb:Project';
+  name: string;
+  targetNamespace: string;
+  entryPoint: Shape;
+  [key: string]: any;
 }
 
 /** Complete project data (returned by toJSON()) */
@@ -321,8 +329,8 @@ export interface FpbInstance {
   /** Import a diagram from a VDI 3682 XML string */
   importXML(xmlString: string): Promise<void>;
 
-  /** Export the current diagram as a JSON object (array of ProcessEntry) */
-  toJSON(): ProcessEntry[];
+  /** Export the current diagram as a JSON object (ProjectDefinition + ProcessEntries) */
+  toJSON(): (ProjectDefinition | ProcessEntry)[];
 
   /** Export the current diagram as a VDI 3682 XML string */
   toXML(): Promise<string>;
@@ -348,8 +356,8 @@ export interface FpbInstance {
 
   // --- Process Management ---
 
-  /** Get all processes in the project */
-  getProcesses(): ProcessEntry[];
+  /** Get all processes in the project (first entry is ProjectDefinition) */
+  getProcesses(): (ProjectDefinition | ProcessEntry)[];
 
   /** Switch to a different process layer by ID */
   switchProcess(id: string): void;

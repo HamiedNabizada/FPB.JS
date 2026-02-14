@@ -159,7 +159,7 @@ export async function createFpbModeler(options = {}) {
 
     toJSON() {
       eventBus.fire('dataStore.updateAll', {});
-      return modeler.getProcesses();
+      return [...modeler.getProcesses()];
     },
 
     async toXML() {
