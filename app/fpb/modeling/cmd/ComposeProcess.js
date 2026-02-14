@@ -123,13 +123,13 @@ ComposeProcess.prototype.preExecute = function (context) {
         systemLimitNew.x = 350;
         systemLimitNew.y = 50;
 
-        computePositions(systemLimitNew, stateShapes, processOperatorNew, 75)
+        computePositions(systemLimitNew, stateShapes, processOperatorNew, 75);
 
         // Fire event for LayerPanel
         this._eventBus.fire('layerPanel.newProcess', {
             newProcess: processNew,
             parentProcess: processOld
-        })
+        });
         context.command = true;
         context.processNew = processNew;
         context.systemLimitNew = systemLimitNew;
@@ -228,12 +228,12 @@ ComposeProcess.prototype.postExecute = function (context) {
                     collectionRemove(state.state.labels, state.state.labels[0]);
                     delete state.state.businessObject.di.label;
                 }
-                modeling.updateLabel(state.state, state.state.businessObject.name)
+                modeling.updateLabel(state.state, state.state.businessObject.name);
             }
 
-        })
+        });
         if (processOperatorNew.businessObject.name) {
-            modeling.updateLabel(processOperatorNew, processOperatorNew.businessObject.name)
+            modeling.updateLabel(processOperatorNew, processOperatorNew.businessObject.name);
         }
     } else {
         stateShapes.forEach((state) => {
@@ -242,14 +242,14 @@ ComposeProcess.prototype.postExecute = function (context) {
                     collectionRemove(state.labels, state.labels[0]);
                     delete state.businessObject.di.label;
                 }
-                modeling.updateLabel(state, state.businessObject.name)
+                modeling.updateLabel(state, state.businessObject.name);
             }
             processFlows.forEach((flow) => {
-                modeling.layoutConnection(flow)
-            })
+                modeling.layoutConnection(flow);
+            });
             systemLimitFlows.forEach((flow) => {
-                modeling.layoutConnection(flow)
-            })
+                modeling.layoutConnection(flow);
+            });
 
             // Re-layout all connections attached to this state
             (state.incoming || []).forEach(function (connection) {
@@ -258,15 +258,12 @@ ComposeProcess.prototype.postExecute = function (context) {
             (state.outgoing || []).forEach(function (connection) {
                 modeling.layoutConnection(connection);
             });
-        })
+        });
     }
 
     this._eventBus.fire('layerPanel.processSwitched', {
         selectedProcess: context.processNew
-    })
-
-
-
+    });
 
 };
 

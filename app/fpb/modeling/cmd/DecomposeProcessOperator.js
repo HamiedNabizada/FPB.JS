@@ -285,16 +285,16 @@ DecomposeProcessOperator.prototype.postExecute = function (context) {
             modeling.layoutConnection(connection);
         });
 
-    })
+    });
     processFlows.forEach((flow) => {
-        modeling.layoutConnection(flow)
-    })
+        modeling.layoutConnection(flow);
+    });
     systemLimitFlows.forEach((flow) => {
-        modeling.layoutConnection(flow)
-    })
+        modeling.layoutConnection(flow);
+    });
     this._eventBus.fire('layerPanel.processSwitched', {
         selectedProcess: context.decomposedProcess
-    })
+    });
 
 }
 

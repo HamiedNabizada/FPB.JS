@@ -113,7 +113,7 @@ SwitchProcess.prototype.postExecute = function (context) {
             modeling.layoutConnection(connection);
         });
 
-    })
+    });
     // Re-layout connections attached to processShapes (TechnicalResources etc.)
     processShapes.forEach((shape) => {
         (shape.incoming || []).forEach(function (connection) {
@@ -122,13 +122,12 @@ SwitchProcess.prototype.postExecute = function (context) {
         (shape.outgoing || []).forEach(function (connection) {
             modeling.layoutConnection(connection);
         });
-    })
-
+    });
 
     eventBus.fire('layerPanel.processSwitched', {
         selectedProcess: process
-    })
+    });
     eventBus.fire('toolTips.processSwitched', {
         selectedProcess: process
-    })
+    });
 }
