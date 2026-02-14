@@ -267,8 +267,6 @@ DecomposeProcessOperator.prototype.postExecute = function (context) {
 
     const modeling = this._modeling;
     const stateShapes = context.stateShapes;
-    const processFlows = context.processFlows;
-    const systemLimitFlows = context.systemLimitFlows;
     stateShapes.forEach((state) => {
         if (state.state.businessObject.name) {
             if (state.state.labels[0]) {
@@ -277,20 +275,13 @@ DecomposeProcessOperator.prototype.postExecute = function (context) {
             }
             modeling.updateLabel(state.state, state.state.businessObject.name);
         }
-        // Re-layout all connections attached to this state
+        // Re-layout connections attached to this state (newly created/repositioned)
         (state.state.incoming || []).forEach(function (connection) {
             modeling.layoutConnection(connection);
         });
         (state.state.outgoing || []).forEach(function (connection) {
             modeling.layoutConnection(connection);
         });
-
-    });
-    processFlows.forEach((flow) => {
-        modeling.layoutConnection(flow);
-    });
-    systemLimitFlows.forEach((flow) => {
-        modeling.layoutConnection(flow);
     });
     this._eventBus.fire('layerPanel.processSwitched', {
         selectedProcess: context.decomposedProcess

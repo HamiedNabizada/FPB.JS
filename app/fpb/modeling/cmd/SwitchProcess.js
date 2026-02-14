@@ -90,9 +90,6 @@ SwitchProcess.prototype.execute = function (context) {
 SwitchProcess.prototype.postExecute = function (context) {
     let eventBus = this._eventBus;
     let process = context.process;
-    let systemLimit = context.systemLimit;
-    let processShapes = context.processShapes;
-
 
     const modeling = this._modeling;
     const stateShapes = context.stateShapes;
@@ -105,23 +102,6 @@ SwitchProcess.prototype.postExecute = function (context) {
             }
             modeling.updateLabel(state.state, state.state.businessObject.name);
         }
-        // Re-layout all connections attached to this state
-        (state.state.incoming || []).forEach(function (connection) {
-            modeling.layoutConnection(connection);
-        });
-        (state.state.outgoing || []).forEach(function (connection) {
-            modeling.layoutConnection(connection);
-        });
-
-    });
-    // Re-layout connections attached to processShapes (TechnicalResources etc.)
-    processShapes.forEach((shape) => {
-        (shape.incoming || []).forEach(function (connection) {
-            modeling.layoutConnection(connection);
-        });
-        (shape.outgoing || []).forEach(function (connection) {
-            modeling.layoutConnection(connection);
-        });
     });
 
     eventBus.fire('layerPanel.processSwitched', {

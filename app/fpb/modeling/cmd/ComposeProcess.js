@@ -208,8 +208,6 @@ ComposeProcess.prototype.postExecute = function (context) {
     // Connect elements with each other
     const stateShapes = context.stateShapes;
     const processOperatorNew = context.processOperatorNew;
-    const systemLimitFlows = context.systemLimitFlows;
-    const processFlows = context.processFlows;
 
     if (context.command) {
         stateShapes.forEach((state) => {
@@ -244,20 +242,6 @@ ComposeProcess.prototype.postExecute = function (context) {
                 }
                 modeling.updateLabel(state, state.businessObject.name);
             }
-            processFlows.forEach((flow) => {
-                modeling.layoutConnection(flow);
-            });
-            systemLimitFlows.forEach((flow) => {
-                modeling.layoutConnection(flow);
-            });
-
-            // Re-layout all connections attached to this state
-            (state.incoming || []).forEach(function (connection) {
-                modeling.layoutConnection(connection);
-            });
-            (state.outgoing || []).forEach(function (connection) {
-                modeling.layoutConnection(connection);
-            });
         });
     }
 
