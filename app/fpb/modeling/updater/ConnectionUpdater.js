@@ -213,11 +213,15 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
   if (is(context.source, 'fpb:TechnicalResource') || is(context.target, 'fpb:TechnicalResource')) {
     collectionAdd(process_rootElement.businessObject.elementsContainer, element);
     if (!Array.isArray(context.source.businessObject.isAssignedTo)) {
-      context.source.businessObject.isAssignedTo = [context.source.businessObject.isAssignedTo];
+      context.source.businessObject.isAssignedTo = context.source.businessObject.isAssignedTo
+        ? [context.source.businessObject.isAssignedTo]
+        : [];
     }
     collectionAdd(context.source.businessObject.isAssignedTo, context.target.businessObject);
     if (!Array.isArray(context.target.businessObject.isAssignedTo)) {
-      context.target.businessObject.isAssignedTo = [context.target.businessObject.isAssignedTo];
+      context.target.businessObject.isAssignedTo = context.target.businessObject.isAssignedTo
+        ? [context.target.businessObject.isAssignedTo]
+        : [];
     }
     collectionAdd(context.target.businessObject.isAssignedTo, context.source.businessObject);
   }
@@ -271,7 +275,8 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
         });
 
         (stateInDecomposedProcess.incoming || []).forEach(function (flow) {
-          collectionRemove(decomposedProcessSystemLimit.businessObject.elementsContainer, flow);
+          const flowElement = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, flow.id);
+          collectionRemove(decomposedProcessSystemLimit.businessObject.elementsContainer, flowElement);
           collectionRemove(flow.businessObject.sourceRef.outgoing, flow.businessObject);
           if (flow.businessObject.sourceRef.decomposedView) {
             decomposedProcesses.push(flow.businessObject.sourceRef.decomposedView);
@@ -287,10 +292,10 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
         if (flow !== element) {
           if (isAny(flow, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
             if (flow.businessObject.inTandemWith) {
-              collectionRemove(flow.businessObject.inTandemWith, element);
+              collectionRemove(flow.businessObject.inTandemWith, element.businessObject);
             }
             if (element.businessObject.inTandemWith) {
-              collectionRemove(element.businessObject.inTandemWith, flow);
+              collectionRemove(element.businessObject.inTandemWith, flow.businessObject);
             }
           }
         }
@@ -363,7 +368,7 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
         if (businessObject.targetRef.get('incoming') === undefined) {
           businessObject.targetRef.incoming = [];
         }
-        businessObject.targetRef.incoming.push(businessObject);
+        collectionAdd(businessObject.targetRef.incoming, businessObject);
       } else {
         collectionAdd(businessObject.targetRef.incoming, businessObject);
       }
@@ -383,7 +388,7 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
         if (businessObject.sourceRef.get('outgoing') === undefined) {
           businessObject.sourceRef.outgoing = [];
         }
-        businessObject.sourceRef.outgoing.push(businessObject);
+        collectionAdd(businessObject.sourceRef.outgoing, businessObject);
       } else {
         collectionAdd(businessObject.sourceRef.outgoing, businessObject);
       }
@@ -395,7 +400,7 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
         if (businessObject.targetRef.get('incoming') === undefined) {
           businessObject.targetRef.incoming = [];
         }
-        businessObject.targetRef.incoming.push(businessObject);
+        collectionAdd(businessObject.targetRef.incoming, businessObject);
       } else {
         collectionAdd(businessObject.targetRef.incoming, businessObject);
       }
@@ -411,7 +416,7 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
         if (businessObject.sourceRef.get('outgoing') === undefined) {
           businessObject.sourceRef.outgoing = [];
         }
-        businessObject.sourceRef.outgoing.push(businessObject);
+        collectionAdd(businessObject.sourceRef.outgoing, businessObject);
       }
       if (businessObject.targetRef !== newTarget) {
         if (inverseSet) {
@@ -425,10 +430,11 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
           businessObject.targetRef.incoming = [businessObject.targetRef.incoming];
         }
         collectionAdd(businessObject.targetRef.incoming, businessObject);
-        businessObject.targetRef = newTarget;
 
         if (!Array.isArray(businessObject.targetRef.isAssignedTo)) {
-          businessObject.targetRef.isAssignedTo = [businessObject.targetRef.isAssignedTo];
+          businessObject.targetRef.isAssignedTo = businessObject.targetRef.isAssignedTo
+            ? [businessObject.targetRef.isAssignedTo]
+            : [];
         }
         collectionAdd(businessObject.targetRef.isAssignedTo, businessObject.sourceRef);
       }
@@ -444,7 +450,10 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
           collectionRemove(businessObject.sourceRef && businessObject.sourceRef.get('outgoing'), businessObject);
         }
         businessObject.sourceRef = newSource;
-        businessObject.sourceRef.outgoing.push(businessObject);
+        if (businessObject.sourceRef.get('outgoing') === undefined) {
+          businessObject.sourceRef.outgoing = [];
+        }
+        collectionAdd(businessObject.sourceRef.outgoing, businessObject);
       }
       if (businessObject.targetRef !== newTarget) {
         if (inverseSet) {

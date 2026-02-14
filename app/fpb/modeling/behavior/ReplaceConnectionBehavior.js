@@ -14,7 +14,7 @@ export default function ReplaceConnectionBehavior(eventBus, modeling) {
         if (!isAny(connection, ['fpb:AlternativeFlow', 'fpb:ParallelFlow'])) {
             return;
         }
-        let sourceOutgoing = e.context.source.outgoing;
+        let sourceOutgoing = e.context.source.outgoing || [];
         let replaceFlow;
         let replaceType;
         sourceOutgoing.forEach((flow) => {
@@ -42,7 +42,7 @@ export default function ReplaceConnectionBehavior(eventBus, modeling) {
         if (!isAny(connection, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
             return;
         };
-        let sourceOutgoing = e.context.source.outgoing;
+        let sourceOutgoing = e.context.source.outgoing || [];
         let replaceFlow;
         let counter = 0;
         let replaceSource;
