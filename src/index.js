@@ -179,6 +179,56 @@ export async function createFpbModeler(options = {}) {
       });
     },
 
+    async toPNG(options = {}) {
+      const { exportPNG } = await import('../app/fpb/export/PngExporter');
+      const svg = await this.toSVG();
+      return exportPNG(svg, options);
+    },
+
+    async toPDF(options = {}) {
+      const { exportPDF, exportMultiLayerPDF } = await import('../app/fpb/export/PdfExporter');
+      const { exportPNG } = await import('../app/fpb/export/PngExporter');
+      const { allLayers = false, ...pdfOptions } = options;
+
+      if (allLayers) {
+        // Collect all process Shapes via entryPoint → consistsOfProcesses
+        const entryPoint = modeler.getProjectDefinition().entryPoint;
+        const processShapes = [];
+        const queue = [entryPoint];
+        while (queue.length > 0) {
+          const shape = queue.shift();
+          if (!shape || !shape.businessObject) continue;
+          processShapes.push(shape);
+          const children = shape.businessObject.consistsOfProcesses || [];
+          for (const child of children) {
+            if (child && child.businessObject) {
+              queue.push(child);
+            }
+          }
+        }
+
+        const currentRoot = canvas.getRootElement();
+        const layers = [];
+
+        for (const processShape of processShapes) {
+          modeling.switchProcess(processShape);
+          const svg = await this.toSVG();
+          const png = await exportPNG(svg, options);
+          const name = processShape.businessObject?.identification?.shortName
+            || processShape.businessObject?.name
+            || processShape.id;
+          layers.push({ name, pngDataUrl: png });
+        }
+
+        modeling.switchProcess(currentRoot);
+        return exportMultiLayerPDF(layers, pdfOptions);
+      } else {
+        const svg = await this.toSVG();
+        const png = await exportPNG(svg, options);
+        return exportPDF(png, pdfOptions);
+      }
+    },
+
     // --- Convenience Methods ---
 
     zoom(level) {

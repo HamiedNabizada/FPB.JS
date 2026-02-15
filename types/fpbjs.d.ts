@@ -183,6 +183,30 @@ export interface FpbProjectData {
 }
 
 // ---------------------------------------------------------------------------
+// Export Options
+// ---------------------------------------------------------------------------
+
+/** Options for PNG export */
+export interface PngExportOptions {
+  /** Scale factor (default: 2 for retina quality) */
+  scale?: number;
+  /** Background fill color (default: '#ffffff') */
+  backgroundColor?: string;
+}
+
+/** Options for PDF export */
+export interface PdfExportOptions extends PngExportOptions {
+  /** Page orientation (default: 'landscape') */
+  orientation?: 'landscape' | 'portrait';
+  /** Page format (default: 'a4') */
+  format?: 'a4' | 'a3' | 'letter';
+  /** Document/page title (default: 'FPB Diagram') */
+  title?: string;
+  /** If true, exports all process layers as separate pages (default: false) */
+  allLayers?: boolean;
+}
+
+// ---------------------------------------------------------------------------
 // diagram-js Services (for get() method)
 // ---------------------------------------------------------------------------
 
@@ -337,6 +361,24 @@ export interface FpbInstance {
 
   /** Export the current diagram as an SVG string */
   toSVG(): Promise<string>;
+
+  /**
+   * Export the current view as a PNG data URL.
+   * @param options.scale - Scale factor (default: 2 for retina quality)
+   * @param options.backgroundColor - Background fill color (default: '#ffffff')
+   * @returns PNG as data URL string (data:image/png;base64,...)
+   */
+  toPNG(options?: PngExportOptions): Promise<string>;
+
+  /**
+   * Export as PDF blob.
+   * @param options.allLayers - If true, exports all process layers (one page per layer)
+   * @param options.orientation - Page orientation (default: 'landscape')
+   * @param options.format - Page format (default: 'a4')
+   * @param options.title - Document title (default: 'FPB Diagram')
+   * @returns PDF as Blob
+   */
+  toPDF(options?: PdfExportOptions): Promise<Blob>;
 
   // --- Viewport ---
 

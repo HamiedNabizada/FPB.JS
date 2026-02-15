@@ -14,6 +14,8 @@ import Alert from 'react-bootstrap/Alert';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import XMLMapper from '../../xml/XMLMapper.js';
+import { exportPNG } from '../../export/PngExporter.js';
+import { exportPDF, exportMultiLayerPDF } from '../../export/PdfExporter.js';
 
 // Regex pattern for invalid filename characters (Windows/Unix compatible)
 const INVALID_FILENAME_CHARS = /[<>:"/\\|?*\x00-\x1f]/g;
@@ -145,6 +147,81 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
         }
     }
 
+    async function downloadPNG() {
+        setIsExporting(true);
+        setExportError(null);
+
+        try {
+            const svg = await new Promise((resolve, reject) => {
+                modeler.saveSVG({}, (err, result) => {
+                    if (err) reject(err);
+                    else if (!result) reject(new Error('SVG generation returned empty result'));
+                    else resolve(result);
+                });
+            });
+            const pngDataUrl = await exportPNG(svg, { scale: 2 });
+            const tempLink = document.createElement('a');
+            tempLink.href = pngDataUrl;
+            tempLink.setAttribute('download', `${filename}.png`);
+            document.getElementsByClassName('layerPanel')[0].appendChild(tempLink);
+            tempLink.click();
+            document.getElementsByClassName('layerPanel')[0].removeChild(tempLink);
+        } catch (error) {
+            console.error('PNG export failed:', error);
+            setExportError(`PNG export failed: ${error.message || 'Unknown error'}`);
+        } finally {
+            setIsExporting(false);
+        }
+    }
+
+    async function downloadPDF() {
+        setIsExporting(true);
+        setExportError(null);
+
+        try {
+            const modeling = modeler.get('modeling');
+            const canvas = modeler.get('canvas');
+            const currentRoot = canvas.getRootElement();
+            const layers = [];
+
+            // processes prop contains Shapes from useProcessManagement
+            for (const processShape of processes) {
+                modeling.switchProcess(processShape);
+                const svg = await new Promise((resolve, reject) => {
+                    modeler.saveSVG({}, (err, result) => {
+                        if (err) reject(err);
+                        else resolve(result);
+                    });
+                });
+                const png = await exportPNG(svg, { scale: 2 });
+                const name = processShape.businessObject?.identification?.shortName
+                    || processShape.businessObject?.name
+                    || processShape.id;
+                layers.push({ name, pngDataUrl: png });
+            }
+
+            modeling.switchProcess(currentRoot);
+
+            const pdfBlob = layers.length === 1
+                ? exportPDF(layers[0].pngDataUrl, { title: layers[0].name })
+                : exportMultiLayerPDF(layers);
+
+            const blobUrl = URL.createObjectURL(pdfBlob);
+            const tempLink = document.createElement('a');
+            tempLink.href = blobUrl;
+            tempLink.setAttribute('download', `${filename}.pdf`);
+            document.getElementsByClassName('layerPanel')[0].appendChild(tempLink);
+            tempLink.click();
+            document.getElementsByClassName('layerPanel')[0].removeChild(tempLink);
+            URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error('PDF export failed:', error);
+            setExportError(`PDF export failed: ${error.message || 'Unknown error'}`);
+        } finally {
+            setIsExporting(false);
+        }
+    }
+
     function replacer(name, val) {
         if (informationLevel === '2') {
             if (name === 'elementVisualInformation') {
@@ -250,7 +327,6 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                 dataEdited = JSON.stringify(data, replacer, 4);
                 contentType = "data:text/json;charset=utf-8,";
             } else if (exportFormat === 'xml') {
-                // Convert to XML format
                 const xmlMapper = new XMLMapper();
                 dataEdited = await xmlMapper.convertToXML(data);
                 contentType = "data:text/xml;charset=utf-8,";
@@ -332,7 +408,7 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                         </Alert>
                     )}
                     <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-svg-export`}>
-                        Downloads a snapshot of the current process as SVG.
+                        Download current process as SVG
                     </Tooltip>}>
                         <Button variant="secondary" onClick={() => { downloadSnapshot() }} disabled={isExporting}>
                             {isExporting ? (
@@ -340,6 +416,33 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                             ) : (
                                 <FontAwesomeIcon icon="file-image" size="lg" />
                             )}
+                            {' '}SVG
+                        </Button>
+                    </OverlayTrigger>
+
+                    <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-png-export`}>
+                        Download current process as PNG image
+                    </Tooltip>}>
+                        <Button variant="secondary" onClick={() => { downloadPNG() }} disabled={isExporting}>
+                            {isExporting ? (
+                                <Spinner animation="border" size="sm" />
+                            ) : (
+                                <FontAwesomeIcon icon="image" size="lg" />
+                            )}
+                            {' '}PNG
+                        </Button>
+                    </OverlayTrigger>
+
+                    <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-pdf-export`}>
+                        Download all processes as multi-page PDF
+                    </Tooltip>}>
+                        <Button variant="secondary" onClick={() => { downloadPDF() }} disabled={isExporting}>
+                            {isExporting ? (
+                                <Spinner animation="border" size="sm" />
+                            ) : (
+                                <FontAwesomeIcon icon="file-pdf" size="lg" />
+                            )}
+                            {' '}PDF
                         </Button>
                     </OverlayTrigger>
 

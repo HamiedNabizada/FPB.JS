@@ -93,6 +93,7 @@
     "ids": "^1.0.5",
     "inherits": "^2.0.4",
     "jsdom": "^26.1.0",
+    "jspdf": "^4.1.0",
     "moddle": "^7.2.0",
     "moddle-xml": "^11.0.0",
     "react-arborist": "^3.4.3",
