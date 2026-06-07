@@ -4,19 +4,19 @@ import Form from 'react-bootstrap/Form';
 import { createArboristTreeData, getPathToProcess } from '../utils/treeUtils';
 
 const ProcessTreeView = memo(({ processes, selectedProcess, onProcessSwitch }) => {
-    if (processes.length === 0) {
-        return <div></div>;
-    }
-
     const [searchTerm, setSearchTerm] = useState('');
-    
+
     const treeData = useMemo(() => createArboristTreeData(processes), [processes]);
-    
+
     const initiallyOpenIds = useMemo(() => {
         if (!selectedProcess) return [];
         return getPathToProcess(selectedProcess, processes);
     }, [selectedProcess, processes]);
-    
+
+    if (processes.length === 0) {
+        return null;
+    }
+
     const Node = ({ node, style, dragHandle }) => {
         const isSelected = selectedProcess && node.data.process?.id === selectedProcess.id;
         const hasChildren = node.children && node.children.length > 0;

@@ -1,11 +1,13 @@
 import { is, isAny } from '../../help/utils';
+import { checkIfOnSystemBorder } from '../../help/helpUtils';
 
 
-var STATE_NOT_IN_SYSTEMLIMIT = 'Product, energy and information must be on or within the system limit',
-    PO_NOT_IN_SYTEMLIMIT = 'Process operators must be within the system limits.',
-    TR_IN_SYSTEMLIMIT = 'Technical resources must be outside the system limits.';
+const STATE_NOT_IN_SYSTEMLIMIT = 'Product, energy and information must be on or within the system limit';
+const PO_NOT_IN_SYTEMLIMIT = 'Process operators must be within the system limits.';
+const TR_IN_SYSTEMLIMIT = 'Technical resources must be outside the system limits.';
+const BOUNDARY_STATE_LOCKED = 'This state represents an input/output of the decomposed process operator and must remain on the system boundary.';
 
-var SWITCHINGPROCESS = 'Switching between processes is purely for navigation purposes. The decomposition and composition functionalities are used to transfer changes to higher and lower process levels.'
+const SWITCHINGPROCESS = 'Switching between processes is purely for navigation purposes. The decomposition and composition functionalities are used to transfer changes to higher and lower process levels.'
 
 
 export default function ModelingFeedback(eventBus, tooltips, translate, canvas) {
@@ -45,6 +47,21 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
         let msg = translate('You are not allowed to place a {src} on a {target}', { src: source, target: target });
         showError(event.position, msg)
     });
+
+    // Error message for blocked deletions
+    eventBus.on(['illegalDelete'], function (event) {
+        let canvasViewbox = canvas.viewbox();
+        let msg = event.message || translate('This element cannot be deleted.');
+        showError({ x: canvasViewbox.x + canvasViewbox.width / 2 - 150, y: canvasViewbox.y + 100 }, msg, 4000);
+    });
+
+    // Scenario 14/12: Feedback after decomposition removal
+    eventBus.on(['toolTips.decompositionRemoved'], function (event) {
+        let canvasViewbox = canvas.viewbox();
+        let poName = event.processOperator?.name || 'ProcessOperator';
+        let msg = translate('The decomposition of "{po}" has been removed.', { po: poName });
+        showTipp(msg, { x: canvasViewbox.x + 10, y: canvasViewbox.height - 200 });
+    });
     eventBus.on(['toolTips.decomposedProcessOperator'], function (event) {
         let command = event.command;
         let processOperator = event.processOperator;
@@ -74,9 +91,27 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
     })
 
     eventBus.on(['shape.move.rejected', 'create.rejected'], function (event) {
-        var context = event.context,
-            shape = context.shape,
-            target = context.target;
+        const context = event.context;
+        const shape = context.shape;
+        const target = context.target;
+
+        // Check if it is a boundary state on a child layer
+        if (isAny(shape, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
+            const process = canvas.getRootElement();
+            if (process && process.businessObject && process.businessObject.isDecomposedProcessOperator) {
+                const systemLimitShape = process.children.find(function(child) {
+                    return is(child, 'fpb:SystemLimit');
+                });
+                if (systemLimitShape) {
+                    const borderPosition = checkIfOnSystemBorder(systemLimitShape, shape);
+                    if (borderPosition === 'onUpperBorder' || borderPosition === 'onBottomBorder') {
+                        showError(event, translate(BOUNDARY_STATE_LOCKED));
+                        return;
+                    }
+                }
+            }
+        }
+
         if (!is(target, 'fpb:SystemLimit') && is(shape, 'fpb:State')) {
             showError(event, translate(STATE_NOT_IN_SYSTEMLIMIT));
         };

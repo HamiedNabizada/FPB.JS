@@ -29,7 +29,8 @@ export default class GridService {
         this._eventBus.fire('gridSnapping.toggle', { active: true });
       }
     } catch (error) {
-      // Silently handle initialization errors
+      // Grid/snapping modules may not be available in all configurations
+      console.debug('GridService: Grid initialization skipped -', error.message);
     }
   }
 }

@@ -12,7 +12,7 @@ import {
   import FpbCharacteristics from '../resources/fpb_characteristics.json';
 
   
-  var packages = {
+  const packages = {
     fpb: FpbPackage,
     fpbch: FpbCharacteristics,
     fpbjs: FpbjsPackage,
@@ -22,7 +22,7 @@ import {
   };
   
   export default function(additionalPackages, options) {
-    var pks = assign({}, packages, additionalPackages);
+    const pks = assign({}, packages, additionalPackages);
   
     return new FpbjsModdle(pks, options);
   }

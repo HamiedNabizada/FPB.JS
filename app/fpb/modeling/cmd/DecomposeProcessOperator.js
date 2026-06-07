@@ -28,35 +28,39 @@ DecomposeProcessOperator.$inject = [
     'eventBus',
     'elementRegistry'];
 
-// Vorbereitung auf Layerwechsel
+// Preparation for layer switch
 DecomposeProcessOperator.prototype.preExecute = function (context) {
-    var canvas = this._canvas;
-    var elementFactory = this._elementFactory;
+    const canvas = this._canvas;
+    const elementFactory = this._elementFactory;
 
-    // Aktueller Prozess, aus dem ein ProcessOperator dekomponiert wird
-    var process = canvas.getRootElement();
-    var isDecomposed = false;
-    var processOperator = context.element;
-    var incomingFlows = processOperator.incoming;
-    var outgoingFlows = processOperator.outgoing;
-    var decomposedProcess;
-    var stateShapes = [];
-    var systemLimit;
+    // Current process from which a ProcessOperator is being decomposed
+    const process = canvas.getRootElement();
+    let isDecomposed = false;
+    const processOperator = context.element;
+    const incomingFlows = processOperator.incoming;
+    const outgoingFlows = processOperator.outgoing;
+    let decomposedProcess;
+    const stateShapes = [];
+    let systemLimit;
 
-    // Falls ProcessOperator bereits dekomponiert gewesen ist
+    // If ProcessOperator has already been decomposed before
     if (processOperator.businessObject.decomposedView) {
         isDecomposed = true;
         decomposedProcess = processOperator.businessObject.decomposedView;
         systemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+        if (!systemLimit) {
+            context.aborted = true;
+            return;
+        }
         getElementsFromElementsContainer(systemLimit.businessObject.elementsContainer, 'fpb:State').forEach((state) => {
-            if (checkIfOnSystemBorder(systemLimit, state) == 'onUpperBorder') {
+            if (checkIfOnSystemBorder(systemLimit, state) === 'onUpperBorder') {
                 stateShapes.push({ state: state, position: 'incoming' });
             }
-            if (checkIfOnSystemBorder(systemLimit, state) == 'onBottomBorder') {
+            if (checkIfOnSystemBorder(systemLimit, state) === 'onBottomBorder') {
                 stateShapes.push({ state: state, position: 'outgoing' });
             }
         });
-        // Prüfen ob neue Shapes mit dem ProcessOperator verbunden sind
+        // Check if new shapes are connected to the ProcessOperator
         incomingFlows.forEach((incoming) => {
             if (!is(incoming, 'fpb:Usage') && !checkIfStateIsNew(incoming.businessObject.sourceRef, decomposedProcess)) {
                 let stateShape = createStateShapeForNewLayer(elementFactory, incoming.businessObject.sourceRef.$type, incoming.businessObject.sourceRef);
@@ -75,9 +79,9 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
         });
     }
 
-    // Falls ProcessOperator erstmalig dekomponiert wird:
+    // If ProcessOperator is being decomposed for the first time:
     else {
-        // Neuen Prozess erstellen
+        // Create new process
         decomposedProcess = this._elementFactory.create('root', {
             type: 'fpb:Process',
             id: processOperator.businessObject.identification.uniqueIdent,
@@ -87,17 +91,17 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
         decomposedProcess.businessObject.isDecomposedProcessOperator = processOperator.businessObject;
         decomposedProcess.businessObject.parent = process;
 
-        // Hinzufügen als Bestandteil des übergeordneten Prozesses und als Information bei dem dekomponierten ProcessOperator;
+        // Add as part of the parent process and as information on the decomposed ProcessOperator;
         collectionAdd(process.businessObject.consistsOfProcesses, decomposedProcess);
         processOperator.businessObject.decomposedView = decomposedProcess;
-        // Shape für neue SystemGrenze erstellen
+        // Create shape for new SystemLimit
         systemLimit = elementFactory.create('shape', { type: 'fpb:SystemLimit' })
         collectionAdd(decomposedProcess.businessObject.elementsContainer, systemLimit)
         decomposedProcess.businessObject.consistsOfSystemLimit = systemLimit;
-        // DefaultPositionierung
+        // Default positioning
         systemLimit.x = 350;
         systemLimit.y = 50;
-        // States für decomposed Process erstellen:
+        // Create states for decomposed process:
         incomingFlows.forEach((incoming) => {
             if (is(incoming.businessObject.sourceRef, 'fpb:State')) {
                 let stateShape = createStateShapeForNewLayer(elementFactory, incoming.businessObject.sourceRef.$type, incoming.businessObject.sourceRef);
@@ -114,7 +118,7 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
                 stateShapes.push({ state: stateShape, position: 'outgoing' });
             }
         });
-        // Event abfeuern für LayerPanel
+        // Fire event for LayerPanel
         this._eventBus.fire('dataStore.newProcess', {
             newProcess: decomposedProcess
         });
@@ -123,27 +127,26 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
             parentProcess: process
         })
     };
-    // Shortname des zu dekomponierenden ProcessOperators als Namen auf die SystemGrenze
+    // Short name of the ProcessOperator being decomposed as name on the SystemLimit
     systemLimit.businessObject.name = "SL_" + processOperator.businessObject.name;
-    // Positionierung der Shapes berechnen
-    var sizesAndPositions = calculateSizeAndPositions(systemLimit, incomingFlows, outgoingFlows);
+    // Calculate positioning of shapes
+    const sizesAndPositions = calculateSizeAndPositions(systemLimit, incomingFlows, outgoingFlows);
     systemLimit.width = sizesAndPositions.SystemLimitWidth;
     stateShapes.forEach(function (state) {
         if (state.position === 'incoming') {
             if (state.state.outgoing.length > 0) {
                 state.state.outgoing.forEach(function (connection) {
-                    // Flows anpassen
+                    // Adjust flows
                     connection.waypoints[0].x = sizesAndPositions.incomings.start_x + 25;
-                    try {
-                        connection.businessObject.di.waypoint[0].x = sizesAndPositions.incomings.start_x + 25;
-                    } catch (error) {
+                    const diWaypoints = connection.businessObject.di?.waypoint;
+                    if (diWaypoints?.[0]) {
+                        diWaypoints[0].x = sizesAndPositions.incomings.start_x + 25;
                     }
-                    // Für Flows mit Knick
+                    // For flows with a bend
                     if (connection.waypoints.length === 4) {
                         connection.waypoints[1].x = sizesAndPositions.incomings.start_x + 25;
-                        try {
-                            connection.businessObject.di.waypoint[1].x = sizesAndPositions.incomings.start_x + 25;
-                        } catch (error) {
+                        if (diWaypoints?.[1]) {
+                            diWaypoints[1].x = sizesAndPositions.incomings.start_x + 25;
                         }
                     }
                 })
@@ -155,23 +158,19 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
         if (state.position === 'outgoing') {
             if (state.state.incoming.length > 0) {
                 state.state.incoming.forEach(function (connection) {
-                    // Flows anpassen
+                    // Adjust flows
                     connection.waypoints[0].x = sizesAndPositions.outgoings.start_x + 25;
-                    try {
-                        connection.businessObject.di.waypoint[0].x = sizesAndPositions.outgoings.start_x + 25;
-                    } catch (error) {
-
+                    const diWaypoints = connection.businessObject.di?.waypoint;
+                    if (diWaypoints?.[0]) {
+                        diWaypoints[0].x = sizesAndPositions.outgoings.start_x + 25;
                     }
 
-                    // Flows mit Knick
+                    // Flows with a bend
                     if (connection.waypoints.length === 4) {
                         connection.waypoints[1].x = sizesAndPositions.outgoings.start_x + 25;
-                        try {
-                            connection.businessObject.di.waypoint[1].x = sizesAndPositions.outgoings.start_x + 25;
-                        } catch (error) {
-
+                        if (diWaypoints?.[1]) {
+                            diWaypoints[1].x = sizesAndPositions.outgoings.start_x + 25;
                         }
-
                     }
                 })
             }
@@ -181,7 +180,7 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
         }
     });
 
-    // Restliche Shapes und Connections abholen, falls ProcessOperator schon dekomponiert gewesen ist
+    // Retrieve remaining shapes and connections, if ProcessOperator has already been decomposed before
     let processFlows = [];
     let systemLimitFlows = [];
     let processShapes = [];
@@ -222,18 +221,20 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
 }
 
 DecomposeProcessOperator.prototype.execute = function (context) {
-    var canvas = this._canvas;
+    if (context.aborted) return;
 
-    var decomposedProcess = context.decomposedProcess;
-    var stateShapes = context.stateShapes;
-    var systemLimit = context.systemLimit;
-    var processShapes = context.processShapes;
-    var processFlows = context.processFlows;
-    var systemLimitFlows = context.systemLimitFlows;
-    // Clearen der Canvas und platzieren der Shapes
+    const canvas = this._canvas;
+
+    const decomposedProcess = context.decomposedProcess;
+    const stateShapes = context.stateShapes;
+    const systemLimit = context.systemLimit;
+    const processShapes = context.processShapes;
+    const processFlows = context.processFlows;
+    const systemLimitFlows = context.systemLimitFlows;
+    // Clear the canvas and place the shapes
     canvas._clear();
     canvas.setRootElement(decomposedProcess, true);
-    // Resetten falls gezoomed und gescrolled wurde
+    // Reset in case the view was zoomed and scrolled
     /*var zoomedAndScrolledViewbox = canvas.viewbox();
     canvas.viewbox({
         x: 0,
@@ -241,7 +242,7 @@ DecomposeProcessOperator.prototype.execute = function (context) {
         width: zoomedAndScrolledViewbox.outer.width,
         height: zoomedAndScrolledViewbox.outer.height
     });*/
-    // Das sollte failsafe sein
+    // This should be fail-safe
     canvas.addShape(systemLimit, decomposedProcess);
     systemLimit.parent = decomposedProcess
     processShapes.forEach(element => {
@@ -260,12 +261,12 @@ DecomposeProcessOperator.prototype.execute = function (context) {
 
 };
 
-// Labels updaten / hinzufügen
+// Update / add labels
 DecomposeProcessOperator.prototype.postExecute = function (context) {
-    var modeling = this._modeling;
-    var stateShapes = context.stateShapes;
-    var processFlows = context.processFlows;
-    var systemLimitFlows = context.systemLimitFlows;
+    if (context.aborted) return;
+
+    const modeling = this._modeling;
+    const stateShapes = context.stateShapes;
     stateShapes.forEach((state) => {
         if (state.state.businessObject.name) {
             if (state.state.labels[0]) {
@@ -274,43 +275,40 @@ DecomposeProcessOperator.prototype.postExecute = function (context) {
             }
             modeling.updateLabel(state.state, state.state.businessObject.name);
         }
-        // Wenn auf über-/untergeordneten Layern Shapes hin und herbewegt worden sind, kommt es zu Anzeigefehlern der Connections
-        // Dies lässt sich beheben, wenn das entsprechende Shape etwas bewegt wird, ist aber keine endgültige Lösung
-        // TODO: Function schreiben, die herausfindet, ob Connection richtig platziert worden ist
-        // Notlösung ist zunächst Shapes hin und her zu bewegen
-        modeling.moveShape(state.state, { x: 3, y: 0 })
-        modeling.moveShape(state.state, { x: -3, y: 0 })
-
-    })
-    processFlows.forEach((flow) => {
-        modeling.layoutConnection(flow)
-    })
-    systemLimitFlows.forEach((flow) => {
-        modeling.layoutConnection(flow)
-    })
+        // Only re-layout connections for newly created/repositioned states,
+        // not for existing shapes (position: '') to preserve user bendpoints
+        if (state.position === 'incoming' || state.position === 'outgoing') {
+            (state.state.incoming || []).forEach(function (connection) {
+                modeling.layoutConnection(connection);
+            });
+            (state.state.outgoing || []).forEach(function (connection) {
+                modeling.layoutConnection(connection);
+            });
+        }
+    });
     this._eventBus.fire('layerPanel.processSwitched', {
         selectedProcess: context.decomposedProcess
-    })
+    });
 
 }
 
-// Prüfen ob ProcessOperator auf übergeordneten Prozess mit einem neuen State verbunden wurde / returned false, wenn neu
+// Check if ProcessOperator was connected to a new state on the parent process / returns false if new
 function checkIfStateIsNew(state, decomposedProcess) {
     return some(decomposedProcess.businessObject.consistsOfStates, function (c) {
         return c.id === state.id;
     })
 };
-// Berechnet wenn notwendig neue Breite der System Grenze und die Positions für States.
+// Calculates new SystemLimit width if necessary and the positions for states.
 function calculateSizeAndPositions(systemLimit, incoming, outgoing) {
     let noOfIncomingStates = incoming.length - noOfUsageConnections(incoming);
     let noOfOutgoingStates = outgoing.length - noOfUsageConnections(outgoing);
     let systemLimitWidth = systemLimit.width;
-    // Neue systemLimit.width berechnen, falls ProcessOperator mehr als 12 Shapes In- oder Output hat (Default Width reicht dann nicht mehr aus)
+    // Calculate new systemLimit.width if ProcessOperator has more than 12 input or output shapes (default width is no longer sufficient)
     if ((noOfIncomingStates || noOfOutgoingStates) >= 12) {
-        // -10, damit deltas nicht zu klein werden // 50 ist Default Width von einem StateShape
+        // -10 so that deltas don't become too small // 50 is the default width of a StateShape
         systemLimitWidth = systemLimitWidth + (Math.max(noOfOutgoingStates, noOfIncomingStates) - 10) * 50;
     };
-    // +1 damit Abstand von den Ecken mit berücksichtigt wird.
+    // +1 to account for spacing from the corners.
     let delta_incoming_x = systemLimitWidth / (noOfIncomingStates + 1);
     let delta_outgoing_x = systemLimitWidth / (noOfOutgoingStates + 1);
     return {

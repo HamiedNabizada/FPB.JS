@@ -63,17 +63,22 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
             
             this._processes.forEach(pr => {
                 if (TypeUtils.isStringLike(pr.process.businessObject.parent)) {
-                    pr.process.businessObject.parent = this._processes.find(proc => {
+                    const parentProc = this._processes.find(proc => {
                         return proc.id === pr.process.businessObject.parent;
-                    }).process
+                    });
+                    if (parentProc) {
+                        pr.process.businessObject.parent = parentProc.process;
+                    }
                 };
-                if (pr.process.businessObject.consistsOfProcesses.length > 0) {
+                if (pr.process.businessObject.consistsOfProcesses && pr.process.businessObject.consistsOfProcesses.length > 0) {
                     let tmpArray = [];
                     pr.process.businessObject.consistsOfProcesses.forEach((e) => {
                         if (TypeUtils.isStringLike(e)) {
-                            let subProcess = this._processes.find((sP) => {
+                            const found = this._processes.find((sP) => {
                                 return sP.process.id === e;
-                            }).process
+                            });
+                            if (!found) return;
+                            let subProcess = found.process;
                             tmpArray.push({ id: subProcess.id, subProcess: subProcess });
 
                         }
@@ -95,7 +100,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
 
 
             })
-            // Timeout notwendig, damit restliche Komponenten erst fertig geladen sind, bevor importiert wird.
+            // Timeout required so remaining components finish loading before import.
             setTimeout(() => {
                 this._processes.forEach((pr, index) => {
                     if (pr.process) {
@@ -103,26 +108,18 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                             newProcess: pr.process,
                             parentProcess: null
                         });
-                        // Event feuern für LayerPanel
+                        // Fire event for LayerPanel
                         this._eventBus.fire(IMPORT_EVENTS.LAYER_PANEL_NEW_PROCESS, {
                             newProcess: pr.process,
                             parentProcess: null
                         });
                     }
                 });
-                // Switch to main process with additional error handling
+                // Switch to main process
                 try {
-                    console.log('🔄 JSONImporter: Switching to main process:', project.entryPoint);
-                    console.log('🔍 JSONImporter: project.entryPoint type:', typeof project.entryPoint, 'has businessObject:', !!project.entryPoint?.businessObject);
-                    if (project.entryPoint?.businessObject) {
-                        console.log('🔍 JSONImporter: businessObject elementsContainer:', project.entryPoint.businessObject.elementsContainer);
-                    }
                     modeling.switchProcess(project.entryPoint);
-                    console.log('✅ JSONImporter: Process switch completed');
                 } catch (error) {
-                    console.error('❌ JSONImporter: Process switch failed:', error);
-                    console.log('🔍 JSONImporter: project.entryPoint at error time:', project.entryPoint);
-                    // Don't throw - just log the error and continue
+                    console.error('JSONImporter: Process switch failed:', error);
                 }
             }, IMPORT_TIMING.UI_INITIALIZATION_DELAY);
         } catch (error) {
@@ -200,7 +197,7 @@ JSONImporter.prototype.buildProcesses = function (data, projectDefinition) {
             updateElements: [] 
         });
         
-        // Zunächst IDs im Process abspeichern
+        // First store IDs in the Process
         process_rootElement.businessObject.consistsOfProcesses = pro.consistsOfProcesses;
         process_rootElement.businessObject.isDecomposedProcessOperator = pro.isDecomposedProcessOperator;
 
@@ -301,7 +298,7 @@ JSONImporter.prototype.buildSystemLimitShapes = function (vI, dI, process, syste
     if (vI.type === 'fpb:Product' || vI.type === 'fpb:Energy' || vI.type === 'fpb:Information') {
         collectionAdd(process.businessObject.consistsOfStates, shape.businessObject);
     }
-    if (shape.businessObject.incoming.length > 0 || shape.businessObject.outgoing.length > 0 || shape.businessObject.isAssignedTo.length > 0) {
+    if ((shape.businessObject.incoming && shape.businessObject.incoming.length > 0) || (shape.businessObject.outgoing && shape.businessObject.outgoing.length > 0) || (shape.businessObject.isAssignedTo && shape.businessObject.isAssignedTo.length > 0)) {
         this._processes[no - 1].updateElements.push(shape)
     }
 }
@@ -359,7 +356,7 @@ JSONImporter.prototype.buildCharacteristics = function (bO, char) {
         let validityLimits = [];
         limits.forEach((limit) => {
             let validityLimit;
-            if (limit.$type == 'fpbch:ValidityLimits') {
+            if (limit.$type === 'fpbch:ValidityLimits') {
                 validityLimit = this._fpbFactory.create(limit.$type, {
                     limitType: limit.limitType,
                     from: limit.from,
@@ -510,12 +507,14 @@ JSONImporter.prototype.updateDepedencies = function (container, element) {
     if (is(element, FPB_TYPES.PROCESS_OPERATOR)) {
         if (element.businessObject.decomposedView) {
             if (TypeUtils.isStringLike(element.businessObject.decomposedView)) {
-                let process = this._processes.find((pr) => {
+                const foundProc = this._processes.find((pr) => {
                     return pr.process.id === element.businessObject.decomposedView;
-                }).process;
-
-                element.businessObject.decomposedView = process;
-                process.businessObject.isDecomposedProcessOperator = element.businessObject;
+                });
+                if (foundProc) {
+                    let process = foundProc.process;
+                    element.businessObject.decomposedView = process;
+                    process.businessObject.isDecomposedProcessOperator = element.businessObject;
+                }
             }
         }
     }

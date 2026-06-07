@@ -2,7 +2,7 @@ import inherits from 'inherits';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { some } from 'min-dash';
 
-import { getElementsFromElementsContainer } from '../help/helpUtils';
+import { getElementsFromElementsContainer, checkIfOnSystemBorder } from '../help/helpUtils';
 import { is, isAny, isLabel } from '../help/utils';
 
 // Import our new constants and utilities
@@ -39,8 +39,8 @@ FpbRuleProvider.prototype.init = function () {
   });
 
   function canCreate(shape, target, position) {
-    const DEBUG = process.env.NODE_ENV === 'development';
-    
+    const DEBUG = false; // Logging disabled
+
     if (DEBUG) {
       console.log('FpbRuleProvider.canCreate', {
         shape: shape?.type,
@@ -48,7 +48,7 @@ FpbRuleProvider.prototype.init = function () {
         position: position ? `${position.x},${position.y}` : 'none'
       });
     }
-    
+
     if (!target) {
       if (DEBUG) console.warn('canCreate: No target specified');
       return false;
@@ -132,25 +132,53 @@ FpbRuleProvider.prototype.init = function () {
     const { connection } = context;
     const source = context.hover || context.source;
     const target = connection.target;
-    return canConnect(source, target, connection);
+    if (!source) return false;
+    return canConnect(source, target, connection) || false;
   });
 
   this.addRule('connection.reconnectEnd', RULE_PRIORITIES.HIGH, (context) => {
     const { connection } = context;
     const source = connection.source;
     const target = context.hover || context.target;
-    return canConnect(source, target, connection);
+    if (!target) return false;
+    return canConnect(source, target, connection) || false;
   });
 
   this.addRule('shape.resize', (context) => {
     const { shape } = context;
-    // Nur die Größe der SystemGrenze darf geändert werden
+    // Only the SystemLimit may be resized
     return is(shape, ELEMENT_TYPES.SYSTEM_LIMIT);
   });
 
   this.addRule('elements.move', (context) => {
     const { target, shapes, position } = context;
     return canMove(shapes, target, position);
+  });
+
+  // Scenario 14/12: Deleting SystemLimit on child layer = undoing decomposition
+  // The actual logic (confirmation dialog + navigation) is in FpbUpdater.js
+  // Here we allow the deletion but fire an event for the confirmation dialog
+  this.addRule('elements.delete', RULE_PRIORITIES.HIGH, (context) => {
+    const { elements } = context;
+
+    const process = canvas.getRootElement();
+    const isChildLayer = process && process.businessObject && process.businessObject.isDecomposedProcessOperator;
+
+    if (isChildLayer) {
+      const systemLimitElement = elements.find(element => is(element, ELEMENT_TYPES.SYSTEM_LIMIT));
+
+      if (systemLimitElement) {
+        // Fire event for confirmation dialog - FpbContextPadProvider or LayerPanel reacts to it
+        eventBus.fire('systemLimit.deleteRequested', {
+          systemLimit: systemLimitElement,
+          process: process
+        });
+        // Block - the actual deletion is performed after confirmation
+        return false;
+      }
+    }
+
+    return true;
   });
 
   const canMove = (elements, target, position) => {
@@ -167,6 +195,30 @@ FpbRuleProvider.prototype.init = function () {
   const canDrop = (element, target, position) => {
     if (is(element, 'label')) {
       return false;
+    }
+
+    // Boundary states on child layers must not be moved away from the system boundary
+    if (isAny(element, ELEMENT_GROUPS.STATES)) {
+      const process = canvas.getRootElement();
+      if (process && process.businessObject && process.businessObject.isDecomposedProcessOperator) {
+        // We are on a child layer - find SystemLimit shape
+        const systemLimitShape = process.children.find(child => is(child, ELEMENT_TYPES.SYSTEM_LIMIT));
+
+        if (systemLimitShape) {
+          const currentBorder = checkIfOnSystemBorder(systemLimitShape, element);
+          // If the state is currently on the boundary, completely prohibit moving
+          if (currentBorder === 'onUpperBorder' || currentBorder === 'onBottomBorder') {
+            // Calculate how far the state would be moved
+            const deltaY = position.y - (element.y + element.height / 2);
+            const tolerance = 5; // Allow small movements (for layout adjustments)
+
+            if (Math.abs(deltaY) > tolerance) {
+              // State would be moved significantly - prohibit
+              return false;
+            }
+          }
+        }
+      }
     }
 
     if (is(element, ELEMENT_TYPES.SYSTEM_LIMIT)) {
@@ -197,13 +249,13 @@ FpbRuleProvider.prototype.init = function () {
       }
 
     };
-    // Nur Droppen innerhalb der Systemgrenze.
+    // Only allow dropping within the system boundary.
     if (isLabel(element) || isAny(element, ELEMENT_GROUPS.INSIDE_SYSTEM_LIMIT)) {
       if (element.parent) {
         return target === element.parent;
       }
     };
-    // TechnicalResource darf nicht innerhalb der SystemGrenzen gedropped werden.
+    // TechnicalResource must not be dropped within the system boundary.
     if (is(element, ELEMENT_TYPES.TECHNICAL_RESOURCE)) {
       if (!isAny(target, [ELEMENT_TYPES.SYSTEM_LIMIT, ...ELEMENT_GROUPS.STATES, ELEMENT_TYPES.PROCESS_OPERATOR])) {
         return true;
@@ -220,17 +272,17 @@ FpbRuleProvider.prototype.init = function () {
 
 
 function canConnect(source, target) {
-  // Keine Connections zu Label
+  // No connections to labels
   if (target.type === ELEMENT_TYPES.LABEL) {
     return;
   }
   
-  // Keine Connection zwischen Shapes, zwischen denen schon eine Verbindung besteht
+  // No connection between shapes that are already connected
   if (areAlreadyConnected(source, target)) {
     return;
   }
   
-  // Verbindung States mit ProcessOperator
+  // Connection from States to ProcessOperator
   if (isAny(source, ELEMENT_GROUPS.STATES)) {
     if (is(target, ELEMENT_TYPES.PROCESS_OPERATOR)) {
       return getConnectionType(source, source.TemporaryFlowHint);
@@ -238,13 +290,13 @@ function canConnect(source, target) {
     return;
   }
   
-  // Verbindung ProcessOperator
+  // Connection from ProcessOperator
   if (is(source, ELEMENT_TYPES.PROCESS_OPERATOR)) {
-    // mit States
+    // to States
     if (isAny(target, ELEMENT_GROUPS.STATES)) {
       return getConnectionType(source, source.TemporaryFlowHint);
     }
-    // mit TechnicalResource
+    // to TechnicalResource
     else if (is(target, ELEMENT_TYPES.TECHNICAL_RESOURCE)) {
       if (source.TemporaryFlowHint === FLOW_HINTS.USAGE) {
         return { type: ELEMENT_TYPES.USAGE };
@@ -254,7 +306,7 @@ function canConnect(source, target) {
     return;
   }
   
-  // Verbindung TechnicalResource mit ProcessOperator
+  // Connection from TechnicalResource to ProcessOperator
   if (is(source, ELEMENT_TYPES.TECHNICAL_RESOURCE) && is(target, ELEMENT_TYPES.PROCESS_OPERATOR)) {
     return { type: ELEMENT_TYPES.USAGE };
   }

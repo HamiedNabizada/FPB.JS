@@ -3,10 +3,10 @@ import { is } from './utils';
 
 
 /**
- * Bei Erstellung von neuen Layern wird Kopie von relevanten StateShapes erstellt
- * @param {*} elementFactory 
- * @param {*} type 
- * @param {*} businessObject 
+ * Creates a copy of relevant StateShapes when new layers are created
+ * @param {*} elementFactory
+ * @param {*} type
+ * @param {*} businessObject
  */
 export function createStateShapeForNewLayer(elementFactory, type, businessObject) {
     /*
@@ -28,22 +28,23 @@ export function createStateShapeForNewLayer(elementFactory, type, businessObject
 }
 
 /**
- * Prüft ob State auf der SystemGrenze liegt und wenn ja, auf welcher.
- * @param {*} systemLimit 
- * @param {*} state 
+ * Checks if a state lies on the system boundary and if so, on which one.
+ * @param {*} systemLimit
+ * @param {*} state
  */
 
 export function checkIfOnSystemBorder(systemLimit, state) {
-    let upperBorder_1 = systemLimit.y - state.height + 1;
-    let upperBorder_2 = systemLimit.y + state.height - 1;
+    // Tolerance: State center must be close to the SystemLimit edge
+    // A state "on the boundary" has its center on the edge (±30 pixel tolerance)
+    const tolerance = 30;
+    const stateCenter = state.y + (state.height || 50) / 2;
+    const upperEdge = systemLimit.y;
+    const bottomEdge = systemLimit.y + systemLimit.height;
 
-    let bottomBorder_1 = systemLimit.y + systemLimit.height - state.height + 1;
-    let bottomBorder_2 = systemLimit.y + systemLimit.height + state.height - 1;
-
-    if (state.y >= upperBorder_1 && state.y <= upperBorder_2) {
+    if (Math.abs(stateCenter - upperEdge) <= tolerance) {
         return 'onUpperBorder';
-    };
-    if (state.y >= bottomBorder_1 && state.y <= bottomBorder_2) {
+    }
+    if (Math.abs(stateCenter - bottomEdge) <= tolerance) {
         return 'onBottomBorder';
     }
     return '';
@@ -51,13 +52,12 @@ export function checkIfOnSystemBorder(systemLimit, state) {
 
 
 /**
- * 
- * Funktion um Elemente eines Types aus einem ElementsContainer zu erhalten
- * @param {Array} elementsContainer 
- * @param {*} type 
+ * Retrieves elements of a given type from an elements container
+ * @param {Array} elementsContainer
+ * @param {*} type
  */
 export function getElementsFromElementsContainer(elementsContainer, type) {
-    var elements = [];
+    const elements = [];
     elementsContainer.forEach(function (element) {
         if (is(element, type)) {
             elements.push(element);
@@ -66,14 +66,14 @@ export function getElementsFromElementsContainer(elementsContainer, type) {
     return elements;
 }
 /**
- * Funktion um BusinessObjects eines Types aus einem ElementsContainer zu erhalten
- * @param {*} elementsContainer 
- * @param {*} type 
+ * Retrieves BusinessObjects of a given type from an elements container
+ * @param {*} elementsContainer
+ * @param {*} type
  */
 export function getBusinessObjectFromElementsContainer(elementsContainer, type) {
     let elements = getElementsFromElementsContainer(elementsContainer, type);
     let businessObjects = [];
-    if (elements.length == 0) {
+    if (elements.length === 0) {
         return businessObjects;
     }
     elements.forEach((element) => {
@@ -83,13 +83,13 @@ export function getBusinessObjectFromElementsContainer(elementsContainer, type) 
 };
 
 /**
- * gibt an wieviele Usage Connections vorhanden sind
- * @param {*} connectionContainer 
+ * Returns the number of Usage connections present
+ * @param {*} connectionContainer
  */
 
 export function noOfUsageConnections(connectionContainer) {
     let no = 0;
-    if (connectionContainer.length == 0) {
+    if (connectionContainer.length === 0) {
         return no;
     }
     connectionContainer.forEach((con) => {
@@ -103,7 +103,7 @@ export function noOfUsageConnections(connectionContainer) {
 
 
 export function getElementById(elementsContainer, id) {
-    var returnElement = null;
+    let returnElement = null;
     elementsContainer.forEach(function (element) {
         if (element.businessObject.id === id) {
             returnElement = element;

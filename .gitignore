@@ -13,3 +13,14 @@ dist/
 
 # Claude development files
 .claude/
+
+# Test results and reports
+test-results/
+playwright-report/
+coverage/
+
+# Example build artifacts
+examples/*/node_modules/
+examples/*/dist/
+examples/*/package-lock.json
+tests/e2e/screenshots/

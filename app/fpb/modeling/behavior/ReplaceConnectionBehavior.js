@@ -10,11 +10,11 @@ export default function ReplaceConnectionBehavior(eventBus, modeling) {
 
     this.postExecuted('connection.create', function (e) {
         let connection = e.context.connection;
-        // Nur Alternative und ParallelFlows betrachten
+        // Only consider Alternative and ParallelFlows
         if (!isAny(connection, ['fpb:AlternativeFlow', 'fpb:ParallelFlow'])) {
             return;
         }
-        let sourceOutgoing = e.context.source.outgoing;
+        let sourceOutgoing = e.context.source.outgoing || [];
         let replaceFlow;
         let replaceType;
         sourceOutgoing.forEach((flow) => {
@@ -37,12 +37,12 @@ export default function ReplaceConnectionBehavior(eventBus, modeling) {
     })
 
     this.postExecuted('connection.delete', function (e) {
-        // Falls alle ALternative/Parallel Flows bis auf einem gelöscht wurde, dann wieder zurücktransformieren zu Flow
+        // If all Alternative/Parallel Flows except one have been deleted, transform back to Flow
         let connection = e.context.connection;
         if (!isAny(connection, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
             return;
         };
-        let sourceOutgoing = e.context.source.outgoing;
+        let sourceOutgoing = e.context.source.outgoing || [];
         let replaceFlow;
         let counter = 0;
         let replaceSource;
@@ -53,7 +53,7 @@ export default function ReplaceConnectionBehavior(eventBus, modeling) {
                 replaceFlow = flow;
             }
         })
-        if (counter == 1) { // Es existiert nur noch eine Flow Verbindung
+        if (counter === 1) { // Only one flow connection remains
             replaceSource = replaceFlow.source;
             replaceTarget = replaceFlow.target;
             modeling.removeConnection(replaceFlow);

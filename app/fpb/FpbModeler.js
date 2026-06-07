@@ -52,7 +52,7 @@ import JsonImporter from './importer';
 import ServicesModule from './services';
 
 
-var DEFAULT_OPTIONS = {
+const DEFAULT_OPTIONS = {
     width: '100%',
     height: '100%',
     position: 'relative'
@@ -83,18 +83,18 @@ FpbModeler.prototype.getModules = function () {
 
 FpbModeler.prototype._init = function (container, moddle, options) {
 
-    var baseModules = options.modules || this.getModules(),
-        additionalModules = options.additionalModules || [],
-        staticModules = [
+    const baseModules = options.modules || this.getModules();
+    const additionalModules = options.additionalModules || [];
+    const staticModules = [
             {
                 fpbjs: ['value', this],
                 moddle: ['value', moddle],
             }
         ];
 
-    var diagramModules = [].concat(staticModules, baseModules, additionalModules);
+    const diagramModules = [].concat(staticModules, baseModules, additionalModules);
 
-    var diagramOptions = assign(omit(options, ['additionalModules']), {
+    const diagramOptions = assign(omit(options, ['additionalModules']), {
         canvas: assign({}, options.canvas, { container: container }),
         modules: diagramModules
     });
@@ -131,7 +131,7 @@ FpbModeler.prototype._modules = [
 ];
 
 FpbModeler.prototype._createContainer = function (options) {
-    var container = domify('<div class="djs-container"></div>');
+    const container = domify('<div class="djs-container"></div>');
     assign(container.style, {
         width: ensureUnit(options.width),
         height: ensureUnit(options.height),
@@ -142,8 +142,8 @@ FpbModeler.prototype._createContainer = function (options) {
 
 
 FpbModeler.prototype._createModdle = function (options) {
-    var moddleOptions = assign({}, this._moddleExtensions, options.moddleExtensions);
-    var moddle = new FpbjsModdle(moddleOptions);
+    const moddleOptions = assign({}, this._moddleExtensions, options.moddleExtensions);
+    const moddle = new FpbjsModdle(moddleOptions);
     return moddle;
 };
 
@@ -173,8 +173,8 @@ FpbModeler.prototype.attachTo = function (parentNode) {
 
 FpbModeler.prototype.detach = function () {
 
-    var container = this._container,
-        parentNode = container.parentNode;
+    const container = this._container;
+    const parentNode = container.parentNode;
 
     if (!parentNode) {
         return;
@@ -213,7 +213,7 @@ FpbModeler.prototype.destroy = function () {
 FpbModeler.prototype.clear = function () {
 
     this.get('elementRegistry').forEach(function (element) {
-        var bo = element.businessObject;
+        const bo = element.businessObject;
 
         if (bo && bo.di) {
             delete bo.di;
@@ -232,12 +232,12 @@ FpbModeler.prototype._addFpbShape = function (fpbElement) {
 
     this._fpbElements.push(fpbElement);
 
-    var canvas = this.get('canvas'),
-        elementFactory = this.get('elementFactory');
+    const canvas = this.get('canvas');
+    const elementFactory = this.get('elementFactory');
 
 
-    var fpbAttrs = assign({ businessObject: fpbElement }, fpbElement);
-    var fpbShape = elementFactory.create('shape', fpbAttrs);
+    const fpbAttrs = assign({ businessObject: fpbElement }, fpbElement);
+    const fpbShape = elementFactory.create('shape', fpbAttrs);
     return canvas.addShape(fpbShape);
 
 };
@@ -246,12 +246,12 @@ FpbModeler.prototype._addFpbConnection = function (fpbElement) {
 
     this._fpbElements.push(fpbElement);
 
-    var canvas = this.get('canvas'),
-        elementFactory = this.get('elementFactory'),
-        elementRegistry = this.get('elementRegistry');
-    var fpbAttrs = assign({ businessObject: fpbElement }, fpbElement);
+    const canvas = this.get('canvas');
+    const elementFactory = this.get('elementFactory');
+    const elementRegistry = this.get('elementRegistry');
+    const fpbAttrs = assign({ businessObject: fpbElement }, fpbElement);
 
-    var connection = elementFactory.create('connection', assign(fpbAttrs, {
+    const connection = elementFactory.create('connection', assign(fpbAttrs, {
         source: elementRegistry.get(fpbElement.source),
         target: elementRegistry.get(fpbElement.target)
     }),
@@ -268,8 +268,8 @@ FpbModeler.prototype.addFpbElements = function (fpbElements) {
         throw new Error('argument must be an array');
     }
 
-    var shapes = [],
-        connections = [];
+    const shapes = [];
+    const connections = [];
 
     fpbElements.forEach(function (fpbElement) {
         if (isFpbConnection(fpbElement)) {
@@ -303,7 +303,7 @@ FpbModeler.prototype.getProcess = function (id) {
     let process;
     this._processes.forEach((pro) => {
         if (pro.process) {
-            if (pro.process.id == id) {
+            if (pro.process.id === id) {
                 process = pro;
             }
         }
@@ -323,7 +323,7 @@ FpbModeler.prototype.getSelectedElements = function (processId) {
     while (elementIds.length > 0) {
         let id = elementIds.pop();
         pro.elementVisualInformation.forEach((vs) => {
-            if (vs.id == id) {
+            if (vs.id === id) {
                 vsInfos.push(vs);
             }
         })
@@ -351,33 +351,33 @@ FpbModeler.prototype.saveSVG = function (options, done) {
 
     this._emit('saveSVG.start');
 
-    var svg, err;
+    let svg, err;
 
     try {
-        var canvas = this.get('canvas');
+        const canvas = this.get('canvas');
 
         // Get the root element's layer which contains all visible content
-        var rootElement = canvas.getRootElement();
-        var contentNode = canvas.getGraphics(rootElement);
-        var defsNode = domQuery('defs', canvas._svg);
+        const rootElement = canvas.getRootElement();
+        const contentNode = canvas.getGraphics(rootElement);
+        const defsNode = domQuery('defs', canvas._svg);
 
-        var contents = innerSVG(contentNode);
+        let contents = innerSVG(contentNode);
         
         // Fix SVG paths without fill="none" to prevent black fills
         contents = contents.replace(/<path([^>]*?)style="([^"]*?)"([^>]*?)>/g, function(match, before, styleContent, after) {
             // Only add fill="none" if no fill is specified and it's not a hit detection path
             if (!styleContent.includes('fill:') && !match.includes('djs-hit')) {
-                var newStyle = styleContent + (styleContent.endsWith(';') ? '' : ';') + ' fill: none;';
+                const newStyle = styleContent + (styleContent.endsWith(';') ? '' : ';') + ' fill: none;';
                 return '<path' + before + 'style="' + newStyle + '"' + after + '>';
             }
             return match;
         });
         
         // Clean defs from grid patterns
-        var cleanDefs = '';
+        let cleanDefs = '';
         if (defsNode) {
-            var defsClone = defsNode.cloneNode(true);
-            var gridPatterns = defsClone.querySelectorAll('pattern[id*="djs-grid-pattern"]');
+            const defsClone = defsNode.cloneNode(true);
+            const gridPatterns = defsClone.querySelectorAll('pattern[id*="djs-grid-pattern"]');
             Array.prototype.forEach.call(gridPatterns, function(pattern) {
                 if (pattern.parentNode) {
                     pattern.parentNode.removeChild(pattern);
@@ -386,7 +386,7 @@ FpbModeler.prototype.saveSVG = function (options, done) {
             cleanDefs = '<defs>' + innerSVG(defsClone) + '</defs>';
         }
 
-        var bbox = contentNode.getBBox();
+        const bbox = contentNode.getBBox();
 
         svg =
             '<?xml version="1.0" encoding="utf-8"?>\n' +

@@ -17,12 +17,12 @@ export default function DataBehavior(eventBus, fpbjs) {
     this._eventBus.on('dataStore.addedProjectDefinition', (e) => {
 
         let projectDefinition = e.projectDefinition;
-        var processes = this._fpbjs.getProcesses();
+        const processes = this._fpbjs.getProcesses();
         collectionAdd(processes, projectDefinition);
     });
     this._eventBus.on('dataStore.newProcess', (e) => {
         let process = e.newProcess.businessObject;
-        var processes = this._fpbjs.getProcesses();
+        const processes = this._fpbjs.getProcesses();
         collectionAdd(processes, { process: process, elementDataInformation: [], elementVisualInformation: [] });
         this._eventBus.fire('dataStore.update', {
             processId: process.id
@@ -33,7 +33,7 @@ export default function DataBehavior(eventBus, fpbjs) {
         let processId = e.processId;
         let processes = this._fpbjs.getProcesses();
         processes.forEach((pro) => {
-            if (pro.process && pro.process.id == processId) {
+            if (pro.process && pro.process.id === processId) {
                 pro.elementDataInformation = [];
                 pro.elementVisualInformation = [];
                 let processElementsContainer = pro.process.elementsContainer;
@@ -72,13 +72,13 @@ export default function DataBehavior(eventBus, fpbjs) {
     this._eventBus.on('dataStore.processDeleted', (e) => {
         let process = e.deletedProcess.businessObject;
         let processIds = [process.id];
-        var processes = this._fpbjs.getProcesses();
-        // Löschen des Prozesses und aller damit verbundenen Prozesse
+        const processes = this._fpbjs.getProcesses();
+        // Delete the process and all associated processes
         while (processIds.length > 0) {
             let id = processIds.pop();
             processes.forEach((pro) => {
-                if (pro.process && pro.process.id == id) {
-                    pro.process.consistsOfProcesses.forEach((childProcess) => {
+                if (pro.process && pro.process.id === id) {
+                    (pro.process.consistsOfProcesses || []).forEach((childProcess) => {
                         processIds.push(childProcess.id)
                     });
                     collectionRemove(processes, pro);

@@ -9,11 +9,11 @@ import {
   getBusinessObject
 } from '../../help/utils';
 
-var DEFAULT_FLOW = 'default',
-  ID = 'id',
-  DI = 'di';
+const DEFAULT_FLOW = 'default';
+const ID = 'id';
+const DI = 'di';
 
-var NULL_DIMENSIONS = {
+const NULL_DIMENSIONS = {
   width: 0,
   height: 0
 };
@@ -38,19 +38,19 @@ UpdatePropertiesHandler.$inject = [
 
 
 UpdatePropertiesHandler.prototype.execute = function (context) {
-  var element = context.element,
-    changed = [element],
-    translate = this._translate;
+  const element = context.element;
+  const changed = [element];
+  const translate = this._translate;
 
   if (!element) {
     throw new Error(translate('element required'));
   }
 
-  var elementRegistry = this._elementRegistry,
-    ids = this._moddle.ids;
-  var businessObject = element.businessObject,
-    properties = unwrapBusinessObjects(context.properties),
-    oldProperties = context.oldProperties || getProperties(businessObject, properties);
+  const elementRegistry = this._elementRegistry;
+  const ids = this._moddle.ids;
+  const businessObject = element.businessObject;
+  const properties = unwrapBusinessObjects(context.properties);
+  const oldProperties = context.oldProperties || getProperties(businessObject, properties);
 
   if (isIdChange(properties, businessObject)) {
     ids.unclaim(businessObject[ID]);
@@ -84,17 +84,17 @@ UpdatePropertiesHandler.prototype.execute = function (context) {
 
 
 UpdatePropertiesHandler.prototype.postExecute = function (context) {
-  var element = context.element,
-    label = element.label;
+  const element = context.element;
+  const label = element.label;
 
-  var text = label && getBusinessObject(label).name;
+  const text = label && getBusinessObject(label).name;
   if (!text) {
     return;
   }
 
   // get layouted text bounds and resize external
   // external label accordingly
-  var newLabelBounds = this._textRenderer.getExternalLabelBounds(label, text);
+  const newLabelBounds = this._textRenderer.getExternalLabelBounds(label, text);
   this._modeling.resizeShape(label, newLabelBounds, NULL_DIMENSIONS);
 };
 
@@ -107,12 +107,12 @@ UpdatePropertiesHandler.prototype.postExecute = function (context) {
  */
 UpdatePropertiesHandler.prototype.revert = function (context) {
 
-  var element = context.element,
-    properties = context.properties,
-    oldProperties = context.oldProperties,
-    businessObject = element.businessObject,
-    elementRegistry = this._elementRegistry,
-    ids = this._moddle.ids;
+  const element = context.element;
+  const properties = context.properties;
+  const oldProperties = context.oldProperties;
+  const businessObject = element.businessObject;
+  const elementRegistry = this._elementRegistry;
+  const ids = this._moddle.ids;
 
   // update properties
   setProperties(businessObject, oldProperties);
@@ -136,7 +136,7 @@ function isIdChange(properties, businessObject) {
 
 
 function getProperties(businessObject, properties) {
-  var propertyNames = keys(properties);
+  const propertyNames = keys(properties);
 
   return reduce(propertyNames, function (result, key) {
 
@@ -182,7 +182,7 @@ function setDiProperties(di, properties) {
 }
 
 
-var referencePropertyNames = ['default'];
+const referencePropertyNames = ['default'];
 
 /**
  * Make sure we unwrap the actual business object
@@ -195,7 +195,7 @@ var referencePropertyNames = ['default'];
  */
 function unwrapBusinessObjects(properties) {
 
-  var unwrappedProps = assign({}, properties);
+  const unwrappedProps = assign({}, properties);
 
   referencePropertyNames.forEach(function (name) {
     if (name in properties) {

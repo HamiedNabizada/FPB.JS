@@ -8,7 +8,7 @@
  * Checks if a shape can be placed within SystemLimit boundaries
  */
 export function checkIfItsWithinSystemLimits(shape, target, position) {
-  const DEBUG = process.env.NODE_ENV === 'development';
+  const DEBUG = false;
   
   if (DEBUG) {
     console.log('RuleUtils: checkIfItsWithinSystemLimits', {

@@ -4,6 +4,23 @@
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 
+// Register FontAwesome icons used by PropertiesPanel / LayerOverview into the
+// shared `library`. Without this the lib build renders icon="folder" etc. as blank.
+if (isBrowser) {
+  // Inline side-effect import; webpack tree-shakes nothing since icons.js calls library.add().
+  import('../app/icons');
+}
+
+// Event mapping: clean external API names → internal diagram-js event names
+const EVENT_MAP = {
+  'changed':          'commandStack.changed',
+  'element.added':    ['shape.added', 'connection.added'],
+  'element.removed':  ['shape.removed', 'connection.removed'],
+  'element.changed':  'element.changed',
+  'selection.changed': 'selection.changed',
+  'process.switched':  'layerPanel.processSwitched',
+};
+
 // Server-side stub implementations that provide helpful error messages
 class FpbModelerStub {
   constructor() {
@@ -41,14 +58,16 @@ export async function createFpbModeler(options = {}) {
   // Dynamic imports that only execute in browser
   const [
     { default: FpbModeler },
-    { default: PropertiesPanel }, 
+    { default: PropertiesPanel },
     { default: LayerOverview },
+    { default: XMLMapper },
     configModule,
     propertiesConfigModule
   ] = await Promise.all([
     import('../app/fpb/FpbModeler'),
     import('../app/fpb/properties-panel'),
     import('../app/fpb/layer-panel'),
+    import('../app/fpb/xml/XMLMapper'),
     import('../app/config.json'),
     import('../app/configPP.json')
   ]);
@@ -93,14 +112,170 @@ export async function createFpbModeler(options = {}) {
     });
   }
 
+  // Get DI services for facade methods
+  const eventBus = modeler.get('eventBus');
+  const canvas = modeler.get('canvas');
+  const selection = modeler.get('selection');
+  const elementRegistry = modeler.get('elementRegistry');
+  const modeling = modeler.get('modeling');
+  const xmlMapper = new XMLMapper();
+
   // Fit viewport by default
-  modeler.get('canvas').zoom('fit-viewport');
+  canvas.zoom('fit-viewport');
 
   return {
+    // Backward-compatible properties
     modeler,
     propertiesPanel,
     layerOverview,
-    // Convenience methods
+
+    // --- Event API ---
+
+    on(event, callback) {
+      const mapped = EVENT_MAP[event];
+      if (Array.isArray(mapped)) {
+        mapped.forEach(e => eventBus.on(e, callback));
+      } else {
+        eventBus.on(mapped || event, callback);
+      }
+    },
+
+    off(event, callback) {
+      const mapped = EVENT_MAP[event];
+      if (Array.isArray(mapped)) {
+        mapped.forEach(e => eventBus.off(e, callback));
+      } else {
+        eventBus.off(mapped || event, callback);
+      }
+    },
+
+    fire(event, data) {
+      return eventBus.fire(event, data);
+    },
+
+    // --- Import/Export API ---
+
+    importJSON(json) {
+      eventBus.fire('FPBJS.import', { data: json });
+    },
+
+    async importXML(xmlString) {
+      const json = await xmlMapper.convertFromXML(xmlString);
+      eventBus.fire('FPBJS.import', { data: json });
+    },
+
+    toJSON() {
+      eventBus.fire('dataStore.updateAll', {});
+      return [...modeler.getProcesses()];
+    },
+
+    async toXML() {
+      eventBus.fire('dataStore.updateAll', {});
+      return xmlMapper.convertToXML(modeler.getProcesses());
+    },
+
+    toSVG() {
+      return new Promise((resolve, reject) => {
+        modeler.saveSVG({}, (err, svg) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(svg);
+          }
+        });
+      });
+    },
+
+    async toPNG(options = {}) {
+      const { exportPNG } = await import('../app/fpb/export/PngExporter');
+      const svg = await this.toSVG();
+      return exportPNG(svg, options);
+    },
+
+    async toPDF(options = {}) {
+      const { exportPDF, exportMultiLayerPDF } = await import('../app/fpb/export/PdfExporter');
+      const { exportPNG } = await import('../app/fpb/export/PngExporter');
+      const { allLayers = false, ...pdfOptions } = options;
+
+      if (allLayers) {
+        // Collect all process Shapes via entryPoint → consistsOfProcesses
+        const entryPoint = modeler.getProjectDefinition().entryPoint;
+        const processShapes = [];
+        const queue = [entryPoint];
+        while (queue.length > 0) {
+          const shape = queue.shift();
+          if (!shape || !shape.businessObject) continue;
+          processShapes.push(shape);
+          const children = shape.businessObject.consistsOfProcesses || [];
+          for (const child of children) {
+            if (child && child.businessObject) {
+              queue.push(child);
+            }
+          }
+        }
+
+        const currentRoot = canvas.getRootElement();
+        const layers = [];
+
+        for (const processShape of processShapes) {
+          modeling.switchProcess(processShape);
+          const svg = await this.toSVG();
+          const png = await exportPNG(svg, options);
+          const name = processShape.businessObject?.identification?.shortName
+            || processShape.businessObject?.name
+            || processShape.id;
+          layers.push({ name, pngDataUrl: png });
+        }
+
+        modeling.switchProcess(currentRoot);
+        return exportMultiLayerPDF(layers, pdfOptions);
+      } else {
+        const svg = await this.toSVG();
+        const png = await exportPNG(svg, options);
+        return exportPDF(png, pdfOptions);
+      }
+    },
+
+    // --- Convenience Methods ---
+
+    zoom(level) {
+      canvas.zoom(level);
+    },
+
+    getZoom() {
+      return canvas.getZoom();
+    },
+
+    select(elementId) {
+      const element = elementRegistry.get(elementId);
+      if (element) {
+        selection.select(element);
+      }
+    },
+
+    getSelected() {
+      return selection.get();
+    },
+
+    getProcesses() {
+      return modeler.getProcesses();
+    },
+
+    switchProcess(id) {
+      const entry = modeler.getProcess(id);
+      if (entry && entry.process) {
+        modeling.switchProcess(entry.process);
+      }
+    },
+
+    // --- DI Access ---
+
+    get(serviceName) {
+      return modeler.get(serviceName);
+    },
+
+    // --- Lifecycle ---
+
     destroy() {
       if (propertiesPanel && typeof propertiesPanel.destroy === 'function') {
         propertiesPanel.destroy();

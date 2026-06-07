@@ -27,7 +27,16 @@ export default class KeyboardAlignService {
       'ctrl+shift+v': () => this._executeDistribute('vertical')    // Distribute Vertical
     };
 
+    // Store bound reference so it can be removed later
+    this._boundHandleKeyDown = this._handleKeyDown.bind(this);
+    this._containerEl = null;
+
     this._setupKeyboardListener();
+
+    // Clean up on diagram destroy to prevent memory leaks
+    eventBus.on('diagram.destroy', () => {
+      this.destroy();
+    });
   }
 
   /**
@@ -39,12 +48,23 @@ export default class KeyboardAlignService {
     this._eventBus.on('canvas.init', () => {
       const container = this._canvas.getContainer();
       if (container) {
-        container.addEventListener('keydown', this._handleKeyDown.bind(this));
+        this._containerEl = container;
+        container.addEventListener('keydown', this._boundHandleKeyDown);
       }
     });
 
     // Also listen globally to document in case canvas doesn't have focus
-    document.addEventListener('keydown', this._handleKeyDown.bind(this));
+    document.addEventListener('keydown', this._boundHandleKeyDown);
+  }
+
+  /**
+   * Remove all event listeners to prevent memory leaks
+   */
+  destroy() {
+    if (this._containerEl) {
+      this._containerEl.removeEventListener('keydown', this._boundHandleKeyDown);
+    }
+    document.removeEventListener('keydown', this._boundHandleKeyDown);
   }
 
   /**
@@ -53,6 +73,12 @@ export default class KeyboardAlignService {
    */
   _handleKeyDown(event) {
     const key = this._getKeyCombo(event);
+
+    // Skip if key combo couldn't be determined
+    if (!key) {
+      return;
+    }
+
     const shortcut = this._shortcuts[key];
 
     if (shortcut) {
@@ -72,6 +98,11 @@ export default class KeyboardAlignService {
     if (event.ctrlKey || event.metaKey) parts.push('ctrl');
     if (event.shiftKey) parts.push('shift');
     if (event.altKey) parts.push('alt');
+
+    // Guard against undefined key (can happen with some browser events)
+    if (!event.key) {
+      return null;
+    }
 
     const key = event.key.toLowerCase();
     parts.push(key);

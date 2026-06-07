@@ -10,7 +10,7 @@ export function isFpb(element) {
 
 
 export function is(element, type) {
-  var bo = getBusinessObject(element);
+  const bo = getBusinessObject(element);
   return bo && bo.$instanceOf && (typeof bo.$instanceOf === 'function') && bo.$instanceOf(type);
 }
 
@@ -54,8 +54,8 @@ function getLabelAttr(semantic) {
 }
 
 export function getLabel(element) {
-  var semantic = element.businessObject,
-    attr = getLabelAttr(semantic);
+  const semantic = element.businessObject;
+  const attr = getLabelAttr(semantic);
   if (attr) {
     return semantic[attr] || '';
   }
@@ -64,8 +64,8 @@ export function getLabel(element) {
 
 export function setLabel(element, text, isExternal) {
 
-  var semantic = element.businessObject,
-    attr = getLabelAttr(semantic);
+  const semantic = element.businessObject;
+  const attr = getLabelAttr(semantic);
   if (attr) {
     semantic[attr] = text;
   }
@@ -73,12 +73,12 @@ export function setLabel(element, text, isExternal) {
 }
 
 
-export var DEFAULT_LABEL_SIZE = {
+export const DEFAULT_LABEL_SIZE = {
   width: 50,
   height: 20
 };
 
-export var FLOW_LABEL_INDENT = 15;
+export const FLOW_LABEL_INDENT = 15;
 
 
 export function isLabelExternal(semantic) {
@@ -146,7 +146,7 @@ export function getWaypointsMid(waypoints) {
 
 
 export function getExternalLabelMid(element) {
-  //TODO: Richtige Labelposition finden
+  //TODO: Find the correct label position
 
   return {
     x: element.x - element.width / 2,
@@ -164,11 +164,11 @@ export function getExternalLabelMid(element) {
  */
 export function getExternalLabelBounds(semantic, element) {
 
-  var mid,
+  let mid,
     size,
-    bounds,
-    di = semantic.di,
-    label = di.label;
+    bounds;
+  const di = semantic.di;
+  const label = di.label;
 
   if (label && label.bounds) {
     bounds = label.bounds;

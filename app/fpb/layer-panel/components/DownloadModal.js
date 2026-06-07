@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
@@ -9,9 +9,44 @@ import Form from 'react-bootstrap/Form';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import Container from 'react-bootstrap/Container';
+import Spinner from 'react-bootstrap/Spinner';
+import Alert from 'react-bootstrap/Alert';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import XMLMapper from '../../xml/XMLMapper.js';
+import { exportPNG } from '../../export/PngExporter.js';
+import { exportPDF, exportMultiLayerPDF } from '../../export/PdfExporter.js';
+
+// Regex pattern for invalid filename characters (Windows/Unix compatible)
+const INVALID_FILENAME_CHARS = /[<>:"/\\|?*\x00-\x1f]/g;
+
+// Validate filename and return sanitized version or error
+function validateFilename(filename) {
+    if (!filename || filename.trim() === '') {
+        return { valid: false, error: 'Filename cannot be empty', sanitized: 'FPB' };
+    }
+
+    const trimmed = filename.trim();
+
+    // Check for reserved names (Windows)
+    const reservedNames = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'];
+    if (reservedNames.includes(trimmed.toUpperCase())) {
+        return { valid: false, error: `"${trimmed}" is a reserved filename`, sanitized: 'FPB' };
+    }
+
+    // Check for invalid characters
+    if (INVALID_FILENAME_CHARS.test(trimmed)) {
+        const sanitized = trimmed.replace(INVALID_FILENAME_CHARS, '_');
+        return { valid: false, error: 'Filename contains invalid characters', sanitized };
+    }
+
+    // Check length (max 200 chars for safety)
+    if (trimmed.length > 200) {
+        return { valid: false, error: 'Filename is too long (max 200 characters)', sanitized: trimmed.substring(0, 200) };
+    }
+
+    return { valid: true, error: null, sanitized: trimmed };
+}
 
 const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedElements }) => {
     const [show, setShow] = useState(false);
@@ -22,6 +57,9 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
     const [filename, setFilename] = useState('FPB');
     const [eventName, setEventName] = useState('fpbjs');
     const [exportFormat, setExportFormat] = useState('json');
+    const [isExporting, setIsExporting] = useState(false);
+    const [exportError, setExportError] = useState(null);
+    const [filenameError, setFilenameError] = useState(null);
 
     const handleInformationLevel = (infoLevel) => {
         setInformationLevel(infoLevel);
@@ -40,7 +78,9 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
     };
     
     const handleFilename = (fn) => {
-        setFilename(fn);
+        const validation = validateFilename(fn);
+        setFilenameError(validation.valid ? null : validation.error);
+        setFilename(validation.sanitized);
     };
     
     const handleEventname = (en) => {
@@ -52,9 +92,19 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
     };
 
     const eventBus = modeler.get('eventBus');
-    eventBus.on(eventName, (e) => {
-        // Event listener for export events
-    });
+    const eventCallbackRef = useRef(null);
+
+    // Register event listener in useEffect with cleanup to prevent memory leaks
+    useEffect(() => {
+        const handler = (e) => {
+            // Event listener for export events
+        };
+        eventCallbackRef.current = handler;
+        eventBus.on(eventName, handler);
+        return () => {
+            eventBus.off(eventName, handler);
+        };
+    }, [eventBus, eventName]);
 
     function download(dataStr, fileExtension = exportFormat) {
         let tempLink = document.createElement('a');
@@ -65,18 +115,111 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
         document.getElementsByClassName('layerPanel')[0].removeChild(tempLink);
     }
 
-    function downloadSnapshot() {
-        modeler.saveSVG({}, function (err, svg) {
-            if (svg) {
-                let dataStr = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
-                let tempLink = document.createElement('a');
-                tempLink.href = dataStr;
-                tempLink.setAttribute('download', `${filename}.svg`);
-                document.getElementsByClassName('layerPanel')[0].appendChild(tempLink);
-                tempLink.click();
-                document.getElementsByClassName('layerPanel')[0].removeChild(tempLink);
+    async function downloadSnapshot() {
+        setIsExporting(true);
+        setExportError(null);
+
+        try {
+            const result = await new Promise((resolve, reject) => {
+                modeler.saveSVG({}, function (err, svg) {
+                    if (err) {
+                        reject(err);
+                    } else if (!svg) {
+                        reject(new Error('SVG generation returned empty result'));
+                    } else {
+                        resolve(svg);
+                    }
+                });
+            });
+
+            const dataStr = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(result);
+            const tempLink = document.createElement('a');
+            tempLink.href = dataStr;
+            tempLink.setAttribute('download', `${filename}.svg`);
+            document.getElementsByClassName('layerPanel')[0].appendChild(tempLink);
+            tempLink.click();
+            document.getElementsByClassName('layerPanel')[0].removeChild(tempLink);
+        } catch (error) {
+            console.error('SVG export failed:', error);
+            setExportError(`SVG export failed: ${error.message || 'Unknown error'}`);
+        } finally {
+            setIsExporting(false);
+        }
+    }
+
+    async function downloadPNG() {
+        setIsExporting(true);
+        setExportError(null);
+
+        try {
+            const svg = await new Promise((resolve, reject) => {
+                modeler.saveSVG({}, (err, result) => {
+                    if (err) reject(err);
+                    else if (!result) reject(new Error('SVG generation returned empty result'));
+                    else resolve(result);
+                });
+            });
+            const pngDataUrl = await exportPNG(svg, { scale: 2 });
+            const tempLink = document.createElement('a');
+            tempLink.href = pngDataUrl;
+            tempLink.setAttribute('download', `${filename}.png`);
+            document.getElementsByClassName('layerPanel')[0].appendChild(tempLink);
+            tempLink.click();
+            document.getElementsByClassName('layerPanel')[0].removeChild(tempLink);
+        } catch (error) {
+            console.error('PNG export failed:', error);
+            setExportError(`PNG export failed: ${error.message || 'Unknown error'}`);
+        } finally {
+            setIsExporting(false);
+        }
+    }
+
+    async function downloadPDF() {
+        setIsExporting(true);
+        setExportError(null);
+
+        try {
+            const modeling = modeler.get('modeling');
+            const canvas = modeler.get('canvas');
+            const currentRoot = canvas.getRootElement();
+            const layers = [];
+
+            // processes prop contains Shapes from useProcessManagement
+            for (const processShape of processes) {
+                modeling.switchProcess(processShape);
+                const svg = await new Promise((resolve, reject) => {
+                    modeler.saveSVG({}, (err, result) => {
+                        if (err) reject(err);
+                        else resolve(result);
+                    });
+                });
+                const png = await exportPNG(svg, { scale: 2 });
+                const name = processShape.businessObject?.identification?.shortName
+                    || processShape.businessObject?.name
+                    || processShape.id;
+                layers.push({ name, pngDataUrl: png });
             }
-        });
+
+            modeling.switchProcess(currentRoot);
+
+            const pdfBlob = layers.length === 1
+                ? exportPDF(layers[0].pngDataUrl, { title: layers[0].name })
+                : exportMultiLayerPDF(layers);
+
+            const blobUrl = URL.createObjectURL(pdfBlob);
+            const tempLink = document.createElement('a');
+            tempLink.href = blobUrl;
+            tempLink.setAttribute('download', `${filename}.pdf`);
+            document.getElementsByClassName('layerPanel')[0].appendChild(tempLink);
+            tempLink.click();
+            document.getElementsByClassName('layerPanel')[0].removeChild(tempLink);
+            URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error('PDF export failed:', error);
+            setExportError(`PDF export failed: ${error.message || 'Unknown error'}`);
+        } finally {
+            setIsExporting(false);
+        }
     }
 
     function replacer(name, val) {
@@ -140,44 +283,59 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
     }
 
     async function go() {
-        eventBus.fire('dataStore.updateAll', {});
-        let data;
-        let dataStr;
-        let dataEdited;
-        let contentType;
-        
-        // Get data based on information selection
-        if (information === 'information1') {
-            data = modeler.getProcesses();
-        }
-        if (information === 'information2') {
-            data = modeler.getProcess(selectedProcess.id);
-        }
-        if (information === 'information3') {
-            data = modeler.getSelectedElements(selectedProcess.id, selectedElements)
-        }
-        if (data === undefined) {
+        // Validate export options
+        if (!exportAsDownload && !exportAsEvent) {
+            setExportError('Please select at least one export method (Event or Download)');
             return;
         }
 
+        // Validate filename if downloading
+        if (exportAsDownload) {
+            const validation = validateFilename(filename);
+            if (!validation.valid) {
+                setExportError(`Invalid filename: ${validation.error}`);
+                return;
+            }
+        }
+
+        setIsExporting(true);
+        setExportError(null);
+
         try {
-            
+            eventBus.fire('dataStore.updateAll', {});
+            let data;
+            let dataStr;
+            let dataEdited;
+            let contentType;
+
+            // Get data based on information selection
+            if (information === 'information1') {
+                data = modeler.getProcesses();
+            }
+            if (information === 'information2') {
+                data = modeler.getProcess(selectedProcess.id);
+            }
+            if (information === 'information3') {
+                data = modeler.getSelectedElements(selectedProcess.id, selectedElements)
+            }
+            if (data === undefined) {
+                throw new Error('No data available for export');
+            }
+
             // Export based on format selection
             if (exportFormat === 'json') {
                 dataEdited = JSON.stringify(data, replacer, 4);
                 contentType = "data:text/json;charset=utf-8,";
             } else if (exportFormat === 'xml') {
-                // Convert to XML format
                 const xmlMapper = new XMLMapper();
                 dataEdited = await xmlMapper.convertToXML(data);
                 contentType = "data:text/xml;charset=utf-8,";
             } else {
-                console.error('Unsupported export format:', exportFormat);
-                return;
+                throw new Error(`Unsupported export format: ${exportFormat}`);
             }
 
             dataStr = contentType + encodeURIComponent(dataEdited);
-            
+
             if (exportAsDownload) {
                 download(dataStr, exportFormat);
             }
@@ -189,13 +347,14 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                     format: exportFormat
                 });
             }
+
+            handleClose();
         } catch (error) {
             console.error('Export failed:', error);
-            alert(`Export failed: ${error.message}`);
-            return;
+            setExportError(`Export failed: ${error.message || 'Unknown error'}`);
+        } finally {
+            setIsExporting(false);
         }
-        
-        handleClose();
     }
 
     const handleClose = () => setShow(false);
@@ -243,19 +402,59 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                     </Row>
                 </Modal.Body>
                 <Modal.Footer>
-                    <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-uniqueId`}>
-                        Downloads a snapshot of the current process as SVG.
+                    {exportError && (
+                        <Alert variant="danger" onClose={() => setExportError(null)} dismissible className="w-100 mb-2">
+                            {exportError}
+                        </Alert>
+                    )}
+                    <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-svg-export`}>
+                        Download current process as SVG
                     </Tooltip>}>
-                        <Button variant="secondary" onClick={() => { downloadSnapshot() }}>
-                            <FontAwesomeIcon icon="file-image" size="lg" />
+                        <Button variant="secondary" onClick={() => { downloadSnapshot() }} disabled={isExporting}>
+                            {isExporting ? (
+                                <Spinner animation="border" size="sm" />
+                            ) : (
+                                <FontAwesomeIcon icon="file-image" size="lg" />
+                            )}
+                            {' '}SVG
                         </Button>
                     </OverlayTrigger>
 
-                    <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-uniqueId`}>
-                        Export
+                    <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-png-export`}>
+                        Download current process as PNG image
                     </Tooltip>}>
-                        <Button variant="secondary" onClick={() => { go() }}>
-                            <FontAwesomeIcon icon="paper-plane" size="lg" />
+                        <Button variant="secondary" onClick={() => { downloadPNG() }} disabled={isExporting}>
+                            {isExporting ? (
+                                <Spinner animation="border" size="sm" />
+                            ) : (
+                                <FontAwesomeIcon icon="image" size="lg" />
+                            )}
+                            {' '}PNG
+                        </Button>
+                    </OverlayTrigger>
+
+                    <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-pdf-export`}>
+                        Download all processes as multi-page PDF
+                    </Tooltip>}>
+                        <Button variant="secondary" onClick={() => { downloadPDF() }} disabled={isExporting}>
+                            {isExporting ? (
+                                <Spinner animation="border" size="sm" />
+                            ) : (
+                                <FontAwesomeIcon icon="file-pdf" size="lg" />
+                            )}
+                            {' '}PDF
+                        </Button>
+                    </OverlayTrigger>
+
+                    <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-export`}>
+                        Export data in selected format
+                    </Tooltip>}>
+                        <Button variant="secondary" onClick={() => { go() }} disabled={isExporting}>
+                            {isExporting ? (
+                                <Spinner animation="border" size="sm" />
+                            ) : (
+                                <FontAwesomeIcon icon="paper-plane" size="lg" />
+                            )}
                         </Button>
                     </OverlayTrigger>
                 </Modal.Footer>
@@ -440,8 +639,13 @@ const Forms_Event = memo(function Forms_Event(props) {
 });
 
 const Forms_Download = memo(function Forms_Download(props) {
+    const [localError, setLocalError] = useState(null);
+
     function handleFilenameChange(e) {
-        props.onFileNameChange(e.target.value);
+        const value = e.target.value;
+        const validation = validateFilename(value);
+        setLocalError(validation.valid ? null : validation.error);
+        props.onFileNameChange(value);
     }
     return (
         <Card>
@@ -451,7 +655,18 @@ const Forms_Download = memo(function Forms_Download(props) {
                     <Form.Group as={Row} controlId="formDownloadFileName">
                         <Form.Label as="legend" column sm={4}><h6>Filename</h6></Form.Label>
                         <Col>
-                            <Form.Control type="text" defaultValue="FPB" onChange={(e) => { handleFilenameChange(e) }} />
+                            <Form.Control
+                                type="text"
+                                defaultValue="FPB"
+                                onChange={(e) => { handleFilenameChange(e) }}
+                                isInvalid={!!localError}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {localError}
+                            </Form.Control.Feedback>
+                            <Form.Text className="text-muted">
+                                Avoid special characters: {'< > : " / \\ | ? *'}
+                            </Form.Text>
                         </Col>
                     </Form.Group>
                 </Form>

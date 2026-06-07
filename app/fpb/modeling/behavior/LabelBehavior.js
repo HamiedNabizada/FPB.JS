@@ -11,12 +11,12 @@ import {
     getExternalLabelMid
 } from '../../help/utils';
 
-var DEFAULT_LABEL_DIMENSIONS = {
+const DEFAULT_LABEL_DIMENSIONS = {
     width: 90,
     height: 20
 };
 
-var NAME_PROPERTY = 'name';
+const NAME_PROPERTY = 'name';
 
 
 export default function LabelBehavior(eventBus, fpbFactory, modeling, textRenderer) {
@@ -24,9 +24,9 @@ export default function LabelBehavior(eventBus, fpbFactory, modeling, textRender
 
     // update label if name property was updated
     this.postExecute('element.updateProperties', function (e) {
-        var context = e.context,
-            element = context.element,
-            properties = context.properties;
+        const context = e.context;
+        const element = context.element;
+        const properties = context.properties;
 
         if (NAME_PROPERTY in properties) {
             modeling.updateLabel(element, properties[NAME_PROPERTY]);
@@ -35,10 +35,10 @@ export default function LabelBehavior(eventBus, fpbFactory, modeling, textRender
 
     // create label shape after shape/connection was created
     this.postExecute(['shape.create', 'connection.create'], function (e) {
-        var context = e.context;
+        const context = e.context;
 
-        var element = context.shape || context.connection,
-            businessObject = element.businessObject;
+        const element = context.shape || context.connection;
+        const businessObject = element.businessObject;
 
         if (!isLabelExternal(element)) {
             return;
@@ -48,10 +48,10 @@ export default function LabelBehavior(eventBus, fpbFactory, modeling, textRender
         if (!businessObject.name) {
             return;
         };
-        var labelCenter = getExternalLabelMid(element);
+        const labelCenter = getExternalLabelMid(element);
 
         // we don't care about x and y
-        var labelDimensions = textRenderer.getExternalLabelBounds(
+        const labelDimensions = textRenderer.getExternalLabelBounds(
             DEFAULT_LABEL_DIMENSIONS,
             businessObject.name || ''
         );
@@ -66,9 +66,9 @@ export default function LabelBehavior(eventBus, fpbFactory, modeling, textRender
 
     // update label after label shape was deleted
     this.postExecute('shape.delete', function (event) {
-        var context = event.context,
-            labelTarget = context.labelTarget,
-            hints = context.hints || {};
+        const context = event.context;
+        const labelTarget = context.labelTarget;
+        const hints = context.hints || {};
 
         // check if label
         if (labelTarget && hints.unsetLabel !== false) {
@@ -79,9 +79,9 @@ export default function LabelBehavior(eventBus, fpbFactory, modeling, textRender
     // update di information on label creation
 
     this.postExecute(['label.create'], function (event) {
-        var context = event.context,
-            element = context.shape,
-            businessObject,
+        const context = event.context;
+        const element = context.shape;
+        let businessObject,
             di;
 
         if (!element.labelTarget) {

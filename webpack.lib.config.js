@@ -15,8 +15,7 @@ module.exports = (env, argv) => {
         libraryTarget: 'umd',
         globalObject: 'this',
         clean: false,
-        chunkLoadingGlobal: 'webpackChunkFpbJS',
-        publicPath: ''
+        asyncChunks: false
       },
       module: {
         rules: [
@@ -52,10 +51,7 @@ module.exports = (env, argv) => {
             test: /\.(png|jpe?g|gif|svg|eot|ttf|woff|woff2)$/,
             type: 'asset/inline'
           },
-          {
-            test: /\.json$/,
-            type: 'asset/source'
-          }
+          // JSON files handled natively by webpack 5 (parsed as objects)
         ]
       },
       externals: {
@@ -74,24 +70,16 @@ module.exports = (env, argv) => {
         }
       },
       plugins: [
+        new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
         new webpack.BannerPlugin({
           banner: `
 // Node.js compatibility polyfills - must run before webpack runtime
 if (typeof global !== 'undefined' && typeof document === 'undefined') {
-  global.document = { baseURI: '' };
+  global.document = { baseURI: '', createElement: function() { return {}; } };
   global.self = { location: { href: '' } };
 }`,
           raw: true,
           entryOnly: false
-        }),
-        new webpack.DefinePlugin({
-          'typeof document': JSON.stringify('undefined'),
-          'typeof window': JSON.stringify('undefined'), 
-          'typeof self': JSON.stringify('undefined'),
-          'document.baseURI': '(typeof document !== "undefined" ? document.baseURI : "")',
-          'self.location.href': '(typeof self !== "undefined" ? self.location.href : "")',
-          'document': '(typeof document !== "undefined" ? document : undefined)',
-          'self': '(typeof self !== "undefined" ? self : undefined)'
         })
       ],
       mode: isProduction ? 'production' : 'development',
@@ -110,8 +98,7 @@ if (typeof global !== 'undefined' && typeof document === 'undefined') {
           type: 'module'
         },
         clean: false,
-        chunkLoadingGlobal: 'webpackChunkFpbJSESM',
-        publicPath: ''
+        asyncChunks: false
       },
       module: {
         rules: [
@@ -148,10 +135,7 @@ if (typeof global !== 'undefined' && typeof document === 'undefined') {
             test: /\.(png|jpe?g|gif|svg|eot|ttf|woff|woff2)$/,
             type: 'asset/inline'
           },
-          {
-            test: /\.json$/,
-            type: 'asset/source'
-          }
+          // JSON files handled natively by webpack 5 (parsed as objects)
         ]
       },
       externals: {
@@ -159,24 +143,16 @@ if (typeof global !== 'undefined' && typeof document === 'undefined') {
         'react-dom': 'react-dom'
       },
       plugins: [
+        new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
         new webpack.BannerPlugin({
           banner: `
 // Node.js compatibility polyfills - must run before webpack runtime
 if (typeof global !== 'undefined' && typeof document === 'undefined') {
-  global.document = { baseURI: '' };
+  global.document = { baseURI: '', createElement: function() { return {}; } };
   global.self = { location: { href: '' } };
 }`,
           raw: true,
           entryOnly: false
-        }),
-        new webpack.DefinePlugin({
-          'typeof document': JSON.stringify('undefined'),
-          'typeof window': JSON.stringify('undefined'), 
-          'typeof self': JSON.stringify('undefined'),
-          'document.baseURI': '(typeof document !== "undefined" ? document.baseURI : "")',
-          'self.location.href': '(typeof self !== "undefined" ? self.location.href : "")',
-          'document': '(typeof document !== "undefined" ? document : undefined)',
-          'self': '(typeof self !== "undefined" ? self : undefined)'
         })
       ],
       mode: isProduction ? 'production' : 'development',

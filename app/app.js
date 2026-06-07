@@ -41,20 +41,42 @@ var modeler = new FpbModeler({
 
 modeler.get('canvas').zoom('fit-viewport');
 if (configPP.propertiesPanel.showPanel) {
-  const propertiesPanel = new PropertiesPanel({
-    container: propertiesContainer,
-    modeler,
-    configPP
-  });
+  try {
+    const propertiesPanel = new PropertiesPanel({
+      container: propertiesContainer,
+      modeler,
+      configPP
+    });
+  } catch (e) {
+    console.error('[FPB.JS] PropertiesPanel init failed:', e);
+  }
 } else {
   document.getElementsByClassName('modeler-parent')[0].removeChild(propertiesContainer);
 }
 
 window.fpbjs = modeler;
 
-new LayerOverview({
-  container: layerContainer,
-  modeler,
-  configPP
-})
+try {
+  new LayerOverview({
+    container: layerContainer,
+    modeler,
+    configPP
+  });
+} catch (e) {
+  console.error('[FPB.JS] LayerOverview init failed:', e);
+}
+
+// Debug: Watch for panel containers disappearing (remove after bug is found)
+if (process.env.NODE_ENV !== 'production') {
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.removedNodes) {
+        if (node.id === 'properties-container' || node.id === 'layer-container') {
+          console.error('[FPB.JS] Panel container removed from DOM:', node.id, new Error().stack);
+        }
+      }
+    }
+  });
+  observer.observe(document.querySelector('.modeler-parent'), { childList: true });
+}
 

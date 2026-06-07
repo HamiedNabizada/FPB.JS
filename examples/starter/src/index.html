@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FPB.JS - Starter Example</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; height: 100vh; display: flex; flex-direction: column; }
+    header { padding: 10px 20px; background: #f5f5f5; border-bottom: 1px solid #ddd; }
+    header h1 { font-size: 18px; color: #333; }
+    .content { display: flex; flex: 1; overflow: hidden; }
+    #modeler-container { flex: 1; position: relative; }
+    .sidebar { width: 280px; border-left: 1px solid #ddd; display: flex; flex-direction: column; }
+    #properties-container { flex: 1; overflow-y: auto; border-bottom: 1px solid #ddd; }
+    #layer-container { height: 200px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FPB.JS Starter Example</h1>
+  </header>
+  <div class="content">
+    <div id="modeler-container"></div>
+    <div class="sidebar">
+      <div id="properties-container"></div>
+      <div id="layer-container"></div>
+    </div>
+  </div>
+</body>
+</html>
