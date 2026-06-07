@@ -4,6 +4,13 @@
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 
+// Register FontAwesome icons used by PropertiesPanel / LayerOverview into the
+// shared `library`. Without this the lib build renders icon="folder" etc. as blank.
+if (isBrowser) {
+  // Inline side-effect import; webpack tree-shakes nothing since icons.js calls library.add().
+  import('../app/icons');
+}
+
 // Event mapping: clean external API names → internal diagram-js event names
 const EVENT_MAP = {
   'changed':          'commandStack.changed',
