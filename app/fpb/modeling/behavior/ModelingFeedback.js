@@ -3,7 +3,7 @@ import { checkIfOnSystemBorder } from '../../help/helpUtils';
 
 
 const STATE_NOT_IN_SYSTEMLIMIT = 'Product, energy and information must be on or within the system limit';
-const PO_NOT_IN_SYTEMLIMIT = 'Process operators must be within the system limits.';
+const PO_NOT_IN_SYSTEMLIMIT = 'Process operators must be within the system limits.';
 const TR_IN_SYSTEMLIMIT = 'Technical resources must be outside the system limits.';
 const BOUNDARY_STATE_LOCKED = 'This state represents an input/output of the decomposed process operator and must remain on the system boundary.';
 
@@ -116,7 +116,7 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
             showError(event, translate(STATE_NOT_IN_SYSTEMLIMIT));
         };
         if (!is(target, 'fpb:SystemLimit') && is(shape, 'fpb:ProcessOperator')) {
-            showError(event, translate(PO_NOT_IN_SYTEMLIMIT));
+            showError(event, translate(PO_NOT_IN_SYSTEMLIMIT));
         };
         if (isAny(target, ['fpb:SystemLimit', 'fpb:Product', 'fpb:Energy', 'fpb:Information', 'fpb:ProcessOperator']) && is(shape, 'fpb:TechnicalResource')) {
             showError(event, translate(TR_IN_SYSTEMLIMIT));

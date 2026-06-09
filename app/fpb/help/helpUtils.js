@@ -21,6 +21,11 @@ export function createStateShapeForNewLayer(elementFactory, type, businessObject
     });
     stateShape.businessObject.name = businessObject.name;
     stateShape.businessObject.identification = businessObject.identification;
+    // Shared reference is intentional: a boundary state is the SAME logical
+    // entity displayed in both parent and sub layer (VDI 3682 Layer-Konsistenz).
+    // Edits on either side must propagate to the other, otherwise the two
+    // representations drift apart.
+    stateShape.businessObject.characteristics = businessObject.characteristics || [];
     stateShape.businessObject.isAssignedTo = [];
     stateShape.businessObject.incoming = [];
     stateShape.businessObject.outgoing = [];
