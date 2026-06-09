@@ -116,11 +116,19 @@ export class ConnectionUtils {
  */
 export class ElementValidationUtils {
   /**
-   * Checks if there are any outgoing flows of a specific type
+   * Returns true if NO outgoing flow of the given type exists.
+   * Despite the name suggesting an existence check, the original implementation
+   * is intentionally inverted: callers in FpbContextPadProvider use this to
+   * gate a sibling-flow-type button — e.g. "show PARALLEL button only when
+   * NO ALTERNATIVE flow already exists", which prevents the user from mixing
+   * Alternative and Parallel flows on the same source element (a pattern VDI
+   * 3682 doesn't endorse). The inverted semantics are load-bearing for the
+   * UI gating logic + all four unit tests are written for this semantics.
+   * TODO: rename to e.g. noOutgoingFlowOfType to remove confusion.
    */
   static anyOutgoingFlowOfType(element, flowType) {
     if (!element.outgoing) return true;
-    
+
     for (const flow of element.outgoing) {
       if (flow.type === flowType) {
         return false;

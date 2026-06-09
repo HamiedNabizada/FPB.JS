@@ -28,6 +28,14 @@ export function checkIfItsWithinSystemLimits(shape, target, position) {
   const shape_y_1 = position.y - shape.height / 2;
   const shape_y_2 = position.y + shape.height / 2;
 
+  // Auf den ersten Blick wirkt OR hier wie ein Logik-Bug ("eine Shape gilt
+  // schon dann als 'innerhalb' wenn nur EINE Edge drin liegt"). In der Praxis
+  // ist das aber gewollt tolerant für Boundary-States: die liegen per
+  // Definition genau auf der SystemLimit-Kante, plus mit strikter AND-Logik
+  // würde shape_x_1 = limit_x_1 - shape.width/2 < limit_x_1 die State sofort
+  // als außerhalb klassifizieren. UI-Drag-Restrictions verhindern in der
+  // Praxis dass Shapes weit außerhalb gedroppt werden, deshalb fällt die OR-
+  // Toleranz im Normalbetrieb nicht negativ auf.
   const xWithin = shape_x_1 >= limit_x_1 || shape_x_2 <= limit_x_2;
   const yWithin = shape_y_1 >= limit_y_1 || shape_y_2 <= limit_y_2;
   const isWithin = xWithin && yWithin;

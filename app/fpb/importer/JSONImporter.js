@@ -35,7 +35,12 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
     this._eventBus.on(IMPORT_EVENTS.IMPORT_REQUEST, (event) => {
         try {
             const data = event.data;
-            
+
+            // Every IMPORT_REQUEST is a REPLACE, not an append. Without this,
+            // buildProcesses keeps pushing onto _processes from prior imports
+            // and the LayerPanel stacks ghost entries.
+            this._processes = [];
+
             // Validate data structure using utilities
             const dataValidation = ValidationUtils.validateImportData(data);
             if (!dataValidation.isValid) {
@@ -49,7 +54,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
             if (!project) {
                 return;
             }
-            
+
             const buildSuccess = this.buildProcesses(data, project);
             if (!buildSuccess) {
                 return;
@@ -60,12 +65,20 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
             });
 
             fpbjs.setProjectDefinition(project);
-            
+
+            // O(1) lookup maps so dependency resolution is linear, not O(n²).
+            // Visible stall during import on models with many decomposed
+            // processes otherwise.
+            const processByOuterId = new Map();
+            const processByInnerId = new Map();
+            this._processes.forEach((p) => {
+                if (p.id) processByOuterId.set(p.id, p);
+                if (p.process && p.process.id) processByInnerId.set(p.process.id, p);
+            });
+
             this._processes.forEach(pr => {
                 if (TypeUtils.isStringLike(pr.process.businessObject.parent)) {
-                    const parentProc = this._processes.find(proc => {
-                        return proc.id === pr.process.businessObject.parent;
-                    });
+                    const parentProc = processByOuterId.get(pr.process.businessObject.parent);
                     if (parentProc) {
                         pr.process.businessObject.parent = parentProc.process;
                     }
@@ -74,9 +87,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                     let tmpArray = [];
                     pr.process.businessObject.consistsOfProcesses.forEach((e) => {
                         if (TypeUtils.isStringLike(e)) {
-                            const found = this._processes.find((sP) => {
-                                return sP.process.id === e;
-                            });
+                            const found = processByInnerId.get(e);
                             if (!found) return;
                             let subProcess = found.process;
                             tmpArray.push({ id: subProcess.id, subProcess: subProcess });
@@ -290,6 +301,12 @@ JSONImporter.prototype.buildSystemLimitShapes = function (vI, dI, process, syste
     }
     if (dI.decomposedView) {
         shape.businessObject.decomposedView = dI.decomposedView;
+    }
+    // refObj wird vom AML-Mapper für Boundary-States emittiert
+    // (state ID des States im Parent-Process). Vorher wurde das Feld beim
+    // Import ignoriert → Round-Trip-Metadata-Loss bei Decomposition.
+    if (dI.refObj) {
+        shape.businessObject.refObj = dI.refObj;
     }
     collectionAdd(systemLimit.businessObject.elementsContainer, shape);
     if (vI.type === "fpb:ProcessOperator") {

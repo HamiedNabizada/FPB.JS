@@ -220,6 +220,14 @@ FpbModeler.prototype.clear = function () {
         }
     });
 
+    // Reset internal collections so clear() is self-contained. Without this,
+    // every host integration has to remember to zero out _processes/_project
+    // before importing — and forgetting it stacks ghost entries in the
+    // LayerPanel on every reimport.
+    this._processes = [];
+    this._project = null;
+    this._fpbElements = [];
+
     // remove drawn elements
     Diagram.prototype.clear.call(this);
 };
@@ -316,6 +324,12 @@ FpbModeler.prototype.getSelectedElements = function (processId) {
     let vsInfos = [];
     let dataInfos = [];
     let elementIds = [];
+
+    // Bail out cleanly if the process was deleted while still marked as the
+    // active selection — pro.elementVisualInformation would otherwise throw.
+    if (!pro) {
+        return { elementDataInformation: [], elementVisualInformation: [] };
+    }
 
     selectedElements.forEach((el) => {
         elementIds.push(el.id);
