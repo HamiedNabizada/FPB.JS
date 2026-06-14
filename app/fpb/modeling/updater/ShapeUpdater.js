@@ -26,7 +26,7 @@ import {
  * - shape.move: elementsContainer update, Szenario 6 (boundary move detection)
  */
 export default function ShapeUpdater(
-  eventBus, fpbFactory, canvas, elementFactory, config) {
+  eventBus, fpbFactory, canvas, elementFactory, config, fpbjs) {
 
   CommandInterceptor.call(this, eventBus);
 
@@ -35,6 +35,7 @@ export default function ShapeUpdater(
   this._elementFactory = elementFactory;
   this._config = config;
   this._eventBus = eventBus;
+  this._fpbjs = fpbjs;
 
   const self = this;
 
@@ -62,7 +63,8 @@ ShapeUpdater.$inject = [
   'fpbFactory',
   'canvas',
   'elementFactory',
-  'config.configFile'
+  'config.configFile',
+  'fpbjs'
 ];
 
 
@@ -109,7 +111,7 @@ ShapeUpdater.prototype._handleCreate = function (element, process_rootElement) {
     // Set new Process as root element of the canvas
     this._canvas.setRootElement(process_rootElement, true);
     element.parent = process_rootElement;
-    fpbjs.setProjectDefinition(projectDefintion);
+    this._fpbjs.setProjectDefinition(projectDefintion);
 
     this._eventBus.fire('dataStore.newProcess', {
       newProcess: process_rootElement,

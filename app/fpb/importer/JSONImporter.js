@@ -64,7 +64,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                 projectDefinition: project
             });
 
-            fpbjs.setProjectDefinition(project);
+            this._fpbjs.setProjectDefinition(project);
 
             // O(1) lookup maps so dependency resolution is linear, not O(n²).
             // Visible stall during import on models with many decomposed
