@@ -101,7 +101,7 @@ export function getConnectionType(source, flowHint) {
  * Checks if two elements are already connected
  */
 export function areAlreadyConnected(source, target) {
-  return source.outgoing && source.outgoing.some(connection => 
-    connection.businessObject.targetRef.id === target.id
+  return source.outgoing && source.outgoing.some(connection =>
+    connection.businessObject?.targetRef?.id === target.id
   );
 }
