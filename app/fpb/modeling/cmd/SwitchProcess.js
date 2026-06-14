@@ -71,20 +71,27 @@ SwitchProcess.prototype.execute = function (context) {
         width: zoomedAndScrolledViewbox.outer.width,
         height: zoomedAndScrolledViewbox.outer.height
     });
-    // This should be fail-safe
-    canvas.addShape(systemLimit, process);
+    // This should be fail-safe — guard against processes imported without
+    // a SystemLimit (incomplete AMLs / corrupt JSON snapshots).
+    if (systemLimit) {
+        canvas.addShape(systemLimit, process);
+    }
     processShapes.forEach(element => {
         canvas.addShape(element, process)
     });
-    stateShapes.forEach(element => {
-        canvas.addShape(element.state, systemLimit)
-    });
+    if (systemLimit) {
+        stateShapes.forEach(element => {
+            canvas.addShape(element.state, systemLimit)
+        });
+    }
     processFlows.forEach(element => {
         canvas.addConnection(element, process)
     });
-    systemLimitFlows.forEach(element => {
-        canvas.addConnection(element, systemLimit)
-    });
+    if (systemLimit) {
+        systemLimitFlows.forEach(element => {
+            canvas.addConnection(element, systemLimit)
+        });
+    }
 }
 
 SwitchProcess.prototype.postExecute = function (context) {
