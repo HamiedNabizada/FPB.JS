@@ -246,11 +246,21 @@ export async function createFpbModeler(options = {}) {
       return canvas.getZoom();
     },
 
-    select(elementId) {
+    /**
+     * Select an element by id. When `options.scroll` is true and the
+     * element exists, scroll the viewport so the element is in view —
+     * useful when a finding panel jumps to an element that's currently
+     * off-screen.
+     * Returns true if the element was found and selected.
+     */
+    select(elementId, options = {}) {
       const element = elementRegistry.get(elementId);
-      if (element) {
-        selection.select(element);
+      if (!element) return false;
+      selection.select(element);
+      if (options.scroll && typeof canvas.scrollToElement === 'function') {
+        try { canvas.scrollToElement(element); } catch (_) { /* ignore */ }
       }
+      return true;
     },
 
     getSelected() {
