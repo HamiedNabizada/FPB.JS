@@ -56,9 +56,11 @@ export default function SystemLimitDropFeedbackBlocker(eventBus) {
             (mutation.attributeName === 'fill' || mutation.attributeName === 'style')) {
           
           const element = mutation.target;
-          
-          // Check if this is within a SystemLimit group
-          const systemLimitGroup = element.closest('g[data-element-id*="SystemLimit"]');
+
+          // Check if this is within a SystemLimit group. The renderer tags the
+          // group with the class `fpb-systemlimit`, so AML imports (UUID IDs)
+          // are matched the same way as standalone IDs containing "SystemLimit".
+          const systemLimitGroup = element.closest('g.fpb-systemlimit');
           if (systemLimitGroup && element.tagName === 'rect') {
             
             // Force SystemLimit rects to stay transparent

@@ -95,6 +95,13 @@ export class ProcessShapeRenderer extends BaseShapeRenderer {
   drawSystemLimit(parentGfx, element) {
     const { width, height } = element;
 
+    // Mark the host group so observers and themes can target the SystemLimit
+    // without relying on the element ID containing the substring "SystemLimit"
+    // (AML imports use UUIDs).
+    if (parentGfx && parentGfx.classList) {
+      parentGfx.classList.add('fpb-systemlimit');
+    }
+
     // Create rect directly like createLine does for flows
     const rect = svgCreate('rect');
 
