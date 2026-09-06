@@ -531,6 +531,16 @@ JSONImporter.prototype.updateDepedencies = function (container, element) {
                     let process = foundProc.process;
                     element.businessObject.decomposedView = process;
                     process.businessObject.isDecomposedProcessOperator = element.businessObject;
+                } else {
+                    // Dangling reference: the referenced sub-process is not in
+                    // this import. Leaving the STRING in place crashes every
+                    // later decomposedView consumer (Decompose reads
+                    // .businessObject.elementsContainer off it) — degrade to a
+                    // non-decomposed PO instead.
+                    console.warn('[FPB.JS] Import: decomposedView "' + element.businessObject.decomposedView +
+                        '" on ProcessOperator "' + (element.businessObject.name || element.id) +
+                        '" references a missing process — clearing the decomposition link.');
+                    element.businessObject.decomposedView = null;
                 }
             }
         }

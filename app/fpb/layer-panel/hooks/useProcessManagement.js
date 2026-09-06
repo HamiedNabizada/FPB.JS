@@ -15,12 +15,27 @@ export const useProcessManagement = (modeler) => {
 
     useEffect(() => {
         const handleNewProcess = (e) => {
+            // Dedup by id — multiple sources fire this event (DecomposeProcessOperator,
+            // ComposeProcess, ShapeUpdater, importer). Re-loading the same AML or running
+            // Update/Refresh would otherwise stack duplicate entries in the layer panel.
+            const id = e.newProcess?.id ?? e.newProcess?.businessObject?.id;
+            let isDuplicate = false;
             setProcesses(prevProcesses => {
+                if (id && prevProcesses.some(p =>
+                    (p?.id ?? p?.businessObject?.id) === id)) {
+                    isDuplicate = true;
+                    return prevProcesses;
+                }
                 const newProcesses = [...prevProcesses];
                 collectionAdd(newProcesses, e.newProcess);
                 return newProcesses;
             });
-            setSelectedProcess(e.newProcess);
+            // Only a genuinely NEW process moves the selection. A deduplicated
+            // re-fire (import echo, refresh) must not yank the user back to
+            // whatever layer the duplicate event happened to describe.
+            if (!isDuplicate) {
+                setSelectedProcess(e.newProcess);
+            }
         };
 
         const handleProcessDeleted = (e) => {

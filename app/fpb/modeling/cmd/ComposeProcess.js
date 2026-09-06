@@ -114,6 +114,10 @@ ComposeProcess.prototype.preExecute = function (context) {
         collectionAdd(processNew.businessObject.elementsContainer, systemLimitNew);
 
         collectionAdd(systemLimitNew.businessObject.elementsContainer, processOperatorNew);
+        // Register the PO on the process itself. execute() places the shapes
+        // via canvas.addShape, which bypasses the shape.create command — so
+        // ShapeUpdater never does this wiring for composed layers.
+        collectionAdd(processNew.businessObject.consistsOfProcessOperator, processOperatorNew.businessObject);
         stateShapes.forEach((state) => {
             collectionAdd(systemLimitNew.businessObject.elementsContainer, state.state);
             collectionAdd(processNew.businessObject.consistsOfStates, state.state.businessObject);
@@ -125,6 +129,13 @@ ComposeProcess.prototype.preExecute = function (context) {
 
         computePositions(systemLimitNew, stateShapes, processOperatorNew, 75);
 
+        // Register the new top-level process in the data store BEFORE the
+        // layer panel hears about it — without this the composed layer never
+        // reaches the JSON export (dead entryPoint, missing process entry).
+        // Mirrors DecomposeProcessOperator's event pair.
+        this._eventBus.fire('dataStore.newProcess', {
+            newProcess: processNew
+        });
         // Fire event for LayerPanel
         this._eventBus.fire('layerPanel.newProcess', {
             newProcess: processNew,

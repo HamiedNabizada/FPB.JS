@@ -83,10 +83,11 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
    * Checks if deleting an element has cross-layer consequences
    */
   function hasLayerConsequences(element) {
-    // ProcessOperator mit decomposed Layer
+    // ProcessOperator mit decomposed Layer. Das Feld heisst decomposedView
+    // (Shape des Child-Prozesses) — ein isDecomposed-Flag gibt es nicht.
     if (is(element, ELEMENT_TYPES.PROCESS_OPERATOR)) {
       const bo = element.businessObject;
-      if (bo && bo.isDecomposed) {
+      if (bo && bo.decomposedView) {
         return {
           type: 'decomposed_process_operator',
           message: 'This process operator contains a decomposed layer. Deleting it will also remove all elements in the subordinate layer.',

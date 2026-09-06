@@ -127,8 +127,13 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
             parentProcess: process
         })
     };
-    // Short name of the ProcessOperator being decomposed as name on the SystemLimit
-    systemLimit.businessObject.name = "SL_" + processOperator.businessObject.name;
+    // Short name of the ProcessOperator being decomposed as name on the SystemLimit.
+    // First decompose only — on re-entry (switching back into an existing
+    // sub-layer) the user may have renamed the SystemLimit; overwriting it
+    // here silently reverted that rename.
+    if (!systemLimit.businessObject.name) {
+        systemLimit.businessObject.name = "SL_" + processOperator.businessObject.name;
+    }
     // Calculate positioning of shapes
     const sizesAndPositions = calculateSizeAndPositions(systemLimit, incomingFlows, outgoingFlows);
     systemLimit.width = sizesAndPositions.SystemLimitWidth;
@@ -304,9 +309,14 @@ function calculateSizeAndPositions(systemLimit, incoming, outgoing) {
     let noOfOutgoingStates = outgoing.length - noOfUsageConnections(outgoing);
     let systemLimitWidth = systemLimit.width;
     // Calculate new systemLimit.width if ProcessOperator has more than 12 input or output shapes (default width is no longer sufficient)
-    if ((noOfIncomingStates || noOfOutgoingStates) >= 12) {
+    // Math.max, not ||: the short-circuit OR returned only the FIRST non-zero
+    // count, so e.g. 3 incoming / 15 outgoing evaluated 3 >= 12 and never widened.
+    if (Math.max(noOfIncomingStates, noOfOutgoingStates) >= 12) {
         // -10 so that deltas don't become too small // 50 is the default width of a StateShape
-        systemLimitWidth = systemLimitWidth + (Math.max(noOfOutgoingStates, noOfIncomingStates) - 10) * 50;
+        // Anchor on the FACTORY default (650), not the current width — re-entering
+        // an already-widened sub-layer otherwise compounds the widening each time.
+        const requiredWidth = 650 + (Math.max(noOfOutgoingStates, noOfIncomingStates) - 10) * 50;
+        systemLimitWidth = Math.max(systemLimitWidth, requiredWidth);
     };
     // +1 to account for spacing from the corners.
     let delta_incoming_x = systemLimitWidth / (noOfIncomingStates + 1);
