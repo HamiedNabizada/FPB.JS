@@ -15,7 +15,7 @@ test.describe('Smoke Tests', () => {
     await expect(page.locator('.djs-palette')).toBeVisible();
 
     // "Add Product" Palette-Eintrag sollte vorhanden sein
-    await expect(page.getByTitle('Add Product')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add Product', exact: true })).toBeVisible();
   });
 
   test('creates a SystemLimit element via palette', async ({ page }) => {

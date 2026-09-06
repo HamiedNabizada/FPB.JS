@@ -64,8 +64,9 @@ export class ModelerPage {
   }
 
   async clickPaletteAndPlace(label, position) {
-    // Klicke auf den Palette-Eintrag per Text
-    const paletteEntry = this.page.getByTitle(label);
+    // Palette-Eintrag per Accessible Name. diagram-js 15.x setzt aria-label,
+    // nicht mehr title, deshalb kein getByTitle.
+    const paletteEntry = this.page.getByRole('button', { name: label, exact: true });
     await paletteEntry.click();
 
     // Klicke auf den Canvas an der gewünschten Position
