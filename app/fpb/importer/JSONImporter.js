@@ -112,7 +112,10 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
 
 
             })
-            this._processes.forEach((pr) => this.completeConnectionWaypoints(pr.process));
+            this._processes.forEach((pr) => {
+                this.removeUnconnectedConnections(pr.process);
+                this.completeConnectionWaypoints(pr.process);
+            });
             // Timeout required so remaining components finish loading before import.
             setTimeout(() => {
                 this._processes.forEach((pr, index) => {
@@ -338,9 +341,10 @@ JSONImporter.prototype.buildSystemLimitShapes = function (vI, dI, process, syste
     if (vI.type === 'fpb:Product' || vI.type === 'fpb:Energy' || vI.type === 'fpb:Information') {
         collectionAdd(process.businessObject.consistsOfStates, shape.businessObject);
     }
-    if ((shape.businessObject.incoming && shape.businessObject.incoming.length > 0) || (shape.businessObject.outgoing && shape.businessObject.outgoing.length > 0) || (shape.businessObject.isAssignedTo && shape.businessObject.isAssignedTo.length > 0)) {
-        this._processes[no - 1].updateElements.push(shape)
-    }
+    // Every shape takes part in reference resolution. Flows look up their source
+    // and target in updateElements, so a state without its own incoming/outgoing
+    // lists (valid for external generators) must still be found there.
+    this._processes[no - 1].updateElements.push(shape);
 }
 JSONImporter.prototype.buildSystemLimitFlow = function (vI, dI, systemLimit, no) {
     if (!vI) {
@@ -417,6 +421,52 @@ JSONImporter.prototype.getConnections = function (process) {
         }
     });
     return connections;
+};
+
+/**
+ * A connection whose source or target could not be resolved cannot be drawn and
+ * used to abort the whole import. Drop it with a warning and undo the half of the
+ * wiring that did resolve.
+ */
+JSONImporter.prototype.removeUnconnectedConnections = function (process) {
+    const removedIds = [];
+    this.getConnections(process).forEach(({ element, container }) => {
+        if (element.source && element.target) {
+            return;
+        }
+        const bo = element.businessObject;
+        this._errorHandler.logWarning(`Connection ${element.id} references a missing source or target - removed`);
+        collectionRemove(container, element);
+        removedIds.push(element.id);
+        [element.source, element.target].forEach((end) => {
+            if (end && end.businessObject) {
+                collectionRemove(end.businessObject.outgoing, bo);
+                collectionRemove(end.businessObject.incoming, bo);
+            }
+        });
+        (bo.inTandemWith || []).forEach((partner) => {
+            if (partner && !TypeUtils.isStringLike(partner)) {
+                collectionRemove(partner.inTandemWith, bo);
+            }
+        });
+    });
+    if (removedIds.length === 0) {
+        return;
+    }
+    // Elements may still list a removed connection by its id (unresolved side).
+    const forEachShape = (container) => (container || []).forEach((element) => {
+        if (!element || !element.businessObject || is(element, FPB_TYPES.FLOW)) {
+            return;
+        }
+        removedIds.forEach((id) => {
+            collectionRemove(element.businessObject.incoming, id);
+            collectionRemove(element.businessObject.outgoing, id);
+        });
+        if (is(element, FPB_TYPES.SYSTEM_LIMIT)) {
+            forEachShape(element.businessObject.elementsContainer);
+        }
+    });
+    forEachShape(process.businessObject.elementsContainer);
 };
 
 /**
@@ -563,16 +613,18 @@ JSONImporter.prototype.updateDepedencies = function (container, element) {
             })
 
         }
-        if (source && TYPE_GROUPS.STATES.some(type => is(source, type))) {
+        // isAssignedTo needs both ends. A flow with an unresolved end is dropped
+        // afterwards in removeUnconnectedConnections.
+        if (source && target && TYPE_GROUPS.STATES.some(type => is(source, type))) {
             collectionRemove(source.businessObject.isAssignedTo, target.businessObject.id);
             collectionAdd(source.businessObject.isAssignedTo, target.businessObject);
         }
-        if (target && TYPE_GROUPS.STATES.some(type => is(target, type))) {
+        if (source && target && TYPE_GROUPS.STATES.some(type => is(target, type))) {
             collectionRemove(target.businessObject.isAssignedTo, source.businessObject.id);
             collectionAdd(target.businessObject.isAssignedTo, source.businessObject);
         }
-        if ((source && is(source, FPB_TYPES.PROCESS_OPERATOR)) || (target && is(target, FPB_TYPES.PROCESS_OPERATOR))) {
-            if ((source && is(source, FPB_TYPES.TECHNICAL_RESOURCE)) || (target && is(target, FPB_TYPES.TECHNICAL_RESOURCE))) {
+        if (source && target && (is(source, FPB_TYPES.PROCESS_OPERATOR) || is(target, FPB_TYPES.PROCESS_OPERATOR))) {
+            if (is(source, FPB_TYPES.TECHNICAL_RESOURCE) || is(target, FPB_TYPES.TECHNICAL_RESOURCE)) {
                 if (source && source.businessObject) {
                     source.businessObject.isAssignedTo = ArrayUtils.ensureArray(source.businessObject.isAssignedTo);
                     collectionRemove(source.businessObject.isAssignedTo, target.businessObject.id);
