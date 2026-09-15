@@ -112,6 +112,17 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
 
 
             })
+            // Files without "parent" on sub-processes (external generators) still
+            // carry the hierarchy in consistsOfProcesses. Compose and the layer
+            // tree navigate via parent, so derive it where it is missing.
+            this._processes.forEach((pr) => {
+                (pr.process.businessObject.consistsOfProcesses || []).forEach((child) => {
+                    const childBo = child && child.businessObject;
+                    if (childBo && (!childBo.parent || TypeUtils.isStringLike(childBo.parent))) {
+                        childBo.parent = pr.process;
+                    }
+                });
+            });
             this._processes.forEach((pr) => {
                 this.removeUnconnectedConnections(pr.process);
                 this.completeConnectionWaypoints(pr.process);
