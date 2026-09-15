@@ -17,10 +17,13 @@ import {
 
 import { is } from '../help/utils';
 
-export default function FpbLayouter() {
+export default function FpbLayouter(elementRegistry) {
+  this._elementRegistry = elementRegistry;
 }
 
 inherits(FpbLayouter, BaseLayouter);
+
+FpbLayouter.$inject = [ 'elementRegistry' ];
 
 
 FpbLayouter.prototype.layoutConnection = function (connection, hints) {
@@ -90,9 +93,9 @@ FpbLayouter.prototype.layoutConnection = function (connection, hints) {
           manhattanOptions
         )
       );
-    if (is(connection, 'fpb:ParallelFlow') && connection.businessObject.inTandemWith[0] && connection.businessObject.inTandemWith[0].di) {
-      let partnerWaypoints = connection.businessObject.inTandemWith[0].di.waypoint;
+    const partnerWaypoints = is(connection, 'fpb:ParallelFlow') ? this._getPartnerWaypoints(connection) : null;
 
+    if (partnerWaypoints) {
       if (target.y > partnerWaypoints[1].y && updatedWaypoints.length > 2) { // Only if shape is placed below the bend and connection has a bend
 
         if (partnerWaypoints.length > 2) { // Only if partner shape has a bend
@@ -109,4 +112,28 @@ FpbLayouter.prototype.layoutConnection = function (connection, hints) {
   }
 
   return updatedWaypoints || [start, end];
+};
+
+/**
+ * Waypoints of the first tandem partner of a ParallelFlow, or null.
+ *
+ * Prefers the live connection shape: di.waypoint is only written on
+ * connection.layout/move/updateWaypoints, so a partner that came in via
+ * JSON import and was never touched has a DI edge without waypoints.
+ * inTandemWith may also still hold a plain id if the importer could not
+ * resolve the partner.
+ */
+FpbLayouter.prototype._getPartnerWaypoints = function (connection) {
+  const tandem = connection.businessObject.inTandemWith;
+  const partner = tandem && tandem[0];
+
+  if (!partner) {
+    return null;
+  }
+
+  const partnerId = typeof partner === 'string' ? partner : partner.id;
+  const partnerShape = partnerId && this._elementRegistry.get(partnerId);
+  const waypoints = (partnerShape && partnerShape.waypoints) || (partner.di && partner.di.waypoint);
+
+  return waypoints && waypoints.length > 1 ? waypoints : null;
 };
