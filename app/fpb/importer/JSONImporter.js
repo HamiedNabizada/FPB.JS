@@ -85,22 +85,22 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                     }
                 };
                 if (pr.process.businessObject.consistsOfProcesses && pr.process.businessObject.consistsOfProcesses.length > 0) {
-                    let tmpArray = [];
+                    // Ids without a matching process in this import are dropped
+                    // instead of lingering as strings.
+                    const resolvedProcesses = [];
                     pr.process.businessObject.consistsOfProcesses.forEach((e) => {
-                        if (TypeUtils.isStringLike(e)) {
-                            const found = processByInnerId.get(e);
-                            if (!found) return;
-                            let subProcess = found.process;
-                            tmpArray.push({ id: subProcess.id, subProcess: subProcess });
-
+                        if (!TypeUtils.isStringLike(e)) {
+                            collectionAdd(resolvedProcesses, e);
+                            return;
                         }
+                        const found = processByInnerId.get(e);
+                        if (!found) {
+                            this._errorHandler.logWarning(`Process ${pr.process.id} lists missing sub-process ${e} - dropped`);
+                            return;
+                        }
+                        collectionAdd(resolvedProcesses, found.process);
                     });
-                    tmpArray.forEach((el) => {
-                        collectionRemove(pr.process.businessObject.consistsOfProcesses, el.id);
-                        collectionAdd(pr.process.businessObject.consistsOfProcesses, el.subProcess);
-                    })
-
-
+                    pr.process.businessObject.consistsOfProcesses = resolvedProcesses;
                 }
                 if (pr.updateElements.length > 0) {
                     pr.updateElements.forEach((el) => {
@@ -144,6 +144,23 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
     });
 
 }
+/**
+ * Swap a reference id for its object at the same position, so resolving keeps
+ * the order of the imported list and an unchanged model exports unchanged.
+ */
+function replaceReference(list, id, object) {
+    const index = list.indexOf(id);
+    if (list.indexOf(object) !== -1) {
+        if (index !== -1) {
+            list.splice(index, 1);
+        }
+    } else if (index !== -1) {
+        list[index] = object;
+    } else {
+        list.push(object);
+    }
+}
+
 /**
  * The importer consumes elementDataInformation/elementVisualInformation while
  * building (filterElements removes every matched entry) and swaps reference IDs
@@ -594,24 +611,27 @@ JSONImporter.prototype.updateDepedencies = function (container, element) {
             }
         };
         if (element.businessObject.inTandemWith) {
-            element.businessObject.inTandemWith.forEach((tandemFlow) => {
-                if (TypeUtils.isStringLike(tandemFlow)) {
-                    let partner = container.find((partner) => {
-                        if (partner.id === tandemFlow) {
-                            collectionRemove(partner.businessObject.inTandemWith, element.id);
-                            collectionAdd(partner.businessObject.inTandemWith, element.businessObject);
-                        }
-                        return partner.id === tandemFlow
-
-                    });
-                    if (partner) {
-                        let flow = partner.businessObject;
-                        collectionRemove(element.businessObject.inTandemWith, flow.id);
-                        collectionAdd(element.businessObject.inTandemWith, flow);
-                    }
+            // Resolve over a copy: replacing entries in the list while iterating
+            // it skipped the entry after every resolved one. Partners get the
+            // back-link, so a group listed on one side only still ends up symmetric.
+            const resolved = [];
+            element.businessObject.inTandemWith.slice().forEach((tandemFlow) => {
+                if (!TypeUtils.isStringLike(tandemFlow)) {
+                    collectionAdd(resolved, tandemFlow);
+                    return;
                 }
-            })
-
+                const partner = container.find((el) => el && el.id === tandemFlow);
+                if (!partner || !partner.businessObject) {
+                    this._errorHandler.logWarning(`Connection ${element.id} lists missing tandem partner ${tandemFlow} - dropped`);
+                    return;
+                }
+                collectionAdd(resolved, partner.businessObject);
+                if (is(partner, FPB_TYPES.PARALLEL_FLOW) || is(partner, FPB_TYPES.ALTERNATIVE_FLOW)) {
+                    partner.businessObject.inTandemWith = ArrayUtils.ensureArray(partner.businessObject.inTandemWith);
+                    replaceReference(partner.businessObject.inTandemWith, element.id, element.businessObject);
+                }
+            });
+            element.businessObject.inTandemWith = resolved;
         }
         // isAssignedTo needs both ends. A flow with an unresolved end is dropped
         // afterwards in removeUnconnectedConnections.
