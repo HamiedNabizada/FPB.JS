@@ -34,7 +34,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
 
     this._eventBus.on(IMPORT_EVENTS.IMPORT_REQUEST, (event) => {
         try {
-            const data = event.data;
+            const data = cloneImportData(event.data);
 
             // Every IMPORT_REQUEST is a REPLACE, not an append. Without this,
             // buildProcesses keeps pushing onto _processes from prior imports
@@ -139,6 +139,21 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
     });
 
 }
+/**
+ * The importer consumes elementDataInformation/elementVisualInformation while
+ * building (filterElements removes every matched entry) and swaps reference IDs
+ * for objects in place. Work on a copy so the caller's data stays intact and can
+ * be imported again. Non-serializable input falls back to the original object,
+ * which is the previous behavior.
+ */
+function cloneImportData(data) {
+    try {
+        return JSON.parse(JSON.stringify(data));
+    } catch (error) {
+        return data;
+    }
+}
+
 JSONImporter.$inject = [
     'eventBus',
     'canvas',
