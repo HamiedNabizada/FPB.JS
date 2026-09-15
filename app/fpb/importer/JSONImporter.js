@@ -126,6 +126,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
             this._processes.forEach((pr) => {
                 this.removeUnconnectedConnections(pr.process);
                 this.completeConnectionWaypoints(pr.process);
+                this.mirrorWaypointsToDi(pr.process);
             });
             // Timeout required so remaining components finish loading before import.
             setTimeout(() => {
@@ -506,6 +507,21 @@ JSONImporter.prototype.completeConnectionWaypoints = function (process) {
         const hasWaypoints = element.waypoints && element.waypoints.length >= 2;
         if (!hasWaypoints && element.source && element.target) {
             element.waypoints = [getMid(element.source), getMid(element.target)];
+        }
+    });
+};
+
+/**
+ * Imported waypoints only lived on the connection shape. di.waypoint is otherwise
+ * written on connection.layout/move/updateWaypoints, so an imported connection
+ * nobody touched had a DI edge without waypoints. Mirror them like
+ * ConnectionUpdater does.
+ */
+JSONImporter.prototype.mirrorWaypointsToDi = function (process) {
+    this.getConnections(process).forEach(({ element }) => {
+        const di = element.businessObject && element.businessObject.di;
+        if (di && typeof di.set === 'function' && element.waypoints && element.waypoints.length >= 2) {
+            di.set('waypoint', this._fpbFactory.createDiWaypoints(element.waypoints));
         }
     });
 };
