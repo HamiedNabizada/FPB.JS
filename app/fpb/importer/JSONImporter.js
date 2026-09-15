@@ -1,4 +1,5 @@
 import { is } from '../help/utils';
+import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
 import {
     add as collectionAdd,
     remove as collectionRemove
@@ -111,6 +112,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
 
 
             })
+            this._processes.forEach((pr) => this.completeConnectionWaypoints(pr.process));
             // Timeout required so remaining components finish loading before import.
             setTimeout(() => {
                 this._processes.forEach((pr, index) => {
@@ -248,6 +250,12 @@ JSONImporter.prototype.filterElements = function (id, eVI, eDI, process, parent,
             break;
         }
     }
+    if (!dataInformation) {
+        // An ID without data (typo, element dropped by an external generator)
+        // used to abort the whole import. Skip it and keep the rest of the model.
+        this._errorHandler.logWarning(`Element ${id} is listed in a container but has no data - skipped`);
+        return;
+    }
     for (let el of eVI) {
         if (id === el.id) {
             visualInformation = el;
@@ -335,10 +343,15 @@ JSONImporter.prototype.buildSystemLimitShapes = function (vI, dI, process, syste
     }
 }
 JSONImporter.prototype.buildSystemLimitFlow = function (vI, dI, systemLimit, no) {
+    if (!vI) {
+        // Waypoints are synthesized in completeConnectionWaypoints once source
+        // and target are resolved.
+        this._errorHandler.logWarning(`Missing visual information for connection ${dI.id} - drawing a straight line`);
+    }
     let connection = this._elementFactory.create('connection', {
-        type: vI.type,
-        id: vI.id,
-        waypoints: vI.waypoints
+        type: vI ? vI.type : dI.$type,
+        id: vI ? vI.id : dI.id,
+        waypoints: vI ? vI.waypoints : []
     });
     connection.businessObject.sourceRef = dI.sourceRef;
     connection.businessObject.targetRef = dI.targetRef;
@@ -351,7 +364,8 @@ JSONImporter.prototype.buildSystemLimitFlow = function (vI, dI, systemLimit, no)
 }
 JSONImporter.prototype.buildTRandUsage = function (vI, dI, process, no) {
     let element;
-    if (vI.type === 'fpb:TechnicalResource') {
+    const elementType = vI ? vI.type : dI.$type;
+    if (elementType === 'fpb:TechnicalResource') {
         element = this._elementFactory.create('shape', {
             type: vI.type,
             id: vI.id,
@@ -369,11 +383,14 @@ JSONImporter.prototype.buildTRandUsage = function (vI, dI, process, no) {
             this.buildCharacteristics(element.businessObject, dI.characteristics);
         }
     }
-    if (vI.type === 'fpb:Usage') {
+    if (elementType === 'fpb:Usage') {
+        if (!vI) {
+            this._errorHandler.logWarning(`Missing visual information for connection ${dI.id} - drawing a straight line`);
+        }
         element = this._elementFactory.create('connection', {
-            type: vI.type,
-            id: vI.id,
-            waypoints: vI.waypoints
+            type: elementType,
+            id: vI ? vI.id : dI.id,
+            waypoints: vI ? vI.waypoints : []
         })
         element.businessObject.sourceRef = dI.sourceRef;
         element.businessObject.targetRef = dI.targetRef;
@@ -381,6 +398,39 @@ JSONImporter.prototype.buildTRandUsage = function (vI, dI, process, no) {
     collectionAdd(process.businessObject.elementsContainer, element);
     collectionAdd(this._processes[no - 1].updateElements, element);
 }
+
+/**
+ * All connections of a process: flows inside the SystemLimit and usages on the
+ * process level, each with the container that holds it.
+ */
+JSONImporter.prototype.getConnections = function (process) {
+    const connections = [];
+    const collect = (container) => (container || []).forEach((element) => {
+        if (element && is(element, FPB_TYPES.FLOW)) {
+            connections.push({ element, container });
+        }
+    });
+    collect(process.businessObject.elementsContainer);
+    (process.businessObject.elementsContainer || []).forEach((element) => {
+        if (element && is(element, FPB_TYPES.SYSTEM_LIMIT)) {
+            collect(element.businessObject.elementsContainer);
+        }
+    });
+    return connections;
+};
+
+/**
+ * Connections imported without (usable) visual information get a straight line
+ * between the centers of source and target.
+ */
+JSONImporter.prototype.completeConnectionWaypoints = function (process) {
+    this.getConnections(process).forEach(({ element }) => {
+        const hasWaypoints = element.waypoints && element.waypoints.length >= 2;
+        if (!hasWaypoints && element.source && element.target) {
+            element.waypoints = [getMid(element.source), getMid(element.target)];
+        }
+    });
+};
 
 JSONImporter.prototype.buildCharacteristics = function (bO, char) {
     let characteristics = [];
