@@ -243,7 +243,8 @@ export interface Modeling {
   updateProperties(element: Element, properties: Record<string, any>): void;
   updateLabel(element: Element, newLabel: string, newBounds?: Bounds, hints?: any): void;
   connect(source: Shape, target: Shape, attrs?: any, hints?: any): Connection;
-  switchProcess(process: ProcessEntry): void;
+  /** Expects the process root shape, not the ProcessEntry from getProcesses() */
+  switchProcess(process: Shape): void;
   decomposeProcessOperator(element: Shape): void;
   composeProcess(element: Shape): void;
 }

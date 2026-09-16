@@ -45,6 +45,8 @@ export const FpbModeler = FpbModelerStub;
 export const PropertiesPanel = PropertiesPanelStub;
 export const LayerOverview = LayerOverviewStub;
 
+import { collectProcessShapes, findProcessShape } from './processShapes';
+
 // Automatic layout works on plain JSON, so it is available without a browser.
 export { layoutImportData, needsLayout } from '../app/fpb/layout/AutoLayout';
 
@@ -201,21 +203,7 @@ export async function createFpbModeler(options = {}) {
       const { allLayers = false, ...pdfOptions } = options;
 
       if (allLayers) {
-        // Collect all process Shapes via entryPoint → consistsOfProcesses
-        const entryPoint = modeler.getProjectDefinition().entryPoint;
-        const processShapes = [];
-        const queue = [entryPoint];
-        while (queue.length > 0) {
-          const shape = queue.shift();
-          if (!shape || !shape.businessObject) continue;
-          processShapes.push(shape);
-          const children = shape.businessObject.consistsOfProcesses || [];
-          for (const child of children) {
-            if (child && child.businessObject) {
-              queue.push(child);
-            }
-          }
-        }
+        const processShapes = collectProcessShapes(modeler.getProjectDefinition());
 
         const currentRoot = canvas.getRootElement();
         const layers = [];
@@ -275,9 +263,10 @@ export async function createFpbModeler(options = {}) {
     },
 
     switchProcess(id) {
-      const entry = modeler.getProcess(id);
-      if (entry && entry.process) {
-        modeling.switchProcess(entry.process);
+      // getProcess() returns the business object, switching needs the shape.
+      const shape = findProcessShape(modeler.getProjectDefinition(), id);
+      if (shape) {
+        modeling.switchProcess(shape);
       }
     },
 
