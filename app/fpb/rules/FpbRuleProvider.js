@@ -128,6 +128,16 @@ FpbRuleProvider.prototype.init = function () {
     return canConnect(source, target);
   });
 
+  // diagram-js executes connection.reconnect when an end is dragged; the
+  // reconnectStart/reconnectEnd rules below are never asked about it.
+  this.addRule('connection.reconnect', RULE_PRIORITIES.HIGH, (context) => {
+    const { connection } = context;
+    const source = context.source || (connection && connection.source);
+    const target = context.target || (connection && connection.target);
+    if (!source || !target) return false;
+    return canConnect(source, target, connection) || false;
+  });
+
   this.addRule('connection.reconnectStart', RULE_PRIORITIES.HIGH, (context) => {
     const { connection } = context;
     const source = context.hover || context.source;

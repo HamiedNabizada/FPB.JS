@@ -98,6 +98,7 @@ export default function DiUpdater(eventBus, fpbFactory, connectionDocking) {
   // update Default & Conditional flows //////////////////////
 
   this.executed([
+    'connection.reconnect',
     'connection.reconnectEnd',
     'connection.reconnectStart'
   ], ifFpb(function (e) {
@@ -126,6 +127,7 @@ export default function DiUpdater(eventBus, fpbFactory, connectionDocking) {
   }));
 
   this.reverted([
+    'connection.reconnect',
     'connection.reconnectEnd',
     'connection.reconnectStart'
   ], ifFpb(function (e) {

@@ -63,10 +63,14 @@ export default function ConnectionUpdater(
     self.updateConnection(e.context);
   }
 
+  // 'connection.reconnect' is the command diagram-js actually executes when an
+  // end is dragged. Without it sourceRef/targetRef kept pointing at the old
+  // element: the drawing followed, the model and the export did not.
   this.executed([
     'connection.create',
     'connection.move',
     'connection.delete',
+    'connection.reconnect',
     'connection.reconnectEnd',
     'connection.reconnectStart'
   ], ifFpb(updateConnection));
@@ -75,6 +79,7 @@ export default function ConnectionUpdater(
     'connection.create',
     'connection.move',
     'connection.delete',
+    'connection.reconnect',
     'connection.reconnectEnd',
     'connection.reconnectStart'
   ], ifFpb(updateConnection));
