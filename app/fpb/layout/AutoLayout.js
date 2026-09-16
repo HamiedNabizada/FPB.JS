@@ -104,7 +104,8 @@ export function layoutImportData(data, options = {}) {
     const parent = findParent(model, models);
     const boundaryOrder = parent ? parentBoundaryOrder(model, parent) : null;
     const outcome = layoutProcess(model, mode, boundaryOrder);
-    report.push({ process: model.entry.process.id, ...outcome });
+    const name = model.systemLimit && typeof model.systemLimit.name === 'string' ? model.systemLimit.name : '';
+    report.push({ process: model.entry.process.id, name, ...outcome });
   });
 
   const changed = report.some((item) => item.mode !== 'unchanged');
@@ -284,7 +285,11 @@ function layoutProcess(model, mode, boundaryOrder) {
     return { mode: 'unchanged', placed: 0 };
   }
 
-  const nothingPlaced = missingShapes.length === model.shapeIds.length;
+  // A lone SystemLimit position (some generators write a default one) is no
+  // layout to build on: arrange everything when no element inside has a place.
+  const nothingPlaced = model.shapeIds
+    .filter((id) => !model.systemLimit || id !== model.systemLimit.id)
+    .every((id) => missingShapes.includes(id));
   const systemLimitMissing = model.systemLimit && missingShapes.includes(model.systemLimit.id);
 
   if (mode === 'all' || nothingPlaced || systemLimitMissing || !model.systemLimit) {
@@ -1368,10 +1373,13 @@ function placeMissingShapes(model, missingIds, boundaryOrder) {
     .map((connection) => model.visual.get(connection.id))
     .filter(hasConnectionVisual)
     .map((visual) => visual.waypoints);
-  // Room for the label left of a state counts as occupied.
+  // Room for the label left of a state counts as occupied, for the new
+  // element and for the ones already there.
+  const withLabelRoom = (box, room) => ({ x: box.x - room, y: box.y, width: box.width + room, height: box.height });
   const isFree = (box, labelRoom) => {
-    const extended = { x: box.x - labelRoom, y: box.y, width: box.width + labelRoom, height: box.height };
-    if (placedBoxes().some((other) => overlaps(extended, other.box, 20))) {
+    const extended = withLabelRoom(box, labelRoom);
+    const occupied = placedBoxes().some((other) => overlaps(extended, withLabelRoom(other.box, labelRoomOf(model.data.get(other.id))), 20));
+    if (occupied) {
       return false;
     }
     const padded = { x: box.x - 10, y: box.y - 10, width: box.width + 20, height: box.height + 20 };
