@@ -465,6 +465,38 @@ export const PropertiesPanel: any;
 /** Server-side stub class (throws on instantiation) */
 export const LayerOverview: any;
 /** Default modeler config (empty object on server) */
+/** Options for layoutImportData */
+export interface LayoutOptions {
+  /**
+   * 'missing' (default) keeps existing visual information and only adds what is
+   * absent; 'all' arranges every process from scratch.
+   */
+  mode?: 'missing' | 'all';
+}
+
+/** Result of layoutImportData */
+export interface LayoutResult {
+  /** Copy of the input with elementVisualInformation completed */
+  data: any[];
+  /** True if any process received new visual information */
+  changed: boolean;
+  /** Per process: how it was arranged and how many elements were placed */
+  report: { process: string; mode: 'unchanged' | 'connections' | 'incremental' | 'full'; placed: number }[];
+}
+
+/**
+ * Arranges FPB.JS JSON data without (complete) visual information, following
+ * the VDI 3682 drawing conventions. Does not modify the input. The importer
+ * applies it automatically to files with missing layout.
+ *
+ * @example
+ * fpb.importJSON(layoutImportData(json, { mode: 'all' }).data);
+ */
+export function layoutImportData(data: any[], options?: LayoutOptions): LayoutResult;
+
+/** True if some shape or connection in the data has no visual information */
+export function needsLayout(data: any[]): boolean;
+
 export const defaultConfig: Record<string, any>;
 /** Default properties panel config (empty object on server) */
 export const defaultPropertiesConfig: Record<string, any>;

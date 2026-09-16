@@ -15,6 +15,7 @@ import {
     ValidationUtils 
 } from './ImportUtils';
 import { ErrorHandler } from './ImportErrors';
+import { needsLayout, layoutImportData } from '../layout/AutoLayout';
 
 export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFactory, elementFactory) {
     this._eventBus = eventBus;
@@ -35,7 +36,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
 
     this._eventBus.on(IMPORT_EVENTS.IMPORT_REQUEST, (event) => {
         try {
-            const data = cloneImportData(event.data);
+            let data = cloneImportData(event.data);
 
             // Every IMPORT_REQUEST is a REPLACE, not an append. Without this,
             // buildProcesses keeps pushing onto _processes from prior imports
@@ -50,6 +51,17 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                     dataValidation.error
                 );
                 return;
+            }
+            // Files without (complete) visual information, e.g. the data-only
+            // download or layout-free AML, get positions instead of aborting.
+            if (needsLayout(data)) {
+                const layout = layoutImportData(data);
+                data = layout.data;
+                layout.report.filter((item) => item.mode !== 'unchanged').forEach((item) => {
+                    this._errorHandler.logWarning(
+                        `Process ${item.process} has no complete layout - arranged automatically (${item.mode}, ${item.placed} elements)`
+                    );
+                });
             }
             const project = this.constructProjectDefinition(data);
             if (!project) {

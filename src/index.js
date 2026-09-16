@@ -45,6 +45,9 @@ export const FpbModeler = FpbModelerStub;
 export const PropertiesPanel = PropertiesPanelStub;
 export const LayerOverview = LayerOverviewStub;
 
+// Automatic layout works on plain JSON, so it is available without a browser.
+export { layoutImportData, needsLayout } from '../app/fpb/layout/AutoLayout';
+
 // Export empty configs for server-side compatibility
 export const defaultConfig = {};
 export const defaultPropertiesConfig = {};
