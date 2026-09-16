@@ -166,22 +166,31 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
           const stateWidth = 50;
           const stateSpacing = 20;
 
-          // Count already existing states on the respective boundary
-          let existingStatesOnBorder = 0;
           const targetY = isIncoming
             ? childSystemLimit.y - 25  // Upper boundary
             : childSystemLimit.y + childSystemLimit.height - 25;  // Lower boundary
 
+          // Place right of the outermost state already sitting on that boundary.
+          // Counting them and multiplying by a fixed spacing assumed they were
+          // packed from the left, which put the new state on top of an existing
+          // one whenever they were not.
+          let rightEdge = null;
           (childSystemLimit.businessObject.elementsContainer || []).forEach(function(el) {
+            if (el === newStateShape) {
+              return;
+            }
             if (isAny(el, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
               if (Math.abs(el.y - targetY) < 30) {
-                existingStatesOnBorder++;
+                const edge = el.x + (el.width || stateWidth);
+                if (rightEdge === null || edge > rightEdge) {
+                  rightEdge = edge;
+                }
               }
             }
           });
 
           const startX = childSystemLimit.x + 50;
-          newStateShape.x = startX + (existingStatesOnBorder * (stateWidth + stateSpacing));
+          newStateShape.x = rightEdge === null ? startX : rightEdge + stateSpacing;
           newStateShape.y = targetY;
         }
       }
@@ -268,18 +277,31 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
         (stateInDecomposedProcess.outgoing || []).forEach(function (flow) {
           const flowElement = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, flow.id);
           collectionRemove(decomposedProcessSystemLimit.businessObject.elementsContainer, flowElement);
-          collectionRemove(flow.businessObject.targetRef.incoming, flow.businessObject);
-          if (flow.businessObject.targetRef.decomposedView) {
-            decomposedProcesses.push(flow.businessObject.targetRef.decomposedView);
+          if (flow.businessObject.targetRef) {
+            collectionRemove(flow.businessObject.targetRef.incoming, flow.businessObject);
+            if (flow.businessObject.targetRef.decomposedView) {
+              decomposedProcesses.push(flow.businessObject.targetRef.decomposedView);
+            }
+          }
+          // Shape references as well. A flow left behind in target.incoming is
+          // invisible but still counts as a connection, so canConnect refuses
+          // every new connection to that element afterwards.
+          if (flow.target) {
+            collectionRemove(flow.target.incoming, flow);
           }
         });
 
         (stateInDecomposedProcess.incoming || []).forEach(function (flow) {
           const flowElement = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, flow.id);
           collectionRemove(decomposedProcessSystemLimit.businessObject.elementsContainer, flowElement);
-          collectionRemove(flow.businessObject.sourceRef.outgoing, flow.businessObject);
-          if (flow.businessObject.sourceRef.decomposedView) {
-            decomposedProcesses.push(flow.businessObject.sourceRef.decomposedView);
+          if (flow.businessObject.sourceRef) {
+            collectionRemove(flow.businessObject.sourceRef.outgoing, flow.businessObject);
+            if (flow.businessObject.sourceRef.decomposedView) {
+              decomposedProcesses.push(flow.businessObject.sourceRef.decomposedView);
+            }
+          }
+          if (flow.source) {
+            collectionRemove(flow.source.outgoing, flow);
           }
         });
         collectionRemove(decomposedProcessSystemLimit.businessObject.elementsContainer, stateInDecomposedProcess);

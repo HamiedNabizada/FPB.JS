@@ -200,6 +200,12 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
                     connectedDecomposedProcesses.push(flow.businessObject.targetRef.decomposedView);
                   }
                 }
+                // Shape references as well. A flow left in target.incoming is
+                // invisible but still counts as a connection, and canConnect
+                // then refuses every new connection to that element.
+                if (flow.target) {
+                  collectionRemove(flow.target.incoming, flow);
+                }
               });
             }
             if (stateInChild.incoming) {
@@ -210,6 +216,9 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
                   if (flow.businessObject.sourceRef.decomposedView) {
                     connectedDecomposedProcesses.push(flow.businessObject.sourceRef.decomposedView);
                   }
+                }
+                if (flow.source) {
+                  collectionRemove(flow.source.outgoing, flow);
                 }
               });
             }
