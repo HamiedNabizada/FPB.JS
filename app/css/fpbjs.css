@@ -231,3 +231,26 @@
 .djs-tooltip-tipp:hover {
   opacity: 1;
 }
+/* Touch
+   The canvas takes every touch itself (pan, pinch, drag); the browser must not
+   scroll or zoom the page underneath. Larger targets where fingers are used. */
+
+.djs-container {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@media (pointer: coarse) {
+  .djs-context-pad .entry {
+    width: 40px;
+    height: 40px;
+    background-size: 36px 36px;
+    background-position: center;
+  }
+
+  .djs-context-pad {
+    max-width: 130px;
+  }
+}

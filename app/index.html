@@ -1,6 +1,7 @@
 <html>
 
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="alternate icon" href="/favicon.ico">
   <link rel="stylesheet" href="../css/diagram-js.css">
@@ -27,7 +28,29 @@
 
     .modeler-parent {
       display: grid;
-      grid-template-columns: 1fr auto auto;
+      grid-template-columns: 1fr auto;
+      position: relative;
+    }
+
+    .side-panels {
+      display: flex;
+    }
+
+    /* Narrow screens (tablet upright, phone): the panels float over the
+       canvas instead of taking its width. */
+    @media (max-width: 900px) {
+      .side-panels {
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        z-index: 5;
+      }
+
+      #properties-container,
+      #layer-container {
+        background: rgba(250, 250, 250, 0.95);
+      }
     }
 
     .modal-body .row {
@@ -61,8 +84,9 @@
   <div class="fpb-wrapper">
     <div class="modeler-parent">
       <div id="modeler-container"></div>
-      <div id="properties-container"></div>
-      <div id="layer-container">
+      <div class="side-panels">
+        <div id="properties-container"></div>
+        <div id="layer-container"></div>
       </div>
     </div>
 
