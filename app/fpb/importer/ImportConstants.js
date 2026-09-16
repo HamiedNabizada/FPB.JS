@@ -65,5 +65,6 @@ export const IMPORT_EVENTS = {
   IMPORT_ERROR: 'import.error',
   PROJECT_ADDED: 'dataStore.addedProjectDefinition',
   NEW_PROCESS: 'dataStore.newProcess',
-  LAYER_PANEL_NEW_PROCESS: 'layerPanel.newProcess'
+  LAYER_PANEL_NEW_PROCESS: 'layerPanel.newProcess',
+  LAYER_PANEL_RESET: 'layerPanel.reset'
 };

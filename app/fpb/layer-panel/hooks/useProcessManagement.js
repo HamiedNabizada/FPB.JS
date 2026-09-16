@@ -50,11 +50,20 @@ export const useProcessManagement = (modeler) => {
             setSelectedProcess(e.selectedProcess);
         };
 
+        // A new import replaces the model, so the panel must forget the old
+        // layers instead of listing them next to the new ones.
+        const handleReset = () => {
+            setProcesses([]);
+            setSelectedProcess(null);
+        };
+
+        modeler.on('layerPanel.reset', handleReset);
         modeler.on('layerPanel.newProcess', handleNewProcess);
         modeler.on('layerPanel.processDeleted', handleProcessDeleted);
         modeler.on('layerPanel.processSwitched', handleProcessSwitched);
 
         return () => {
+            modeler.off('layerPanel.reset', handleReset);
             modeler.off('layerPanel.newProcess', handleNewProcess);
             modeler.off('layerPanel.processDeleted', handleProcessDeleted);
             modeler.off('layerPanel.processSwitched', handleProcessSwitched);

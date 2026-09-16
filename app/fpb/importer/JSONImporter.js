@@ -61,12 +61,6 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                 return;
             }
             
-            this._eventBus.fire(IMPORT_EVENTS.PROJECT_ADDED, {
-                projectDefinition: project
-            });
-
-            this._fpbjs.setProjectDefinition(project);
-
             // O(1) lookup maps so dependency resolution is linear, not O(n²).
             // Visible stall during import on models with many decomposed
             // processes otherwise.
@@ -128,6 +122,16 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                 this.completeConnectionWaypoints(pr.process);
                 this.mirrorWaypointsToDi(pr.process);
             });
+            // Replace, don't append. Registering the new model only here means a
+            // failure while resolving leaves the previous one untouched.
+            this.resetModelState();
+
+            this._eventBus.fire(IMPORT_EVENTS.PROJECT_ADDED, {
+                projectDefinition: project
+            });
+
+            this._fpbjs.setProjectDefinition(project);
+
             // Timeout required so remaining components finish loading before import.
             setTimeout(() => {
                 this._processes.forEach((pr, index) => {
@@ -197,6 +201,17 @@ JSONImporter.$inject = [
     'elementFactory'
 ];
 
+
+/**
+ * Drop the previously imported model. Without this every import appends: the
+ * data store keeps the old project definition and processes (they end up in the
+ * next export) and the layer panel keeps showing the old layers.
+ */
+JSONImporter.prototype.resetModelState = function () {
+    // Empty in place, other modules hold a reference to this array.
+    this._fpbjs.getProcesses().length = 0;
+    this._eventBus.fire(IMPORT_EVENTS.LAYER_PANEL_RESET, {});
+};
 
 JSONImporter.prototype.constructProjectDefinition = function (data) {
     // Use utility for validation
