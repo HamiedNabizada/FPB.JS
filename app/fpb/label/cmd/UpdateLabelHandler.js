@@ -22,6 +22,21 @@ const NULL_DIMENSIONS = {
   height: 0
 };
 
+/**
+ * Write a value that postExecute puts straight into the model (no command of its
+ * own) and remember it on the context, so revert can take it back and a redo can
+ * apply it again. Without this, undo left renamed states on other layers and the
+ * identification of the renamed element on the new name.
+ */
+function trackedWrite(ctx, target, key, value) {
+  if (!target) {
+    return;
+  }
+  ctx.directWrites = ctx.directWrites || [];
+  ctx.directWrites.push({ target, key, oldValue: target[key], newValue: value });
+  target[key] = value;
+}
+
 export default function UpdateLabelHandler(modeling, textRenderer, eventBus, canvas) {
   this._modeling = modeling;
   this._textRenderer = textRenderer;
@@ -59,6 +74,12 @@ UpdateLabelHandler.prototype.preExecute = function(ctx) {
  */
 UpdateLabelHandler.prototype.execute = function(ctx) {
   ctx.oldLabel = getLabel(ctx.element);
+
+  // On redo postExecute does not run again, so re-apply its direct writes.
+  (ctx.directWrites || []).forEach((write) => {
+    write.target[write.key] = write.newValue;
+  });
+
   return this._setText(ctx.element, ctx.newLabel);
 };
 
@@ -66,7 +87,14 @@ UpdateLabelHandler.prototype.execute = function(ctx) {
  * Revert: Restore the old label text
  */
 UpdateLabelHandler.prototype.revert = function(ctx) {
-  return this._setText(ctx.element, ctx.oldLabel);
+  const changed = this._setText(ctx.element, ctx.oldLabel);
+
+  const writes = ctx.directWrites || [];
+  for (let i = writes.length - 1; i >= 0; i--) {
+    writes[i].target[writes[i].key] = writes[i].oldValue;
+  }
+
+  return changed;
 };
 
 /**
@@ -88,7 +116,7 @@ UpdateLabelHandler.prototype.postExecute = function(ctx) {
   this._handleProcessOperatorUpdate(element);
 
   // Update business object identification
-  this._updateBusinessObjectIdentification(element, ctx.newLabel);
+  this._updateBusinessObjectIdentification(element, ctx.newLabel, ctx);
 
   // Handle State element resizing
   if (is(element, 'fpb:State')) {
@@ -97,7 +125,7 @@ UpdateLabelHandler.prototype.postExecute = function(ctx) {
 
   // Scenario 7 & 8: Bidirectional state name synchronization
   if (isAny(element, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
-    this._handleStateNameSync(element, newLabel);
+    this._handleStateNameSync(element, newLabel, ctx);
   }
 };
 
@@ -150,9 +178,9 @@ UpdateLabelHandler.prototype._handleProcessOperatorUpdate = function(element) {
 /**
  * Update business object identification
  */
-UpdateLabelHandler.prototype._updateBusinessObjectIdentification = function(element, newLabel) {
+UpdateLabelHandler.prototype._updateBusinessObjectIdentification = function(element, newLabel, ctx) {
   if (element.businessObject.identification) {
-    element.businessObject.identification.shortName = newLabel;
+    trackedWrite(ctx, element.businessObject.identification, 'shortName', newLabel);
   }
 };
 
@@ -186,7 +214,7 @@ UpdateLabelHandler.prototype._handleStateElementResize = function(element, label
  * - When state renamed on parent: sync to child layers
  * - When boundary state renamed on child: sync to parent layer
  */
-UpdateLabelHandler.prototype._handleStateNameSync = function(element, newLabel) {
+UpdateLabelHandler.prototype._handleStateNameSync = function(element, newLabel, ctx) {
   const process = this._canvas.getRootElement();
   const stateId = element.businessObject.id;
 
@@ -209,9 +237,9 @@ UpdateLabelHandler.prototype._handleStateNameSync = function(element, newLabel) 
 
           if (stateInChild && stateInChild.businessObject) {
             // Update name on child layer
-            stateInChild.businessObject.name = newLabel;
+            trackedWrite(ctx, stateInChild.businessObject, 'name', newLabel);
             if (stateInChild.businessObject.identification) {
-              stateInChild.businessObject.identification.shortName = newLabel;
+              trackedWrite(ctx, stateInChild.businessObject.identification, 'shortName', newLabel);
             }
           }
         }
@@ -247,9 +275,9 @@ UpdateLabelHandler.prototype._handleStateNameSync = function(element, newLabel) 
 
             if (stateInParent && stateInParent.businessObject) {
               // Update name on parent layer
-              stateInParent.businessObject.name = newLabel;
+              trackedWrite(ctx, stateInParent.businessObject, 'name', newLabel);
               if (stateInParent.businessObject.identification) {
-                stateInParent.businessObject.identification.shortName = newLabel;
+                trackedWrite(ctx, stateInParent.businessObject.identification, 'shortName', newLabel);
               }
             }
           }
