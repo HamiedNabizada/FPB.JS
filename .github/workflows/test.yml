@@ -1,0 +1,72 @@
+name: Tests
+
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+  pull_request:
+  workflow_dispatch:
+
+# Ein laufender Lauf pro Branch reicht, aeltere abbrechen
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: Unit-Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      # --ignore-scripts: das prepare-Script baut sonst vor jedem Lauf die
+      # komplette Library, was die Unit-Tests nicht brauchen.
+      - run: npm ci --ignore-scripts
+
+      - run: npm run test:unit
+
+  e2e:
+    name: E2E-Tests (Chromium)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - run: npm ci --ignore-scripts
+
+      - run: npx playwright install --with-deps chromium
+
+      # Playwright startet den Dev-Server selbst (webServer in playwright.config.js)
+      - run: npm run test:e2e
+
+      - name: Report hochladen
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - run: npm ci --ignore-scripts
+
+      - run: npm run build
