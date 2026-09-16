@@ -72,13 +72,16 @@ export class ConnectionUtils {
    * Determines flow hint from event source element
    */
   static getFlowHintFromEvent(event) {
-    let className;
-    
-    // Handle different event types (click vs touch)
-    if (event.type === 'click' || event.type === 'dragstart') {
-      className = event.srcElement.className;
-    } else {
-      className = event.srcEvent.srcElement.className;
+    // Mouse events carry the entry as target, the touch module hands it over
+    // as delegateTarget. srcEvent is the old hammer.js wrapper, kept for
+    // callers that still pass one.
+    const original = (event && event.srcEvent) || event || {};
+    const node = original.delegateTarget || original.srcElement || original.target;
+    let className = '';
+    if (node) {
+      className = typeof node.className === 'string'
+        ? node.className
+        : (node.getAttribute && node.getAttribute('class')) || '';
     }
 
     // Determine flow type from CSS class
