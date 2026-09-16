@@ -572,27 +572,17 @@ JSONImporter.prototype.buildCharacteristics = function (bO, char) {
     }
     
     const addActualValues = (values) => {
-        // Handle both array and single object formats
-        if (Array.isArray(values)) {
-            // If it's an array, take the first element or return null if empty
-            const firstValue = values.length > 0 ? values[0] : null;
-            if (firstValue && firstValue.$type) {
-                return this._fpbFactory.create(firstValue.$type, {
-                    value: firstValue.value,
-                    unit: firstValue.unit
-                });
-            }
-            return null;
-        } else if (values && values.$type) {
-            // Handle single object format
-            return this._fpbFactory.create(values.$type, {
-                value: values.value,
-                unit: values.unit
-            });
-        }
-        return null;
+        // isMany in the schema. Exports before 1.4 wrote a single object, and
+        // only the first entry survived the import; keep the whole list.
+        const list = Array.isArray(values) ? values : (values ? [values] : []);
+        return list
+            .filter((entry) => entry && entry.$type)
+            .map((entry) => this._fpbFactory.create(entry.$type, {
+                value: entry.value,
+                unit: entry.unit
+            }));
     }
-    
+
     char.forEach(ch => {
         let type = ch.$type;
         if (type === 'fpbch:Characteristics') {

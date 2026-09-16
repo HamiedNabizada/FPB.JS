@@ -401,6 +401,14 @@ const Characteristics = (props) => {
   // Always get fresh characteristics data to ensure tab names update
   const getCharacteristics = () => element.businessObject.get('characteristics');
   const modeling = modeler.get('modeling');
+  const fpbFactory = modeler.get('fpbFactory');
+
+  // actualValues is a list in the schema (isMany); the panel shows and edits
+  // its first entry. Older files may still carry a single object.
+  const firstActualValue = (characteristic) => {
+    const values = characteristic.descriptiveElement.actualValues;
+    return (Array.isArray(values) ? values[0] : values) || {};
+  };
 
   function removeCharacteristic() {
     const characteristics = getCharacteristics();
@@ -411,7 +419,16 @@ const Characteristics = (props) => {
   function updateCharacteristics(type, valueType, value, addOptions) {
     const characteristics = getCharacteristics();
     if (addOptions) {
-      characteristics[no][type][valueType][addOptions] = value;
+      let target = characteristics[no][type][valueType];
+      if (Array.isArray(target)) {
+        // Writing the field onto the array itself showed up in the panel but
+        // was dropped on export, the list serializes only its entries.
+        if (target.length === 0) {
+          target.push(fpbFactory.create('fpbch:ValueWithUnit', { value: '', unit: '' }));
+        }
+        target = target[0];
+      }
+      target[addOptions] = value;
       modeling.updateProperties(element, {
         'characteristics': characteristics
       });
@@ -540,10 +557,10 @@ const Characteristics = (props) => {
                             <Form.Group as={Col} controlId="pp_characteristics_descriptiveElement_actualValues">
                               <Form.Label>Actual Values</Form.Label>
                               <InputGroup>
-                                <Form.Control placeholder="value" defaultValue={characteristics[no].descriptiveElement.actualValues?.value || ''} onChange={(event) => {
+                                <Form.Control placeholder="value" defaultValue={firstActualValue(characteristics[no]).value || ''} onChange={(event) => {
                                   updateCharacteristics('descriptiveElement', 'actualValues', event.target.value, 'value')
                                 }} />
-                                <Form.Control placeholder="unit" defaultValue={characteristics[no].descriptiveElement.actualValues?.unit || ''} onChange={(event) => {
+                                <Form.Control placeholder="unit" defaultValue={firstActualValue(characteristics[no]).unit || ''} onChange={(event) => {
                                   updateCharacteristics('descriptiveElement', 'actualValues', event.target.value, 'unit')
                                 }} />
                               </InputGroup>
