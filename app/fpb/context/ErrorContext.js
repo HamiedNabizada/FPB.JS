@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import ErrorNotification from '../components/ErrorNotification';
+import ImportReportNotification from '../components/ImportReportNotification';
 
 const ErrorContext = createContext();
 
@@ -13,12 +14,13 @@ export const useError = () => {
 
 export const ErrorProvider = ({ children }) => {
   const [error, setError] = useState(null);
+  const [report, setReport] = useState(null);
 
   const showError = useCallback((errorMessage, details = null) => {
-    const errorObj = typeof errorMessage === 'string' 
+    const errorObj = typeof errorMessage === 'string'
       ? { message: errorMessage, details }
       : errorMessage;
-    
+
     console.error('Import/Export Error:', errorObj);
     setError(errorObj);
   }, []);
@@ -27,12 +29,26 @@ export const ErrorProvider = ({ children }) => {
     setError(null);
   }, []);
 
+  // Warnings of an import that went through (skipped elements, automatic layout).
+  const showReport = useCallback((importReport) => {
+    const hasWarnings = importReport && Array.isArray(importReport.warnings) && importReport.warnings.length > 0;
+    setReport(hasWarnings ? importReport : null);
+  }, []);
+
+  const clearReport = useCallback(() => {
+    setReport(null);
+  }, []);
+
   return (
-    <ErrorContext.Provider value={{ showError, clearError, error }}>
+    <ErrorContext.Provider value={{ showError, clearError, error, showReport, clearReport, report }}>
       {children}
-      <ErrorNotification 
-        error={error} 
+      <ErrorNotification
+        error={error}
         onDismiss={clearError}
+      />
+      <ImportReportNotification
+        report={report}
+        onDismiss={clearReport}
       />
     </ErrorContext.Provider>
   );

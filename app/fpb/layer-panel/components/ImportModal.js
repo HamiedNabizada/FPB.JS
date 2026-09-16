@@ -28,18 +28,18 @@ const ImportModal = memo(({ modeler }) => {
     let fileReader;
     
     useEffect(() => {
-        const handleImportError = (event) => {
-            const { message, details } = event;
-            showError(message, details);
+        // The notification itself comes from ImportNotificationBridge, which
+        // is mounted even while the panel is collapsed.
+        const handleImportError = () => {
             setIsImporting(false);
         };
-        
+
         eventBus.on('import.error', handleImportError);
-        
+
         return () => {
             eventBus.off('import.error', handleImportError);
         };
-    }, [eventBus, showError]);
+    }, [eventBus]);
 
     const handleFileRead = async (e) => {
         try {

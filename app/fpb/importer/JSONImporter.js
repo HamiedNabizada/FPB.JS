@@ -36,6 +36,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
 
     this._eventBus.on(IMPORT_EVENTS.IMPORT_REQUEST, (event) => {
         try {
+            this._errorHandler.startReport();
             let data = cloneImportData(event.data);
 
             // Every IMPORT_REQUEST is a REPLACE, not an append. Without this,
@@ -58,8 +59,13 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                 const layout = layoutImportData(data);
                 data = layout.data;
                 layout.report.filter((item) => item.mode !== 'unchanged').forEach((item) => {
+                    const label = item.name ? `"${item.name}"` : item.process;
                     this._errorHandler.logWarning(
-                        `Process ${item.process} has no complete layout - arranged automatically (${item.mode}, ${item.placed} elements)`
+                        item.mode === 'full'
+                            ? `Process ${label} carried no layout - all ${item.placed} elements were arranged automatically`
+                            : `Process ${label} carried an incomplete layout - ${item.placed} elements were placed automatically`,
+                        null,
+                        'Move elements as needed and download the file again to keep the layout.'
                     );
                 });
             }
@@ -101,7 +107,11 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                         }
                         const found = processByInnerId.get(e);
                         if (!found) {
-                            this._errorHandler.logWarning(`Process ${pr.process.id} lists missing sub-process ${e} - dropped`);
+                            this._errorHandler.logWarning(
+                                `Process ${pr.process.id} lists missing sub-process ${e} - dropped`,
+                                null,
+                                'Add the sub-process to the file or remove its id from consistsOfProcesses.'
+                            );
                             return;
                         }
                         collectionAdd(resolvedProcesses, found.process);
@@ -165,6 +175,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                 } catch (error) {
                     console.error('JSONImporter: Process switch failed:', error);
                 }
+                this._errorHandler.finishReport();
             }, IMPORT_TIMING.UI_INITIALIZATION_DELAY);
         } catch (error) {
             this._errorHandler.handleError(error);
@@ -172,6 +183,25 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
     });
 
 }
+/**
+ * Human readable end of a connection: the element name, else its id.
+ */
+function describeEnd(ref) {
+    if (!ref) {
+        return 'unknown';
+    }
+    if (TypeUtils.isStringLike(ref)) {
+        return String(ref);
+    }
+    return ref.name || ref.id || 'unknown';
+}
+
+function describeConnection(element) {
+    const bo = element.businessObject;
+    const type = (bo.$type || 'Connection').replace('fpb:', '');
+    return `${type} from ${describeEnd(bo.sourceRef)} to ${describeEnd(bo.targetRef)}`;
+}
+
 /**
  * Swap a reference id for its object at the same position, so resolving keeps
  * the order of the imported list and an unchanged model exports unchanged.
@@ -312,7 +342,11 @@ JSONImporter.prototype.filterElements = function (id, eVI, eDI, process, parent,
     if (!dataInformation) {
         // An ID without data (typo, element dropped by an external generator)
         // used to abort the whole import. Skip it and keep the rest of the model.
-        this._errorHandler.logWarning(`Element ${id} is listed in a container but has no data - skipped`);
+        this._errorHandler.logWarning(
+            `Element ${id} is listed in a container but has no data - skipped`,
+            null,
+            'Add the element to elementDataInformation or remove its id from the container.'
+        );
         return;
     }
     for (let el of eVI) {
@@ -491,7 +525,13 @@ JSONImporter.prototype.removeUnconnectedConnections = function (process) {
             return;
         }
         const bo = element.businessObject;
-        this._errorHandler.logWarning(`Connection ${element.id} references a missing source or target - removed`);
+        const missingEnd = !element.source ? 'source' : 'target';
+        const missingId = describeEnd(!element.source ? bo.sourceRef : bo.targetRef);
+        this._errorHandler.logWarning(
+            `${describeConnection(element)} references a missing ${missingEnd} (${missingId}) - removed`,
+            null,
+            `Add the ${missingEnd} element with this id to the process or delete the connection from the file.`
+        );
         collectionRemove(container, element);
         removedIds.push(element.id);
         [element.source, element.target].forEach((end) => {
@@ -666,7 +706,11 @@ JSONImporter.prototype.updateDepedencies = function (container, element) {
                 }
                 const partner = container.find((el) => el && el.id === tandemFlow);
                 if (!partner || !partner.businessObject) {
-                    this._errorHandler.logWarning(`Connection ${element.id} lists missing tandem partner ${tandemFlow} - dropped`);
+                    this._errorHandler.logWarning(
+                        `${describeConnection(element)} lists a missing tandem partner (${tandemFlow}) - dropped`,
+                        null,
+                        'Remove the id from inTandemWith or add the partner flow to the file.'
+                    );
                     return;
                 }
                 collectionAdd(resolved, partner.businessObject);
@@ -718,9 +762,11 @@ JSONImporter.prototype.updateDepedencies = function (container, element) {
                     // later decomposedView consumer (Decompose reads
                     // .businessObject.elementsContainer off it) — degrade to a
                     // non-decomposed PO instead.
-                    console.warn('[FPB.JS] Import: decomposedView "' + element.businessObject.decomposedView +
-                        '" on ProcessOperator "' + (element.businessObject.name || element.id) +
-                        '" references a missing process — clearing the decomposition link.');
+                    this._errorHandler.logWarning(
+                        `ProcessOperator "${element.businessObject.name || element.id}" references a missing sub-process (${element.businessObject.decomposedView}) - decomposition link cleared`,
+                        null,
+                        'Add the sub-process to the file or remove decomposedView from the operator.'
+                    );
                     element.businessObject.decomposedView = null;
                 }
             }

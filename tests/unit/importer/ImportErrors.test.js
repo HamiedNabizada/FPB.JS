@@ -301,6 +301,41 @@ describe('ImportErrors', () => {
         expect(console.warn).toHaveBeenCalledWith('Import Warning: Test warning', null);
       });
 
+      it('keeps the warning with its hint for the report', () => {
+        errorHandler.logWarning('Element x skipped', 'details', 'Add it to the file.');
+        expect(errorHandler.warnings).toEqual([
+          { message: 'Element x skipped', details: 'details', hint: 'Add it to the file.' }
+        ]);
+      });
+
+    });
+
+    describe('import report', () => {
+
+      it('fires import.report with the collected warnings and clears them', () => {
+        errorHandler.startReport();
+        errorHandler.logWarning('one', null, 'fix one');
+        errorHandler.logWarning('two');
+
+        const warnings = errorHandler.finishReport();
+
+        expect(warnings).toHaveLength(2);
+        expect(mockEventBus.fire).toHaveBeenCalledWith('import.report', { warnings });
+        expect(errorHandler.warnings).toEqual([]);
+      });
+
+      it('fires nothing for a clean import', () => {
+        errorHandler.startReport();
+        expect(errorHandler.finishReport()).toEqual([]);
+        expect(mockEventBus.fire).not.toHaveBeenCalled();
+      });
+
+      it('drops warnings of a previous import on start', () => {
+        errorHandler.logWarning('stale');
+        errorHandler.startReport();
+        expect(errorHandler.warnings).toEqual([]);
+      });
+
     });
 
   });

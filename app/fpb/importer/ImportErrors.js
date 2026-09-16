@@ -3,7 +3,7 @@
  * 
  * Specialized error classes and handling for FPB import operations
  */
-import { IMPORT_ERRORS } from './ImportConstants';
+import { IMPORT_ERRORS, IMPORT_EVENTS } from './ImportConstants';
 
 /**
  * Base class for import-related errors
@@ -76,6 +76,27 @@ export class DependencyError extends ImportError {
 export class ErrorHandler {
   constructor(eventBus) {
     this.eventBus = eventBus;
+    this.warnings = [];
+  }
+
+  /**
+   * Forgets the warnings of the previous import.
+   */
+  startReport() {
+    this.warnings = [];
+  }
+
+  /**
+   * Hands the collected warnings to the UI as one report and clears them.
+   * Nothing is fired for a clean import.
+   */
+  finishReport() {
+    const warnings = this.warnings;
+    this.warnings = [];
+    if (warnings.length > 0) {
+      this.eventBus.fire(IMPORT_EVENTS.IMPORT_REPORT, { warnings });
+    }
+    return warnings;
   }
 
   /**
@@ -134,9 +155,11 @@ export class ErrorHandler {
   }
 
   /**
-   * Logs warnings without throwing errors
+   * Logs a warning without throwing and keeps it for the import report.
+   * The hint says what the user can do about it.
    */
-  logWarning(message, details = null) {
+  logWarning(message, details = null, hint = null) {
     console.warn(`Import Warning: ${message}`, details);
+    this.warnings.push({ message, details, hint });
   }
 }

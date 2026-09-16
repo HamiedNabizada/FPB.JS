@@ -129,6 +129,18 @@ export interface FpbEventMap {
   'selection.changed': { newSelection: Element[]; oldSelection: Element[] };
   /** Process layer was switched */
   'process.switched': { selectedProcess: Shape };
+  /** An import went through with warnings (skipped elements, automatic layout) */
+  'import.report': { warnings: ImportWarning[] };
+}
+
+/** One warning of an import report */
+export interface ImportWarning {
+  /** What happened, naming the affected element or process */
+  message: string;
+  /** Technical details, if any */
+  details: string | null;
+  /** What the user can do about it, if anything */
+  hint: string | null;
 }
 
 /** All known facade event names */

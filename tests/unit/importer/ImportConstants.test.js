@@ -229,8 +229,12 @@ describe('ImportConstants', () => {
 
   describe('IMPORT_EVENTS', () => {
 
-    it('defines all 6 event types', () => {
-      expect(Object.keys(IMPORT_EVENTS)).toHaveLength(6);
+    it('defines all 7 event types', () => {
+      expect(Object.keys(IMPORT_EVENTS)).toHaveLength(7);
+    });
+
+    it('defines IMPORT_REPORT', () => {
+      expect(IMPORT_EVENTS.IMPORT_REPORT).toBe('import.report');
     });
 
     it('defines LAYER_PANEL_RESET', () => {

@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import LayerPanel from './LayerPanel';
 import ErrorBoundary from '../ErrorBoundary';
 import { ErrorProvider } from '../context/ErrorContext';
+import ImportNotificationBridge from '../components/ImportNotificationBridge';
 
 export default class LayerOverview {
   constructor(options) {
@@ -15,6 +16,7 @@ export default class LayerOverview {
     const root = createRoot(container);
     root.render(
       <ErrorProvider>
+        <ImportNotificationBridge modeler={modeler} />
         <ErrorBoundary>
           <LayerPanel modeler={modeler} config={configPP} />
         </ErrorBoundary>
