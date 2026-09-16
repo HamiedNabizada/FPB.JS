@@ -194,6 +194,19 @@ class XMLMapper {
     }
 
     /**
+     * Waypoints of a flow element, or null when the file carries none.
+     * The writer stores them as visual:waypoints, the reader used to drop them
+     * and fall back to a straight default line.
+     */
+    _readWaypoints(flowElement) {
+        const visual = this._extractVisualAttributes(flowElement);
+        if (visual && Array.isArray(visual.waypoints) && visual.waypoints.length >= 2) {
+            return visual.waypoints;
+        }
+        return null;
+    }
+
+    /**
      * Update visual information in original JSON data
      */
     _updateVisualInformation(jsonData, visualInformation) {
@@ -574,11 +587,12 @@ class XMLMapper {
                     "targetRef": flowInfo.targetRef
                 };
 
-                // Create minimal visual information required by JSONImporter
+                // Waypoints from the file if it carries them, otherwise minimal
+                // ones for the layout engine to recalculate.
                 const flowVisual = {
                     "id": flowId,
                     "type": flowType,
-                    "waypoints": XMLMapper.DEFAULT_WAYPOINTS  // Minimal waypoints - layout engine will recalculate
+                    "waypoints": flowInfo.waypoints || XMLMapper.DEFAULT_WAYPOINTS
                 };
 
                 processEntry.elementDataInformation.push(flowData);
@@ -617,18 +631,20 @@ class XMLMapper {
 
                     // Determine flow type from FlowContainer using flow ID
                     let flowType = 'fpb:Flow'; // Default
+                    let waypoints = null;
                     if (flowId) {
                         const flowContainerFlow = this._findFlowInContainers(processElement, flowId);
                         if (flowContainerFlow) {
                             const containerFlowType = flowContainerFlow.getAttribute('flowType');
                             flowType = this.reverseFlowTypeMapping[containerFlowType] || 'fpb:Flow';
+                            waypoints = this._readWaypoints(flowContainerFlow);
                         }
                     }
 
 
                     if (sourceRef && targetRef) {
                         const flowKey = `${sourceRef}->${targetRef}`;
-                        extractedFlows.set(flowKey, { sourceRef, targetRef, flowType, flowId });
+                        extractedFlows.set(flowKey, { sourceRef, targetRef, flowType, flowId, waypoints });
                     }
                 }
             }
@@ -695,14 +711,12 @@ class XMLMapper {
                 "targetRef": targetRef
             };
 
-            // Create minimal visual information required by JSONImporter
+            // Waypoints from the file if it carries them, otherwise minimal
+            // ones for the layout engine to recalculate.
             const flowVisual = {
                 "id": flowId,
                 "type": jsonType,
-                "waypoints": [
-                    { "original": { "x": 100, "y": 100 }, "x": 100, "y": 100 },
-                    { "original": { "x": 200, "y": 200 }, "x": 200, "y": 200 }
-                ]  // Minimal waypoints - layout engine will recalculate
+                "waypoints": this._readWaypoints(flowElement) || XMLMapper.DEFAULT_WAYPOINTS
             };
 
             processEntry.elementDataInformation.push(flowData);
