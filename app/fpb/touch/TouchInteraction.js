@@ -15,7 +15,9 @@ import { closest as domClosest } from 'min-dom';
  *
  * While a touch drag is active the element under the finger is reported as
  * element.hover / element.out, which Create and Connect rely on to find their
- * target. Taps stay with the browser, which turns them into clicks.
+ * target. Taps become clicks (see _tap); taps into text fields stay with the
+ * browser. Palette and context pad are optional, a modeler without them only
+ * loses their touch drags.
  */
 
 const DRAG_THRESHOLD = 8;
@@ -24,13 +26,13 @@ const DOUBLE_TAP_DISTANCE = 20;
 const MIN_ZOOM = 0.2;
 const MAX_ZOOM = 4;
 
-export default function TouchInteraction(eventBus, canvas, elementRegistry, palette, contextPad, dragging) {
+export default function TouchInteraction(eventBus, canvas, elementRegistry, injector) {
   this._eventBus = eventBus;
   this._canvas = canvas;
   this._elementRegistry = elementRegistry;
-  this._palette = palette;
-  this._contextPad = contextPad;
-  this._dragging = dragging;
+  this._palette = injector.get('palette', false);
+  this._contextPad = injector.get('contextPad', false);
+  this._dragging = injector.get('dragging', false);
 
   this._touch = null;
   this._pinch = null;
@@ -44,7 +46,7 @@ export default function TouchInteraction(eventBus, canvas, elementRegistry, pale
   eventBus.on('diagram.destroy', () => this._unbind());
 }
 
-TouchInteraction.$inject = ['eventBus', 'canvas', 'elementRegistry', 'palette', 'contextPad', 'dragging'];
+TouchInteraction.$inject = ['eventBus', 'canvas', 'elementRegistry', 'injector'];
 
 TouchInteraction.prototype._bind = function () {
   const container = this._canvas.getContainer();
@@ -134,12 +136,6 @@ TouchInteraction.prototype._onTouchEnd = function (event) {
 };
 
 /**
- * A tap on a palette or context pad entry starts a create or connect through
- * the browser's click, and that operation then follows the mouse. A second tap
- * on the canvas finishes it here: move the operation to the tap and end it.
- * Touch started drags are left to Dragging, which listens to the touch itself.
- */
-/**
  * A tap becomes a click, two quick taps at one spot a double click. Chrome
  * does not send its mouse compatibility events for the first tap after a
  * touch drag, so taps are turned into clicks here and the browser's own
@@ -148,6 +144,12 @@ TouchInteraction.prototype._onTouchEnd = function (event) {
 TouchInteraction.prototype._tap = function (touch, event) {
   const point = touch.last;
   const target = document.elementFromPoint(point.x, point.y) || touch.event.target;
+  // Text fields (the label editor) keep the browser's own tap handling, which
+  // places the caret and keeps the on-screen keyboard.
+  if (isEditable(target)) {
+    this._lastTap = null;
+    return;
+  }
   const now = Date.now();
   const last = this._lastTap;
   const double = !!last && now - last.time < DOUBLE_TAP_MS && distance(point, last.point) < DOUBLE_TAP_DISTANCE;
@@ -169,8 +171,14 @@ TouchInteraction.prototype._tap = function (touch, event) {
   event.preventDefault();
 };
 
+/**
+ * A tap on a palette or context pad entry starts a create or connect through
+ * a click, and that operation then follows the mouse. A second tap on the
+ * canvas finishes it here: move the operation to the tap and end it. Touch
+ * started drags are left to Dragging, which listens to the touch itself.
+ */
 TouchInteraction.prototype._finishTapDrag = function (touch, event) {
-  const context = this._dragging.context();
+  const context = this._dragging && this._dragging.context();
   if (!context || context.isTouch) {
     return false;
   }
@@ -204,12 +212,12 @@ TouchInteraction.prototype._startDrag = function (touch) {
   // on delegateTarget.
   defineOn(original, 'button', 0);
 
-  if (touch.paletteEntry) {
+  if (touch.paletteEntry && this._palette) {
     defineOn(original, 'delegateTarget', touch.paletteEntry);
     this._palette.trigger('dragstart', original);
     return true;
   }
-  if (touch.padEntry) {
+  if (touch.padEntry && this._contextPad) {
     defineOn(original, 'delegateTarget', touch.padEntry);
     // The pad closes as soon as the drag clears the selection. The browser
     // keeps sending this touch to the entry it started on, and events on a
@@ -291,6 +299,10 @@ TouchInteraction.prototype._clearHover = function (originalEvent) {
 };
 
 // --- helpers ----------------------------------------------------------------------------
+
+function isEditable(node) {
+  return !!node && !!domClosest(node, '[contenteditable="true"], input, textarea, select', true);
+}
 
 function toClientPoint(touch) {
   return { x: touch.clientX, y: touch.clientY };

@@ -36,9 +36,10 @@
       display: flex;
     }
 
-    /* Narrow screens (tablet upright, phone): the panels float over the
-       canvas instead of taking its width. */
-    @media (max-width: 900px) {
+    /* Narrow touch screens (tablet upright, phone): the panels float over
+       the canvas instead of taking its width. Narrow desktop windows keep
+       the panels beside the canvas. */
+    @media (max-width: 900px) and (pointer: coarse) {
       .side-panels {
         position: absolute;
         top: 0;
