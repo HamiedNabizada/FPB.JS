@@ -27,13 +27,14 @@ const NOT_COPIED = ['$type', 'id', 'di'];
  * - Flow: the whole branching at the source changes between ParallelFlow and
  *   AlternativeFlow, as the branching type is defined at the source.
  */
-export default function ChangeTypeHandler(fpbFactory, fpbjs, canvas) {
+export default function ChangeTypeHandler(fpbFactory, fpbjs, canvas, modeling) {
   this._fpbFactory = fpbFactory;
   this._fpbjs = fpbjs;
   this._canvas = canvas;
+  this._modeling = modeling;
 }
 
-ChangeTypeHandler.$inject = ['fpbFactory', 'fpbjs', 'canvas'];
+ChangeTypeHandler.$inject = ['fpbFactory', 'fpbjs', 'canvas', 'modeling'];
 
 ChangeTypeHandler.prototype.execute = function (context) {
   const self = this;
@@ -51,6 +52,23 @@ ChangeTypeHandler.prototype.execute = function (context) {
   context.changedShapes = shapes;
 
   return this._onCanvas(shapes);
+};
+
+/**
+ * The look of a branching comes from the layouter, not from the renderer: an
+ * alternative flow runs straight from source to target, a parallel one bends
+ * onto the common bar of its tandem. After the type change the connections are
+ * therefore laid out again, otherwise the branching would still look like the
+ * old type. Runs in postExecute, so it belongs to the same undo step.
+ */
+ChangeTypeHandler.prototype.postExecute = function (context) {
+  const modeling = this._modeling;
+  const connections = (context.changedShapes || []).filter(function (shape) {
+    return shape && shape.waypoints && shape.parent;
+  });
+  // twice: the first flow aligns to a partner that is laid out after it
+  connections.forEach(function (connection) { modeling.layoutConnection(connection, { fpbRelayout: true }); });
+  connections.forEach(function (connection) { modeling.layoutConnection(connection, { fpbRelayout: true }); });
 };
 
 ChangeTypeHandler.prototype.revert = function (context) {

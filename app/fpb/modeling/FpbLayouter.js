@@ -31,7 +31,11 @@ FpbLayouter.prototype.layoutConnection = function (connection, hints) {
   hints = hints || {};
   const source = connection.source;
   const target = connection.target;
-  let waypoints = connection.waypoints;
+  // After a type change the route has to be built anew: repairConnection would
+  // keep the points of the old type (a straight alternative flow stays straight
+  // even though a parallel flow bends onto the bar of its tandem).
+  const { fpbRelayout, ...manhattanHints } = hints;
+  let waypoints = fpbRelayout ? [] : connection.waypoints;
   let manhattanOptions,
     updatedWaypoints;
 
@@ -60,7 +64,7 @@ FpbLayouter.prototype.layoutConnection = function (connection, hints) {
     manhattanOptions = {
       preferredLayouts: ['h:h']
     };
-    manhattanOptions = assign(manhattanOptions, hints);
+    manhattanOptions = assign(manhattanOptions, manhattanHints);
     updatedWaypoints =
       withoutRedundantPoints(
         repairConnection(
@@ -82,7 +86,7 @@ FpbLayouter.prototype.layoutConnection = function (connection, hints) {
     manhattanOptions = {
       preferredLayouts: ['v:v']
     };
-    manhattanOptions = assign(manhattanOptions, hints);
+    manhattanOptions = assign(manhattanOptions, manhattanHints);
 
     updatedWaypoints =
       withoutRedundantPoints(
