@@ -60,8 +60,12 @@ describe('ContextPadConstants', () => {
 
   describe('CONTEXT_PAD_ICONS', () => {
 
-    it('defines all 9 icons', () => {
-      expect(Object.keys(CONTEXT_PAD_ICONS)).toHaveLength(9);
+    it('defines all 10 icons', () => {
+      expect(Object.keys(CONTEXT_PAD_ICONS)).toHaveLength(10);
+    });
+
+    it('defines APPEND icon', () => {
+      expect(CONTEXT_PAD_ICONS.APPEND).toBe('context-pad-icon-fpbappend');
     });
 
     it('defines CHANGE_TYPE icon', () => {
@@ -165,8 +169,12 @@ describe('ContextPadConstants', () => {
 
   describe('ENTRY_IDS', () => {
 
-    it('defines all 8 entry IDs', () => {
-      expect(Object.keys(ENTRY_IDS)).toHaveLength(8);
+    it('defines all 9 entry IDs', () => {
+      expect(Object.keys(ENTRY_IDS)).toHaveLength(9);
+    });
+
+    it('defines APPEND', () => {
+      expect(ENTRY_IDS.APPEND).toBe('append');
     });
 
     it('defines CHANGE_TYPE', () => {
@@ -206,8 +214,12 @@ describe('ContextPadConstants', () => {
 
   describe('TOOLTIP_KEYS', () => {
 
-    it('defines all 13 tooltip keys', () => {
-      expect(Object.keys(TOOLTIP_KEYS)).toHaveLength(13);
+    it('defines all 14 tooltip keys', () => {
+      expect(Object.keys(TOOLTIP_KEYS)).toHaveLength(14);
+    });
+
+    it('defines APPEND tooltip', () => {
+      expect(TOOLTIP_KEYS.APPEND).toBe('Append a connected element below');
     });
 
     it('defines CHANGE_TYPE tooltip', () => {

@@ -47,4 +47,34 @@ test.describe('Ansicht', () => {
     expect([...new Set(fuellungen)]).toEqual(['none']);
   });
 
+
+  test('das Context-Pad bleibt neben den Panels sichtbar', async ({ page }) => {
+    await page.setViewportSize({ width: 560, height: 700 });
+    const importer = new ImportPage(page);
+    await importer.goto();
+    await importer.import(clone());
+
+    // Element an den rechten Rand der Zeichenfläche schieben: dort hätte das
+    // Pad in seiner Standardlage keinen Platz mehr
+    await page.evaluate(() => {
+      const canvas = window.fpbjs.get('canvas');
+      const element = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:TechnicalResource')[0];
+      canvas.scrollToElement(element);
+      const box = document.querySelector(`[data-element-id="${element.id}"]`).getBoundingClientRect();
+      const flaeche = canvas.getContainer().getBoundingClientRect();
+      canvas.scroll({ dx: flaeche.right - box.right - 10, dy: 0 });
+      window.fpbjs.get('selection').select(element);
+      window.fpbjs.get('contextPad').open(element);
+    });
+    await page.waitForTimeout(300);
+
+    const lage = await page.evaluate(() => {
+      const pad = document.querySelector('.djs-context-pad.open').getBoundingClientRect();
+      const panels = document.querySelector('.side-panels').getBoundingClientRect();
+      return { padRechts: pad.right, panelsLinks: panels.left, padLinks: pad.left };
+    });
+    expect(lage.padRechts).toBeLessThanOrEqual(lage.panelsLinks);
+    expect(lage.padLinks).toBeGreaterThan(0);
+  });
+
 });

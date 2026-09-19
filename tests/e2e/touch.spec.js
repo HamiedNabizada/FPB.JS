@@ -154,10 +154,11 @@ for (const [label, device] of [['tablet', devices['iPad (gen 7)']], ['phone', de
       await openModel(page);
       const touch = touchDriver(page, context);
 
-      // Two fresh states below Erhitzen as targets.
+      // Two fresh states as targets, in the lower part: the context pad of
+      // Erhitzen opens below it and would otherwise cover them.
       const paletteEntry = center(await page.locator('.djs-palette [data-action="fpb-product"]').boundingBox());
-      await touch.drag(paletteEntry, await freeSpot(page, 0.5), 14);
-      await touch.drag(paletteEntry, await freeSpot(page, 0.5), 14);
+      await touch.drag(paletteEntry, await freeSpot(page, 0.7), 14);
+      await touch.drag(paletteEntry, await freeSpot(page, 0.7), 14);
       const targets = await page.evaluate(() => window.fpbjs.get('elementRegistry')
         .filter((e) => e.businessObject && e.businessObject.$type === 'fpb:Product' && e.type !== 'label'
           && !(e.incoming || []).length && !(e.outgoing || []).length)
