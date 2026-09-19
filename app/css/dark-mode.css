@@ -626,3 +626,18 @@ body {
 [data-theme="light"] rect[fill="none"] {
   stroke: black !important;
 }
+[data-theme="dark"] .djs-minimap {
+  background-color: var(--fpb-panel-bg);
+  border-color: var(--fpb-border-color);
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .djs-minimap.open .overlay {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* Connections in the minimap copy carry no djs-connection class; they are the
+   paths with an arrow marker. */
+[data-theme="dark"] .djs-minimap .map path[style*="marker-end"] {
+  stroke: #ffffff !important;
+}

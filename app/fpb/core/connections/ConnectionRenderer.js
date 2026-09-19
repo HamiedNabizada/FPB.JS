@@ -176,7 +176,10 @@ export class ConnectionRenderer {
       return path;
     }
 
-    return svgAppend(parentGfx, createLine(element.waypoints, attrs));
+    // fill none on the element itself, not only through diagram-js.css: copies
+    // of the drawing (minimap, exported SVG) do not carry that stylesheet and
+    // filled the line's area black.
+    return svgAppend(parentGfx, createLine(element.waypoints, Object.assign({ fill: 'none' }, attrs)));
   }
 
   /**
@@ -236,6 +239,6 @@ export class ConnectionRenderer {
       strokeWidth: STROKE_WIDTHS.CONNECTION
     };
 
-    return svgAppend(parentGfx, createLine(element.waypoints, attrs));
+    return svgAppend(parentGfx, createLine(element.waypoints, Object.assign({ fill: 'none' }, attrs)));
   }
 }

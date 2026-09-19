@@ -254,3 +254,41 @@
     max-width: 130px;
   }
 }
+
+/* Minimap (diagram-js-minimap 5.4, MIT). Styles of its assets/diagram-js-minimap.css,
+   placed bottom left: the panels sit on the right, the palette top left. */
+.djs-minimap {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 175;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.92);
+  border: solid 1px #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.djs-minimap .map { display: none; width: 320px; height: 180px; cursor: crosshair; }
+.djs-minimap.open .map { display: block; }
+.djs-minimap:not(.open) .toggle { padding: 8px 10px; text-align: center; cursor: pointer; }
+.djs-minimap .toggle:before { content: attr(title); }
+.djs-minimap.open .toggle { position: absolute; right: 0; padding: 6px; z-index: 1; cursor: pointer; }
+.djs-minimap .viewport { fill: none; stroke: none; }
+.djs-minimap .viewport-dom {
+  position: absolute;
+  border: solid 2px #13ae4d;
+  border-radius: 2px;
+  box-sizing: border-box;
+  cursor: move;
+}
+.djs-minimap:not(.open) .viewport-dom { display: none; }
+.djs-minimap.open .overlay {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  background: rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+}
+.djs-minimap .cursor-crosshair { cursor: crosshair; }
+.djs-minimap .cursor-move { cursor: move; }

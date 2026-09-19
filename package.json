@@ -76,6 +76,7 @@
     "diagram-js": "^15.26.0",
     "diagram-js-direct-editing": "^3.2.0",
     "diagram-js-grid": "^2.1.0",
+    "diagram-js-minimap": "^5.4.1",
     "happy-dom": "^20.6.1",
     "html-webpack-plugin": "^5.6.3",
     "ids": "^1.0.5",
