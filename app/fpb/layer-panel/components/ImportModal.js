@@ -20,11 +20,12 @@ const ImportModal = memo(({ modeler }) => {
     const [fileData, setFileData] = useState(null);
     const [fileName, setFileName] = useState('');
     const [fileType, setFileType] = useState('json');
+    const [isDragging, setIsDragging] = useState(false);
     const { showError } = useError();
     const fileLabelRef = useRef();
 
     const eventBus = modeler.get('eventBus');
-    const defaultText = 'Import a local stored FPB.js JSON file or XML file';
+    const defaultText = 'Import a local stored FPB.js JSON file or XML file, or drop it here';
     let fileReader;
     
     useEffect(() => {
@@ -157,6 +158,27 @@ const ImportModal = memo(({ modeler }) => {
     };
 
     const handleShow = () => setShow(true);
+
+    // The whole dialog body takes a dropped file, so it need not hit the label.
+    // Without preventDefault the browser would open the dropped file itself.
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        setIsDragging(true);
+    };
+    const handleDragLeave = (e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+            setIsDragging(false);
+        }
+    };
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) {
+            handleFileChosen(file);
+        }
+    };
     let tooltTipImportOptions = 'Import Options';
 
     return (
@@ -182,7 +204,7 @@ const ImportModal = memo(({ modeler }) => {
                         </Row>
                     </Container>
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
                     <Container>
                         <Row>
                             <input type="file"
@@ -191,7 +213,7 @@ const ImportModal = memo(({ modeler }) => {
                                 accept='.json,.xml'
                                 onChange={e => handleFileChosen(e.target.files[0])} />
 
-                            <label htmlFor="file" ref={fileLabelRef} className="fileLabel"> 
+                            <label htmlFor="file" ref={fileLabelRef} className={isDragging ? 'fileLabel fileLabel--dragover' : 'fileLabel'}> 
                                 {fileName || defaultText} 
                             </label>
                         </Row>

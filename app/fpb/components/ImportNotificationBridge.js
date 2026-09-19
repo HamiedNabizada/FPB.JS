@@ -24,5 +24,25 @@ export default function ImportNotificationBridge({ modeler }) {
     };
   }, [modeler, showError, showReport]);
 
+  // A file dropped outside the import dialog made the browser open it and leave
+  // the page, with the unsaved model. The dialog handles its own drops first
+  // (defaultPrevented); everywhere else a dragged file is refused.
+  useEffect(() => {
+    const draggingFile = (event) => event.dataTransfer
+      && Array.from(event.dataTransfer.types || []).includes('Files');
+    const refuse = (event) => {
+      if (draggingFile(event) && !event.defaultPrevented) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'none';
+      }
+    };
+    window.addEventListener('dragover', refuse);
+    window.addEventListener('drop', refuse);
+    return () => {
+      window.removeEventListener('dragover', refuse);
+      window.removeEventListener('drop', refuse);
+    };
+  }, []);
+
   return null;
 }

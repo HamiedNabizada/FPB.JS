@@ -82,6 +82,11 @@ padding-top: 3px;
   .inputfile + label:hover {
       background-color: gray;
   }
+  /* A file is dragged over the import dialog */
+  .inputfile + label.fileLabel--dragover {
+      border: 2px dashed #13ae4d;
+      background-color: rgba(19, 174, 77, 0.12);
+  }
   .examples {
     width: 100%;
     border: 0.5px solid #ccc;
@@ -202,6 +207,11 @@ padding-top: 3px;
 [data-theme="dark"] .inputfile:focus + label,
 [data-theme="dark"] .inputfile + label:hover {
   background-color: var(--fpb-button-hover);
+}
+
+[data-theme="dark"] .inputfile + label.fileLabel--dragover {
+  border: 2px dashed #13ae4d;
+  background-color: rgba(19, 174, 77, 0.2);
 }
 
 [data-theme="dark"] .examples {
