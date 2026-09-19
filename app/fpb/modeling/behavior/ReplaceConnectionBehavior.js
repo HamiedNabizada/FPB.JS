@@ -5,6 +5,11 @@ import CommandInterceptor from 'diagram-js/lib/command/CommandInterceptor';
 import { isAny, is } from '../../help/utils';
 
 
+// The flow is only swapped for one of another type between the same elements.
+// Tells ConnectionUpdater to keep the boundary state and its flows in child layers,
+// which a real delete would remove.
+export const REPLACE_HINTS = { fpbReplaceConnection: true };
+
 export default function ReplaceConnectionBehavior(eventBus, modeling) {
     CommandInterceptor.call(this, eventBus);
 
@@ -29,7 +34,7 @@ export default function ReplaceConnectionBehavior(eventBus, modeling) {
             replaceType = connection.type;
             let replaceSource = replaceFlow.source;
             let replaceTarget = replaceFlow.target;
-            modeling.removeConnection(replaceFlow);
+            modeling.removeConnection(replaceFlow, REPLACE_HINTS);
             modeling.connect(replaceSource, replaceTarget, {
                 type: replaceType,
             });
@@ -56,7 +61,7 @@ export default function ReplaceConnectionBehavior(eventBus, modeling) {
         if (counter === 1) { // Only one flow connection remains
             replaceSource = replaceFlow.source;
             replaceTarget = replaceFlow.target;
-            modeling.removeConnection(replaceFlow);
+            modeling.removeConnection(replaceFlow, REPLACE_HINTS);
             modeling.connect(replaceSource, replaceTarget, {
                 type: 'fpb:Flow',
             });

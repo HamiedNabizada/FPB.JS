@@ -43,10 +43,17 @@ export default function ConnectionUpdater(
 
   // connection business logic (from updateProcessInformation) //////////////////////
 
+  // Every model change made while creating or deleting a connection is journaled
+  // in the command context. diagram-js only reverts the canvas; undo replays the
+  // journal backwards so the business model follows. Without it an undone create
+  // stayed in the model (and in the export), an undone delete was missing there.
   function onConnectionEvent(e) {
     const context = e.context;
     const command = e.command;
-    self._handleConnectionCommand(command, context);
+    context.fpbJournal = runJournaled(function () {
+      self._handleConnectionCommand(command, context);
+      self.updateConnection(context);
+    });
   }
 
   this.executed([
@@ -54,8 +61,15 @@ export default function ConnectionUpdater(
     'connection.delete'
   ], ifFpb(onConnectionEvent));
 
-  // NOTE: The revert path for updateProcessInformation was non-functional in the
-  // original FpbUpdater.js. Not registering a revert handler preserves that behavior.
+  this.reverted([
+    'connection.create',
+    'connection.delete'
+  ], ifFpb(function (e) {
+    revertJournal(e.context.fpbJournal);
+    if (e.command === 'connection.delete') {
+      self.updateConnectionWaypoints(e.context.connection);
+    }
+  }));
 
   // attach / detach connection (sourceRef/targetRef) //////////////////////
 
@@ -66,19 +80,16 @@ export default function ConnectionUpdater(
   // 'connection.reconnect' is the command diagram-js actually executes when an
   // end is dragged. Without it sourceRef/targetRef kept pointing at the old
   // element: the drawing followed, the model and the export did not.
+  // create and delete run updateConnection inside their journal (see above).
   this.executed([
-    'connection.create',
     'connection.move',
-    'connection.delete',
     'connection.reconnect',
     'connection.reconnectEnd',
     'connection.reconnectStart'
   ], ifFpb(updateConnection));
 
   this.reverted([
-    'connection.create',
     'connection.move',
-    'connection.delete',
     'connection.reconnect',
     'connection.reconnectEnd',
     'connection.reconnectStart'
@@ -136,7 +147,7 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
   if (is(context.source, 'fpb:State') || is(context.target, 'fpb:State')) {
     const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
     if (!processSystemLimit) return;
-    collectionAdd(processSystemLimit.businessObject.elementsContainer, element);
+    addTracked(processSystemLimit.businessObject.elementsContainer, element);
 
     let stateShape;
     let processOperatorShape;
@@ -147,7 +158,7 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
       stateShape = context.target;
       processOperatorShape = context.source;
     }
-    collectionAdd(stateShape.businessObject.isAssignedTo, processOperatorShape.businessObject);
+    addTracked(stateShape.businessObject.isAssignedTo, processOperatorShape.businessObject);
 
     if (processOperatorShape.businessObject.decomposedView) {
       this._eventBus.fire('toolTips.decomposedProcessOperator', {
@@ -163,8 +174,8 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
         if (!existingStateInChild) {
           // Create state on child layer
           const newStateShape = createStateShapeForNewLayer(this._elementFactory, stateShape.businessObject.$type, stateShape.businessObject);
-          collectionAdd(decomposedProcess.businessObject.consistsOfStates, newStateShape.businessObject);
-          collectionAdd(childSystemLimit.businessObject.elementsContainer, newStateShape);
+          addTracked(decomposedProcess.businessObject.consistsOfStates, newStateShape.businessObject);
+          addTracked(childSystemLimit.businessObject.elementsContainer, newStateShape);
 
           // Set position based on direction (incoming/outgoing)
           const isIncoming = is(context.source, 'fpb:State'); // State -> ProcessOperator = incoming
@@ -213,10 +224,10 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
         (context.source.outgoing || []).forEach(function (flow) {
           if (flow !== element && isAny(flow, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
             if (!flow.businessObject.inTandemWith) {
-              flow.businessObject.inTandemWith = [];
+              setTracked(flow.businessObject, 'inTandemWith', []);
             }
-            collectionAdd(flow.businessObject.inTandemWith, element.businessObject);
-            collectionAdd(element.businessObject.inTandemWith, flow.businessObject);
+            addTracked(flow.businessObject.inTandemWith, element.businessObject);
+            addTracked(element.businessObject.inTandemWith, flow.businessObject);
           }
         });
       }
@@ -225,49 +236,49 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
 
   // Connection to Technical Resource
   if (is(context.source, 'fpb:TechnicalResource') || is(context.target, 'fpb:TechnicalResource')) {
-    collectionAdd(process_rootElement.businessObject.elementsContainer, element);
+    addTracked(process_rootElement.businessObject.elementsContainer, element);
     if (!Array.isArray(context.source.businessObject.isAssignedTo)) {
-      context.source.businessObject.isAssignedTo = context.source.businessObject.isAssignedTo
-        ? [context.source.businessObject.isAssignedTo]
-        : [];
+      setTracked(context.source.businessObject, 'isAssignedTo', context.source.businessObject.isAssignedTo ? [context.source.businessObject.isAssignedTo] : []);
     }
-    collectionAdd(context.source.businessObject.isAssignedTo, context.target.businessObject);
+    addTracked(context.source.businessObject.isAssignedTo, context.target.businessObject);
     if (!Array.isArray(context.target.businessObject.isAssignedTo)) {
-      context.target.businessObject.isAssignedTo = context.target.businessObject.isAssignedTo
-        ? [context.target.businessObject.isAssignedTo]
-        : [];
+      setTracked(context.target.businessObject, 'isAssignedTo', context.target.businessObject.isAssignedTo ? [context.target.businessObject.isAssignedTo] : []);
     }
-    collectionAdd(context.target.businessObject.isAssignedTo, context.source.businessObject);
+    addTracked(context.target.businessObject.isAssignedTo, context.source.businessObject);
   }
 };
 
 
 ConnectionUpdater.prototype._handleDelete = function (element, context, process_rootElement) {
+  const self = this;
   const connection = element;
 
   // Connections to States
   if (is(context.source, 'fpb:State') || is(context.target, 'fpb:State')) {
     const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
     if (!processSystemLimit) return;
-    collectionRemove(processSystemLimit.businessObject.elementsContainer, connection);
+    removeTracked(processSystemLimit.businessObject.elementsContainer, connection);
 
     let stateShape;
     let processOperatorShape;
     if (is(context.source, 'fpb:State')) {
       stateShape = context.source;
       processOperatorShape = context.target;
-      collectionRemove(processOperatorShape.businessObject.incoming, connection.businessObject);
-      collectionRemove(stateShape.businessObject.outgoing, connection.businessObject);
+      removeTracked(processOperatorShape.businessObject.incoming, connection.businessObject);
+      removeTracked(stateShape.businessObject.outgoing, connection.businessObject);
     } else {
       stateShape = context.target;
       processOperatorShape = context.source;
-      collectionRemove(processOperatorShape.businessObject.outgoing, connection.businessObject);
-      collectionRemove(stateShape.businessObject.incoming, connection.businessObject);
+      removeTracked(processOperatorShape.businessObject.outgoing, connection.businessObject);
+      removeTracked(stateShape.businessObject.incoming, connection.businessObject);
     }
-    collectionRemove(stateShape.businessObject.isAssignedTo, processOperatorShape.businessObject);
+    removeTracked(stateShape.businessObject.isAssignedTo, processOperatorShape.businessObject);
 
-    // Deep delete in the layers below
-    if (processOperatorShape.businessObject.decomposedView) {
+    // Deep delete in the layers below. Not when the flow is only replaced by one
+    // of another type: the state stays connected, and the child layer would lose
+    // the state's flows although nothing changed there.
+    const replacing = context.hints && context.hints.fpbReplaceConnection;
+    if (processOperatorShape.businessObject.decomposedView && !replacing) {
       const decomposedProcesses = [processOperatorShape.businessObject.decomposedView];
       while (decomposedProcesses.length > 0) {
         const decomposedProcess = decomposedProcesses.shift();
@@ -279,11 +290,13 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
           continue;
         }
 
+        const removedFlows = (stateInDecomposedProcess.outgoing || []).concat(stateInDecomposedProcess.incoming || []);
+
         (stateInDecomposedProcess.outgoing || []).forEach(function (flow) {
           const flowElement = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, flow.id);
-          collectionRemove(decomposedProcessSystemLimit.businessObject.elementsContainer, flowElement);
+          removeTracked(decomposedProcessSystemLimit.businessObject.elementsContainer, flowElement);
           if (flow.businessObject.targetRef) {
-            collectionRemove(flow.businessObject.targetRef.incoming, flow.businessObject);
+            removeTracked(flow.businessObject.targetRef.incoming, flow.businessObject);
             if (flow.businessObject.targetRef.decomposedView) {
               decomposedProcesses.push(flow.businessObject.targetRef.decomposedView);
             }
@@ -292,71 +305,146 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
           // invisible but still counts as a connection, so canConnect refuses
           // every new connection to that element afterwards.
           if (flow.target) {
-            collectionRemove(flow.target.incoming, flow);
+            removeTracked(flow.target.incoming, flow);
           }
         });
 
         (stateInDecomposedProcess.incoming || []).forEach(function (flow) {
           const flowElement = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, flow.id);
-          collectionRemove(decomposedProcessSystemLimit.businessObject.elementsContainer, flowElement);
+          removeTracked(decomposedProcessSystemLimit.businessObject.elementsContainer, flowElement);
           if (flow.businessObject.sourceRef) {
-            collectionRemove(flow.businessObject.sourceRef.outgoing, flow.businessObject);
+            removeTracked(flow.businessObject.sourceRef.outgoing, flow.businessObject);
             if (flow.businessObject.sourceRef.decomposedView) {
               decomposedProcesses.push(flow.businessObject.sourceRef.decomposedView);
             }
           }
           if (flow.source) {
-            collectionRemove(flow.source.outgoing, flow);
+            removeTracked(flow.source.outgoing, flow);
           }
         });
-        collectionRemove(decomposedProcessSystemLimit.businessObject.elementsContainer, stateInDecomposedProcess);
-        collectionRemove(decomposedProcess.businessObject.consistsOfStates, stateInDecomposedProcess.businessObject);
+        removeTracked(decomposedProcessSystemLimit.businessObject.elementsContainer, stateInDecomposedProcess);
+        removeTracked(decomposedProcess.businessObject.consistsOfStates, stateInDecomposedProcess.businessObject);
+        self._unlinkRemovedTandems(removedFlows, decomposedProcessSystemLimit);
       }
     }
 
+    // Partners are taken from inTandemWith itself: looking only at the current
+    // source missed a partner whose start had been moved to another element.
     if (isAny(element, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
-      (context.source.outgoing || []).forEach(function (flow) {
-        if (flow !== element) {
-          if (isAny(flow, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
-            if (flow.businessObject.inTandemWith) {
-              collectionRemove(flow.businessObject.inTandemWith, element.businessObject);
-            }
-            if (element.businessObject.inTandemWith) {
-              collectionRemove(element.businessObject.inTandemWith, flow.businessObject);
-            }
-          }
+      (element.businessObject.inTandemWith || []).slice().forEach(function (partner) {
+        if (!partner || typeof partner === 'string') {
+          return;
         }
+        removeTracked(partner.inTandemWith, element.businessObject);
+        removeTracked(element.businessObject.inTandemWith, partner);
       });
     }
   }
 
   if (is(context.source, 'fpb:TechnicalResource') || is(context.target, 'fpb:TechnicalResource')) {
-    collectionRemove(context.source.businessObject.isAssignedTo, context.target.businessObject);
-    collectionRemove(context.target.businessObject.isAssignedTo, context.source.businessObject);
-    collectionRemove(process_rootElement.businessObject.elementsContainer, connection);
+    removeTracked(context.source.businessObject.isAssignedTo, context.target.businessObject);
+    removeTracked(context.target.businessObject.isAssignedTo, context.source.businessObject);
+    removeTracked(process_rootElement.businessObject.elementsContainer, connection);
     if (context.source.businessObject.outgoing) {
-      collectionRemove(context.source.businessObject.outgoing, connection.businessObject);
+      removeTracked(context.source.businessObject.outgoing, connection.businessObject);
     }
     if (context.target.businessObject.incoming) {
-      collectionRemove(context.target.businessObject.incoming, connection.businessObject);
+      removeTracked(context.target.businessObject.incoming, connection.businessObject);
     }
   }
 };
 
 
+/**
+ * The deep delete in child layers removes flows without a command, so neither
+ * the tandem cleanup of _handleDelete nor ReplaceConnectionBehavior runs for them.
+ * Unlink the removed flows from their partners and turn a partner left alone
+ * back into a plain Flow. Otherwise the partner kept the id of a flow that no
+ * longer exists, and a flow drawn again later was linked next to it.
+ */
+ConnectionUpdater.prototype._unlinkRemovedTandems = function (removedFlows, systemLimit) {
+  const self = this;
+  const removed = removedFlows.map(function (flow) {
+    return flow.businessObject;
+  });
+  const orphaned = [];
+
+  removed.forEach(function (bo) {
+    if (!isAny(bo, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
+      return;
+    }
+    (bo.inTandemWith || []).slice().forEach(function (partner) {
+      if (!partner || typeof partner === 'string' || removed.indexOf(partner) !== -1) {
+        return;
+      }
+      removeTracked(partner.inTandemWith, bo);
+      removeTracked(bo.inTandemWith, partner);
+      collectionAdd(orphaned, partner);
+    });
+  });
+
+  orphaned.forEach(function (partner) {
+    const remaining = (partner.inTandemWith || []).filter(function (other) {
+      return other && typeof other !== 'string';
+    });
+    if (remaining.length === 0) {
+      self._replaceWithPlainFlow(getElementById(systemLimit.businessObject.elementsContainer, partner.id), systemLimit);
+    }
+  });
+};
+
+// Swap a connection that is not on the canvas for a plain Flow with the same id.
+ConnectionUpdater.prototype._replaceWithPlainFlow = function (connection, systemLimit) {
+  if (!connection || !isAny(connection, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
+    return;
+  }
+  const oldBo = connection.businessObject;
+  const plain = this._elementFactory.create('connection', {
+    type: 'fpb:Flow',
+    id: connection.id,
+    waypoints: connection.waypoints
+  });
+  const bo = plain.businessObject;
+  Object.keys(oldBo).forEach(function (key) {
+    if (['$type', 'id', 'di', 'inTandemWith'].indexOf(key) === -1) {
+      bo[key] = oldBo[key];
+    }
+  });
+  if (oldBo.di && oldBo.di.waypoint) {
+    bo.di.waypoint = oldBo.di.waypoint;
+  }
+
+  const swap = function (collection, oldEntry, newEntry) {
+    const idx = removeTracked(collection, oldEntry);
+    if (idx !== -1) {
+      addTracked(collection, newEntry, idx);
+    }
+  };
+  swap(systemLimit.businessObject.elementsContainer, connection, plain);
+  swap(oldBo.sourceRef && oldBo.sourceRef.outgoing, oldBo, bo);
+  swap(oldBo.targetRef && oldBo.targetRef.incoming, oldBo, bo);
+
+  const source = connection.source;
+  const target = connection.target;
+  setTracked(connection, 'source', null);
+  setTracked(connection, 'target', null);
+  setTracked(plain, 'source', source);
+  setTracked(plain, 'target', target);
+};
+
 // update existing sourceElement and targetElement di information
 ConnectionUpdater.prototype.updateDiConnection = function (di, newSource, newTarget) {
   if (di.sourceElement === undefined) {
-    di.sourceElement = newSource && newSource.di;
+    setTracked(di, 'sourceElement', newSource && newSource.di);
   }
   if (di.sourceElement && di.sourceElement.fpbjsElement !== newSource) {
-    di.sourceElement = newSource && newSource.di;
+    setTracked(di, 'sourceElement', newSource && newSource.di);
   }
   if (di.targetElement === undefined) {
-    di.targetElement = newTarget && newTarget.di;
+    setTracked(di, 'targetElement', newTarget && newTarget.di);
   }
   if (di.targetElement && di.targetElement.fpbjsElement !== newTarget) {
-    di.targetElement = newTarget && newTarget.di;
+    setTracked(di, 'targetElement', newTarget && newTarget.di);
   }
 };
 
@@ -378,26 +466,26 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
       const inverseSet = is(businessObject, 'fpb:Flow');
       if (businessObject.sourceRef !== newSource) {
         if (inverseSet) {
-          collectionRemove(businessObject.sourceRef && businessObject.sourceRef.get('outgoing'), businessObject);
+          removeTracked(businessObject.sourceRef && businessObject.sourceRef.get('outgoing'), businessObject);
         }
-        businessObject.sourceRef = newSource;
+        setTracked(businessObject, 'sourceRef', newSource);
         if (businessObject.sourceRef.get('outgoing') === undefined) {
-          businessObject.sourceRef.outgoing = [];
+          setTracked(businessObject.sourceRef, 'outgoing', []);
         }
-        collectionAdd(businessObject.sourceRef.outgoing, businessObject);
+        addTracked(businessObject.sourceRef.outgoing, businessObject);
       }
 
       if (businessObject.targetRef !== newTarget) {
         if (inverseSet) {
-          collectionRemove(businessObject.targetRef && businessObject.targetRef.get('incoming'), businessObject);
+          removeTracked(businessObject.targetRef && businessObject.targetRef.get('incoming'), businessObject);
         }
-        businessObject.targetRef = newTarget;
+        setTracked(businessObject, 'targetRef', newTarget);
         if (businessObject.targetRef.get('incoming') === undefined) {
-          businessObject.targetRef.incoming = [];
+          setTracked(businessObject.targetRef, 'incoming', []);
         }
-        collectionAdd(businessObject.targetRef.incoming, businessObject);
+        addTracked(businessObject.targetRef.incoming, businessObject);
       } else {
-        collectionAdd(businessObject.targetRef.incoming, businessObject);
+        addTracked(businessObject.targetRef.incoming, businessObject);
       }
     }
   }
@@ -409,27 +497,27 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
       const inverseSet = is(businessObject, 'fpb:Flow');
       if (businessObject.sourceRef !== newSource) {
         if (inverseSet) {
-          collectionRemove(businessObject.sourceRef && businessObject.sourceRef.get('outgoing'), businessObject);
+          removeTracked(businessObject.sourceRef && businessObject.sourceRef.get('outgoing'), businessObject);
         }
-        businessObject.sourceRef = newSource;
+        setTracked(businessObject, 'sourceRef', newSource);
         if (businessObject.sourceRef.get('outgoing') === undefined) {
-          businessObject.sourceRef.outgoing = [];
+          setTracked(businessObject.sourceRef, 'outgoing', []);
         }
-        collectionAdd(businessObject.sourceRef.outgoing, businessObject);
+        addTracked(businessObject.sourceRef.outgoing, businessObject);
       } else {
-        collectionAdd(businessObject.sourceRef.outgoing, businessObject);
+        addTracked(businessObject.sourceRef.outgoing, businessObject);
       }
       if (businessObject.targetRef !== newTarget) {
         if (inverseSet) {
-          collectionRemove(businessObject.targetRef && businessObject.targetRef.get('incoming'), businessObject);
+          removeTracked(businessObject.targetRef && businessObject.targetRef.get('incoming'), businessObject);
         }
-        businessObject.targetRef = newTarget;
+        setTracked(businessObject, 'targetRef', newTarget);
         if (businessObject.targetRef.get('incoming') === undefined) {
-          businessObject.targetRef.incoming = [];
+          setTracked(businessObject.targetRef, 'incoming', []);
         }
-        collectionAdd(businessObject.targetRef.incoming, businessObject);
+        addTracked(businessObject.targetRef.incoming, businessObject);
       } else {
-        collectionAdd(businessObject.targetRef.incoming, businessObject);
+        addTracked(businessObject.targetRef.incoming, businessObject);
       }
     }
 
@@ -437,33 +525,31 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
       const inverseSet = is(businessObject, 'fpb:Usage');
       if (businessObject.sourceRef !== newSource) {
         if (inverseSet) {
-          collectionRemove(businessObject.sourceRef && businessObject.sourceRef.get('outgoing'), businessObject);
+          removeTracked(businessObject.sourceRef && businessObject.sourceRef.get('outgoing'), businessObject);
         }
-        businessObject.sourceRef = newSource;
+        setTracked(businessObject, 'sourceRef', newSource);
         if (businessObject.sourceRef.get('outgoing') === undefined) {
-          businessObject.sourceRef.outgoing = [];
+          setTracked(businessObject.sourceRef, 'outgoing', []);
         }
-        collectionAdd(businessObject.sourceRef.outgoing, businessObject);
+        addTracked(businessObject.sourceRef.outgoing, businessObject);
       }
       if (businessObject.targetRef !== newTarget) {
         if (inverseSet) {
-          collectionRemove(businessObject.targetRef && businessObject.targetRef.get('incoming'), businessObject);
+          removeTracked(businessObject.targetRef && businessObject.targetRef.get('incoming'), businessObject);
         }
-        businessObject.targetRef = newTarget;
+        setTracked(businessObject, 'targetRef', newTarget);
         if (businessObject.targetRef.get('incoming') === undefined) {
-          businessObject.targetRef.incoming = [];
+          setTracked(businessObject.targetRef, 'incoming', []);
         }
         if (!Array.isArray(businessObject.targetRef.incoming)) {
-          businessObject.targetRef.incoming = [businessObject.targetRef.incoming];
+          setTracked(businessObject.targetRef, 'incoming', [businessObject.targetRef.incoming]);
         }
-        collectionAdd(businessObject.targetRef.incoming, businessObject);
+        addTracked(businessObject.targetRef.incoming, businessObject);
 
         if (!Array.isArray(businessObject.targetRef.isAssignedTo)) {
-          businessObject.targetRef.isAssignedTo = businessObject.targetRef.isAssignedTo
-            ? [businessObject.targetRef.isAssignedTo]
-            : [];
+          setTracked(businessObject.targetRef, 'isAssignedTo', businessObject.targetRef.isAssignedTo ? [businessObject.targetRef.isAssignedTo] : []);
         }
-        collectionAdd(businessObject.targetRef.isAssignedTo, businessObject.sourceRef);
+        addTracked(businessObject.targetRef.isAssignedTo, businessObject.sourceRef);
       }
     }
   }
@@ -474,27 +560,27 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
       const inverseSet = is(businessObject, 'fpb:Usage');
       if (businessObject.sourceRef !== newSource) {
         if (inverseSet) {
-          collectionRemove(businessObject.sourceRef && businessObject.sourceRef.get('outgoing'), businessObject);
+          removeTracked(businessObject.sourceRef && businessObject.sourceRef.get('outgoing'), businessObject);
         }
-        businessObject.sourceRef = newSource;
+        setTracked(businessObject, 'sourceRef', newSource);
         if (businessObject.sourceRef.get('outgoing') === undefined) {
-          businessObject.sourceRef.outgoing = [];
+          setTracked(businessObject.sourceRef, 'outgoing', []);
         }
-        collectionAdd(businessObject.sourceRef.outgoing, businessObject);
+        addTracked(businessObject.sourceRef.outgoing, businessObject);
       }
       if (businessObject.targetRef !== newTarget) {
         if (inverseSet) {
-          collectionRemove(businessObject.targetRef && businessObject.targetRef.get('incoming'), businessObject);
+          removeTracked(businessObject.targetRef && businessObject.targetRef.get('incoming'), businessObject);
         }
 
-        businessObject.targetRef = newTarget;
+        setTracked(businessObject, 'targetRef', newTarget);
         if (businessObject.targetRef.get('incoming') === undefined) {
-          businessObject.targetRef.incoming = [];
+          setTracked(businessObject.targetRef, 'incoming', []);
         }
         if (!Array.isArray(businessObject.targetRef.incoming)) {
-          businessObject.targetRef.incoming = [businessObject.targetRef.incoming];
+          setTracked(businessObject.targetRef, 'incoming', [businessObject.targetRef.incoming]);
         }
-        collectionAdd(businessObject.targetRef.incoming, businessObject);
+        addTracked(businessObject.targetRef.incoming, businessObject);
       }
     }
   }
@@ -505,6 +591,62 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
 
 
 /////// helpers ///////////////////////////////////
+
+// Journal of the running connection.create/delete, null outside of it.
+let activeJournal = null;
+
+function runJournaled(fn) {
+  const previous = activeJournal;
+  const journal = activeJournal = [];
+  try {
+    fn();
+  } finally {
+    activeJournal = previous;
+  }
+  return journal;
+}
+
+function revertJournal(journal) {
+  for (let i = (journal || []).length - 1; i >= 0; i--) {
+    const entry = journal[i];
+    if (entry.op === 'add') {
+      collectionRemove(entry.collection, entry.element);
+    } else if (entry.op === 'remove') {
+      if (entry.collection.indexOf(entry.element) === -1) {
+        entry.collection.splice(Math.min(entry.idx, entry.collection.length), 0, entry.element);
+      }
+    } else {
+      entry.target[entry.key] = entry.old;
+    }
+  }
+}
+
+function addTracked(collection, element, idx) {
+  if (!collection || !element || collection.indexOf(element) !== -1) {
+    collectionAdd(collection, element, idx);
+    return;
+  }
+  collectionAdd(collection, element, idx);
+  if (activeJournal) {
+    activeJournal.push({ op: 'add', collection: collection, element: element });
+  }
+}
+
+function removeTracked(collection, element) {
+  const idx = collectionRemove(collection, element);
+  if (idx !== -1 && activeJournal) {
+    activeJournal.push({ op: 'remove', collection: collection, element: element, idx: idx });
+  }
+  return idx;
+}
+
+function setTracked(target, key, value) {
+  const old = target[key];
+  target[key] = value;
+  if (activeJournal && old !== value) {
+    activeJournal.push({ op: 'set', target: target, key: key, old: old });
+  }
+}
 
 function ifFpb(fn) {
   return function (event) {
