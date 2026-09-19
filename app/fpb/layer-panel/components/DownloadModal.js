@@ -275,6 +275,8 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
             case 'labels':
             case 'ProjectAssignment':
             case 'TemporaryFlowHint':
+            // diagram-js keeps CSS markers of the canvas as a Set on the shape
+            case 'markers':
                 return undefined;
                 
             default: 

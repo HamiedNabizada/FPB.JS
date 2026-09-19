@@ -12,6 +12,7 @@ import Ids from 'ids';
 
 // Specialized renderers
 import { MarkerManager } from './utils/MarkerUtils';
+import { setTooltipText } from './utils/TooltipUtils';
 import { StateShapeRenderer } from './shapes/StateShapeRenderer';
 import { ProcessShapeRenderer } from './shapes/ProcessShapeRenderer';
 import { ConnectionRenderer } from './connections/ConnectionRenderer';
@@ -195,13 +196,13 @@ FpbRenderer.prototype.renderExternalLabel = function(parentGfx, element) {
   var longName = semantic.identification?.longName;
 
   if (longName && wasTruncated) {
-    element._tooltipText = semantic.name + '\n' + longName;
+    setTooltipText(element, semantic.name + '\n' + longName);
   } else if (longName) {
-    element._tooltipText = longName;
+    setTooltipText(element, longName);
   } else if (wasTruncated) {
-    element._tooltipText = semantic.name;
+    setTooltipText(element, semantic.name);
   } else {
-    element._tooltipText = null;
+    setTooltipText(element, null);
   }
 
   parentGfx.appendChild(text);

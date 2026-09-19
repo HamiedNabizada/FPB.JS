@@ -10,6 +10,7 @@ import {
   classes as svgClasses
 } from 'tiny-svg';
 import { assign } from 'min-dash';
+import { setTooltipText } from '../utils/TooltipUtils';
 import { COLORS, STROKE_WIDTHS, LABEL_CONFIG, LABEL_LIMITS } from '../FpbConstants';
 
 export class BaseShapeRenderer {
@@ -136,13 +137,13 @@ export class BaseShapeRenderer {
     const longName = semantic.identification?.longName;
 
     if (longName && wasTruncated) {
-      element._tooltipText = semantic.name + '\n' + longName;
+      setTooltipText(element, semantic.name + '\n' + longName);
     } else if (longName) {
-      element._tooltipText = longName;
+      setTooltipText(element, longName);
     } else if (wasTruncated) {
-      element._tooltipText = semantic.name;
+      setTooltipText(element, semantic.name);
     } else {
-      element._tooltipText = null;
+      setTooltipText(element, null);
     }
   }
 
