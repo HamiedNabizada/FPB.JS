@@ -24,6 +24,7 @@ export const RULES = {
   D4: { severity: SEVERITY.INFO, title: 'State has a name' },
   D5: { severity: SEVERITY.INFO, title: 'Technical resource has a name' },
   F5: { severity: SEVERITY.WARNING, title: 'Decomposition contains every input and output' },
+  F8: { severity: SEVERITY.WARNING, title: 'Branching type matches the decomposition' },
   G1: { severity: SEVERITY.WARNING, title: 'Process operator has an input and an output' },
   G3: { severity: SEVERITY.ERROR, title: 'Flow has different source and target' },
   G4: { severity: SEVERITY.WARNING, title: 'Element is connected' }
@@ -88,6 +89,23 @@ function layerContents(process) {
     flows: all.filter(function (e) { return isFlow(e) && e.waypoints; }),
     usages: all.filter(function (e) { return is(e, 'fpb:Usage'); })
   };
+}
+
+/**
+ * 'alternative' or 'parallel' if the flows form a branching of one kind,
+ * otherwise null (a single flow or mixed types say nothing, see C9).
+ */
+function branchKind(flows) {
+  if (flows.length < 2) {
+    return null;
+  }
+  if (flows.every(function (flow) { return is(flow, 'fpb:AlternativeFlow'); })) {
+    return 'alternative';
+  }
+  if (flows.every(function (flow) { return is(flow, 'fpb:ParallelFlow'); })) {
+    return 'parallel';
+  }
+  return null;
 }
 
 function flowsOf(element, direction) {
@@ -186,6 +204,38 @@ function checkProcess(process, issues) {
     if (!(element.incoming || []).length && !(element.outgoing || []).length) {
       report(issues, 'G4', element, process, label(element) + ' is not connected.');
     }
+  });
+
+  // F8: a branching of a decomposed operator must not contradict its decomposition
+  layer.operators.forEach(function (operator) {
+    const child = operator.businessObject.decomposedView;
+    if (!child || !child.businessObject) {
+      return;
+    }
+    const childStates = {};
+    layerContents(child).states.forEach(function (state) { childStates[state.id] = state; });
+
+    [
+      { direction: 'outgoing', childDirection: 'incoming', label: 'outputs', verb: 'produces' },
+      { direction: 'incoming', childDirection: 'outgoing', label: 'inputs', verb: 'uses' }
+    ].forEach(function (side) {
+      const flows = flowsOf(operator, side.direction);
+      const parentKind = branchKind(flows);
+      if (!parentKind) {
+        return;
+      }
+      const childFlows = flows
+        .map(function (flow) { return side.direction === 'outgoing' ? flow.target : flow.source; })
+        .map(function (state) { return state && childStates[state.id]; })
+        .filter(Boolean)
+        .reduce(function (all, state) { return all.concat(flowsOf(state, side.childDirection)); }, []);
+
+      const childKind = branchKind(childFlows);
+      if (childKind && childKind !== parentKind) {
+        report(issues, 'F8', operator, process, 'The ' + side.label + ' of ' + label(operator) + ' are '
+          + parentKind + ', but its decomposition ' + side.verb + ' them ' + childKind + '.');
+      }
+    });
   });
 
   // F5: every input and output of a decomposed operator exists in its decomposition
