@@ -88,6 +88,20 @@ const LayerPanel = ({ modeler, config }) => {
             )}
             
             <div className="mt-3">
+                <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id="tooltip-search">
+                    Search all layers (Ctrl+F)
+                </Tooltip>}>
+                    <Button
+                        id="openSearchButton"
+                        onClick={() => modeler.get('fpbSearch').open()}
+                        variant="secondary-outline"
+                    >
+                        <FontAwesomeIcon icon="magnifying-glass" size="lg" />
+                    </Button>
+                </OverlayTrigger>
+            </div>
+
+            <div className="mt-3">
                 <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id="tooltip-info">
                     Show information and help
                 </Tooltip>}>

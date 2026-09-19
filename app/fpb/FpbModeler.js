@@ -53,6 +53,7 @@ import JsonImporter from './importer';
 import ServicesModule from './services';
 import TouchModule from './touch';
 import EditorModule from './editor';
+import SearchModule from './search';
 
 
 const DEFAULT_OPTIONS = {
@@ -132,7 +133,8 @@ FpbModeler.prototype._modules = [
     JsonImporter,
     ServicesModule,
     TouchModule,
-    EditorModule
+    EditorModule,
+    SearchModule
     // AutoResize - disabled to allow free SystemLimit resize
 ];
 

@@ -23,8 +23,10 @@ import { faMoon } from '@fortawesome/free-solid-svg-icons/faMoon';
 import { faCheck } from '@fortawesome/free-solid-svg-icons/faCheck';
 import { faImage } from '@fortawesome/free-solid-svg-icons/faImage';
 import { faFilePdf } from '@fortawesome/free-solid-svg-icons/faFilePdf';
+import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons/faMagnifyingGlass';
 
 library.add(
+  faMagnifyingGlass,
   faAnglesRight,
   faAnglesLeft,
   faClipboard,

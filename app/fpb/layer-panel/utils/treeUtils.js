@@ -6,7 +6,7 @@ import { is } from '../../help/utils';
  * @param {number} maxLength - Maximum length before truncation
  * @returns {string} Formatted process name
  */
-const getProcessDisplayName = (process, maxLength = 25) => {
+export const getProcessDisplayName = (process, maxLength = 25) => {
     if (is(process.businessObject.parent, 'fpb:Project')) {
         return process.businessObject.parent.name;
     }

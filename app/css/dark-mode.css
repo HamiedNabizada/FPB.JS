@@ -641,3 +641,26 @@ body {
 [data-theme="dark"] .djs-minimap .map path[style*="marker-end"] {
   stroke: #ffffff !important;
 }
+
+[data-theme="dark"] .fpb-search,
+[data-theme="dark"] .fpb-search .djs-search-result {
+  background: var(--fpb-panel-bg);
+  border-color: var(--fpb-border-color);
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .fpb-search .djs-search-input input {
+  background: var(--fpb-panel-bg);
+  color: var(--fpb-text-primary);
+  border-color: var(--fpb-border-color);
+}
+
+[data-theme="dark"] .fpb-search .djs-search-result:hover,
+[data-theme="dark"] .fpb-search .djs-search-result-selected {
+  background: var(--fpb-button-hover);
+}
+
+[data-theme="dark"] .fpb-search .djs-search-highlight,
+[data-theme="dark"] .fpb-search .fpb-search-meta {
+  color: var(--fpb-text-primary);
+}

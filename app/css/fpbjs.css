@@ -292,3 +292,11 @@
 }
 .djs-minimap .cursor-crosshair { cursor: crosshair; }
 .djs-minimap .cursor-move { cursor: move; }
+
+/* Search over all layers (fpb/search), on top of the search pad styles */
+.fpb-search { z-index: 180; opacity: 1; }
+.fpb-search .djs-search-results { max-height: 320px; }
+.fpb-search .djs-search-result-primary { margin: 0 0 2px; }
+.fpb-search .fpb-search-meta { font-family: inherit; font-size: 0.85em; color: #666; }
+.fpb-search .djs-search-highlight { font-weight: 700; }
+.fpb-search .fpb-search-empty { color: #666; cursor: default; }

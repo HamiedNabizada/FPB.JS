@@ -12,7 +12,8 @@ export const keyboardShortcuts = [
       { keys: [`${ctrlKey}+Z`], description: 'Undo (within the current layer)' },
       { keys: [`${ctrlKey}+Y`, `${ctrlKey}+Shift+Z`], description: 'Redo' },
       { keys: ['Delete', 'Backspace'], description: 'Delete selected elements (asks first if another layer is affected)' },
-      { keys: [`${ctrlKey}+A`], description: 'Select all elements of the layer' }
+      { keys: [`${ctrlKey}+A`], description: 'Select all elements of the layer' },
+      { keys: [`${ctrlKey}+F`], description: 'Search all layers and jump to an element' }
     ]
   },
   {
