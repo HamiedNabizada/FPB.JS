@@ -86,6 +86,35 @@ test.describe('Typwechsel', () => {
     expect(fehler).toEqual([]);
   });
 
+  test('die Verzweigung wird nach dem Wechsel passend zum Typ gezeichnet', async ({ page }) => {
+    // Der Unterschied steckt im Layouter: eine alternative Verzweigung läuft
+    // gerade zum Ziel, eine parallele knickt auf den gemeinsamen Balken.
+    const { fehler } = await vorbereiten(page);
+    const stuetzpunkte = () => page.evaluate(() => window.fpbjs.get('elementRegistry')
+      .filter((e) => e.waypoints && e.source && e.source.businessObject.name === 'Erhitzen' && e.type !== 'fpb:Usage')
+      .map((e) => ({ typ: e.type, punkte: e.waypoints.length, knickY: e.waypoints.length > 2 ? e.waypoints[1].y : null })));
+
+    const vorher = await stuetzpunkte();
+    expect(vorher.every((c) => c.typ === 'fpb:ParallelFlow' && c.punkte > 2)).toBe(true);
+
+    await menueOeffnen(page, { id: (await page.evaluate(() => window.fpbjs.get('elementRegistry')
+      .filter((e) => e.waypoints && e.source && e.source.businessObject.name === 'Erhitzen' && e.type !== 'fpb:Usage')[0].id)).slice(0, 8) });
+    await page.click('.djs-popup .entry:has-text("Alternative")');
+
+    const alternativ = await stuetzpunkte();
+    expect(alternativ.every((c) => c.typ === 'fpb:AlternativeFlow' && c.punkte === 2)).toBe(true);
+
+    await menueOeffnen(page, { id: alternativ.length ? (await page.evaluate(() => window.fpbjs.get('elementRegistry')
+      .filter((e) => e.waypoints && e.source && e.source.businessObject.name === 'Erhitzen' && e.type !== 'fpb:Usage')[0].id)).slice(0, 8) : '' });
+    await page.click('.djs-popup .entry:has-text("Parallel")');
+
+    const wiederParallel = await stuetzpunkte();
+    expect(wiederParallel.every((c) => c.typ === 'fpb:ParallelFlow' && c.punkte > 2)).toBe(true);
+    // beide Linien knicken auf denselben Balken
+    expect(new Set(wiederParallel.map((c) => c.knickY)).size).toBe(1);
+    expect(fehler).toEqual([]);
+  });
+
   test('Rückgängig stellt den vorherigen Typ in allen Ebenen wieder her', async ({ page }) => {
     await vorbereiten(page);
     const vorher = await exportiere(page);
