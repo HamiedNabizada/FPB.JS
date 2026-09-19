@@ -224,6 +224,33 @@ test.describe('Import - unvollständige Dateien', () => {
     expect(consistsOf).toEqual([]);
   });
 
+  test('lädt ein Merkmal, dem Teile fehlen', async ({ page }) => {
+    // Vorher brach der ganze Import mit einem TypeError in addValidityLimits ab
+    // (belegt an einer Datei auf der Platte ohne validityLimits).
+    const modell = clone();
+    const produkt = daten(prozesse(modell)[0]).find((e) => e.characteristics && e.characteristics.length);
+    const merkmal = produkt.characteristics[0];
+    delete merkmal.descriptiveElement.validityLimits;
+    delete merkmal.descriptiveElement.setpointValue;
+    delete merkmal.relationalElement;
+
+    const importer = new ImportPage(page);
+    await importer.goto();
+    await importer.import(modell);
+
+    expect((await importer.dataStore()).prozesse).toHaveLength(2);
+    const geladen = await page.evaluate((id) => {
+      const shape = window.fpbjs.get('elementRegistry').get(id);
+      const m = shape && shape.businessObject.characteristics[0];
+      return m && {
+        grenzen: m.descriptiveElement.validityLimits,
+        sollwert: m.descriptiveElement.setpointValue.$type,
+        relational: m.relationalElement.$type,
+      };
+    }, produkt.id);
+    expect(geladen).toEqual({ grenzen: [], sollwert: 'fpbch:ValueWithUnit', relational: 'fpbch:RelationalElement' });
+  });
+
 });
 
 test.describe('Import - Referenzauflösung', () => {
