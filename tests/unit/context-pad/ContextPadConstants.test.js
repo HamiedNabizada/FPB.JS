@@ -60,8 +60,12 @@ describe('ContextPadConstants', () => {
 
   describe('CONTEXT_PAD_ICONS', () => {
 
-    it('defines all 8 icons', () => {
-      expect(Object.keys(CONTEXT_PAD_ICONS)).toHaveLength(8);
+    it('defines all 9 icons', () => {
+      expect(Object.keys(CONTEXT_PAD_ICONS)).toHaveLength(9);
+    });
+
+    it('defines CHANGE_TYPE icon', () => {
+      expect(CONTEXT_PAD_ICONS.CHANGE_TYPE).toBe('context-pad-icon-fpbchangetype');
     });
 
     it('defines REMOVE icon', () => {
@@ -161,8 +165,12 @@ describe('ContextPadConstants', () => {
 
   describe('ENTRY_IDS', () => {
 
-    it('defines all 7 entry IDs', () => {
-      expect(Object.keys(ENTRY_IDS)).toHaveLength(7);
+    it('defines all 8 entry IDs', () => {
+      expect(Object.keys(ENTRY_IDS)).toHaveLength(8);
+    });
+
+    it('defines CHANGE_TYPE', () => {
+      expect(ENTRY_IDS.CHANGE_TYPE).toBe('change_type');
     });
 
     it('defines DELETE', () => {
@@ -198,8 +206,12 @@ describe('ContextPadConstants', () => {
 
   describe('TOOLTIP_KEYS', () => {
 
-    it('defines all 12 tooltip keys', () => {
-      expect(Object.keys(TOOLTIP_KEYS)).toHaveLength(12);
+    it('defines all 13 tooltip keys', () => {
+      expect(Object.keys(TOOLTIP_KEYS)).toHaveLength(13);
+    });
+
+    it('defines CHANGE_TYPE tooltip', () => {
+      expect(TOOLTIP_KEYS.CHANGE_TYPE).toBe('Change type');
     });
 
     it('defines REMOVE tooltip', () => {
