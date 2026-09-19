@@ -597,9 +597,12 @@ JSONImporter.prototype.buildCharacteristics = function (bO, char) {
     let characteristics = [];
     const addValidityLimits = (limits) => {
         let validityLimits = [];
-        limits.forEach((limit) => {
+        // Missing in files from external generators, a single object in some;
+        // either aborted the whole import with a TypeError.
+        const list = Array.isArray(limits) ? limits : (limits ? [limits] : []);
+        list.forEach((limit) => {
             let validityLimit;
-            if (limit.$type === 'fpbch:ValidityLimits') {
+            if (limit && limit.$type === 'fpbch:ValidityLimits') {
                 validityLimit = this._fpbFactory.create(limit.$type, {
                     limitType: limit.limitType,
                     from: limit.from,
@@ -626,29 +629,36 @@ JSONImporter.prototype.buildCharacteristics = function (bO, char) {
     char.forEach(ch => {
         let type = ch.$type;
         if (type === 'fpbch:Characteristics') {
+            // Parts missing in files from external generators are created empty,
+            // as the properties panel does for a new characteristic, instead of
+            // aborting the whole import.
+            const category = ch.category || {};
+            const descriptive = ch.descriptiveElement || {};
+            const setpoint = descriptive.setpointValue || {};
+            const relational = ch.relationalElement || {};
             let characteristic = this._fpbFactory.create(type, {
                 //category
-                category: this._fpbFactory.create(ch.category.$type, {
-                    uniqueIdent: ch.category.uniqueIdent,
-                    longName: ch.category.longName,
-                    shortName: ch.category.shortName,
-                    versionNumber: ch.category.versionNumber,
-                    revisionNumber: ch.category.revisionNumber
+                category: this._fpbFactory.create(category.$type || 'fpb:Identification', {
+                    uniqueIdent: category.uniqueIdent,
+                    longName: category.longName,
+                    shortName: category.shortName,
+                    versionNumber: category.versionNumber,
+                    revisionNumber: category.revisionNumber
                 }),
-                descriptiveElement: this._fpbFactory.create(ch.descriptiveElement.$type, {
-                    valueDeterminationProcess: ch.descriptiveElement.valueDeterminationProcess,
-                    representivity: ch.descriptiveElement.representivity,
-                    setpointValue: this._fpbFactory.create(ch.descriptiveElement.setpointValue.$type, {
-                        value: ch.descriptiveElement.setpointValue.value,
-                        unit: ch.descriptiveElement.setpointValue.unit
+                descriptiveElement: this._fpbFactory.create(descriptive.$type || 'fpbch:DescriptiveElement', {
+                    valueDeterminationProcess: descriptive.valueDeterminationProcess,
+                    representivity: descriptive.representivity,
+                    setpointValue: this._fpbFactory.create(setpoint.$type || 'fpbch:ValueWithUnit', {
+                        value: setpoint.value,
+                        unit: setpoint.unit
                     }),
-                    validityLimits: addValidityLimits(ch.descriptiveElement.validityLimits),
-                    actualValues: addActualValues(ch.descriptiveElement.actualValues),
+                    validityLimits: addValidityLimits(descriptive.validityLimits),
+                    actualValues: addActualValues(descriptive.actualValues),
                 }),
-                relationalElement: this._fpbFactory.create(ch.relationalElement.$type, {
-                    view: ch.relationalElement.view,
-                    model: ch.relationalElement.model,
-                    regulationsForRelationalGeneration: ch.relationalElement.regulationsForRelationalGeneration
+                relationalElement: this._fpbFactory.create(relational.$type || 'fpbch:RelationalElement', {
+                    view: relational.view,
+                    model: relational.model,
+                    regulationsForRelationalGeneration: relational.regulationsForRelationalGeneration
                 })
             });
             collectionAdd(characteristics, characteristic);
