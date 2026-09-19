@@ -45,12 +45,8 @@ export default function FpbContextPadProvider(
     this._autoPlace = injector.get('autoPlace', false);
   }
 
-  // Listener for confirmation of delete actions
-  eventBus.on('confirmation.confirmed', function(event) {
-    if (event.action && event.action.type === 'delete' && event.action.element) {
-      modeling.removeElements([event.action.element]);
-    }
-  });
+  // Deletion incl. the confirmation for other layers (shared with the Delete key)
+  this._fpbDelete = injector.get('fpbDelete');
 }
 FpbContextPadProvider.$inject = [
   'config.contextPad',
@@ -79,79 +75,8 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
   const context = this._contextHelper.getProcessContext();
   const { process, systemLimit, processOperators, states, technicalResources } = context;
 
-  /**
-   * Checks if deleting an element has cross-layer consequences
-   */
-  function hasLayerConsequences(element) {
-    // ProcessOperator mit decomposed Layer. Das Feld heisst decomposedView
-    // (Shape des Child-Prozesses) — ein isDecomposed-Flag gibt es nicht.
-    if (is(element, ELEMENT_TYPES.PROCESS_OPERATOR)) {
-      const bo = element.businessObject;
-      if (bo && bo.decomposedView) {
-        return {
-          type: 'decomposed_process_operator',
-          message: 'This process operator contains a decomposed layer. Deleting it will also remove all elements in the subordinate layer.',
-          details: 'The entire subordinate process will be deleted.'
-        };
-      }
-    }
-
-    // State on system boundary in a decomposed layer
-    if (isAny(element, ELEMENT_GROUPS.STATES)) {
-      if (process && process.businessObject && process.businessObject.isDecomposedProcessOperator) {
-        // Check if the state lies on the system boundary
-        if (systemLimit) {
-          const borderCheck = checkIfOnSystemBorder(systemLimit, element);
-          if (borderCheck === 'onUpperBorder' || borderCheck === 'onBottomBorder') {
-            return {
-              type: 'boundary_state',
-              message: 'This state is connected to the parent layer.',
-              details: 'Deleting this boundary state will also remove the corresponding connection on the parent layer.'
-            };
-          }
-        }
-      }
-    }
-
-    // Deleting SystemLimit on child layer = undoing decomposition
-    if (is(element, ELEMENT_TYPES.SYSTEM_LIMIT)) {
-      if (process && process.businessObject && process.businessObject.isDecomposedProcessOperator) {
-        const parentPO = process.businessObject.isDecomposedProcessOperator;
-        const poName = parentPO.name || 'ProcessOperator';
-        return {
-          type: 'remove_decomposition',
-          message: 'Deleting the system limit will remove the entire decomposition of ProcessOperator "' + poName + '".',
-          details: 'You will be redirected to the parent process. All elements in this process will be deleted.'
-        };
-      }
-    }
-
-    return null;
-  }
-
   function removeElement() {
-    const consequences = hasLayerConsequences(element);
-
-    if (consequences) {
-      // Request confirmation for layer consequences
-      eventBus.fire('confirmation.required', {
-        title: consequences.type === 'remove_decomposition' ? 'Remove Decomposition?' : 'Confirm deletion',
-        message: consequences.message,
-        details: consequences.details,
-        isBlocked: false,
-        action: {
-          type: consequences.type === 'remove_decomposition' ? 'remove_decomposition' : 'delete',
-          element: element,
-          consequenceType: consequences.type,
-          // For remove_decomposition, include process info
-          process: consequences.type === 'remove_decomposition' ? process : undefined,
-          parentProcessOperator: consequences.type === 'remove_decomposition' ? process.businessObject.isDecomposedProcessOperator : undefined
-        }
-      });
-    } else {
-      // Delete directly without confirmation
-      modeling.removeElements([element]);
-    }
+    self._fpbDelete.remove([element]);
   }
 
   function startConnect(event, element, autoActivate) {

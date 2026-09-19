@@ -7,6 +7,15 @@ const ctrlKey = isMac ? '⌘' : 'Ctrl';
 
 export const keyboardShortcuts = [
   {
+    category: 'Editing',
+    items: [
+      { keys: [`${ctrlKey}+Z`], description: 'Undo (within the current layer)' },
+      { keys: [`${ctrlKey}+Y`, `${ctrlKey}+Shift+Z`], description: 'Redo' },
+      { keys: ['Delete', 'Backspace'], description: 'Delete selected elements (asks first if another layer is affected)' },
+      { keys: [`${ctrlKey}+A`], description: 'Select all elements of the layer' }
+    ]
+  },
+  {
     category: 'Zoom & Navigation',
     items: [
       { keys: [`${ctrlKey}++`], description: 'Zoom in' },
