@@ -14,6 +14,7 @@ import {
   FLOW_TYPES 
 } from './ContextPadConstants';
 import { canChangeType, CHANGE_TYPE_MENU } from '../replace/ChangeTypeMenuProvider';
+import { APPEND_MENU } from '../append/FpbAppend';
 import { 
   ContextHelper, 
   ConnectionUtils, 
@@ -49,6 +50,7 @@ export default function FpbContextPadProvider(
   // Deletion incl. the confirmation for other layers (shared with the Delete key)
   this._fpbDelete = injector.get('fpbDelete');
   this._popupMenu = injector.get('popupMenu', false);
+  this._fpbAppend = injector.get('fpbAppend', false);
 }
 FpbContextPadProvider.$inject = [
   'config.contextPad',
@@ -126,6 +128,35 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
       }
     }
   });
+  // Append a new connected element below this one
+  if (this._fpbAppend && this._popupMenu && this._fpbAppend.canAppend(element)) {
+    const fpbAppend = this._fpbAppend;
+    const popupMenu = this._popupMenu;
+    assign(pad, {
+      [ENTRY_IDS.APPEND]: {
+        group: ENTRY_GROUPS.EDIT,
+        className: CONTEXT_PAD_ICONS.APPEND,
+        title: translate(TOOLTIP_KEYS.APPEND),
+        action: {
+          click: function (event, target) {
+            const options = fpbAppend.getOptions(target);
+            if (options.length === 1) {
+              fpbAppend.append(target, options[0].type);
+              return;
+            }
+            const padNode = event.target.closest('.djs-context-pad') || event.target;
+            const padRect = padNode.getBoundingClientRect();
+            popupMenu.open(target, APPEND_MENU, {
+              x: padRect.left,
+              y: padRect.bottom + 5,
+              cursor: { x: event.x, y: event.y }
+            }, { title: translate(TOOLTIP_KEYS.APPEND), search: false, width: 240 });
+          }
+        }
+      }
+    });
+  }
+
   // Change the type of a state or of a branching, keeping id and connections
   if (this._popupMenu && canChangeType(element)) {
     const popupMenu = this._popupMenu;

@@ -56,6 +56,8 @@ import EditorModule from './editor';
 import SearchModule from './search';
 import ReplaceModule from './replace';
 import ValidationModule from './validation';
+import AppendModule from './append';
+import SnappingModule from 'diagram-js/lib/features/snapping';
 
 
 const DEFAULT_OPTIONS = {
@@ -138,7 +140,9 @@ FpbModeler.prototype._modules = [
     EditorModule,
     SearchModule,
     ReplaceModule,
-    ValidationModule
+    ValidationModule,
+    AppendModule,
+    SnappingModule
     // AutoResize - disabled to allow free SystemLimit resize
 ];
 

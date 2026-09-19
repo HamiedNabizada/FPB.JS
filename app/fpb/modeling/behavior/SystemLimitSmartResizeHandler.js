@@ -100,7 +100,9 @@ export default function SystemLimitSmartResizeHandler(eventBus) {
 
     const state = resizeState.get(shape.id);
     if (!state) {
-      console.warn('SystemLimitSmartResizeHandler: No resize state found');
+      // No resize state means the resize does not come from the resize handles
+      // but from the API (e.g. appending an element grows the system limit).
+      // Nothing to correct then.
       return;
     }
 

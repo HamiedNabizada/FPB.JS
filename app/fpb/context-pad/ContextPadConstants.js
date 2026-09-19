@@ -23,7 +23,8 @@ export const CONTEXT_PAD_ICONS = {
   DECOMPOSE: 'context-pad-icon-fpbdecompose',
   COMPOSE: 'context-pad-icon-fpbcompose',
   SWITCH_UP: 'context-pad-icon-fpbswitchup',
-  CHANGE_TYPE: 'context-pad-icon-fpbchangetype'
+  CHANGE_TYPE: 'context-pad-icon-fpbchangetype',
+  APPEND: 'context-pad-icon-fpbappend'
 };
 
 // Flow Types and Hints
@@ -54,7 +55,8 @@ export const ENTRY_IDS = {
   CONNECT_USAGE: 'connect_usage',
   DECOMPOSE: 'decompose',
   COMPOSE: 'compose',
-  CHANGE_TYPE: 'change_type'
+  CHANGE_TYPE: 'change_type',
+  APPEND: 'append'
 };
 
 // Translation Keys for Tooltips
@@ -71,7 +73,8 @@ export const TOOLTIP_KEYS = {
   SWITCH_TO_PARENT: 'Switch to parent process',
   COMPOSE_SYSTEM_LIMIT: 'Compose SystemLimit',
   ALTERNATIVE_FLOW: 'Alternative Flow',
-  CHANGE_TYPE: 'Change type'
+  CHANGE_TYPE: 'Change type',
+  APPEND: 'Append a connected element below'
 };
 
 // Layout Constants

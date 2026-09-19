@@ -6,6 +6,7 @@ import CreateModule from 'diagram-js/lib/features/create';
 
 import ContextPadProvider from './FpbContextPadProvider';
 import FpbDelete from './FpbDelete';
+import ContextPadPosition from './ContextPadPosition';
 
 export default {
   __depends__: [
@@ -15,7 +16,8 @@ export default {
     ConnectModule,
     CreateModule
   ],
-  __init__: [ 'fpbDelete', 'contextPadProvider' ],
+  __init__: [ 'fpbDelete', 'contextPadProvider', 'contextPadPosition' ],
   fpbDelete: [ 'type', FpbDelete ],
-  contextPadProvider: [ 'type', ContextPadProvider ]
+  contextPadProvider: [ 'type', ContextPadProvider ],
+  contextPadPosition: [ 'type', ContextPadPosition ]
 };
