@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 
 
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
 
 // Bootstrap components
 // https://react-bootstrap.github.io/
@@ -194,6 +194,25 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
   if (element.labelTarget) {
     element = element.labelTarget;
   };
+
+  // The identification fields are uncontrolled (defaultValue). A rename on the
+  // canvas or an undo left the old name in the field, and typing there wrote the
+  // old name back. Rebuild the form when the element changes from outside, but
+  // not while the user types in the panel, which would drop the caret.
+  const panelRef = useRef(null);
+  const [externalRevision, setExternalRevision] = useState(0);
+  useEffect(() => {
+    const handleChanged = (e) => {
+      const concernsElement = (e.elements || []).some((changed) =>
+        changed === element || changed.labelTarget === element);
+      const typingInPanel = panelRef.current && panelRef.current.contains(document.activeElement);
+      if (concernsElement && !typingInPanel) {
+        setExternalRevision((revision) => revision + 1);
+      }
+    };
+    modeler.on('elements.changed', handleChanged);
+    return () => modeler.off('elements.changed', handleChanged);
+  }, [modeler, element]);
   const modeling = modeler.get('modeling');
   function updateIdentifactionProperty(property, value) {
     if (property === 'shortName') {
@@ -286,7 +305,7 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
   }
 
   return (
-    <div className="element-properties" key={element.id}>
+    <div className="element-properties" key={element.id} ref={panelRef}>
 
       <Accordion defaultActiveKey="pp_identification">
         {is(element, 'fpb:Object') &&
@@ -297,7 +316,7 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
                   <b>Identification</b>
                 </Accordion.Header>
                 <Accordion.Body>
-                    <Form>
+                    <Form key={externalRevision}>
                       {config.propertiesPanel.identificationElements.showUniqueIdent &&
                         <Row>
                           <Form.Group as={Col}>
