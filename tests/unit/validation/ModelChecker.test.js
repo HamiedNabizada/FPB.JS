@@ -120,6 +120,51 @@ describe('ModelChecker', () => {
       expect(issues.find((i) => i.rule === 'F5').message).toContain('"Output"');
     });
 
+    /**
+     * Operator with two outputs, decomposed: in the child layer two operators
+     * produce the two boundary states.
+     */
+    function mitZweiAusgaengen(elternTyp, kindTyp) {
+      const m = validModel();
+      const zweiter = shape('out2', 'fpb:Energy', at(375, 475), { name: 'Heat' });
+      m.process.businessObject.elementsContainer[0].businessObject.elementsContainer.push(zweiter);
+      m.op.outgoing = m.op.outgoing.filter((c) => c.type === 'fpb:Usage');
+      m.output.incoming = [];
+      connect('p1', elternTyp, m.op, m.output);
+      connect('p2', elternTyp, m.op, zweiter);
+
+      const kindAusgang = shape('out', 'fpb:Product', at(275, 475), { name: 'Output' });
+      const kindAusgang2 = shape('out2', 'fpb:Energy', at(375, 475), { name: 'Heat' });
+      const op1 = shape('k1', 'fpb:ProcessOperator', at(200, 260, OPERATOR), { name: 'Step 1' });
+      const op2 = shape('k2', 'fpb:ProcessOperator', at(380, 260, OPERATOR), { name: 'Step 2' });
+      const eingang = shape('in', 'fpb:Product', at(275, 75), { name: 'Input' });
+      connect('kf0', 'fpb:Flow', eingang, op1);
+      connect('kf1', kindTyp, op1, kindAusgang);
+      connect('kf2', kindTyp, op2, kindAusgang2);
+      const child = process('c', [eingang, op1, op2, kindAusgang, kindAusgang2], [], {
+        isDecomposedProcessOperator: m.op.businessObject, parent: m.process
+      });
+      m.op.businessObject.decomposedView = child;
+      return { m, child };
+    }
+
+    it('F8: Eltern-Ebene alternativ, Kind-Ebene erzeugt beide parallel', () => {
+      const { m, child } = mitZweiAusgaengen('fpb:AlternativeFlow', 'fpb:ParallelFlow');
+      const f8 = checkModel([m.process, child]).filter((i) => i.rule === 'F8');
+      expect(f8).toHaveLength(1);
+      expect(f8[0].message).toContain('alternative');
+      expect(f8[0].message).toContain('parallel');
+      expect(f8[0].elementId).toBe('op');
+    });
+
+    it('F8 meldet nichts, wenn beide Ebenen zusammenpassen', () => {
+      const gleich = mitZweiAusgaengen('fpb:ParallelFlow', 'fpb:ParallelFlow');
+      expect(checkModel([gleich.m.process, gleich.child]).filter((i) => i.rule === 'F8')).toEqual([]);
+
+      const alternativ = mitZweiAusgaengen('fpb:AlternativeFlow', 'fpb:AlternativeFlow');
+      expect(checkModel([alternativ.m.process, alternativ.child]).filter((i) => i.rule === 'F8')).toEqual([]);
+    });
+
     it('B6: boundary state inside instead of on the border', () => {
       const inside = shape('out', 'fpb:Product', at(275, 300), { name: 'Output' });
       const { m, child } = decomposed([shape('in', 'fpb:Product', at(275, 75), { name: 'Input' }), inside]);
