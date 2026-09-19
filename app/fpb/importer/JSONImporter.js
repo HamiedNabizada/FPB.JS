@@ -172,6 +172,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                 // Switch to main process
                 try {
                     modeling.switchProcess(project.entryPoint);
+                    fitToViewport(this._canvas);
                 } catch (error) {
                     console.error('JSONImporter: Process switch failed:', error);
                 }
@@ -216,6 +217,21 @@ function replaceReference(list, id, object) {
         list[index] = object;
     } else {
         list.push(object);
+    }
+}
+
+// Lowest zoom after fitting an imported model, as the zoom scroll range starts at 0.2.
+const MIN_FIT_ZOOM = 0.3;
+
+/**
+ * Shows the whole imported model. Before, the view stayed at the origin with
+ * zoom 1, so larger models started partly outside the window. fit-viewport never
+ * zooms in beyond 1; a very large model stays readable at MIN_FIT_ZOOM.
+ */
+function fitToViewport(canvas) {
+    canvas.zoom('fit-viewport', 'auto');
+    if (canvas.zoom() < MIN_FIT_ZOOM) {
+        canvas.zoom(MIN_FIT_ZOOM, 'auto');
     }
 }
 
