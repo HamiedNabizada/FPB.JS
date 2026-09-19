@@ -12,6 +12,10 @@ import {
 export const useProcessManagement = (modeler) => {
     const [selectedProcess, setSelectedProcess] = useState(null);
     const [processes, setProcesses] = useState([]);
+    // The tree shows the names of the decomposed ProcessOperators. Renaming one
+    // changes its business object in place, the process list stays the same, so
+    // the tree needs its own signal to rebuild.
+    const [namesRevision, setNamesRevision] = useState(0);
 
     useEffect(() => {
         const handleNewProcess = (e) => {
@@ -57,13 +61,23 @@ export const useProcessManagement = (modeler) => {
             setSelectedProcess(null);
         };
 
+        const handleElementsChanged = (e) => {
+            const namesProcess = (e.elements || []).some((element) =>
+                element && element.businessObject && element.businessObject.decomposedView);
+            if (namesProcess) {
+                setNamesRevision((revision) => revision + 1);
+            }
+        };
+
         modeler.on('layerPanel.reset', handleReset);
+        modeler.on('elements.changed', handleElementsChanged);
         modeler.on('layerPanel.newProcess', handleNewProcess);
         modeler.on('layerPanel.processDeleted', handleProcessDeleted);
         modeler.on('layerPanel.processSwitched', handleProcessSwitched);
 
         return () => {
             modeler.off('layerPanel.reset', handleReset);
+            modeler.off('elements.changed', handleElementsChanged);
             modeler.off('layerPanel.newProcess', handleNewProcess);
             modeler.off('layerPanel.processDeleted', handleProcessDeleted);
             modeler.off('layerPanel.processSwitched', handleProcessSwitched);
@@ -81,6 +95,7 @@ export const useProcessManagement = (modeler) => {
     return {
         selectedProcess,
         processes,
+        namesRevision,
         switchProcess
     };
 };

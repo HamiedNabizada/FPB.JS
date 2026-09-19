@@ -26,7 +26,7 @@ const LayerPanel = ({ modeler, config }) => {
     const [isOpenedOptions, setIsOpenedOptions] = useState(false);
     const [showInfoModal, setShowInfoModal] = useState(false);
 
-    const { selectedProcess, processes, switchProcess } = useProcessManagement(modeler);
+    const { selectedProcess, processes, namesRevision, switchProcess } = useProcessManagement(modeler);
     const selectedElements = useSelectedElements(modeler);
     const { showConfirmation, confirmationData, handleConfirm, handleCancel } = useConfirmation(modeler);
 
@@ -78,6 +78,7 @@ const LayerPanel = ({ modeler, config }) => {
                         <div className="layerPanel-ProcessOverview-Content">
                             <ProcessTreeView 
                                 processes={processes}
+                                namesRevision={namesRevision}
                                 selectedProcess={selectedProcess}
                                 onProcessSwitch={switchProcess}
                             />

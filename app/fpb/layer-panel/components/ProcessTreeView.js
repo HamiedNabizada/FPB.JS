@@ -3,10 +3,11 @@ import { Tree } from 'react-arborist';
 import Form from 'react-bootstrap/Form';
 import { createArboristTreeData, getPathToProcess } from '../utils/treeUtils';
 
-const ProcessTreeView = memo(({ processes, selectedProcess, onProcessSwitch }) => {
+const ProcessTreeView = memo(({ processes, namesRevision, selectedProcess, onProcessSwitch }) => {
     const [searchTerm, setSearchTerm] = useState('');
 
-    const treeData = useMemo(() => createArboristTreeData(processes), [processes]);
+    // namesRevision: names are read from business objects changed in place
+    const treeData = useMemo(() => createArboristTreeData(processes), [processes, namesRevision]);
 
     const initiallyOpenIds = useMemo(() => {
         if (!selectedProcess) return [];
