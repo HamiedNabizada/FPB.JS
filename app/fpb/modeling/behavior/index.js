@@ -4,6 +4,7 @@ import DataBehavior from './DataBehavior'
 import ReplaceConnectionBehavior from './ReplaceConnectionBehavior';
 import SystemLimitSmartResizeHandler from './SystemLimitSmartResizeHandler';
 import SystemLimitDropFeedbackBlocker from './SystemLimitDropFeedbackBlocker';
+import LayerUndoBoundary from './LayerUndoBoundary';
 import FpbFactory from '../FpbFactory';
 
 export default {
@@ -13,7 +14,8 @@ export default {
     'replaceConnectionBehavior',
     'dataBehavior',
     'systemLimitSmartResizeHandler',
-    'systemLimitDropFeedbackBlocker'
+    'systemLimitDropFeedbackBlocker',
+    'layerUndoBoundary'
   ],
   __depends__: [
     FpbFactory
@@ -23,5 +25,6 @@ export default {
   replaceConnectionBehavior: [ 'type', ReplaceConnectionBehavior ],
   dataBehavior: ['type', DataBehavior],
   systemLimitSmartResizeHandler: ['type', SystemLimitSmartResizeHandler],
-  systemLimitDropFeedbackBlocker: ['type', SystemLimitDropFeedbackBlocker]
+  systemLimitDropFeedbackBlocker: ['type', SystemLimitDropFeedbackBlocker],
+  layerUndoBoundary: ['type', LayerUndoBoundary]
 };

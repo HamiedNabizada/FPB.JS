@@ -5,9 +5,13 @@ import { getElementsFromElementsContainer, getElementById, checkIfOnSystemBorder
 import CommandInterceptor from 'diagram-js/lib/command/CommandInterceptor';
 
 import {
-  add as collectionAdd,
-  remove as collectionRemove
-} from 'diagram-js/lib/util/Collections';
+  runJournaled,
+  revertJournal,
+  addTracked,
+  removeTracked,
+  setTracked,
+  onRevert
+} from './ModelJournal';
 
 import {
   isLabel
@@ -39,10 +43,16 @@ export default function ShapeUpdater(
 
   const self = this;
 
+  // Model changes are journaled in the command context and replayed backwards
+  // on undo (see ModelJournal). Before, undo moved the shapes back but left the
+  // model as it was: an undone create stayed in the export, an undone delete
+  // was missing there, and the layers below kept what the delete had removed.
   function onShapeEvent(e) {
     const context = e.context;
     const command = e.command;
-    self._handleShapeCommand(command, context);
+    context.fpbJournal = runJournaled(function () {
+      self._handleShapeCommand(command, context);
+    });
   }
 
   this.executed([
@@ -51,9 +61,13 @@ export default function ShapeUpdater(
     'shape.delete'
   ], ifFpb(onShapeEvent));
 
-  // NOTE: The revert path for updateProcessInformation was non-functional in the
-  // original FpbUpdater.js (reverseUpdateProcessInformation passed wrong argument types).
-  // Not registering a revert handler here preserves that behavior.
+  this.reverted([
+    'shape.move',
+    'shape.create',
+    'shape.delete'
+  ], ifFpb(function (e) {
+    revertJournal(e.context.fpbJournal);
+  }));
 }
 
 inherits(ShapeUpdater, CommandInterceptor);
@@ -127,9 +141,9 @@ ShapeUpdater.prototype._handleCreate = function (element, process_rootElement) {
   if (isAny(element, ['fpb:State', 'fpb:ProcessOperator'])) {
     const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
     if (!processSystemLimit) return;
-    collectionAdd(processSystemLimit.businessObject.elementsContainer, element);
+    addTracked(processSystemLimit.businessObject.elementsContainer, element);
     if (is(element, 'fpb:State')) {
-      collectionAdd(process_rootElement.businessObject.consistsOfStates, element.businessObject);
+      addTracked(process_rootElement.businessObject.consistsOfStates, element.businessObject);
 
       // Scenario 4: If a State is placed on the system boundary of a child layer,
       // show a confirmation dialog
@@ -151,15 +165,15 @@ ShapeUpdater.prototype._handleCreate = function (element, process_rootElement) {
         }
       }
     } else {
-      collectionAdd(process_rootElement.businessObject.consistsOfProcessOperator, element.businessObject);
+      addTracked(process_rootElement.businessObject.consistsOfProcessOperator, element.businessObject);
     }
   }
 
   // SystemLimit and TechnicalResource in the Process's elementsContainer
   if (isAny(element, ['fpb:TechnicalResource', 'fpb:SystemLimit'])) {
-    collectionAdd(process_rootElement.businessObject.elementsContainer, element);
+    addTracked(process_rootElement.businessObject.elementsContainer, element);
     if (is(element, 'fpb:SystemLimit')) {
-      process_rootElement.businessObject.consistsOfSystemLimit = element.businessObject;
+      setTracked(process_rootElement.businessObject, 'consistsOfSystemLimit', element.businessObject);
     }
   }
 };
@@ -170,10 +184,10 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
   if (isAny(element, ['fpb:State', 'fpb:ProcessOperator'])) {
     const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
     if (!processSystemLimit) return;
-    collectionRemove(processSystemLimit.businessObject.elementsContainer, element);
+    removeTracked(processSystemLimit.businessObject.elementsContainer, element);
 
     if (is(element, 'fpb:State')) {
-      collectionRemove(process_rootElement.businessObject.consistsOfStates, element.businessObject);
+      removeTracked(process_rootElement.businessObject.consistsOfStates, element.businessObject);
 
       // Layer consistency: Propagate state deletion to child layers
       const connectedDecomposedProcesses = [];
@@ -193,9 +207,9 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
             // Delete the state's flows in the child layer
             if (stateInChild.outgoing) {
               stateInChild.outgoing.forEach(function(flow) {
-                collectionRemove(childSystemLimit.businessObject.elementsContainer, flow);
+                removeTracked(childSystemLimit.businessObject.elementsContainer, flow);
                 if (flow.businessObject.targetRef) {
-                  collectionRemove(flow.businessObject.targetRef.incoming, flow.businessObject);
+                  removeTracked(flow.businessObject.targetRef.incoming, flow.businessObject);
                   if (flow.businessObject.targetRef.decomposedView) {
                     connectedDecomposedProcesses.push(flow.businessObject.targetRef.decomposedView);
                   }
@@ -204,27 +218,27 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
                 // invisible but still counts as a connection, and canConnect
                 // then refuses every new connection to that element.
                 if (flow.target) {
-                  collectionRemove(flow.target.incoming, flow);
+                  removeTracked(flow.target.incoming, flow);
                 }
               });
             }
             if (stateInChild.incoming) {
               stateInChild.incoming.forEach(function(flow) {
-                collectionRemove(childSystemLimit.businessObject.elementsContainer, flow);
+                removeTracked(childSystemLimit.businessObject.elementsContainer, flow);
                 if (flow.businessObject.sourceRef) {
-                  collectionRemove(flow.businessObject.sourceRef.outgoing, flow.businessObject);
+                  removeTracked(flow.businessObject.sourceRef.outgoing, flow.businessObject);
                   if (flow.businessObject.sourceRef.decomposedView) {
                     connectedDecomposedProcesses.push(flow.businessObject.sourceRef.decomposedView);
                   }
                 }
                 if (flow.source) {
-                  collectionRemove(flow.source.outgoing, flow);
+                  removeTracked(flow.source.outgoing, flow);
                 }
               });
             }
             // Remove state from child layer
-            collectionRemove(childSystemLimit.businessObject.elementsContainer, stateInChild);
-            collectionRemove(childProcess.businessObject.consistsOfStates, stateInChild.businessObject);
+            removeTracked(childSystemLimit.businessObject.elementsContainer, stateInChild);
+            removeTracked(childProcess.businessObject.consistsOfStates, stateInChild.businessObject);
           }
         }
       }
@@ -269,19 +283,19 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
               }
 
               flowsToRemove.forEach(function(flow) {
-                collectionRemove(parentSystemLimit.businessObject.elementsContainer, flow);
-                collectionRemove(parentState.businessObject.outgoing, flow.businessObject);
-                collectionRemove(parentState.businessObject.incoming, flow.businessObject);
-                collectionRemove(parentProcessOperator.outgoing, flow.businessObject);
-                collectionRemove(parentProcessOperator.incoming, flow.businessObject);
-                collectionRemove(parentState.businessObject.isAssignedTo, parentProcessOperator);
+                removeTracked(parentSystemLimit.businessObject.elementsContainer, flow);
+                removeTracked(parentState.businessObject.outgoing, flow.businessObject);
+                removeTracked(parentState.businessObject.incoming, flow.businessObject);
+                removeTracked(parentProcessOperator.outgoing, flow.businessObject);
+                removeTracked(parentProcessOperator.incoming, flow.businessObject);
+                removeTracked(parentState.businessObject.isAssignedTo, parentProcessOperator);
 
                 // Remove shape references
-                collectionRemove(parentState.outgoing, flow);
-                collectionRemove(parentState.incoming, flow);
+                removeTracked(parentState.outgoing, flow);
+                removeTracked(parentState.incoming, flow);
                 if (parentProcessOperatorShape) {
-                  collectionRemove(parentProcessOperatorShape.outgoing, flow);
-                  collectionRemove(parentProcessOperatorShape.incoming, flow);
+                  removeTracked(parentProcessOperatorShape.outgoing, flow);
+                  removeTracked(parentProcessOperatorShape.incoming, flow);
                 }
               });
             }
@@ -289,7 +303,7 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
         }
       }
     } else {
-      collectionRemove(process_rootElement.businessObject.consistsOfProcessOperator, element.businessObject);
+      removeTracked(process_rootElement.businessObject.consistsOfProcessOperator, element.businessObject);
       // If ProcessOperator had been decomposed
       if (element.businessObject.decomposedView) {
         this._eventBus.fire('toolTips.decomposedProcessOperator', {
@@ -303,18 +317,27 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
         this._eventBus.fire('layerPanel.processDeleted', {
           deletedProcess: element.businessObject.decomposedView
         });
-        collectionRemove(process_rootElement.businessObject.consistsOfProcesses, element.businessObject.decomposedView);
+        const eventBus = this._eventBus;
+        const deletedProcess = element.businessObject.decomposedView;
+        const canvas = this._canvas;
+        onRevert(function () {
+          eventBus.fire('dataStore.newProcess', { newProcess: deletedProcess, parentProcess: process_rootElement });
+          eventBus.fire('layerPanel.newProcess', { newProcess: deletedProcess, parentProcess: process_rootElement });
+          // layerPanel.newProcess selects the process it announces; the canvas stays here.
+          eventBus.fire('layerPanel.processSwitched', { selectedProcess: canvas.getRootElement() });
+        });
+        removeTracked(process_rootElement.businessObject.consistsOfProcesses, element.businessObject.decomposedView);
       }
     }
   }
 
   if (isAny(element, ['fpb:TechnicalResource', 'fpb:SystemLimit'])) {
-    collectionRemove(process_rootElement.businessObject.elementsContainer, element);
+    removeTracked(process_rootElement.businessObject.elementsContainer, element);
     if (is(element, 'fpb:SystemLimit')) {
-      process_rootElement.businessObject.consistsOfSystemLimit = null;
-      process_rootElement.businessObject.consistsOfStates = [];
-      process_rootElement.businessObject.consistsOfProcesses = [];
-      process_rootElement.businessObject.consistsOfProcessOperator = [];
+      setTracked(process_rootElement.businessObject, 'consistsOfSystemLimit', null);
+      setTracked(process_rootElement.businessObject, 'consistsOfStates', []);
+      setTracked(process_rootElement.businessObject, 'consistsOfProcesses', []);
+      setTracked(process_rootElement.businessObject, 'consistsOfProcessOperator', []);
     }
   }
 };
@@ -326,15 +349,15 @@ ShapeUpdater.prototype._handleMove = function (element, process_rootElement, con
     if (processSystemLimit) {
       const elementFromElementsContainer = getElementById(processSystemLimit.businessObject.elementsContainer, element.businessObject.id);
       // Otherwise there are issues when switching between layers
-      collectionRemove(processSystemLimit.businessObject.elementsContainer, elementFromElementsContainer);
-      collectionAdd(processSystemLimit.businessObject.elementsContainer, element);
+      removeTracked(processSystemLimit.businessObject.elementsContainer, elementFromElementsContainer);
+      addTracked(processSystemLimit.businessObject.elementsContainer, element);
     }
   }
 
   if (isAny(element, ['fpb:SystemLimit', 'fpb:TechnicalResource'])) {
     const elementFromElementsContainer = getElementById(process_rootElement.businessObject.elementsContainer, element.businessObject.id);
-    collectionRemove(process_rootElement.businessObject.elementsContainer, elementFromElementsContainer);
-    collectionAdd(process_rootElement.businessObject.elementsContainer, element);
+    removeTracked(process_rootElement.businessObject.elementsContainer, elementFromElementsContainer);
+    addTracked(process_rootElement.businessObject.elementsContainer, element);
   }
 
   // Scenario 6: Internal state is moved to the system boundary

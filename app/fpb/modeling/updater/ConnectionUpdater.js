@@ -5,6 +5,14 @@ import { getElementsFromElementsContainer, getElementById, createStateShapeForNe
 import CommandInterceptor from 'diagram-js/lib/command/CommandInterceptor';
 
 import {
+  runJournaled,
+  revertJournal,
+  addTracked,
+  removeTracked,
+  setTracked
+} from './ModelJournal';
+
+import {
   add as collectionAdd,
   remove as collectionRemove
 } from 'diagram-js/lib/util/Collections';
@@ -592,61 +600,6 @@ ConnectionUpdater.prototype.updateConnection = function (context) {
 
 /////// helpers ///////////////////////////////////
 
-// Journal of the running connection.create/delete, null outside of it.
-let activeJournal = null;
-
-function runJournaled(fn) {
-  const previous = activeJournal;
-  const journal = activeJournal = [];
-  try {
-    fn();
-  } finally {
-    activeJournal = previous;
-  }
-  return journal;
-}
-
-function revertJournal(journal) {
-  for (let i = (journal || []).length - 1; i >= 0; i--) {
-    const entry = journal[i];
-    if (entry.op === 'add') {
-      collectionRemove(entry.collection, entry.element);
-    } else if (entry.op === 'remove') {
-      if (entry.collection.indexOf(entry.element) === -1) {
-        entry.collection.splice(Math.min(entry.idx, entry.collection.length), 0, entry.element);
-      }
-    } else {
-      entry.target[entry.key] = entry.old;
-    }
-  }
-}
-
-function addTracked(collection, element, idx) {
-  if (!collection || !element || collection.indexOf(element) !== -1) {
-    collectionAdd(collection, element, idx);
-    return;
-  }
-  collectionAdd(collection, element, idx);
-  if (activeJournal) {
-    activeJournal.push({ op: 'add', collection: collection, element: element });
-  }
-}
-
-function removeTracked(collection, element) {
-  const idx = collectionRemove(collection, element);
-  if (idx !== -1 && activeJournal) {
-    activeJournal.push({ op: 'remove', collection: collection, element: element, idx: idx });
-  }
-  return idx;
-}
-
-function setTracked(target, key, value) {
-  const old = target[key];
-  target[key] = value;
-  if (activeJournal && old !== value) {
-    activeJournal.push({ op: 'set', target: target, key: key, old: old });
-  }
-}
 
 function ifFpb(fn) {
   return function (event) {
