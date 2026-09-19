@@ -710,3 +710,17 @@ body {
 [data-theme="dark"] .fpb-validation-item:hover {
   background: var(--fpb-button-hover);
 }
+
+[data-theme="dark"] .fpb-decomposition-preview {
+  background: var(--fpb-panel-bg);
+  border-color: var(--fpb-border-color);
+}
+
+[data-theme="dark"] .fpb-decomposition-preview-title {
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .fpb-decomposition-preview svg polyline,
+[data-theme="dark"] .fpb-decomposition-preview svg rect[fill="none"] {
+  stroke: var(--fpb-text-primary);
+}

@@ -368,3 +368,26 @@
   background: #e8a200;
 }
 .fpb-validation-count.has-errors { background: #d0021b; }
+
+/* Preview of the decomposition while hovering a decomposed operator */
+.fpb-decomposition-preview {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  padding: 6px;
+  cursor: pointer;
+  pointer-events: all;
+}
+.fpb-decomposition-preview-title {
+  font: 600 12px/1.4 sans-serif;
+  color: #444;
+  margin-bottom: 4px;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fpb-decomposition-preview:hover {
+  border-color: #13ae4d;
+}
