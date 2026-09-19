@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import Button from 'react-bootstrap/Button';
 
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -10,6 +10,7 @@ import DownloadOptions from './features/DownloadOptions';
 import InfoModal from './components/InfoModal';
 import ConfirmationModal from './components/ConfirmationModal';
 import ProcessTreeView from './components/ProcessTreeView';
+import { describeCounts } from '../validation/FpbValidation';
 import ThemeToggle from './components/ThemeToggle';
 import { useProcessManagement } from './hooks/useProcessManagement';
 import { useSelectedElements } from './hooks/useSelectedElements';
@@ -29,6 +30,15 @@ const LayerPanel = ({ modeler, config }) => {
     const { selectedProcess, processes, namesRevision, switchProcess } = useProcessManagement(modeler);
     const selectedElements = useSelectedElements(modeler);
     const { showConfirmation, confirmationData, handleConfirm, handleCancel } = useConfirmation(modeler);
+
+    // Findings of the model check for the counter on its button
+    const [checkCounts, setCheckCounts] = useState({ error: 0, warning: 0, info: 0 });
+    useEffect(() => {
+        const handleChecked = (e) => setCheckCounts(e.counts);
+        modeler.on('fpbValidation.changed', handleChecked);
+        return () => modeler.off('fpbValidation.changed', handleChecked);
+    }, [modeler]);
+    const shownFindings = checkCounts.error + checkCounts.warning;
 
 
     const tooltipsOptions = isOpenedOptions ? 'Hide Options' : 'Show Options';
@@ -87,6 +97,26 @@ const LayerPanel = ({ modeler, config }) => {
                 </div>
             )}
             
+            <div className="mt-3">
+                <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id="tooltip-check">
+                    {`Model check (VDI 3682): ${describeCounts(checkCounts)}`}
+                </Tooltip>}>
+                    <Button
+                        id="openValidationButton"
+                        onClick={() => modeler.get('fpbValidation').togglePanel()}
+                        variant="secondary-outline"
+                        style={{ position: 'relative' }}
+                    >
+                        <FontAwesomeIcon icon="list-check" size="lg" />
+                        {shownFindings > 0 && (
+                            <span className={checkCounts.error ? 'fpb-validation-count has-errors' : 'fpb-validation-count'}>
+                                {shownFindings}
+                            </span>
+                        )}
+                    </Button>
+                </OverlayTrigger>
+            </div>
+
             <div className="mt-3">
                 <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id="tooltip-search">
                     Search all layers (Ctrl+F)

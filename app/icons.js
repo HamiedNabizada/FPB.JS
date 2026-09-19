@@ -24,9 +24,11 @@ import { faCheck } from '@fortawesome/free-solid-svg-icons/faCheck';
 import { faImage } from '@fortawesome/free-solid-svg-icons/faImage';
 import { faFilePdf } from '@fortawesome/free-solid-svg-icons/faFilePdf';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons/faMagnifyingGlass';
+import { faListCheck } from '@fortawesome/free-solid-svg-icons/faListCheck';
 
 library.add(
   faMagnifyingGlass,
+  faListCheck,
   faAnglesRight,
   faAnglesLeft,
   faClipboard,

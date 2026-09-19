@@ -684,3 +684,25 @@ body {
 [data-theme="dark"] .djs-popup img.djs-popup-entry-icon {
   filter: invert(1);
 }
+
+[data-theme="dark"] .fpb-validation-panel {
+  background: var(--fpb-panel-bg);
+  border-color: var(--fpb-border-color);
+  color: var(--fpb-text-primary);
+}
+
+[data-theme="dark"] .fpb-validation-header,
+[data-theme="dark"] .fpb-validation-list,
+[data-theme="dark"] .fpb-validation-item {
+  border-color: var(--fpb-border-color);
+}
+
+[data-theme="dark"] .fpb-validation-summary,
+[data-theme="dark"] .fpb-validation-toggle,
+[data-theme="dark"] .fpb-validation-item-head {
+  color: var(--fpb-text-secondary);
+}
+
+[data-theme="dark"] .fpb-validation-item:hover {
+  background: var(--fpb-button-hover);
+}

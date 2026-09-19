@@ -1,6 +1,7 @@
 import { isCmd, isKey } from 'diagram-js/lib/features/keyboard/KeyboardUtil';
 import { collectEntries, findEntries } from './SearchIndex';
 import { collectProcessShapes } from '../help/processShapes';
+import { goToElement } from '../help/navigation';
 
 const MAX_RESULTS = 50;
 
@@ -162,15 +163,12 @@ FpbSearch.prototype._choose = function (entry) {
     return;
   }
   this.close();
-  if (entry.process !== this._canvas.getRootElement()) {
-    this._modeling.switchProcess(entry.process);
-  }
-  const element = this._elementRegistry.get(entry.id);
-  if (element) {
-    this._canvas.scrollToElement(element);
-    this._selection.select(element);
-  }
-  this._canvas.focus();
+  goToElement({
+    canvas: this._canvas,
+    modeling: this._modeling,
+    elementRegistry: this._elementRegistry,
+    selection: this._selection
+  }, entry.process, entry.id);
 };
 
 function appendHighlighted(node, text, pattern) {
