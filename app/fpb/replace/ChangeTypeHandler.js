@@ -1,0 +1,169 @@
+import { is, isAny } from '../help/utils';
+import { getElementsFromElementsContainer } from '../help/helpUtils';
+import { collectProcessShapes } from '../help/processShapes';
+import {
+  runJournaled,
+  revertJournal,
+  setTracked
+} from '../modeling/updater/ModelJournal';
+
+export const STATE_TYPES = ['fpb:Product', 'fpb:Energy', 'fpb:Information'];
+export const BRANCH_FLOW_TYPES = ['fpb:ParallelFlow', 'fpb:AlternativeFlow'];
+
+// Not copied: identity and type come from the new object, di is moved explicitly.
+const NOT_COPIED = ['$type', 'id', 'di'];
+
+/**
+ * Command 'fpb.changeType': changes the type of a state or of a branching,
+ * keeping ids and connections.
+ *
+ * A moddle business object cannot change its $type (read-only), so each
+ * affected object is replaced by a new one of the new type with the same
+ * properties, and every reference to the old one is moved over. All changes go
+ * through the model journal and are reverted on undo.
+ *
+ * - State: the state in every layer (boundary states share the id, each layer
+ *   has its own object) becomes Product, Energy or Information.
+ * - Flow: the whole branching at the source changes between ParallelFlow and
+ *   AlternativeFlow, as the branching type is defined at the source.
+ */
+export default function ChangeTypeHandler(fpbFactory, fpbjs, canvas) {
+  this._fpbFactory = fpbFactory;
+  this._fpbjs = fpbjs;
+  this._canvas = canvas;
+}
+
+ChangeTypeHandler.$inject = ['fpbFactory', 'fpbjs', 'canvas'];
+
+ChangeTypeHandler.prototype.execute = function (context) {
+  const self = this;
+  const element = context.element;
+  const newType = context.newType;
+  let shapes = [];
+
+  context.journal = runJournaled(function () {
+    if (is(element, 'fpb:State')) {
+      shapes = self._changeState(element, newType);
+    } else if (isAny(element, BRANCH_FLOW_TYPES)) {
+      shapes = self._changeBranching(element, newType);
+    }
+  });
+  context.changedShapes = shapes;
+
+  return this._onCanvas(shapes);
+};
+
+ChangeTypeHandler.prototype.revert = function (context) {
+  revertJournal(context.journal);
+  return this._onCanvas(context.changedShapes || []);
+};
+
+ChangeTypeHandler.prototype._changeState = function (element, newType) {
+  const self = this;
+  const shapes = [];
+  collectProcessShapes(this._fpbjs.getProjectDefinition()).forEach(function (process) {
+    const systemLimit = getElementsFromElementsContainer(process.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    if (!systemLimit) {
+      return;
+    }
+    (systemLimit.businessObject.elementsContainer || []).forEach(function (candidate) {
+      if (candidate && candidate.id === element.id && is(candidate, 'fpb:State')) {
+        shapes.push({ shape: candidate, process: process });
+      }
+    });
+  });
+  // The shape on the canvas is not necessarily the object in elementsContainer.
+  if (!shapes.some(function (entry) { return entry.shape === element; })) {
+    shapes.push({ shape: element, process: this._canvas.getRootElement() });
+  }
+
+  // The canvas shape and its elementsContainer entry may share one object.
+  const replaced = new Map();
+  shapes.forEach(function (entry) {
+    const oldBo = entry.shape.businessObject;
+    if (!replaced.has(oldBo)) {
+      const newBo = self._copy(oldBo, newType);
+      replaced.set(oldBo, newBo);
+      replaceIn(entry.process.businessObject.consistsOfStates, oldBo, newBo);
+      (oldBo.isAssignedTo || []).forEach(function (operator) {
+        replaceIn(operator && operator.isAssignedTo, oldBo, newBo);
+      });
+      (oldBo.incoming || []).concat(oldBo.outgoing || []).forEach(function (flow) {
+        if (!flow || typeof flow === 'string') {
+          return;
+        }
+        if (flow.sourceRef === oldBo) setTracked(flow, 'sourceRef', newBo);
+        if (flow.targetRef === oldBo) setTracked(flow, 'targetRef', newBo);
+      });
+    }
+    self._swapShape(entry.shape, replaced.get(oldBo), newType);
+  });
+
+  return shapes.map(function (entry) { return entry.shape; });
+};
+
+ChangeTypeHandler.prototype._changeBranching = function (element, newType) {
+  const self = this;
+  const group = (element.source && element.source.outgoing || []).filter(function (flow) {
+    return isAny(flow, BRANCH_FLOW_TYPES);
+  });
+  group.forEach(function (flow) {
+    const oldBo = flow.businessObject;
+    const newBo = self._copy(oldBo, newType);
+    newBo.inTandemWith = (oldBo.inTandemWith || []).slice();
+    replaceIn(oldBo.sourceRef && oldBo.sourceRef.outgoing, oldBo, newBo);
+    replaceIn(oldBo.targetRef && oldBo.targetRef.incoming, oldBo, newBo);
+    (oldBo.inTandemWith || []).forEach(function (partner) {
+      if (partner && typeof partner !== 'string') {
+        replaceIn(partner.inTandemWith, oldBo, newBo);
+      }
+    });
+    self._swapShape(flow, newBo, newType);
+  });
+  return group;
+};
+
+/** New business object of the new type with the same id and properties. */
+ChangeTypeHandler.prototype._copy = function (oldBo, newType) {
+  const newBo = this._fpbFactory.create(newType, {}, oldBo.id);
+  Object.keys(oldBo).forEach(function (key) {
+    if (NOT_COPIED.indexOf(key) === -1 && key !== 'inTandemWith') {
+      newBo[key] = oldBo[key];
+    }
+  });
+  newBo.di = oldBo.di;
+  return newBo;
+};
+
+ChangeTypeHandler.prototype._swapShape = function (shape, newBo, newType) {
+  setTracked(shape, 'businessObject', newBo);
+  setTracked(shape, 'type', newType);
+  (shape.labels || []).forEach(function (label) {
+    setTracked(label, 'businessObject', newBo);
+  });
+};
+
+/** The shapes among the given that are drawn on the canvas now. */
+ChangeTypeHandler.prototype._onCanvas = function (shapes) {
+  const root = this._canvas.getRootElement();
+  return shapes.filter(function (shape) {
+    return shape && shape.parent && findRoot(shape) === root;
+  });
+};
+
+function findRoot(element) {
+  while (element.parent) {
+    element = element.parent;
+  }
+  return element;
+}
+
+function replaceIn(collection, oldEntry, newEntry) {
+  if (!collection) {
+    return;
+  }
+  const idx = collection.indexOf(oldEntry);
+  if (idx !== -1) {
+    setTracked(collection, idx, newEntry);
+  }
+}

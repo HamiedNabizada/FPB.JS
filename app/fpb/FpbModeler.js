@@ -54,6 +54,7 @@ import ServicesModule from './services';
 import TouchModule from './touch';
 import EditorModule from './editor';
 import SearchModule from './search';
+import ReplaceModule from './replace';
 
 
 const DEFAULT_OPTIONS = {
@@ -134,7 +135,8 @@ FpbModeler.prototype._modules = [
     ServicesModule,
     TouchModule,
     EditorModule,
-    SearchModule
+    SearchModule,
+    ReplaceModule
     // AutoResize - disabled to allow free SystemLimit resize
 ];
 

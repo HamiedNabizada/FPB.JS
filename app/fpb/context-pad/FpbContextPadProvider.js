@@ -13,6 +13,7 @@ import {
   TOOLTIP_KEYS,
   FLOW_TYPES 
 } from './ContextPadConstants';
+import { canChangeType, CHANGE_TYPE_MENU } from '../replace/ChangeTypeMenuProvider';
 import { 
   ContextHelper, 
   ConnectionUtils, 
@@ -47,6 +48,7 @@ export default function FpbContextPadProvider(
 
   // Deletion incl. the confirmation for other layers (shared with the Delete key)
   this._fpbDelete = injector.get('fpbDelete');
+  this._popupMenu = injector.get('popupMenu', false);
 }
 FpbContextPadProvider.$inject = [
   'config.contextPad',
@@ -124,6 +126,34 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
       }
     }
   });
+  // Change the type of a state or of a branching, keeping id and connections
+  if (this._popupMenu && canChangeType(element)) {
+    const popupMenu = this._popupMenu;
+    assign(pad, {
+      [ENTRY_IDS.CHANGE_TYPE]: {
+        group: ENTRY_GROUPS.EDIT,
+        className: CONTEXT_PAD_ICONS.CHANGE_TYPE,
+        title: translate(TOOLTIP_KEYS.CHANGE_TYPE),
+        action: {
+          click: function (event, target) {
+            // The pad's own box (ContextPad#getPad is deprecated in diagram-js 15)
+            const padNode = event.target.closest('.djs-context-pad') || event.target;
+            const padRect = padNode.getBoundingClientRect();
+            popupMenu.open(target, CHANGE_TYPE_MENU, {
+              x: padRect.left,
+              y: padRect.bottom + 5,
+              cursor: { x: event.x, y: event.y }
+            }, {
+              title: translate(TOOLTIP_KEYS.CHANGE_TYPE),
+              search: false,
+              width: 240
+            });
+          }
+        }
+      }
+    });
+  }
+
   // ContextPad for States (Product, Information, Energy)
   if (is(element, ELEMENT_TYPES.STATE)) {
     // Show all connection types if no outgoing flows and ProcessOperators available below
