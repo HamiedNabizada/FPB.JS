@@ -510,11 +510,6 @@ class XMLMapper {
                 "elementsContainer": []
             };
             processEntry.elementDataInformation.push(systemLimitData);
-
-            // Add SystemLimit visual information
-            if (systemLimitVisual) {
-                processEntry.elementVisualInformation.push(systemLimitVisual);
-            }
         }
 
         // Extract states (go into SystemLimit)
