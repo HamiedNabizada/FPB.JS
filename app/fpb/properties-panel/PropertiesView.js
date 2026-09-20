@@ -89,6 +89,8 @@ const PropertiesView = ({ modeler, config }) => {
           id="openPropertiesPanelButton" 
           variant="secondary" 
           onClick={togglePropertiesPanel}
+          aria-label={isOpenedPropertiesPanel ? 'Close properties panel' : 'Open properties panel'}
+          aria-expanded={isOpenedPropertiesPanel}
         >
           {isOpenedPropertiesPanelButton}
         </Button>
@@ -320,13 +322,13 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
                             <Form.Label>Unique Identifaction</Form.Label>
                             <InputGroup>
                               <Form.Control id="uniqueIdent_id" readOnly defaultValue={element.businessObject.identification.uniqueIdent} />
-                              <OverlayTrigger
+                              <OverlayTrigger trigger={['hover', 'focus']}
                                 placement="top"
                                 overlay={<Tooltip id={`tooltip-uniqueId`}>
                                   {tooltips_text.copyUniqueIdToClipboard}
                                 </Tooltip>}
                               >
-                                <Button variant="secondary" onClick={
+                                <Button variant="secondary" aria-label={tooltips_text.copyUniqueIdToClipboard} onClick={
                                   () => {
                                     const copyText = document.getElementById("uniqueIdent_id");
                                     copyText.select();
@@ -631,11 +633,11 @@ const Characteristics = (props) => {
               }
 
             </Accordion>
-            <OverlayTrigger placement="auto" overlay={<Tooltip id={`tooltip-RemoveCharacterics${no}`}>
+            <OverlayTrigger trigger={['hover', 'focus']} placement="auto" overlay={<Tooltip id={`tooltip-RemoveCharacterics${no}`}>
                    Removes the characteristic
                 </Tooltip>}>
 
-                <Button variant="secondary" onClick={() => removeCharacteristic()}><FontAwesomeIcon icon="trash-can" /></Button>
+                <Button variant="secondary" aria-label={`Remove characteristic C_${no + 1}`} onClick={() => removeCharacteristic()}><FontAwesomeIcon icon="trash-can" /></Button>
 
                 </OverlayTrigger>
             

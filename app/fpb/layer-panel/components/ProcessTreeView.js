@@ -30,7 +30,17 @@ const ProcessTreeView = memo(({ processes, namesRevision, selectedProcess, onPro
                 {hasChildren && (
                     <span 
                         className="arborist-toggle"
+                        role="button"
+                        tabIndex={0}
+                        aria-label={node.isOpen ? `Collapse ${node.data.name}` : `Expand ${node.data.name}`}
+                        aria-expanded={node.isOpen}
                         onClick={(e) => {
+                            e.stopPropagation();
+                            node.toggle();
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key !== 'Enter' && e.key !== ' ') return;
+                            e.preventDefault();
                             e.stopPropagation();
                             node.toggle();
                         }}
@@ -41,7 +51,17 @@ const ProcessTreeView = memo(({ processes, namesRevision, selectedProcess, onPro
                 {!hasChildren && <span className="arborist-toggle"></span>}
                 <span 
                     className="arborist-node-content"
+                    role="button"
+                    tabIndex={0}
+                    aria-current={isSelected ? 'true' : undefined}
                     onClick={() => {
+                        if (node.data.process) {
+                            onProcessSwitch(node.data.process);
+                        }
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key !== 'Enter' && e.key !== ' ') return;
+                        e.preventDefault();
                         if (node.data.process) {
                             onProcessSwitch(node.data.process);
                         }

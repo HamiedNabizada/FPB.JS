@@ -384,10 +384,10 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
     
     return (
         <div className="download-properties" key='dl-properties'>
-            <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId2`}>
+            <OverlayTrigger trigger={['hover', 'focus']} placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId2`}>
                 {tooltTipExportOptions}
             </Tooltip>}>
-                <Button variant="secondary-outline" onClick={handleShow} >
+                <Button variant="secondary-outline" onClick={handleShow} aria-label={tooltTipExportOptions}>
                     <FontAwesomeIcon icon="download" size="lg" />
                 </Button>
             </OverlayTrigger>
@@ -435,7 +435,7 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                             {exportError}
                         </Alert>
                     )}
-                    <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-svg-export`}>
+                    <OverlayTrigger trigger={['hover', 'focus']} placement="top" overlay={<Tooltip id={`tooltip-svg-export`}>
                         Download current process as SVG
                     </Tooltip>}>
                         <Button variant="secondary" onClick={() => { downloadSnapshot() }} disabled={isExporting}>
@@ -448,7 +448,7 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                         </Button>
                     </OverlayTrigger>
 
-                    <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-png-export`}>
+                    <OverlayTrigger trigger={['hover', 'focus']} placement="top" overlay={<Tooltip id={`tooltip-png-export`}>
                         Download current process as PNG image
                     </Tooltip>}>
                         <Button variant="secondary" onClick={() => { downloadPNG() }} disabled={isExporting}>
@@ -461,7 +461,7 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                         </Button>
                     </OverlayTrigger>
 
-                    <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-pdf-export`}>
+                    <OverlayTrigger trigger={['hover', 'focus']} placement="top" overlay={<Tooltip id={`tooltip-pdf-export`}>
                         Download all processes as multi-page PDF
                     </Tooltip>}>
                         <Button variant="secondary" onClick={() => { downloadPDF() }} disabled={isExporting}>
@@ -474,7 +474,7 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                         </Button>
                     </OverlayTrigger>
 
-                    <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-export`}>
+                    <OverlayTrigger trigger={['hover', 'focus']} placement="top" overlay={<Tooltip id={`tooltip-export`}>
                         Export data in selected format
                     </Tooltip>}>
                         <Button variant="secondary" onClick={() => { go() }} disabled={isExporting}>

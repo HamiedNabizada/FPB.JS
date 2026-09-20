@@ -49,12 +49,14 @@ const LayerPanel = ({ modeler, config }) => {
 
     return (
         <div className="layerPanel">
-            <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId1`}>
+            <OverlayTrigger trigger={['hover', 'focus']} placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId1`}>
                 {tooltipsOptions}
             </Tooltip>}>
                 <Button 
                     onClick={() => setIsOpenedOptions(!isOpenedOptions)} 
                     variant="secondary-outline"
+                    aria-label={tooltipsOptions}
+                    aria-expanded={isOpenedOptions}
                 >
                     <FontAwesomeIcon icon="ellipsis-vertical" size="lg" />
                 </Button>
@@ -72,13 +74,15 @@ const LayerPanel = ({ modeler, config }) => {
             {processes.length > 1 && (
                 <div>
                     <div className="layerPanel-ProcessOverview-Config">
-                        <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId`}>
+                        <OverlayTrigger trigger={['hover', 'focus']} placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId`}>
                             {tooltipsTextLayer}
                         </Tooltip>}>
                             <Button 
                                 id="openLayerButton" 
                                 variant="secondary-outline" 
                                 onClick={() => setIsOpenedLayerPanel(!isOpenedLayerPanel)}
+                                aria-label={tooltipsTextLayer}
+                                aria-expanded={isOpenedLayerPanel}
                             >
                                 {isOpenedLayerButton}
                             </Button>
@@ -98,12 +102,13 @@ const LayerPanel = ({ modeler, config }) => {
             )}
             
             <div className="mt-3">
-                <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id="tooltip-check">
+                <OverlayTrigger trigger={['hover', 'focus']} placement="auto" flip={true} overlay={<Tooltip id="tooltip-check">
                     {`Model check (VDI 3682): ${describeCounts(checkCounts)}`}
                 </Tooltip>}>
                     <Button
                         id="openValidationButton"
                         onClick={() => modeler.get('fpbValidation').togglePanel()}
+                        aria-label={`Model check (VDI 3682): ${describeCounts(checkCounts)}`}
                         variant="secondary-outline"
                         style={{ position: 'relative' }}
                     >
@@ -118,12 +123,13 @@ const LayerPanel = ({ modeler, config }) => {
             </div>
 
             <div className="mt-3">
-                <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id="tooltip-search">
+                <OverlayTrigger trigger={['hover', 'focus']} placement="auto" flip={true} overlay={<Tooltip id="tooltip-search">
                     Search all layers (Ctrl+F)
                 </Tooltip>}>
                     <Button
                         id="openSearchButton"
                         onClick={() => modeler.get('fpbSearch').open()}
+                        aria-label="Search all layers"
                         variant="secondary-outline"
                     >
                         <FontAwesomeIcon icon="magnifying-glass" size="lg" />
@@ -132,12 +138,13 @@ const LayerPanel = ({ modeler, config }) => {
             </div>
 
             <div className="mt-3">
-                <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id="tooltip-info">
+                <OverlayTrigger trigger={['hover', 'focus']} placement="auto" flip={true} overlay={<Tooltip id="tooltip-info">
                     Show information and help
                 </Tooltip>}>
                     <Button 
                         onClick={() => setShowInfoModal(true)} 
                         variant="secondary-outline"
+                        aria-label="Show information and help"
                     >
                         <FontAwesomeIcon icon="info-circle" size="lg" />
                     </Button>

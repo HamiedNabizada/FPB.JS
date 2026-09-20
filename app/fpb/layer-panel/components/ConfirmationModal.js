@@ -27,12 +27,12 @@ const ConfirmationModal = ({ show, onConfirm, onCancel, title, message, details,
 
       <Modal.Footer>
         {isBlocked ? (
-          <Button variant="primary" onClick={onCancel}>
+          <Button variant="primary" onClick={onCancel} autoFocus>
             OK
           </Button>
         ) : (
           <>
-            <Button variant="secondary" onClick={onCancel}>
+            <Button variant="secondary" onClick={onCancel} autoFocus>
               <FontAwesomeIcon icon="times" className="me-1" />
               Cancel
             </Button>

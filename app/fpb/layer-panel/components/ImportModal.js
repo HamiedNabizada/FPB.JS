@@ -183,10 +183,10 @@ const ImportModal = memo(({ modeler }) => {
 
     return (
         <div className="upload-properties" key='ul-properties'>
-            <OverlayTrigger placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId2_upload`}>
+            <OverlayTrigger trigger={['hover', 'focus']} placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId2_upload`}>
                 {tooltTipImportOptions}
             </Tooltip>}>
-                <Button variant="secondary-outline" onClick={handleShow} >
+                <Button variant="secondary-outline" onClick={handleShow} aria-label={tooltTipImportOptions}>
                     <FontAwesomeIcon icon="upload" size="lg" />
                 </Button>
             </OverlayTrigger>
@@ -197,8 +197,8 @@ const ImportModal = memo(({ modeler }) => {
                         <Row as={Modal.Title}>
                             <Col>Import Options</Col>
                             <Col md="auto">
-                                <Button variant="secondary" size="sm">
-                                    <FontAwesomeIcon icon="rectangle-xmark" size="lg" onClick={handleClose} />
+                                <Button variant="secondary" size="sm" aria-label="Close import options" onClick={handleClose}>
+                                    <FontAwesomeIcon icon="rectangle-xmark" size="lg" />
                                 </Button>
                             </Col>
                         </Row>
@@ -220,7 +220,7 @@ const ImportModal = memo(({ modeler }) => {
                     </Container>
                 </Modal.Body>
                 <Modal.Footer>
-                    <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-uniqueId`}>
+                    <OverlayTrigger trigger={['hover', 'focus']} placement="top" overlay={<Tooltip id={`tooltip-uniqueId`}>
                         Import
                     </Tooltip>}>
                         <Button 

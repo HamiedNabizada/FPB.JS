@@ -47,7 +47,9 @@ padding-top: 3px;
     position: relative; }
     .tree-item--active {
         font-weight: bold;
-        background: rgb(181, 181, 181);
+        /* war rgb(181, 181, 181): mit #333 nur etwa 2,8:1 */
+        background: #6b6b6b;
+        color: #ffffff;
       }
 /* border-bottom: none;
       color: white;
@@ -80,7 +82,8 @@ padding-top: 3px;
   
   .inputfile:focus + label,
   .inputfile + label:hover {
-      background-color: gray;
+      background-color: #6b6b6b;
+      color: #ffffff;
   }
   /* A file is dragged over the import dialog */
   .inputfile + label.fileLabel--dragover {
@@ -96,7 +99,8 @@ padding-top: 3px;
     cursor: pointer;
   }
   .examples:hover {
-      background-color: gray;
+      background-color: #6b6b6b;
+      color: #ffffff;
   }
 
   /* React Arborist Tree Styles */
@@ -260,4 +264,14 @@ padding-top: 3px;
   background: var(--fpb-input-bg);
   border: 1px solid var(--fpb-input-border);
   color: var(--fpb-text-primary);
+}
+
+/* Tastaturbedienung sichtbar machen (Feature 022, WCAG 2.4.7).
+   Ohne diese Regeln war beim Durchtabben nicht zu erkennen, wo man steht. */
+.layerPanel button:focus-visible,
+.arborist-node [role="button"]:focus-visible,
+.arborist-node:focus-visible,
+.examples:focus-visible {
+  outline: 2px solid #4A90E2;
+  outline-offset: 2px;
 }

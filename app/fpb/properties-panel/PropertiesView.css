@@ -21,3 +21,11 @@ input[placeholder="unit"] {
 .card-body {
   padding: 10px;
 }
+
+/* Tastaturbedienung sichtbar machen (Feature 022, WCAG 2.4.7) */
+.propertiespanel button:focus-visible,
+.propertiespanel input:focus-visible,
+.propertiespanel select:focus-visible {
+  outline: 2px solid #4A90E2;
+  outline-offset: 2px;
+}
