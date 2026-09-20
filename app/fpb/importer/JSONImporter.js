@@ -1,4 +1,5 @@
 import { is } from '../help/utils';
+import { cloneModelData } from '../help/cloneModelData';
 import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
 import {
     add as collectionAdd,
@@ -17,13 +18,14 @@ import {
 import { ErrorHandler } from './ImportErrors';
 import { needsLayout, layoutImportData } from '../layout/AutoLayout';
 
-export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFactory, elementFactory) {
+export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFactory, elementFactory, uiReadiness) {
     this._eventBus = eventBus;
     this._canvas = canvas;
     this._modeling = modeling;
     this._fpbjs = fpbjs;
     this._fpbFactory = fpbFactory;
     this._elementFactory = elementFactory;
+    this._uiReadiness = uiReadiness;
     this._processes = [];
     
     // Initialize error handler with improved error handling
@@ -37,7 +39,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
     this._eventBus.on(IMPORT_EVENTS.IMPORT_REQUEST, (event) => {
         try {
             this._errorHandler.startReport();
-            let data = cloneImportData(event.data);
+            let data = cloneModelData(event.data);
 
             // Every IMPORT_REQUEST is a REPLACE, not an append. Without this,
             // buildProcesses keeps pushing onto _processes from prior imports
@@ -154,8 +156,9 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
 
             this._fpbjs.setProjectDefinition(project);
 
-            // Timeout required so remaining components finish loading before import.
-            setTimeout(() => {
+            // The panels announce themselves when they are mounted; the fixed
+            // delay is only the safety net for one that never does.
+            this._uiReadiness.whenReady(() => {
                 this._processes.forEach((pr, index) => {
                     if (pr.process) {
                         this._eventBus.fire(IMPORT_EVENTS.NEW_PROCESS, {
@@ -179,7 +182,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                 this._errorHandler.finishReport();
                 // Everything is on the canvas now: the model check can look at it
                 this._eventBus.fire(IMPORT_EVENTS.IMPORT_DONE, {});
-            }, IMPORT_TIMING.UI_INITIALIZATION_DELAY);
+            }, IMPORT_TIMING.UI_READINESS_TIMEOUT);
         } catch (error) {
             this._errorHandler.handleError(error);
         }
@@ -237,28 +240,14 @@ function fitToViewport(canvas) {
     }
 }
 
-/**
- * The importer consumes elementDataInformation/elementVisualInformation while
- * building (filterElements removes every matched entry) and swaps reference IDs
- * for objects in place. Work on a copy so the caller's data stays intact and can
- * be imported again. Non-serializable input falls back to the original object,
- * which is the previous behavior.
- */
-function cloneImportData(data) {
-    try {
-        return JSON.parse(JSON.stringify(data));
-    } catch (error) {
-        return data;
-    }
-}
-
 JSONImporter.$inject = [
     'eventBus',
     'canvas',
     'modeling',
     'fpbjs',
     'fpbFactory',
-    'elementFactory'
+    'elementFactory',
+    'uiReadiness'
 ];
 
 

@@ -1,3 +1,5 @@
+import { cloneModelData } from '../help/cloneModelData';
+
 /**
  * Automatic layout for FPB.JS import data.
  *
@@ -84,7 +86,7 @@ export function needsLayout(data) {
  */
 export function layoutImportData(data, options = {}) {
   const mode = options.mode === 'all' ? 'all' : 'missing';
-  const result = cloneData(data);
+  const result = cloneModelData(data);
   const report = [];
 
   if (!Array.isArray(result)) {
@@ -115,14 +117,6 @@ export function layoutImportData(data, options = {}) {
 // ---------------------------------------------------------------------------
 // Reading the exchange format
 // ---------------------------------------------------------------------------
-
-function cloneData(data) {
-  try {
-    return JSON.parse(JSON.stringify(data));
-  } catch (error) {
-    return data;
-  }
-}
 
 function refId(ref) {
   if (ref === null || ref === undefined) {
