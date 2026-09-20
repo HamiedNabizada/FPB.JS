@@ -58,6 +58,22 @@ test.describe('Farbschema', () => {
     expect(symbol.toUpperCase()).toContain('4DFF97');
   });
 
+  test('der Knopf steht unter dem für den Dunkelmodus, nicht daneben', async ({ page }) => {
+    await laden(page);
+    await page.locator('.layerPanel > button').first().click();
+
+    const lage = await page.evaluate(() => {
+      const kasten = (wahl) => {
+        const box = document.querySelector(wahl).getBoundingClientRect();
+        return { x: Math.round(box.x), y: Math.round(box.y) };
+      };
+      return { theme: kasten('.layerPanel button[aria-label*="Mode"]'), farben: kasten('#colorSchemeButton') };
+    });
+
+    expect(lage.farben.x).toBe(lage.theme.x);
+    expect(lage.farben.y).toBeGreaterThan(lage.theme.y);
+  });
+
   test('die Wahl überlebt das Neuladen', async ({ page }) => {
     await laden(page);
     await umschalten(page, 'accessible');

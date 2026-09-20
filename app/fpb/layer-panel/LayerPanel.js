@@ -75,8 +75,15 @@ const LayerPanel = ({ modeler, config }) => {
                     selectedProcess={selectedProcess} 
                     selectedElements={selectedElements} 
                 />
-                <ThemeToggle />
-                <ColorSchemeToggle modeler={modeler} />
+                {/* je ein eigener Block, sonst stehen die Knöpfe nebeneinander:
+                    Import und Download bringen ihr eigenes div mit, die
+                    Umschalter sind nackte Buttons und damit inline */}
+                <div className="layerPanel-option">
+                    <ThemeToggle />
+                </div>
+                <div className="layerPanel-option">
+                    <ColorSchemeToggle modeler={modeler} />
+                </div>
             </Collapse>
             {processes.length > 1 && (
                 <div>
