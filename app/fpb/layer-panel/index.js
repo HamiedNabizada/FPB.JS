@@ -13,6 +13,8 @@ export default class LayerOverview {
       container,
       configPP
     } = options;
+    // The import waits for this panel instead of waiting a fixed time
+    modeler.get('eventBus').fire('ui.componentRegistered', { component: 'layerPanel' });
     const root = createRoot(container);
     root.render(
       <ErrorProvider>

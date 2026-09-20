@@ -73,3 +73,31 @@ test.describe('Import-Dialog - Drag and Drop', () => {
   });
 
 });
+
+/**
+ * Der Import wartete fest zwei Sekunden, damit die React-Panels bis dahin
+ * zuhören. Jetzt melden die Panels sich selbst (UiReadiness), und der Import
+ * geht weiter, sobald sie da sind.
+ */
+test.describe('Dauer des Imports', () => {
+
+  test('der Import wartet auf die Panels statt auf eine feste Zeit', async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    const importer = new ImportPage(page);
+    await importer.goto();
+
+    const dauer = await page.evaluate((daten) => new Promise((resolve) => {
+      const start = performance.now();
+      window.fpbjs.get('eventBus').once('import.done', () => resolve(performance.now() - start));
+      window.fpbjs.get('eventBus').fire('FPBJS.import', { data: daten });
+      setTimeout(() => resolve(-1), 10000);
+    }), JSON.parse(JSON.stringify(basis)));
+
+    expect(dauer).toBeGreaterThan(0);
+    expect(dauer).toBeLessThan(1000);
+
+    // und das Modell ist wirklich da
+    await expect(page.locator('.djs-element')).not.toHaveCount(0);
+  });
+
+});

@@ -11,9 +11,9 @@ export class ImportPage {
 
   constructor(page) {
     this.page = page;
-    // Import läuft über setTimeout (UI_INITIALIZATION_DELAY = 2000 ms) und
-    // wechselt danach auf den Einstiegsprozess.
-    this.importDelay = 3200;
+    // Nachlauf, in dem die React-Panels auf den Import reagieren. Auf den
+    // Import selbst wird über sein Ereignis gewartet, nicht über eine Zeit.
+    this.importDelay = 400;
   }
 
   async goto() {
@@ -26,9 +26,13 @@ export class ImportPage {
    * Modell importieren und warten, bis der Wechsel auf den Einstiegsprozess durch ist
    */
   async import(data, delay) {
-    await this.page.evaluate((d) => {
+    await this.page.evaluate((d) => new Promise((resolve) => {
+      window.fpbjs.get('eventBus').once('import.done', () => resolve());
       window.fpbjs.get('eventBus').fire('FPBJS.import', { data: d });
-    }, data);
+      // Ein Import, der nie fertig meldet, soll den Test scheitern lassen,
+      // nicht hängen lassen.
+      setTimeout(resolve, 8000);
+    }), data);
     await this.page.waitForTimeout(delay || this.importDelay);
   }
 

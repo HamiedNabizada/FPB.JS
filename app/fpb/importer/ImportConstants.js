@@ -33,7 +33,9 @@ export const TYPE_GROUPS = {
 
 // Import timing constants
 export const IMPORT_TIMING = {
-  UI_INITIALIZATION_DELAY: 2000 // ms - delay for UI components to initialize
+  // Safety net only: the import waits for the panels to announce themselves
+  // (UiReadiness) and gives up waiting after this time.
+  UI_READINESS_TIMEOUT: 2000
 };
 
 // Default fallback values for missing visual information

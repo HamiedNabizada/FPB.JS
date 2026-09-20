@@ -10,13 +10,15 @@ import AlignService from './AlignService';
 import PaletteAlignState from './PaletteAlignState';
 import KeyboardAlignService from './KeyboardAlignService';
 import ToolClearService from './ToolClearService';
+import UiReadiness from './UiReadiness';
 
 export default {
-  __init__: ['gridService', 'settingsService', 'alignService', 'paletteAlignState', 'keyboardAlignService', 'toolClearService'],
+  __init__: ['gridService', 'settingsService', 'alignService', 'paletteAlignState', 'keyboardAlignService', 'toolClearService', 'uiReadiness'],
   gridService: ['type', GridService],
   settingsService: ['type', SettingsService],
   alignService: ['type', AlignService],
   paletteAlignState: ['type', PaletteAlignState],
   keyboardAlignService: ['type', KeyboardAlignService],
-  toolClearService: ['type', ToolClearService]
+  toolClearService: ['type', ToolClearService],
+  uiReadiness: ['type', UiReadiness]
 };

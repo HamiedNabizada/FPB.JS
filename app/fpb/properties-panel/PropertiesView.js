@@ -46,6 +46,11 @@ const PropertiesView = ({ modeler, config }) => {
     setElement(element);
   }, []);
 
+  // Mounted: whoever waits for the interface (the import) can go on
+  useEffect(() => {
+    modeler.get('eventBus').fire('ui.componentReady', { component: 'propertiesPanel' });
+  }, [modeler]);
+
   useEffect(() => {
     const handleSelectionChanged = (e) => {
       setSelectedElements(e.newSelection);

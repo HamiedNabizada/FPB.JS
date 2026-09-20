@@ -33,6 +33,11 @@ const LayerPanel = ({ modeler, config }) => {
 
     // Findings of the model check for the counter on its button
     const [checkCounts, setCheckCounts] = useState({ error: 0, warning: 0, info: 0 });
+    // Mounted: whoever waits for the interface (the import) can go on
+    useEffect(() => {
+        modeler.get('eventBus').fire('ui.componentReady', { component: 'layerPanel' });
+    }, [modeler]);
+
     useEffect(() => {
         const handleChecked = (e) => setCheckCounts(e.counts);
         modeler.on('fpbValidation.changed', handleChecked);

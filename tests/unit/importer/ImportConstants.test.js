@@ -136,17 +136,17 @@ describe('ImportConstants', () => {
 
   describe('IMPORT_TIMING', () => {
 
-    it('defines UI_INITIALIZATION_DELAY', () => {
-      expect(IMPORT_TIMING.UI_INITIALIZATION_DELAY).toBeDefined();
+    it('defines UI_READINESS_TIMEOUT', () => {
+      expect(IMPORT_TIMING.UI_READINESS_TIMEOUT).toBeDefined();
     });
 
-    it('UI_INITIALIZATION_DELAY is 2000ms', () => {
-      expect(IMPORT_TIMING.UI_INITIALIZATION_DELAY).toBe(2000);
+    it('UI_READINESS_TIMEOUT is 2000ms', () => {
+      expect(IMPORT_TIMING.UI_READINESS_TIMEOUT).toBe(2000);
     });
 
     it('delay is a reasonable value (1000-5000ms)', () => {
-      expect(IMPORT_TIMING.UI_INITIALIZATION_DELAY).toBeGreaterThanOrEqual(1000);
-      expect(IMPORT_TIMING.UI_INITIALIZATION_DELAY).toBeLessThanOrEqual(5000);
+      expect(IMPORT_TIMING.UI_READINESS_TIMEOUT).toBeGreaterThanOrEqual(1000);
+      expect(IMPORT_TIMING.UI_READINESS_TIMEOUT).toBeLessThanOrEqual(5000);
     });
 
   });
