@@ -164,4 +164,34 @@ test.describe('Ansicht', () => {
     expect(nachher.sichtbar).toBe(true);
   });
 
+  /**
+   * Das Context-Pad schrieb seine Titel in das `title`-Attribut, also erschien
+   * der Tooltip des Browsers: anderes Aussehen, andere Verzögerung als bei der
+   * Palette. Beides läuft jetzt über `hover-tooltip` von diagram-js, und der
+   * Titel steht als `aria-label` am Eintrag.
+   */
+  test('das Context-Pad zeigt seine Tooltips im selben Stil wie die Palette', async ({ page }) => {
+    const importer = new ImportPage(page);
+    await importer.goto();
+    await importer.import(clone());
+
+    await page.evaluate(() => {
+      const element = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+      window.fpbjs.get('selection').select(element);
+      window.fpbjs.get('contextPad').open(element);
+    });
+    const eintrag = page.locator('.djs-context-pad .entry').first();
+    await expect(eintrag).toBeVisible();
+
+    // kein Titel mehr am Eintrag, dafür ein zugänglicher Name
+    expect(await eintrag.getAttribute('title')).toBeNull();
+    const name = await eintrag.getAttribute('aria-label');
+    expect(name).toBeTruthy();
+
+    await eintrag.hover();
+    const tooltip = page.locator('.djs-hover-tooltip');
+    await expect(tooltip).toBeVisible({ timeout: 3000 });
+    await expect(tooltip).toHaveText(name);
+  });
+
 });
