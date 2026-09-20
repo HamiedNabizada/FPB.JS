@@ -77,4 +77,46 @@ test.describe('Ansicht', () => {
     expect(lage.padLinks).toBeGreaterThan(0);
   });
 
+  /**
+   * app/css/diagram-js.css ist eine Kopie des Stylesheets von diagram-js und
+   * hinkte weit hinterher. Was seit Version 15 dazukam, lief deshalb ohne
+   * Gestaltung: hier die Umrandung, die diagram-js seit 15.13 auch um
+   * Verbindungen legt und in seinem Stylesheet wieder ausblendet.
+   */
+  test('eine ausgewählte Verbindung bekommt kein Umrandungsrechteck', async ({ page }) => {
+    const importer = new ImportPage(page);
+    await importer.goto();
+    await importer.import(clone());
+
+    const umrandung = await page.evaluate(() => {
+      const verbindung = window.fpbjs.get('elementRegistry').filter((e) => e.waypoints)[0];
+      window.fpbjs.get('selection').select(verbindung);
+      const outline = document.querySelector(`[data-element-id="${verbindung.id}"] .djs-outline`);
+      if (!outline) return { vorhanden: false };
+      const box = outline.getBoundingClientRect();
+      return { vorhanden: true, display: getComputedStyle(outline).display, flaeche: Math.round(box.width * box.height) };
+    });
+
+    expect(umrandung.vorhanden ? umrandung.display : 'none').toBe('none');
+    expect(umrandung.vorhanden ? umrandung.flaeche : 0).toBe(0);
+  });
+
+  test('die Kantengriffe der Systemgrenze zeigen einen Größen-Cursor', async ({ page }) => {
+    const importer = new ImportPage(page);
+    await importer.goto();
+    await importer.import(clone());
+
+    const cursor = await page.evaluate(() => {
+      const systemLimit = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:SystemLimit')[0];
+      window.fpbjs.get('selection').select(systemLimit);
+      const lies = (richtung) => {
+        const griff = document.querySelector('.djs-resizer-' + richtung);
+        return griff ? getComputedStyle(griff).cursor : 'fehlt';
+      };
+      return { n: lies('n'), s: lies('s'), e: lies('e'), w: lies('w') };
+    });
+
+    expect(cursor).toEqual({ n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize' });
+  });
+
 });

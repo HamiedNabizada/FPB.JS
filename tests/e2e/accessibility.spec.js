@@ -82,14 +82,21 @@ test.describe('Barrierefreiheit', () => {
   test('jeder Palette-Eintrag zeigt beim Überfahren seine Beschriftung', async ({ page }) => {
     await laden(page);
 
-    // diagram-js 15 rendert den Titel nur als aria-label, das Tooltip holt
-    // PaletteTooltips zurück
-    const eintraege = await page.evaluate(() => [...document.querySelectorAll('.djs-palette .entry')]
-      .map((e) => ({ aktion: e.getAttribute('data-action'), title: e.getAttribute('title'), aria: e.getAttribute('aria-label') })));
+    // diagram-js zeichnet diesen Tooltip seit Version 15 selbst
+    // (features/palette/PaletteTooltip.js). Er blieb unsichtbar, solange die
+    // Regeln dazu in app/css/diagram-js.css fehlten.
+    const eintrag = page.locator('.djs-palette .entry[data-action="fpb-product"]');
+    await eintrag.hover();
 
-    expect(eintraege.length).toBeGreaterThan(5);
-    expect(eintraege.filter((e) => !e.title)).toEqual([]);
-    eintraege.forEach((e) => expect(e.title).toBe(e.aria));
+    const tooltip = page.locator('.djs-hover-tooltip');
+    await expect(tooltip).toBeVisible({ timeout: 3000 });
+    await expect(tooltip).toHaveText('Add Product');
+    expect(await tooltip.evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe('rgba(0, 0, 0, 0)');
+
+    // und jeder Eintrag trägt seine Beschriftung
+    const ohneNamen = await page.evaluate(() => [...document.querySelectorAll('.djs-palette .entry')]
+      .filter((e) => !e.getAttribute('aria-label')).length);
+    expect(ohneNamen).toBe(0);
   });
 
   test('die Palette ist mit der Tastatur erreichbar und auslösbar', async ({ page }) => {

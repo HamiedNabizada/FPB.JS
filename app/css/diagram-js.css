@@ -728,3 +728,236 @@ marker.djs-dragger tspan {
 .djs-label-hidden .djs-label {
   display: none !important;
 }
+
+
+/**
+ * Nachgetragen aus diagram-js 15.26 (assets/diagram-js.css).
+ *
+ * Diese Datei ist eine Kopie des Stylesheets von diagram-js und stammt noch aus
+ * der Zeit von Version 5. Seitdem sind Stile dazugekommen, deren Regeln hier
+ * fehlten; die zugehörigen Funktionen liefen, waren aber unsichtbar. Erster
+ * Fall: der Tooltip der Palette, den diagram-js seit 15 selbst zeichnet
+ * (features/palette/PaletteTooltip.js) und der ohne diese Regeln nichts anzeigt.
+ *
+ * Die Variablen stehen in diagram-js unter `.djs-parent`; diese Klasse setzt
+ * Canvas.js auf den Container.
+ */
+.djs-parent {
+  --color-grey-225-10-15: hsl(225, 10%, 15%);
+  --color-grey-225-10-35: hsl(225, 10%, 35%);
+  --color-grey-225-10-55: hsl(225, 10%, 55%);
+  --color-grey-225-10-75: hsl(225, 10%, 75%);
+  --color-grey-225-10-80: hsl(225, 10%, 80%);
+  --color-grey-225-10-85: hsl(225, 10%, 85%);
+  --color-grey-225-10-90: hsl(225, 10%, 90%);
+  --color-grey-225-10-95: hsl(225, 10%, 95%);
+  --color-grey-225-10-97: hsl(225, 10%, 97%);
+
+  --color-blue-205-100-40: hsl(205, 100%, 40%);
+  --color-blue-205-100-45: hsl(205, 100%, 45%);
+  --color-blue-205-100-45-opacity-30: hsla(205, 100%, 45%, 30%);
+  --color-blue-205-100-50: hsl(205, 100%, 50%);
+  --color-blue-205-100-50-opacity-15: hsla(205, 100%, 50%, 15%);
+  --color-blue-205-100-70: hsl(205, 100%, 75%);
+  --color-blue-205-100-95: hsl(205, 100%, 95%);
+
+  --color-green-150-86-44: hsl(150, 86%, 44%);
+
+  --color-red-360-100-40: hsl(360, 100%, 40%);
+  --color-red-360-100-45: hsl(360, 100%, 45%);
+  --color-red-360-100-92: hsl(360, 100%, 92%);
+  --color-red-360-100-97: hsl(360, 100%, 97%);
+
+  --color-white: hsl(0, 0%, 100%);
+  --color-black: hsl(0, 0%, 0%);
+  --color-black-opacity-10: hsla(0, 0%, 0%, 10%);
+  --color-black-opacity-30: hsla(0, 0%, 0%, 30%);
+
+  --canvas-fill-color: var(--color-white);
+
+  --accent-color: var(--color-blue-205-100-40);
+
+  --bendpoint-fill-color: var(--color-blue-205-100-45);
+  --bendpoint-stroke-color: var(--canvas-fill-color);
+
+  --context-pad-entry-background-color: var(--color-white);
+  --context-pad-entry-hover-background-color: var(--color-grey-225-10-95);
+
+  --element-dragger-color: var(--accent-color);
+  --element-hover-outline-fill-color: var(--color-blue-205-100-45);
+  --element-selected-outline-stroke-color: var(--accent-color);
+  --element-selected-outline-secondary-stroke-color: var(--color-blue-205-100-70);
+
+  --lasso-fill-color: var(--color-blue-205-100-50-opacity-15);
+  --lasso-stroke-color: var(--element-selected-outline-stroke-color);
+
+  --palette-entry-color: var(--color-grey-225-10-15);
+  --palette-entry-hover-color: var(--color-blue-205-100-45);
+  --palette-entry-selected-color: var(--accent-color);
+  --palette-separator-color: var(--color-grey-225-10-75);
+  --palette-toggle-hover-background-color: var(--color-grey-225-10-55);
+  --palette-background-color: var(--color-grey-225-10-97);
+  --palette-border-color: var(--color-grey-225-10-75);
+
+  --popup-font-family: "IBM Plex Sans", sans-serif;
+  --popup-font-size: 14px;
+  --popup-secondary-font-size: .9em;
+  --popup-header-entry-selected-color: var(--accent-color);
+  --popup-header-font-weight: bolder;
+  --popup-header-group-divider-color: var(--color-grey-225-10-75);
+  --popup-background-color: var(--color-white);
+  --popup-border-color: transparent;
+  --popup-shadow-color: var(--color-black-opacity-30);
+  --popup-disabled-color: var(--color-grey-225-10-35);
+  --popup-description-color: var(--color-grey-225-10-35);
+  --popup-no-results-color: var(--color-grey-225-10-55);
+  --popup-entry-title-color: var(--color-grey-225-10-55);
+  --popup-entry-hover-color:  var(--color-grey-225-10-95);
+  --popup-search-border-color: var(--color-grey-225-10-75);
+  --popup-search-focus-border-color: var(--accent-color);
+  --popup-search-focus-background-color: var(--color-blue-205-100-95);
+  --popup-tab-color: var(--color-grey-225-10-55);
+  --popup-tab-hover-color: var(--color-grey-225-10-15);
+  --popup-tab-active-color: var(--color-grey-225-10-15);
+  --popup-tab-active-border-color: var(--accent-color);
+  --popup-tab-strip-border-color: var(--color-grey-225-10-90);
+  --popup-tab-focus-border-color: var(--accent-color);
+
+  --resizer-fill-color: var(--color-blue-205-100-45);
+  --resizer-stroke-color: var(--canvas-fill-color);
+
+  --search-font-family: "IBM Plex Sans", sans-serif;
+  --search-font-size: 14px;
+  --search-container-background-color: var(--color-white);
+  --search-shadow-color: var(--color-black-opacity-30);
+  --search-input-border-color: var(--color-grey-225-10-75);
+  --search-input-focus-border-color: var(--accent-color);
+  --search-input-focus-background-color: var(--color-blue-205-100-95);
+  --search-result-hover-background-color: var(--color-grey-225-10-95);
+  --search-result-secondary-color: var(--color-grey-225-10-55);
+  --search-preselected-background-color: var(--color-blue-205-100-50-opacity-15);
+
+  --shape-attach-allowed-stroke-color: var(--accent-color);
+  --shape-connect-allowed-fill-color: var(--color-grey-225-10-97);
+  --shape-drop-allowed-fill-color: var(--color-grey-225-10-97);
+  --shape-drop-not-allowed-fill-color: var(--color-red-360-100-97);
+  --shape-resize-preview-stroke-color: var(--accent-color);
+
+  --snap-line-stroke-color: var(--color-blue-205-100-45-opacity-30);
+
+  --space-tool-crosshair-stroke-color: var(--color-black);
+
+  --tooltip-error-background-color: var(--color-red-360-100-97);
+  --tooltip-error-border-color: var(--color-red-360-100-45);
+  --tooltip-error-color: var(--color-red-360-100-45);
+
+  --hover-tooltip-font-family: "IBM Plex Sans", sans-serif;
+  --hover-tooltip-font-size: 12px;
+  --hover-tooltip-secondary-font-size: 11px;
+  --hover-tooltip-background-color: var(--color-grey-225-10-15);
+  --hover-tooltip-color: var(--color-white);
+  --hover-tooltip-shadow-color: var(--color-black-opacity-10);
+
+  --palette-tooltip-shortcut-background-color: var(--color-grey-225-10-35);
+}
+
+.djs-hover-tooltip {
+  position: fixed;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 10px;
+  border-radius: 4px;
+
+  background-color: var(--hover-tooltip-background-color);
+  color: var(--hover-tooltip-color);
+
+  font-family: var(--hover-tooltip-font-family);
+  font-size: var(--hover-tooltip-font-size);
+  line-height: 1.2;
+  white-space: nowrap;
+
+  pointer-events: none;
+  box-shadow: 0 1px 4px var(--hover-tooltip-shadow-color);
+}
+
+.djs-hover-tooltip--right {
+  transform: translateY(-50%);
+}
+
+.djs-hover-tooltip--top {
+  transform: translate(-50%, -100%);
+}
+
+.djs-palette-tooltip-shortcut {
+  padding: 1px 5px;
+
+  border-radius: 3px;
+
+  background-color: var(--palette-tooltip-shortcut-background-color);
+
+  font-family: monospace;
+  font-size: var(--hover-tooltip-secondary-font-size);
+  line-height: 1.2;
+}
+
+
+/*
+ * Ebenfalls nachgetragen: Klassen, die diagram-js setzt und für die es in
+ * dieser Kopie keine Regel gab.
+ *
+ * - djs-hit-no-move: Trefferfläche eines Elements, das nicht verschoben werden
+ *   darf. Ohne `pointer-events` wäre es gar nicht anklickbar. Kommt im
+ *   aktuellen Regelwerk von FPB.JS nicht vor, steht hier als Sicherheitsnetz.
+ * - djs-multi-select: zweite Umrandung bei Mehrfachauswahl und beim Lasso.
+ * - djs-outline-hidden: Umrandungen ausblenden.
+ */
+.djs-element > .djs-hit-all,
+.djs-element > .djs-hit-no-move {
+  pointer-events: all;
+}
+
+.djs-multi-select .djs-element.selected .djs-outline,
+.djs-dragging-active-lasso .djs-element.selected .djs-outline {
+  stroke: var(--element-selected-outline-secondary-stroke-color);
+  display: block;
+}
+
+.djs-outline-hidden .djs-outline {
+  display: none !important;
+}
+
+/*
+ * Ebenfalls aus diagram-js 15.26 nachgetragen.
+ *
+ * - Ausgewählte Verbindungen: seit Version 15 legt diagram-js auch um
+ *   Verbindungen eine Umrandung (features/outline/Outline.js) und blendet sie
+ *   im eigenen Stylesheet wieder aus. Ohne diese Regel lag um jeden
+ *   ausgewählten Fluss ein dünnes Rechteck (gemessen 360 mal 11 Pixel).
+ * - Cursor an den Kantengriffen: die vier Griffe an den Kanten gibt es erst
+ *   seit 15.14, ihre Cursor fehlten. Fällt seit dem Umbau der Trefferfläche
+ *   (SystemLimitResizeHandles) auf, weil die ganze Kante fasst.
+ * - djs-updating: während Stützpunkte gezogen werden, sollen die Elemente
+ *   darunter keine Mausereignisse bekommen.
+ */
+.djs-connection.selected .djs-outline {
+  display: none;
+}
+
+.djs-resizer-n,
+.djs-resizer-s {
+  cursor: ns-resize;
+}
+
+.djs-resizer-e,
+.djs-resizer-w {
+  cursor: ew-resize;
+}
+
+.djs-updating,
+.djs-updating > * {
+  pointer-events: none !important;
+}
