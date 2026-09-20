@@ -255,8 +255,12 @@ export interface Modeling {
   updateProperties(element: Element, properties: Record<string, any>): void;
   updateLabel(element: Element, newLabel: string, newBounds?: Bounds, hints?: any): void;
   connect(source: Shape, target: Shape, attrs?: any, hints?: any): Connection;
-  /** Expects the process root shape, not the ProcessEntry from getProcesses() */
-  switchProcess(process: Shape): void;
+  /**
+   * Expects the process root shape, not the ProcessEntry from getProcesses().
+   * `hints.fpbTransient` marks a switch that only passes through a layer (as
+   * the PDF export does) and therefore keeps the undo history.
+   */
+  switchProcess(process: Shape, hints?: { fpbTransient?: boolean;[key: string]: any }): void;
   decomposeProcessOperator(element: Shape): void;
   composeProcess(element: Shape): void;
 }
@@ -290,6 +294,68 @@ export interface ElementFactory {
   createConnection(attrs: any): Connection;
 }
 
+/** A finding of the model check, see the VDI 3682 rule catalog */
+export interface ValidationIssue {
+  /** Rule id of the catalog, e.g. 'B2' */
+  rule: string;
+  severity: 'error' | 'warning' | 'info';
+  message: string;
+  elementId?: string;
+  /** Process (layer) the finding belongs to */
+  process?: Shape;
+}
+
+export interface ValidationCounts {
+  error: number;
+  warning: number;
+  info: number;
+}
+
+/** Model check against the VDI 3682 rule catalog */
+export interface FpbValidation {
+  run(): ValidationIssue[];
+  getIssues(): ValidationIssue[];
+  getCounts(): ValidationCounts;
+  setShowMarkers(show: boolean): void;
+  isPanelOpen(): boolean;
+  openPanel(): void;
+  closePanel(): void;
+  togglePanel(): void;
+}
+
+/** Search across all layers (Ctrl+F) */
+export interface FpbSearch {
+  isOpen(): boolean;
+  open(): void;
+  close(): void;
+}
+
+/** Append an element to an existing one, connected and placed */
+export interface FpbAppend {
+  getOptions(element: Element): Array<{ type: string; label: string }>;
+  canAppend(element: Element): boolean;
+  append(source: Shape, type: string): Shape;
+}
+
+/** Copy and paste within and across layers */
+export interface FpbCopyPaste {
+  isEmpty(): boolean;
+  copy(elements: Element[]): void;
+  paste(): Element[];
+}
+
+/** Where the undo history ends, see switchProcess hints */
+export interface LayerUndoBoundary {
+  /** Runs `work` and leaves the undo history as it was before */
+  keepHistory<T>(work: () => Promise<T> | T): Promise<T>;
+}
+
+/** Readiness of the user interface components, used by the import */
+export interface UiReadiness {
+  isReady(): boolean;
+  whenReady(callback: () => void, timeout: number): void;
+}
+
 /** Map of known DI service names to their types */
 export interface FpbServiceMap {
   eventBus: EventBus;
@@ -299,6 +365,12 @@ export interface FpbServiceMap {
   elementRegistry: ElementRegistry;
   commandStack: CommandStack;
   elementFactory: ElementFactory;
+  fpbValidation: FpbValidation;
+  fpbSearch: FpbSearch;
+  fpbAppend: FpbAppend;
+  fpbCopyPaste: FpbCopyPaste;
+  layerUndoBoundary: LayerUndoBoundary;
+  uiReadiness: UiReadiness;
 }
 
 // ---------------------------------------------------------------------------
