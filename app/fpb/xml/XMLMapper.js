@@ -404,6 +404,8 @@ class XMLMapper {
             this._reconstructDecomposedViewRelationships(jsonData);
             // Then reconstruct parent relationships (uses consistsOfProcesses)
             this._reconstructParentRelationships(jsonData, projectInfo);
+            // The XML does not carry inTandemWith; it follows from source and type
+            this._reconstructTandems(jsonData);
 
 
             return jsonData;
@@ -412,6 +414,42 @@ class XMLMapper {
             console.error('_convertXMLtoJSON: Error converting XML to JSON:', error);
             throw error;
         }
+    }
+
+    /**
+     * Rebuilds inTandemWith after reading XML.
+     *
+     * The exchange format does not store the tandem: which parallel or
+     * alternative flows belong together follows from their common source and
+     * their type, the same way the AML mapper reads it. Without this the
+     * relation was lost on every trip through the XML, and the drawing of a
+     * parallel branching (common bar) with it.
+     */
+    _reconstructTandems(jsonData) {
+        const BRANCH_TYPES = ['fpb:ParallelFlow', 'fpb:AlternativeFlow'];
+
+        jsonData.filter(entry => entry && entry.process).forEach(entry => {
+            const groups = new Map();
+
+            (entry.elementDataInformation || []).forEach(element => {
+                if (!BRANCH_TYPES.includes(element.$type) || !element.sourceRef) {
+                    return;
+                }
+                const key = element.sourceRef + '|' + element.$type;
+                if (!groups.has(key)) {
+                    groups.set(key, []);
+                }
+                groups.get(key).push(element);
+            });
+
+            groups.forEach(group => {
+                group.forEach(flow => {
+                    flow.inTandemWith = group
+                        .filter(other => other !== flow)
+                        .map(other => other.id);
+                });
+            });
+        });
     }
 
     /**
@@ -876,35 +914,17 @@ class XMLMapper {
             }
         }
 
-        // Extract flows (convert entry/exit to incoming/outgoing)
-        const flowsElement = stateElement.getElementsByTagName('flows')[0];
-        if (flowsElement) {
-            const flows = flowsElement.getElementsByTagName('flow');
-            for (let i = 0; i < flows.length; i++) {
-                const flowElement = flows[i];
-                const entries = flowElement.getElementsByTagName('entry');
-                const exits = flowElement.getElementsByTagName('exit');
-
-                for (let j = 0; j < entries.length; j++) {
-                    const entryId = entries[j].getAttribute('id');
-                    if (entryId && !stateData.incoming.includes(entryId)) {
-                        stateData.incoming.push(entryId);
-                    }
-                }
-
-                for (let j = 0; j < exits.length; j++) {
-                    const exitId = exits[j].getAttribute('id');
-                    if (exitId && !stateData.outgoing.includes(exitId)) {
-                        stateData.outgoing.push(exitId);
-                    }
-                }
-            }
-        }
+        // Extract flows (the flow ids, not the connected elements)
+        this._readFlowLists(stateElement, stateData);
 
         // Extract characteristics
         const characteristicsElement = stateElement.getElementsByTagName('characteristics')[0];
         if (characteristicsElement) {
-            stateData.characteristics = this._extractCharacteristicsFromXML(characteristicsElement);
+            const merkmale = this._extractCharacteristicsFromXML(characteristicsElement);
+            // keine leere Liste erfinden, wo vorher keine war
+            if (merkmale.length) {
+                stateData.characteristics = merkmale;
+            }
         }
 
         // Extract visual attributes
@@ -1057,6 +1077,9 @@ class XMLMapper {
 
     /**
      * Extract characteristics from XML
+     *
+     * Values come back as text: XML attributes carry no type, and the model
+     * holds both (a setpoint "20" next to an actual value 20).
      */
     _extractCharacteristicsFromXML(characteristicsElement) {
         const characteristics = [];
@@ -1091,7 +1114,7 @@ class XMLMapper {
                         "value": descriptiveElement.getAttribute('setpointValue') || '',
                         "unit": descriptiveElement.getAttribute('unit') || ''
                     },
-                    "actualValues": null,
+                    "actualValues": [],
                     "validityLimits": []
                 };
 
@@ -1104,6 +1127,17 @@ class XMLMapper {
                         "limitType": validityLimit.getAttribute('limitType') || '',
                         "from": parseFloat(validityLimit.getAttribute('from')) || 0,
                         "to": parseFloat(validityLimit.getAttribute('to')) || 0
+                    });
+                }
+
+                // Actual values, written as child elements as well
+                const actualValueElements = descriptiveElement.getElementsByTagName('actualValues');
+                for (let j = 0; j < actualValueElements.length; j++) {
+                    const actual = actualValueElements[j];
+                    characteristic.descriptiveElement.actualValues.push({
+                        "$type": "fpbch:ValueWithUnit",
+                        "value": actual.getAttribute('value') || '',
+                        "unit": actual.getAttribute('unit') || ''
                     });
                 }
             }
@@ -1126,6 +1160,48 @@ class XMLMapper {
     }
 
     /**
+     * Reads the <flows> block of an element into incoming and outgoing.
+     *
+     * In the XML a <flow> holds the connected elements (entry, exit); in the
+     * JSON model incoming and outgoing hold the ids of the FLOWS. The reader
+     * used to copy the element ids over, so afterwards an element listed itself
+     * or its neighbour instead of the connection.
+     */
+    _readFlowLists(element, targetData) {
+        const flowsElement = element.getElementsByTagName('flows')[0];
+        if (!flowsElement) {
+            return;
+        }
+        const flows = flowsElement.getElementsByTagName('flow');
+        const hatId = (knoten, id) => {
+            for (let i = 0; i < knoten.length; i++) {
+                if (knoten[i].getAttribute('id') === id) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        for (let i = 0; i < flows.length; i++) {
+            const flowElement = flows[i];
+            const flowId = flowElement.getAttribute('id');
+            if (!flowId) {
+                continue;
+            }
+            const entries = flowElement.getElementsByTagName('entry');
+            const exits = flowElement.getElementsByTagName('exit');
+
+            // flow ends here: incoming; flow starts here: outgoing
+            if (hatId(exits, targetData.id) && !targetData.incoming.includes(flowId)) {
+                targetData.incoming.push(flowId);
+            }
+            if (hatId(entries, targetData.id) && !targetData.outgoing.includes(flowId)) {
+                targetData.outgoing.push(flowId);
+            }
+        }
+    }
+
+    /**
      * Extract common element data (assignments, flows, etc.)
      */
     _extractCommonElementData(element, targetData) {
@@ -1141,35 +1217,16 @@ class XMLMapper {
             }
         }
 
-        // Extract flows (similar to state conversion)
-        const flowsElement = element.getElementsByTagName('flows')[0];
-        if (flowsElement) {
-            const flows = flowsElement.getElementsByTagName('flow');
-            for (let i = 0; i < flows.length; i++) {
-                const flowElement = flows[i];
-                const entries = flowElement.getElementsByTagName('entry');
-                const exits = flowElement.getElementsByTagName('exit');
-
-                for (let j = 0; j < entries.length; j++) {
-                    const entryId = entries[j].getAttribute('id');
-                    if (entryId && !targetData.incoming.includes(entryId)) {
-                        targetData.incoming.push(entryId);
-                    }
-                }
-
-                for (let j = 0; j < exits.length; j++) {
-                    const exitId = exits[j].getAttribute('id');
-                    if (exitId && !targetData.outgoing.includes(exitId)) {
-                        targetData.outgoing.push(exitId);
-                    }
-                }
-            }
-        }
+        // Extract flows (the flow ids, not the connected elements)
+        this._readFlowLists(element, targetData);
 
         // Extract characteristics
         const characteristicsElement = element.getElementsByTagName('characteristics')[0];
         if (characteristicsElement) {
-            targetData.characteristics = this._extractCharacteristicsFromXML(characteristicsElement);
+            const merkmale = this._extractCharacteristicsFromXML(characteristicsElement);
+            if (merkmale.length) {
+                targetData.characteristics = merkmale;
+            }
         }
     }
 
@@ -1886,6 +1943,35 @@ class XMLMapper {
                 if (desc.representivity) descriptiveElementXml.setAttribute('representivity', desc.representivity);
                 if (desc.setpointValue && desc.setpointValue.value) descriptiveElementXml.setAttribute('setpointValue', desc.setpointValue.value);
                 if (desc.setpointValue && desc.setpointValue.unit) descriptiveElementXml.setAttribute('unit', desc.setpointValue.unit);
+
+                // Validity limits and actual values are lists, so they are child
+                // elements: as attributes (as in the Blatt 3 draft) they would
+                // need a text format of their own. Without this they were lost
+                // on every trip through the XML.
+                (Array.isArray(desc.validityLimits) ? desc.validityLimits : []).forEach(limit => {
+                    if (!limit) {
+                        return;
+                    }
+                    const limitXml = xmlDoc.createElement('validityLimits');
+                    limitXml.setAttribute('limitType', limit.limitType || '');
+                    limitXml.setAttribute('from', limit.from !== undefined ? limit.from : '');
+                    limitXml.setAttribute('to', limit.to !== undefined ? limit.to : '');
+                    descriptiveElementXml.appendChild(limitXml);
+                });
+
+                const actualValues = Array.isArray(desc.actualValues)
+                    ? desc.actualValues
+                    : (desc.actualValues ? [desc.actualValues] : []);
+                actualValues.forEach(actual => {
+                    if (!actual) {
+                        return;
+                    }
+                    const actualXml = xmlDoc.createElement('actualValues');
+                    actualXml.setAttribute('value', actual.value !== undefined ? actual.value : '');
+                    actualXml.setAttribute('unit', actual.unit || '');
+                    descriptiveElementXml.appendChild(actualXml);
+                });
+
                 characteristicXml.appendChild(descriptiveElementXml);
 
                 // Add relationalElement
