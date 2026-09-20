@@ -138,6 +138,43 @@ test.describe('Typwechsel', () => {
     expect(await importer.unresolvedReferences()).toEqual([]);
   });
 
+  test('beim Zeichnen einer Verzweigung behält der vorhandene Flow seine ID', async ({ page }) => {
+    // ReplaceConnectionBehavior gleicht die Typen an einer Quelle an. Früher per
+    // Löschen und neu Anlegen, die ID änderte sich dabei von selbst (Bug B07).
+    const { fehler } = await vorbereiten(page);
+    const flows = () => page.evaluate(() => window.fpbjs.get('elementRegistry')
+      .filter((e) => e.waypoints && e.source && e.source.businessObject.name === 'Warmprodukt' && e.type !== 'fpb:Usage')
+      .map((e) => ({ id: e.id, typ: e.type, tandem: (e.businessObject.inTandemWith || []).map((p) => p.id || p) })));
+
+    const vorher = await flows();
+    expect(vorher).toHaveLength(1);
+    expect(vorher[0].typ).toBe('fpb:Flow');
+
+    await page.evaluate(() => {
+      const registry = window.fpbjs.get('elementRegistry');
+      const quelle = registry.filter((e) => e.businessObject && e.businessObject.name === 'Warmprodukt' && !e.waypoints)[0];
+      const ziel = registry.filter((e) => e.type === 'fpb:ProcessOperator'
+        && !(e.incoming || []).some((c) => c.source === quelle))[0];
+      window.fpbjs.get('modeling').connect(quelle, ziel, { type: 'fpb:AlternativeFlow' });
+    });
+
+    const gezeichnet = await flows();
+    expect(gezeichnet).toHaveLength(2);
+    const alt = gezeichnet.find((f) => f.id === vorher[0].id);
+    expect(alt.typ).toBe('fpb:AlternativeFlow');
+    expect(alt.tandem).toEqual([gezeichnet.find((f) => f.id !== alt.id).id]);
+
+    // wieder löschen: der übrige Flow behält ebenfalls seine ID
+    await page.evaluate((id) => {
+      const registry = window.fpbjs.get('elementRegistry');
+      window.fpbjs.get('modeling').removeConnection(registry.get(id));
+    }, gezeichnet.find((f) => f.id !== vorher[0].id).id);
+
+    const zurueck = await flows();
+    expect(zurueck).toEqual([{ id: vorher[0].id, typ: 'fpb:Flow', tandem: [] }]);
+    expect(fehler).toEqual([]);
+  });
+
   test('das Menü zeigt den aktuellen Typ gesperrt, Operatoren haben keinen Eintrag', async ({ page }) => {
     await vorbereiten(page);
 
