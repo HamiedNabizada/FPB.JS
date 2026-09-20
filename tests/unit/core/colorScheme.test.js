@@ -8,11 +8,14 @@ import { SCHEMES, colors, getScheme, setScheme } from '../../../app/fpb/core/col
  * Bleiben die Elementfarben unterscheidbar, wenn man sie durch die drei
  * häufigen Formen der Farbfehlsichtigkeit schickt?
  *
- * Gerechnet wird in CIE Lab, simuliert mit den üblichen linearen Näherungen
- * (Viénot/Brettel). Ein Abstand unter etwa 25 gilt als leicht verwechselbar.
- * Das Standardschema von VDI 3682 liegt bei 18, das zugängliche bei 30; beides
- * hält dieser Test fest, damit der Grund für das zweite Schema dokumentiert
- * bleibt.
+ * Simuliert wird mit den Matrizen von Machado u.a. in der stärksten
+ * Ausprägung, gemessen wird mit CIEDE2000 (der einfache Lab-Abstand CIE76
+ * überschätzt gesättigte Farben deutlich).
+ *
+ * Der Rot-Grün-Fall ist der entscheidende: Produkt gegen Prozessoperator liegt
+ * im Standardschema bei ΔE00 7,9 und ΔL* 4, also praktisch gleich. Im
+ * zugänglichen Schema sind es 26,7 bei ΔL* 33, der Unterschied trägt damit
+ * auch ohne jede Farbwahrnehmung. Beides hält dieser Test fest.
  */
 
 const MATRIZEN = {
@@ -45,10 +48,42 @@ function lab(rgb) {
   return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
 }
 
-const abstand = (a, b) => {
-  const [A, B] = [lab(a), lab(b)];
-  return Math.sqrt((A[0] - B[0]) ** 2 + (A[1] - B[1]) ** 2 + (A[2] - B[2]) ** 2);
-};
+/** CIEDE2000 */
+function abstand(a, b) {
+  const [L1, a1, b1] = lab(a);
+  const [L2, a2, b2] = lab(b);
+  const rad = Math.PI / 180, deg = 180 / Math.PI;
+  const C1 = Math.hypot(a1, b1), C2 = Math.hypot(a2, b2);
+  const Cb = (C1 + C2) / 2;
+  const G = 0.5 * (1 - Math.sqrt(Cb ** 7 / (Cb ** 7 + 25 ** 7)));
+  const a1p = (1 + G) * a1, a2p = (1 + G) * a2;
+  const C1p = Math.hypot(a1p, b1), C2p = Math.hypot(a2p, b2);
+  const h1p = (Math.atan2(b1, a1p) * deg + 360) % 360;
+  const h2p = (Math.atan2(b2, a2p) * deg + 360) % 360;
+  const dLp = L2 - L1, dCp = C2p - C1p;
+  let dhp = 0;
+  if (C1p * C2p !== 0) {
+    dhp = h2p - h1p;
+    if (dhp > 180) dhp -= 360; else if (dhp < -180) dhp += 360;
+  }
+  const dHp = 2 * Math.sqrt(C1p * C2p) * Math.sin((dhp / 2) * rad);
+  const Lbp = (L1 + L2) / 2, Cbp = (C1p + C2p) / 2;
+  let hbp = h1p + h2p;
+  if (C1p * C2p !== 0) {
+    hbp = Math.abs(h1p - h2p) > 180 ? (hbp + 360) / 2 : hbp / 2;
+  }
+  const T = 1 - 0.17 * Math.cos((hbp - 30) * rad) + 0.24 * Math.cos(2 * hbp * rad)
+    + 0.32 * Math.cos((3 * hbp + 6) * rad) - 0.20 * Math.cos((4 * hbp - 63) * rad);
+  const dTheta = 30 * Math.exp(-(((hbp - 275) / 25) ** 2));
+  const Rc = 2 * Math.sqrt(Cbp ** 7 / (Cbp ** 7 + 25 ** 7));
+  const Sl = 1 + (0.015 * (Lbp - 50) ** 2) / Math.sqrt(20 + (Lbp - 50) ** 2);
+  const Sc = 1 + 0.045 * Cbp, Sh = 1 + 0.015 * Cbp * T;
+  const Rt = -Math.sin(2 * dTheta * rad) * Rc;
+  return Math.sqrt((dLp / Sl) ** 2 + (dCp / Sc) ** 2 + (dHp / Sh) ** 2 + Rt * (dCp / Sc) * (dHp / Sh));
+}
+
+/** Helligkeitsunterschied, trägt auch ohne jede Farbwahrnehmung */
+const helligkeitsUnterschied = (a, b) => Math.abs(lab(a)[0] - lab(b)[0]);
 
 /** Kleinster Abstand zweier Elementfarben über alle vier Sehweisen */
 function kleinsterAbstand(schema) {
@@ -75,11 +110,32 @@ describe('Farbschema', () => {
 
   it('die Farben von VDI 3682 fallen bei Farbfehlsichtigkeit zusammen', () => {
     // der Grund für das zweite Schema, hier als Messwert festgehalten
-    expect(kleinsterAbstand(SCHEMES.standard)).toBeLessThan(25);
+    expect(kleinsterAbstand(SCHEMES.standard)).toBeLessThan(12);
   });
 
   it('das zugängliche Schema hält alle Typen auseinander', () => {
-    expect(kleinsterAbstand(SCHEMES.accessible)).toBeGreaterThanOrEqual(30);
+    expect(kleinsterAbstand(SCHEMES.accessible)).toBeGreaterThanOrEqual(15);
+  });
+
+  it('trennt Produkt und Operator bei Rot-Grün-Schwäche, auch in der Helligkeit', () => {
+    const paar = (schema, art) => [
+      simuliere(schema.FPB_PRODUCT, art),
+      simuliere(schema.FPB_PROCESS_OPERATOR, art)
+    ];
+
+    ['protanopie', 'deuteranopie'].forEach((art) => {
+      const [standardA, standardB] = paar(SCHEMES.standard, art);
+      const [neuA, neuB] = paar(SCHEMES.accessible, art);
+
+      expect(abstand(neuA, neuB)).toBeGreaterThan(abstand(standardA, standardB));
+      expect(abstand(neuA, neuB)).toBeGreaterThan(20);
+      // der Unterschied liegt auch in der Helligkeit, trägt also ohne Farbe
+      expect(helligkeitsUnterschied(neuA, neuB)).toBeGreaterThan(25);
+    });
+
+    // im Standardschema war genau das der Schwachpunkt
+    const [altA, altB] = paar(SCHEMES.standard, 'deuteranopie');
+    expect(helligkeitsUnterschied(altA, altB)).toBeLessThan(10);
   });
 
   it('behält die Farbfamilien, damit die Bedeutung erkennbar bleibt', () => {
