@@ -3,6 +3,8 @@ import {
   remove as collectionRemove
 } from 'diagram-js/lib/util/Collections';
 
+import { nextCharacteristicNumber } from './characteristicsNumbering';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 
@@ -235,12 +237,7 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
 
     // Get fresh characteristics reference
     let currentCharacteristics = element.businessObject.get('characteristics');
-    let characterNo;
-    if (!currentCharacteristics || currentCharacteristics.length === 0) {
-      characterNo = 1;
-    } else { 
-      characterNo = currentCharacteristics.length + 1;
-    }
+    const characterNo = nextCharacteristicNumber(currentCharacteristics);
 
     let newCharacteristics = fpbFactory.create('fpbch:Characteristics', {
       category: fpbFactory.create('fpb:Identification', {
