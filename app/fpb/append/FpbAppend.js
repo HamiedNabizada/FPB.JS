@@ -1,5 +1,5 @@
 import { is, isAny } from '../help/utils';
-import { getElementsFromElementsContainer } from '../help/helpUtils';
+import { getSystemLimit } from '../help/helpUtils';
 
 const GAP = 70;
 const STEP = 70;
@@ -77,7 +77,7 @@ FpbAppend.prototype._systemLimit = function () {
   if (!root || !root.businessObject || !root.businessObject.elementsContainer) {
     return null;
   }
-  return getElementsFromElementsContainer(root.businessObject.elementsContainer, 'fpb:SystemLimit')[0] || null;
+  return getSystemLimit(root);
 };
 
 /** Centre below the source, moved right while the spot is taken. */

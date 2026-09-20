@@ -6,7 +6,7 @@ import {
     remove as collectionRemove
 } from 'diagram-js/lib/util/Collections';
 
-import { checkIfOnSystemBorder, getElementById, getElementsFromElementsContainer, createStateShapeForNewLayer } from '../../help/helpUtils'
+import { checkIfOnSystemBorder, getElementById, getElementsFromElementsContainer, createStateShapeForNewLayer, getSystemLimit } from '../../help/helpUtils'
 
 export default function ComposeProcess(canvas, modeling, elementFactory, eventBus, elementRegistry, fpbjs) {
     this._canvas = canvas;
@@ -50,7 +50,7 @@ ComposeProcess.prototype.preExecute = function (context) {
          after that decomposition must always start from the parent process first.
         */
         processNew = processOld.businessObject.parent;
-        systemLimitNew = getElementsFromElementsContainer(processNew.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+        systemLimitNew = getSystemLimit(processNew);
         if (!systemLimitNew) {
             context.aborted = true;
             return;

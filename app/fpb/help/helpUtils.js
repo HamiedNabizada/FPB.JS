@@ -57,6 +57,29 @@ export function checkIfOnSystemBorder(systemLimit, state) {
 
 
 /**
+ * The system limit of a process. A process has at most one (rule A2 of the
+ * catalog), so the lookup is the same everywhere; it used to be written out in
+ * fifteen places, each with its own way of dealing with a missing one.
+ *
+ * Takes the process shape, its business object or an elements container, and
+ * returns the system limit shape or null.
+ */
+export function getSystemLimit(process) {
+    if (!process) {
+        return null;
+    }
+    const container = Array.isArray(process)
+        ? process
+        : (process.businessObject && process.businessObject.elementsContainer) || process.elementsContainer;
+
+    if (!Array.isArray(container)) {
+        return null;
+    }
+    return getElementsFromElementsContainer(container, 'fpb:SystemLimit')[0] || null;
+}
+
+
+/**
  * Retrieves elements of a given type from an elements container
  * @param {Array} elementsContainer
  * @param {*} type

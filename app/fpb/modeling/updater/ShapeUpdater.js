@@ -1,6 +1,6 @@
 import inherits from 'inherits';
 
-import { getElementsFromElementsContainer, getElementById, checkIfOnSystemBorder } from '../../help/helpUtils';
+import { getElementById, checkIfOnSystemBorder, getSystemLimit } from '../../help/helpUtils';
 
 import CommandInterceptor from 'diagram-js/lib/command/CommandInterceptor';
 
@@ -139,7 +139,7 @@ ShapeUpdater.prototype._handleCreate = function (element, process_rootElement) {
 
   // ProcessOperators and States are added to the SystemLimit's elementsContainer
   if (isAny(element, ['fpb:State', 'fpb:ProcessOperator'])) {
-    const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    const processSystemLimit = getSystemLimit(process_rootElement);
     if (!processSystemLimit) return;
     addTracked(processSystemLimit.businessObject.elementsContainer, element);
     if (is(element, 'fpb:State')) {
@@ -182,7 +182,7 @@ ShapeUpdater.prototype._handleCreate = function (element, process_rootElement) {
 ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
   // Deleted element is a State or ProcessOperator
   if (isAny(element, ['fpb:State', 'fpb:ProcessOperator'])) {
-    const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    const processSystemLimit = getSystemLimit(process_rootElement);
     if (!processSystemLimit) return;
     removeTracked(processSystemLimit.businessObject.elementsContainer, element);
 
@@ -200,7 +200,7 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
       // Recursively traverse all child layers and delete the state there as well
       while (connectedDecomposedProcesses.length > 0) {
         const childProcess = connectedDecomposedProcesses.shift();
-        const childSystemLimit = getElementsFromElementsContainer(childProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+        const childSystemLimit = getSystemLimit(childProcess);
         if (childSystemLimit && childSystemLimit.businessObject.elementsContainer) {
           const stateInChild = getElementById(childSystemLimit.businessObject.elementsContainer, element.businessObject.id);
           if (stateInChild) {
@@ -249,10 +249,7 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
         const parentProcess = process_rootElement.businessObject.parent;
 
         if (parentProcess) {
-          const parentSystemLimit = getElementsFromElementsContainer(
-            parentProcess.businessObject.elementsContainer,
-            'fpb:SystemLimit'
-          )[0];
+          const parentSystemLimit = getSystemLimit(parentProcess);
 
           if (parentSystemLimit) {
             const parentState = getElementById(
@@ -345,7 +342,7 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
 
 ShapeUpdater.prototype._handleMove = function (element, process_rootElement, context) {
   if (isAny(element, ['fpb:State', 'fpb:ProcessOperator'])) {
-    const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    const processSystemLimit = getSystemLimit(process_rootElement);
     if (processSystemLimit) {
       const elementFromElementsContainer = getElementById(processSystemLimit.businessObject.elementsContainer, element.businessObject.id);
       // Otherwise there are issues when switching between layers
@@ -363,7 +360,7 @@ ShapeUpdater.prototype._handleMove = function (element, process_rootElement, con
   // Scenario 6: Internal state is moved to the system boundary
   if (isAny(element, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
     if (process_rootElement.businessObject.isDecomposedProcessOperator) {
-      const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+      const processSystemLimit = getSystemLimit(process_rootElement);
 
       if (processSystemLimit && context.delta) {
         // Calculate old position

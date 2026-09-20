@@ -1,5 +1,5 @@
 import { isAny } from '../help/utils';
-import { getElementsFromElementsContainer } from '../help/helpUtils';
+import { getSystemLimit } from '../help/helpUtils';
 import { cloneModdle } from '../help/moddleClone';
 
 const COPYABLE = ['fpb:State', 'fpb:ProcessOperator', 'fpb:TechnicalResource'];
@@ -105,5 +105,5 @@ FpbCopyPaste.prototype._systemLimit = function () {
   if (!root || !root.businessObject || !root.businessObject.elementsContainer) {
     return null;
   }
-  return getElementsFromElementsContainer(root.businessObject.elementsContainer, 'fpb:SystemLimit')[0] || null;
+  return getSystemLimit(root);
 };

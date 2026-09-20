@@ -1,6 +1,6 @@
 import inherits from 'inherits';
 
-import { getElementsFromElementsContainer, getElementById, createStateShapeForNewLayer } from '../../help/helpUtils';
+import { getElementById, createStateShapeForNewLayer, getSystemLimit } from '../../help/helpUtils';
 
 import CommandInterceptor from 'diagram-js/lib/command/CommandInterceptor';
 
@@ -167,7 +167,7 @@ ConnectionUpdater.prototype._handleConnectionCommand = function (command, contex
 ConnectionUpdater.prototype._handleCreate = function (element, context, process_rootElement) {
   // Connections to States
   if (is(context.source, 'fpb:State') || is(context.target, 'fpb:State')) {
-    const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    const processSystemLimit = getSystemLimit(process_rootElement);
     if (!processSystemLimit) return;
     addTracked(processSystemLimit.businessObject.elementsContainer, element);
 
@@ -190,7 +190,7 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
 
       // Layer consistency: Create state on child layer if not already present
       const decomposedProcess = processOperatorShape.businessObject.decomposedView;
-      const childSystemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+      const childSystemLimit = getSystemLimit(decomposedProcess);
       if (childSystemLimit && childSystemLimit.businessObject.elementsContainer) {
         const existingStateInChild = getElementById(childSystemLimit.businessObject.elementsContainer, stateShape.businessObject.id);
         if (!existingStateInChild) {
@@ -326,7 +326,7 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
 
   // Connections to States
   if (is(context.source, 'fpb:State') || is(context.target, 'fpb:State')) {
-    const processSystemLimit = getElementsFromElementsContainer(process_rootElement.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    const processSystemLimit = getSystemLimit(process_rootElement);
     if (!processSystemLimit) return;
     removeTracked(processSystemLimit.businessObject.elementsContainer, connection);
 
@@ -353,7 +353,7 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
       const decomposedProcesses = [processOperatorShape.businessObject.decomposedView];
       while (decomposedProcesses.length > 0) {
         const decomposedProcess = decomposedProcesses.shift();
-        const decomposedProcessSystemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+        const decomposedProcessSystemLimit = getSystemLimit(decomposedProcess);
         if (!decomposedProcessSystemLimit) continue;
         const stateInDecomposedProcess = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, stateShape.id);
 

@@ -1,5 +1,5 @@
 import { is, isAny } from '../help/utils';
-import { getElementsFromElementsContainer } from '../help/helpUtils';
+import { getSystemLimit } from '../help/helpUtils';
 import { collectProcessShapes } from '../help/processShapes';
 import {
   runJournaled,
@@ -87,7 +87,7 @@ ChangeTypeHandler.prototype._changeState = function (element, newType) {
   const self = this;
   const shapes = [];
   collectProcessShapes(this._fpbjs.getProjectDefinition()).forEach(function (process) {
-    const systemLimit = getElementsFromElementsContainer(process.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+    const systemLimit = getSystemLimit(process);
     if (!systemLimit) {
       return;
     }

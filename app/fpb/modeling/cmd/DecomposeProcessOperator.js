@@ -1,6 +1,6 @@
 import { is } from '../../help/utils';
 
-import { getElementsFromElementsContainer, noOfUsageConnections, checkIfOnSystemBorder, createStateShapeForNewLayer } from '../../help/helpUtils';
+import { getElementsFromElementsContainer, noOfUsageConnections, checkIfOnSystemBorder, createStateShapeForNewLayer, getSystemLimit } from '../../help/helpUtils';
 
 import {
     some,
@@ -47,7 +47,7 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
     if (processOperator.businessObject.decomposedView) {
         isDecomposed = true;
         decomposedProcess = processOperator.businessObject.decomposedView;
-        systemLimit = getElementsFromElementsContainer(decomposedProcess.businessObject.elementsContainer, 'fpb:SystemLimit')[0];
+        systemLimit = getSystemLimit(decomposedProcess);
         if (!systemLimit) {
             context.aborted = true;
             return;

@@ -15,7 +15,7 @@ import {
   isAny
 } from '../../help/utils';
 import { isEmptyText } from '../utils/LabelUtils';
-import { getElementsFromElementsContainer, getElementById, checkIfOnSystemBorder } from '../../help/helpUtils';
+import { getElementById, checkIfOnSystemBorder, getSystemLimit } from '../../help/helpUtils';
 
 const NULL_DIMENSIONS = {
   width: 0,
@@ -193,7 +193,7 @@ UpdateLabelHandler.prototype._syncSystemLimitName = function(element, ctx) {
     return;
   }
 
-  const systemLimit = getElementsFromElementsContainer(container, 'fpb:SystemLimit')[0];
+  const systemLimit = getSystemLimit(container);
   const generatedName = (operatorName) => 'SL_' + operatorName;
 
   if (!systemLimit || systemLimit.businessObject.name !== generatedName(ctx.oldLabel)) {
@@ -256,10 +256,7 @@ UpdateLabelHandler.prototype._handleStateNameSync = function(element, newLabel, 
     element.businessObject.isAssignedTo.forEach(processOperator => {
       if (processOperator.decomposedView) {
         const childProcess = processOperator.decomposedView;
-        const childSystemLimit = getElementsFromElementsContainer(
-          childProcess.businessObject.elementsContainer,
-          'fpb:SystemLimit'
-        )[0];
+        const childSystemLimit = getSystemLimit(childProcess);
 
         if (childSystemLimit && childSystemLimit.businessObject.elementsContainer) {
           const stateInChild = getElementById(
@@ -281,10 +278,7 @@ UpdateLabelHandler.prototype._handleStateNameSync = function(element, newLabel, 
 
   // Scenario 8: Boundary state on child layer renamed - sync to parent layer
   if (process.businessObject.isDecomposedProcessOperator) {
-    const systemLimit = getElementsFromElementsContainer(
-      process.businessObject.elementsContainer,
-      'fpb:SystemLimit'
-    )[0];
+    const systemLimit = getSystemLimit(process);
 
     if (systemLimit) {
       const borderPosition = checkIfOnSystemBorder(systemLimit, element);
@@ -294,10 +288,7 @@ UpdateLabelHandler.prototype._handleStateNameSync = function(element, newLabel, 
         const parentProcess = process.businessObject.parent;
 
         if (parentProcess) {
-          const parentSystemLimit = getElementsFromElementsContainer(
-            parentProcess.businessObject.elementsContainer,
-            'fpb:SystemLimit'
-          )[0];
+          const parentSystemLimit = getSystemLimit(parentProcess);
 
           if (parentSystemLimit && parentSystemLimit.businessObject.elementsContainer) {
             const stateInParent = getElementById(
