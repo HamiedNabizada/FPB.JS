@@ -4,7 +4,9 @@ import { collectProcessShapes } from '../help/processShapes';
 import {
   runJournaled,
   revertJournal,
-  setTracked
+  setTracked,
+  addTracked,
+  removeTracked
 } from '../modeling/updater/ModelJournal';
 
 export const STATE_TYPES = ['fpb:Product', 'fpb:Energy', 'fpb:Information'];
@@ -26,6 +28,9 @@ const NOT_COPIED = ['$type', 'id', 'di'];
  *   has its own object) becomes Product, Energy or Information.
  * - Flow: the whole branching at the source changes between ParallelFlow and
  *   AlternativeFlow, as the branching type is defined at the source.
+ * - context.scope 'connection': only this one connection changes, including
+ *   Flow to a branching type and back. Used by ReplaceConnectionBehavior, which
+ *   used to delete the connection and create a new one with a new id.
  */
 export default function ChangeTypeHandler(fpbFactory, fpbjs, canvas, modeling) {
   this._fpbFactory = fpbFactory;
@@ -43,7 +48,9 @@ ChangeTypeHandler.prototype.execute = function (context) {
   let shapes = [];
 
   context.journal = runJournaled(function () {
-    if (is(element, 'fpb:State')) {
+    if (context.scope === 'connection') {
+      shapes = self._changeConnections([element], newType);
+    } else if (is(element, 'fpb:State')) {
       shapes = self._changeState(element, newType);
     } else if (isAny(element, BRANCH_FLOW_TYPES)) {
       shapes = self._changeBranching(element, newType);
@@ -121,24 +128,71 @@ ChangeTypeHandler.prototype._changeState = function (element, newType) {
 };
 
 ChangeTypeHandler.prototype._changeBranching = function (element, newType) {
-  const self = this;
   const group = (element.source && element.source.outgoing || []).filter(function (flow) {
     return isAny(flow, BRANCH_FLOW_TYPES);
   });
-  group.forEach(function (flow) {
+  return this._changeConnections(group, newType);
+};
+
+/**
+ * Changes the type of the given connections and keeps inTandemWith right:
+ * a connection that becomes a branching joins the branching at its source, one
+ * that becomes a plain Flow leaves it.
+ */
+ChangeTypeHandler.prototype._changeConnections = function (connections, newType) {
+  const self = this;
+  const becomesBranch = BRANCH_FLOW_TYPES.indexOf(newType) !== -1;
+
+  connections.forEach(function (flow) {
     const oldBo = flow.businessObject;
     const newBo = self._copy(oldBo, newType);
-    newBo.inTandemWith = (oldBo.inTandemWith || []).slice();
+    if (becomesBranch) {
+      newBo.inTandemWith = (oldBo.inTandemWith || []).slice();
+    }
     replaceIn(oldBo.sourceRef && oldBo.sourceRef.outgoing, oldBo, newBo);
     replaceIn(oldBo.targetRef && oldBo.targetRef.incoming, oldBo, newBo);
     (oldBo.inTandemWith || []).forEach(function (partner) {
-      if (partner && typeof partner !== 'string') {
+      if (!partner || typeof partner === 'string') {
+        return;
+      }
+      if (becomesBranch) {
         replaceIn(partner.inTandemWith, oldBo, newBo);
+      } else {
+        // no longer part of a branching
+        removeTracked(partner.inTandemWith, oldBo);
       }
     });
+    if (!becomesBranch && newBo.inTandemWith) {
+      setTracked(newBo, 'inTandemWith', []);
+    }
     self._swapShape(flow, newBo, newType);
   });
-  return group;
+
+  if (becomesBranch) {
+    connections.forEach(function (flow) {
+      self._linkTandem(flow);
+    });
+  }
+  return connections;
+};
+
+/** Links the connection with the other branching flows of its source. */
+ChangeTypeHandler.prototype._linkTandem = function (flow) {
+  const bo = flow.businessObject;
+  (flow.source && flow.source.outgoing || []).forEach(function (other) {
+    if (other === flow || !isAny(other, BRANCH_FLOW_TYPES)) {
+      return;
+    }
+    const otherBo = other.businessObject;
+    if (!bo.inTandemWith) {
+      setTracked(bo, 'inTandemWith', []);
+    }
+    if (!otherBo.inTandemWith) {
+      setTracked(otherBo, 'inTandemWith', []);
+    }
+    addTracked(bo.inTandemWith, otherBo);
+    addTracked(otherBo.inTandemWith, bo);
+  });
 };
 
 /** New business object of the new type with the same id and properties. */

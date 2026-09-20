@@ -5,13 +5,25 @@ import CommandInterceptor from 'diagram-js/lib/command/CommandInterceptor';
 import { isAny, is } from '../../help/utils';
 
 
-// The flow is only swapped for one of another type between the same elements.
-// Tells ConnectionUpdater to keep the boundary state and its flows in child layers,
-// which a real delete would remove.
-export const REPLACE_HINTS = { fpbReplaceConnection: true };
-
-export default function ReplaceConnectionBehavior(eventBus, modeling) {
+/**
+ * Keeps the flow types at a source consistent: drawing a parallel or
+ * alternative flow next to a normal one turns that one into the same type, and
+ * a branching that loses all but one flow becomes a normal flow again.
+ *
+ * The change runs through the command fpb.changeType, which keeps the id of the
+ * connection. Before, the flow was deleted and a new one created, so ids
+ * changed on their own and references to them went stale (bug B07).
+ */
+export default function ReplaceConnectionBehavior(eventBus, commandStack) {
     CommandInterceptor.call(this, eventBus);
+
+    function changeType(connection, newType) {
+        commandStack.execute('fpb.changeType', {
+            element: connection,
+            newType: newType,
+            scope: 'connection'
+        });
+    }
 
     this.postExecuted('connection.create', function (e) {
         let connection = e.context.connection;
@@ -21,23 +33,13 @@ export default function ReplaceConnectionBehavior(eventBus, modeling) {
         }
         let sourceOutgoing = e.context.source.outgoing || [];
         let replaceFlow;
-        let replaceType;
         sourceOutgoing.forEach((flow) => {
             if (!isAny(flow, ['fpb:AlternativeFlow', 'fpb:ParallelFlow', 'fpb:Usage'])) {
                 replaceFlow = flow;
             }
         })
-        if (!replaceFlow) {
-            return;
-        }
-        else {
-            replaceType = connection.type;
-            let replaceSource = replaceFlow.source;
-            let replaceTarget = replaceFlow.target;
-            modeling.removeConnection(replaceFlow, REPLACE_HINTS);
-            modeling.connect(replaceSource, replaceTarget, {
-                type: replaceType,
-            });
+        if (replaceFlow) {
+            changeType(replaceFlow, connection.type);
         }
     })
 
@@ -50,21 +52,14 @@ export default function ReplaceConnectionBehavior(eventBus, modeling) {
         let sourceOutgoing = e.context.source.outgoing || [];
         let replaceFlow;
         let counter = 0;
-        let replaceSource;
-        let replaceTarget;
         sourceOutgoing.forEach((flow) => {
             if (flow !== connection && !is(flow, 'fpb:Usage')) {
                 counter++;
                 replaceFlow = flow;
             }
         })
-        if (counter === 1) { // Only one flow connection remains
-            replaceSource = replaceFlow.source;
-            replaceTarget = replaceFlow.target;
-            modeling.removeConnection(replaceFlow, REPLACE_HINTS);
-            modeling.connect(replaceSource, replaceTarget, {
-                type: 'fpb:Flow',
-            });
+        if (counter === 1 && isAny(replaceFlow, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) { // Only one flow connection remains
+            changeType(replaceFlow, 'fpb:Flow');
         }
     })
 }
@@ -73,5 +68,5 @@ inherits(ReplaceConnectionBehavior, CommandInterceptor);
 
 ReplaceConnectionBehavior.$inject = [
     'eventBus',
-    'modeling'
+    'commandStack'
 ];
