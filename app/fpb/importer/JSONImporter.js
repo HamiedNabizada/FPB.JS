@@ -177,6 +177,8 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                     console.error('JSONImporter: Process switch failed:', error);
                 }
                 this._errorHandler.finishReport();
+                // Everything is on the canvas now: the model check can look at it
+                this._eventBus.fire(IMPORT_EVENTS.IMPORT_DONE, {});
             }, IMPORT_TIMING.UI_INITIALIZATION_DELAY);
         } catch (error) {
             this._errorHandler.handleError(error);

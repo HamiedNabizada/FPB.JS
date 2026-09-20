@@ -64,6 +64,7 @@ export const IMPORT_EVENTS = {
   IMPORT_REQUEST: 'FPBJS.import',
   IMPORT_ERROR: 'import.error',
   IMPORT_REPORT: 'import.report',
+  IMPORT_DONE: 'import.done',
   PROJECT_ADDED: 'dataStore.addedProjectDefinition',
   NEW_PROCESS: 'dataStore.newProcess',
   LAYER_PANEL_NEW_PROCESS: 'layerPanel.newProcess',

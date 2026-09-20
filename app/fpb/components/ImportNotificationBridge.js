@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useError } from '../context/ErrorContext';
 
 /**
@@ -9,18 +9,37 @@ import { useError } from '../context/ErrorContext';
  */
 export default function ImportNotificationBridge({ modeler }) {
   const { showError, showReport } = useError();
+  const warnungen = useRef([]);
 
   useEffect(() => {
     const eventBus = modeler.get('eventBus');
     const handleError = (event) => showError(event.message, event.details);
-    const handleReport = (event) => showReport(event);
+    const handleReport = (event) => {
+      warnungen.current = event.warnings || [];
+      showReport(event);
+    };
+
+    // After the import the model check runs; its result belongs in the report,
+    // otherwise a file that imports cleanly but breaks rules says nothing.
+    const handleDone = () => {
+      const validation = modeler.get('fpbValidation', false);
+      const counts = validation ? validation.run() && validation.getCounts() : null;
+      showReport({
+        warnings: warnungen.current,
+        check: counts,
+        onOpenCheck: validation ? () => validation.openPanel() : null
+      });
+      warnungen.current = [];
+    };
 
     eventBus.on('import.error', handleError);
     eventBus.on('import.report', handleReport);
+    eventBus.on('import.done', handleDone);
 
     return () => {
       eventBus.off('import.error', handleError);
       eventBus.off('import.report', handleReport);
+      eventBus.off('import.done', handleDone);
     };
   }, [modeler, showError, showReport]);
 

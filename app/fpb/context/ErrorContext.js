@@ -32,7 +32,9 @@ export const ErrorProvider = ({ children }) => {
   // Warnings of an import that went through (skipped elements, automatic layout).
   const showReport = useCallback((importReport) => {
     const hasWarnings = importReport && Array.isArray(importReport.warnings) && importReport.warnings.length > 0;
-    setReport(hasWarnings ? importReport : null);
+    const check = importReport && importReport.check;
+    const hasFindings = !!check && (check.error > 0 || check.warning > 0);
+    setReport(hasWarnings || hasFindings ? importReport : null);
   }, []);
 
   const clearReport = useCallback(() => {

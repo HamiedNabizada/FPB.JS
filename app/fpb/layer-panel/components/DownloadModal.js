@@ -360,7 +360,17 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
     }
 
     const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
+    // Findings of the model check, shown as a hint before exporting
+    const [checkCounts, setCheckCounts] = useState(null);
+    const handleShow = () => {
+        try {
+            const validation = modeler.get('fpbValidation', false);
+            setCheckCounts(validation ? validation.run() && validation.getCounts() : null);
+        } catch (error) {
+            setCheckCounts(null);
+        }
+        setShow(true);
+    };
     let tooltTipExportOptions = 'Export Options';
     
     return (
@@ -386,6 +396,13 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                     </Container>
                 </Modal.Header>
                 <Modal.Body>
+                    {checkCounts && (checkCounts.error > 0 || checkCounts.warning > 0) && (
+                        <Alert variant={checkCounts.error > 0 ? 'danger' : 'warning'} className="py-2 download-check-hint">
+                            <FontAwesomeIcon icon="exclamation-triangle" className="me-2" />
+                            Model check (VDI 3682): {checkCounts.error} {checkCounts.error === 1 ? 'error' : 'errors'},{' '}
+                            {checkCounts.warning} {checkCounts.warning === 1 ? 'warning' : 'warnings'}. The export runs anyway.
+                        </Alert>
+                    )}
                     <Row>
                         <Col>
                             <Forms_Format onInformationLevel={handleInformationLevel} onExportAsEvent={handleExportAsEvent} onExportAsDownload={handleExportAsDownload} onExportFormat={handleExportFormat} />

@@ -9,11 +9,17 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
  * to retry, the user may want to fix the file afterwards.
  */
 const ImportReportNotification = memo(({ report, onDismiss }) => {
-  if (!report || !report.warnings || report.warnings.length === 0) {
+  const warnings = (report && report.warnings) || [];
+  const check = report && report.check;
+  const findings = check ? check.error + check.warning : 0;
+
+  if (!report || (warnings.length === 0 && findings === 0)) {
     return null;
   }
 
-  const { warnings } = report;
+  const summary = warnings.length
+    ? `Import completed with ${warnings.length} ${warnings.length === 1 ? 'note' : 'notes'}`
+    : 'Import completed';
 
   return (
     <Alert
@@ -33,7 +39,7 @@ const ImportReportNotification = memo(({ report, onDismiss }) => {
     >
       <Alert.Heading>
         <FontAwesomeIcon icon="exclamation-triangle" className="me-2" />
-        Import completed with {warnings.length} {warnings.length === 1 ? 'note' : 'notes'}
+        {summary}
       </Alert.Heading>
       <ul className="mb-2 ps-3">
         {warnings.map((warning, index) => (
@@ -51,6 +57,19 @@ const ImportReportNotification = memo(({ report, onDismiss }) => {
           </li>
         ))}
       </ul>
+      {findings > 0 && (
+        <div className="mb-2 import-report-check">
+          <div>
+            Model check (VDI 3682): {check.error} {check.error === 1 ? 'error' : 'errors'},{' '}
+            {check.warning} {check.warning === 1 ? 'warning' : 'warnings'}
+          </div>
+          {report.onOpenCheck && (
+            <Button variant="outline-warning" size="sm" className="mt-1" onClick={report.onOpenCheck}>
+              Show findings
+            </Button>
+          )}
+        </div>
+      )}
       <div className="d-flex justify-content-end">
         <Button variant="outline-warning" size="sm" onClick={onDismiss}>
           <FontAwesomeIcon icon="times" className="me-1" />
