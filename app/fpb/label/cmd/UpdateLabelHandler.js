@@ -113,7 +113,7 @@ UpdateLabelHandler.prototype.postExecute = function(ctx) {
   }
 
   // Handle ProcessOperator-specific logic
-  this._handleProcessOperatorUpdate(element);
+  this._handleProcessOperatorUpdate(element, ctx);
 
   // Update business object identification
   this._updateBusinessObjectIdentification(element, ctx.newLabel, ctx);
@@ -166,12 +166,44 @@ UpdateLabelHandler.prototype._calculateExternalLabelCenter = function(element) {
 /**
  * Handle ProcessOperator-specific updates
  */
-UpdateLabelHandler.prototype._handleProcessOperatorUpdate = function(element) {
+UpdateLabelHandler.prototype._handleProcessOperatorUpdate = function(element, ctx) {
   if (is(element, 'fpb:ProcessOperator') && element.businessObject.decomposedView) {
+    this._syncSystemLimitName(element, ctx);
+
     // Trigger LayerPanel re-render
     this._eventBus.fire('layerPanel.processSwitched', {
       selectedProcess: this._canvas.getRootElement()
     });
+  }
+};
+
+/**
+ * Scenario 10: the system limit of the decomposition carries the name of the
+ * operator it belongs to, so it follows a rename.
+ *
+ * Only while it still carries the generated name though. A system limit the
+ * user named himself keeps that name, the same consideration that keeps
+ * DecomposeProcessOperator from overwriting an existing name.
+ */
+UpdateLabelHandler.prototype._syncSystemLimitName = function(element, ctx) {
+  const childProcess = element.businessObject.decomposedView;
+  const container = childProcess.businessObject && childProcess.businessObject.elementsContainer;
+
+  if (!container) {
+    return;
+  }
+
+  const systemLimit = getElementsFromElementsContainer(container, 'fpb:SystemLimit')[0];
+  const generatedName = (operatorName) => 'SL_' + operatorName;
+
+  if (!systemLimit || systemLimit.businessObject.name !== generatedName(ctx.oldLabel)) {
+    return;
+  }
+
+  trackedWrite(ctx, systemLimit.businessObject, 'name', generatedName(ctx.newLabel));
+
+  if (systemLimit.businessObject.identification) {
+    trackedWrite(ctx, systemLimit.businessObject.identification, 'shortName', generatedName(ctx.newLabel));
   }
 };
 
