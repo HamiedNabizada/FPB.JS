@@ -19,6 +19,14 @@ export const keyboardShortcuts = [
     ]
   },
   {
+    category: 'Tools',
+    items: [
+      { keys: ['H'], description: 'Hand tool (press again to leave it)' },
+      { keys: ['L'], description: 'Lasso tool' },
+      { keys: ['S'], description: 'Create/remove space tool' }
+    ]
+  },
+  {
     category: 'Zoom & Navigation',
     items: [
       { keys: [`${ctrlKey}++`], description: 'Zoom in' },
