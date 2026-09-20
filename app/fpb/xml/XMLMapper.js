@@ -40,6 +40,7 @@ class XMLMapper {
 
         // Store original JSON data for round-trip preservation
         this.originalJsonData = null;
+        this.originalXmlString = null;
     }
 
     /**
@@ -51,11 +52,13 @@ class XMLMapper {
             // Step 1: Convert ModdleElements to proper JSON format (like normal JSON export)
             const properJsonData = this._convertModdleElementsToProperJSON(jsonData);
 
-            // Store original data for round-trip
-            this.originalJsonData = JSON.parse(JSON.stringify(properJsonData));
-
             // Use schema-compliant conversion
             const xmlString = this._convertJSONtoXML(properJsonData);
+
+            // Keep the data for the round trip, together with the XML it
+            // belongs to: only that exact document may be answered from here.
+            this.originalJsonData = JSON.parse(JSON.stringify(properJsonData));
+            this.originalXmlString = xmlString;
 
             return xmlString;
         } catch (error) {
@@ -70,7 +73,12 @@ class XMLMapper {
     async convertFromXML(xmlString) {
         try {
 
-            if (!this.originalJsonData) {
+            // Reading back the document this mapper just wrote: answer from the
+            // kept data, which carries what the XML cannot. Anything else is a
+            // foreign file and gets parsed, otherwise an import after an export
+            // would quietly return the exported model instead of the file the
+            // user picked.
+            if (!this.originalJsonData || !this._isOwnExport(xmlString)) {
                 return this._convertXMLtoJSON(xmlString);
             }
 
@@ -97,6 +105,16 @@ class XMLMapper {
             console.error('XMLMapper: JSON conversion failed:', error);
             throw error;
         }
+    }
+
+    /**
+     * Is this the very document this mapper produced last?
+     * Compared without surrounding whitespace, which a file round trip can add.
+     */
+    _isOwnExport(xmlString) {
+        return typeof xmlString === 'string'
+            && typeof this.originalXmlString === 'string'
+            && xmlString.trim() === this.originalXmlString.trim();
     }
 
     /**
@@ -469,7 +487,7 @@ class XMLMapper {
                 "consistsOfSystemLimit": null,
                 "consistsOfProcesses": [],
                 "consistsOfProcessOperator": [],
-                "parent": null // Will be set later in _reconstructParentStructure
+                "parent": null // Will be set later in _reconstructParentRelationships
             },
             "elementDataInformation": [],
             "elementVisualInformation": []
@@ -649,7 +667,6 @@ class XMLMapper {
      * Extract flows from a single element (state or processOperator)
      */
     _extractFlowsFromElement(element, extractedFlows, processElement) {
-        const elementId = element.querySelector('identification')?.getAttribute('uniqueIdent');
         const flowsContainer = element.getElementsByTagName('flows')[0];
         if (flowsContainer) {
             const flows = flowsContainer.getElementsByTagName('flow');
@@ -701,67 +718,6 @@ class XMLMapper {
             }
         }
         return null;
-    }
-
-    /**
-     * Extract flows from flowContainer (AlternativeFlow, ParallelFlow, regular Flows)
-     */
-    _extractFlowsFromFlowContainer(processElement, processEntry, systemLimitData) {
-        const flowContainer = processElement.getElementsByTagName('flowContainer')[0];
-        if (!flowContainer) return;
-
-        const flows = flowContainer.getElementsByTagName('flow');
-
-        for (let i = 0; i < flows.length; i++) {
-            const flowElement = flows[i];
-            const flowId = flowElement.getAttribute('id');
-            const flowType = flowElement.getAttribute('flowType') || 'flow';
-
-            // Skip usage flows - they're handled by _extractUsageConnections
-            if (flowType === 'usage') continue;
-
-            // Extract entry and exit elements like normal flows
-            const entryElement = flowElement.getElementsByTagName('entry')[0];
-            const exitElement = flowElement.getElementsByTagName('exit')[0];
-
-            if (!entryElement || !exitElement) {
-                continue;
-            }
-
-            const sourceRef = entryElement.getAttribute('id');
-            const targetRef = exitElement.getAttribute('id');
-
-            if (!sourceRef || !targetRef) {
-                continue;
-            }
-
-            // Determine JSON type
-            const jsonType = this.reverseFlowTypeMapping[flowType] || 'fpb:Flow';
-
-
-            const flowData = {
-                "$type": jsonType,
-                "id": flowId,
-                "sourceRef": sourceRef,
-                "targetRef": targetRef
-            };
-
-            // Waypoints from the file if it carries them, otherwise minimal
-            // ones for the layout engine to recalculate.
-            const flowVisual = {
-                "id": flowId,
-                "type": jsonType,
-                "waypoints": this._readWaypoints(flowElement) || XMLMapper.DEFAULT_WAYPOINTS
-            };
-
-            processEntry.elementDataInformation.push(flowData);
-            processEntry.elementVisualInformation.push(flowVisual);
-
-            if (systemLimitData) {
-                systemLimitData.elementsContainer.push(flowId);
-            }
-
-            }
     }
 
     /**
@@ -1006,39 +962,6 @@ class XMLMapper {
     }
 
     /**
-     * Convert flow from XML flowContainer to JSON
-     */
-    _convertFlowFromXML(flowElement) {
-        const flowId = flowElement.getAttribute('id');
-        const flowType = flowElement.getAttribute('flowType') || 'flow';
-        const jsonType = this.reverseFlowTypeMapping[flowType] || 'fpb:Flow';
-
-        // Extract sourceRef and targetRef from XML
-        const sourceRef = flowElement.getAttribute('sourceRef') || null;
-        const targetRef = flowElement.getAttribute('targetRef') || null;
-
-
-        const flowData = {
-            "$type": jsonType,
-            "id": flowId,
-            "sourceRef": sourceRef,
-            "targetRef": targetRef
-        };
-
-        // Extract visual attributes
-        const visual = this._extractVisualAttributes(flowElement);
-        if (visual) {
-            visual.id = flowId;
-            visual.type = jsonType;
-        }
-
-        return {
-            data: flowData,
-            visual: visual
-        };
-    }
-
-    /**
      * Extract identification from XML
      */
     _extractIdentificationFromXML(identificationElement) {
@@ -1226,184 +1149,6 @@ class XMLMapper {
     }
 
     /**
-     * Reconstruct parent structure based on project entryPoint and process hierarchy
-     */
-    _reconstructParentStructure(jsonData, projectInfo) {
-
-        // Find project and process entries
-        const projectEntry = jsonData.find(item => item.$type === 'fpb:Project');
-        const processEntries = jsonData.filter(item => item.process);
-
-        if (!projectEntry || processEntries.length === 0) {
-            return;
-        }
-
-        const entryPoint = projectInfo.getAttribute('entryPoint');
-
-        // Set parent relationships
-        processEntries.forEach(processEntry => {
-            const process = processEntry.process;
-
-            if (process.id === entryPoint) {
-                // Main process: parent is the full Project object
-                process.parent = {
-                    "$type": "fpb:Project",
-                    "name": projectEntry.name,
-                    "targetNamespace": projectEntry.targetNamespace,
-                    "entryPoint": projectEntry.entryPoint
-                };
-            } else {
-                // Sub-process: parent is the entryPoint process ID
-                process.parent = entryPoint;
-            }
-        });
-
-    }
-
-    /**
-     * Convert a single process XML element to flat JSON objects
-     */
-    _convertProcessToFlatJSON(processElement, jsonData) {
-        const processId = processElement.getAttribute('id');
-        if (!processId) return;
-
-
-        // 1. Create and add Process object
-        const processObj = {
-            "$type": "fpb:Process",
-            "id": processId,
-            "elementsContainer": [],
-            "isDecomposedProcessOperator": null,
-            "consistsOfStates": [],
-            "consistsOfSystemLimit": null,
-            "consistsOfProcesses": [],
-            "parent": null
-        };
-        jsonData.push(processObj);
-
-        // 2. Extract SystemLimit
-        const systemLimitElement = processElement.querySelector('systemLimit');
-        let systemLimitObj = null;
-        if (systemLimitElement) {
-            const systemLimitId = systemLimitElement.getAttribute('id');
-            systemLimitObj = {
-                "$type": "fpb:SystemLimit",
-                "id": systemLimitId,
-                "elementsContainer": []
-            };
-
-            // Extract SystemLimit name from XML attribute, allow empty string
-            const systemLimitName = systemLimitElement.getAttribute('name') || '';
-            systemLimitObj.name = systemLimitName;
-
-            jsonData.push(systemLimitObj);
-            processObj.consistsOfSystemLimit = systemLimitId;
-            processObj.elementsContainer.push(systemLimitId);
-        }
-
-        // 3. Extract States (go into SystemLimit)
-        const statesContainer = processElement.querySelector('states');
-        if (statesContainer && systemLimitObj) {
-            const states = statesContainer.querySelectorAll('state');
-            states.forEach(stateElement => {
-                const stateResult = this._convertStateFromXML(stateElement);
-                if (stateResult && stateResult.data) {
-                    jsonData.push(stateResult.data);
-                    processObj.consistsOfStates.push(stateResult.data.id);
-                    systemLimitObj.elementsContainer.push(stateResult.data.id);
-                }
-            });
-        }
-
-        // 4. Extract ProcessOperators (go into SystemLimit)
-        const processOperatorsContainer = processElement.querySelector('processOperators');
-        if (processOperatorsContainer && systemLimitObj) {
-            const processOperators = processOperatorsContainer.querySelectorAll('processOperator');
-            processOperators.forEach(processOpElement => {
-                const processOpResult = this._convertProcessOperatorFromXML(processOpElement);
-                if (processOpResult && processOpResult.data) {
-                    jsonData.push(processOpResult.data);
-                    processObj.consistsOfProcessOperator = processObj.consistsOfProcessOperator || [];
-                    processObj.consistsOfProcessOperator.push(processOpResult.data.id);
-                    systemLimitObj.elementsContainer.push(processOpResult.data.id);
-                }
-            });
-        }
-
-        // 5. Extract TechnicalResources (go into Process)
-        const technicalResourcesContainer = processElement.querySelector('technicalResources');
-        if (technicalResourcesContainer) {
-            const technicalResources = technicalResourcesContainer.querySelectorAll('technicalResource');
-            technicalResources.forEach(techResElement => {
-                const techResResult = this._convertTechnicalResourceFromXML(techResElement);
-                if (techResResult && techResResult.data) {
-                    jsonData.push(techResResult.data);
-                    processObj.elementsContainer.push(techResResult.data.id);
-                }
-            });
-        }
-
-        // 6. Extract Flows
-        this._extractFlowsToFlatJSON(processElement, jsonData, systemLimitObj);
-    }
-
-    /**
-     * Extract flows for flat JSON structure
-     */
-    _extractFlowsToFlatJSON(processElement, jsonData, systemLimitObj) {
-        // Extract flows from flowContainer
-        const flowContainer = processElement.querySelector('flowContainer');
-        if (flowContainer) {
-            const flows = flowContainer.querySelectorAll('flow');
-            flows.forEach(flowElement => {
-                const flowResult = this._convertFlowFromXML(flowElement);
-                if (flowResult && flowResult.data) {
-                    jsonData.push(flowResult.data);
-                    if (systemLimitObj) {
-                        systemLimitObj.elementsContainer.push(flowResult.data.id);
-                    }
-                }
-            });
-        }
-
-        // Extract usages from usageContainer
-        const usageContainer = processElement.querySelector('usageContainer');
-        if (usageContainer) {
-            const usages = usageContainer.querySelectorAll('usage');
-            usages.forEach(usageElement => {
-                const usageResult = this._convertUsageFromXML(usageElement);
-                if (usageResult && usageResult.data) {
-                    jsonData.push(usageResult.data);
-                    if (systemLimitObj) {
-                        systemLimitObj.elementsContainer.push(usageResult.data.id);
-                    }
-                }
-            });
-        }
-    }
-
-    /**
-     * Convert usage from XML to JSON
-     */
-    _convertUsageFromXML(usageElement) {
-        const usageId = usageElement.getAttribute('id');
-        const sourceRef = usageElement.getAttribute('sourceRef') || null;
-        const targetRef = usageElement.getAttribute('targetRef') || null;
-
-        const usageData = {
-            "$type": "fpb:Usage",
-            "id": usageId,
-            "sourceRef": sourceRef,
-            "targetRef": targetRef
-        };
-
-        return {
-            data: usageData,
-            visual: null // Usage flows don't have visual representation in current schema
-        };
-    }
-
-    /**
      * Reconstruct parent relationships between processes and project
      */
     _reconstructParentRelationships(jsonData, projectInfo) {
@@ -1411,7 +1156,6 @@ class XMLMapper {
         if (!projectInfo) return;
 
         const entryPoint = projectInfo.getAttribute('entryPoint');
-        const project = jsonData.find(obj => obj.$type === 'fpb:Project');
 
         // Find all process entries
         const processEntries = jsonData.filter(obj => obj.process);
@@ -1448,38 +1192,6 @@ class XMLMapper {
                 if (entryPointProcess) {
                     entry.process.parent = entryPointProcess;
                 }
-            }
-        });
-    }
-
-    /**
-     * Reconstruct relationships for standard JSON format
-     */
-    _reconstructStandardJSONRelationships(jsonData, projectInfo) {
-
-        // 1. Set parent relationships
-        if (projectInfo) {
-            const entryPoint = projectInfo.getAttribute('entryPoint');
-            const project = jsonData.find(obj => obj.$type === 'fpb:Project');
-
-            jsonData.filter(obj => obj.$type === 'fpb:Process').forEach(process => {
-                if (process.id === entryPoint && project) {
-                    process.parent = project;
-                } else if (process.id !== entryPoint) {
-                    process.parent = entryPoint;
-                }
-            });
-        }
-
-        // 2. Set decomposed view relationships (ProcessOperator <-> Process by matching IDs)
-        const processOperators = jsonData.filter(obj => obj.$type === 'fpb:ProcessOperator');
-        const processes = jsonData.filter(obj => obj.$type === 'fpb:Process');
-
-        processOperators.forEach(operator => {
-            const matchingProcess = processes.find(proc => proc.id === operator.id);
-            if (matchingProcess) {
-                operator.decomposedView = matchingProcess.id;
-                matchingProcess.isDecomposedProcessOperator = operator.id;
             }
         });
     }
@@ -1686,8 +1398,6 @@ class XMLMapper {
         const { process, elementDataInformation = [], elementVisualInformation = [] } = processEntry;
 
 
-        const actualTypes = elementDataInformation.map(el => el.$type).filter(Boolean);
-        const uniqueTypes = [...new Set(actualTypes)];
 
         const processXml = xmlDoc.createElement('process');
         processXml.setAttribute('id', process.id);
@@ -2088,47 +1798,6 @@ class XMLMapper {
         });
 
         return usagesXml;
-    }
-
-
-    /**
-     * Extract flows with entry/exit from states
-     */
-    _extractStateFlows(processElement) {
-        const stateFlows = [];
-        const statesContainer = processElement.getElementsByTagName('states')[0];
-
-        if (statesContainer) {
-            const states = statesContainer.getElementsByTagName('state');
-            for (let i = 0; i < states.length; i++) {
-                const state = states[i];
-                const flowsContainer = state.getElementsByTagName('flows')[0];
-
-                if (flowsContainer) {
-                    const flows = flowsContainer.getElementsByTagName('flow');
-                    for (let j = 0; j < flows.length; j++) {
-                        const flow = flows[j];
-                        const flowId = flow.getAttribute('id');
-
-                        // Extract entry and exit
-                        const entries = flow.getElementsByTagName('entry');
-                        const exits = flow.getElementsByTagName('exit');
-
-                        if (entries.length > 0 && exits.length > 0) {
-                            const stateFlow = {
-                                id: flowId,
-                                sourceRef: entries[0].getAttribute('id'),
-                                targetRef: exits[0].getAttribute('id')
-                            };
-                            stateFlows.push(stateFlow);
-                        } else {
-                        }
-                    }
-                }
-            }
-        }
-
-        return stateFlows;
     }
 
     /**
