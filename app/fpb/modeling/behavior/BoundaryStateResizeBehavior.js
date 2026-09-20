@@ -2,10 +2,16 @@ import inherits from 'inherits';
 
 import CommandInterceptor from 'diagram-js/lib/command/CommandInterceptor';
 
+import { computeChildrenBBox } from 'diagram-js/lib/features/resize/ResizeUtil';
+
 import { isAny } from '../../help/utils';
 import { checkIfOnSystemBorder } from '../../help/helpUtils';
 
 const STATE_TYPES = ['fpb:Product', 'fpb:Energy', 'fpb:Information'];
+
+// Room left between the innermost elements and the border when shrinking
+const CHILDREN_PADDING = 20;
+const MIN_SIZE = 100;
 
 /**
  * Keeps the boundary states on the border when the system limit is resized
@@ -22,6 +28,33 @@ const STATE_TYPES = ['fpb:Product', 'fpb:Energy', 'fpb:Information'];
  */
 export default function BoundaryStateResizeBehavior(eventBus, modeling) {
   CommandInterceptor.call(this, eventBus);
+
+  /**
+   * A boundary state stands on the line, so half of it hangs outside the system
+   * limit. diagram-js takes the box around all children as the smallest size the
+   * limit may have, and those overhanging halves made that box larger than the
+   * limit itself: every resize snapped to it, the limit grew by the overhang
+   * instead of following the mouse, and it could not be made smaller at all.
+   *
+   * The documented way in is 'resize.start' (see Resize.js): the states that
+   * ride on the border are left out of the box, they follow the border anyway.
+   */
+  eventBus.on('resize.start', 1500, function (event) {
+    const context = event.context;
+    const shape = context.shape;
+
+    if (!shape || shape.type !== 'fpb:SystemLimit') {
+      return;
+    }
+
+    const inner = (shape.children || []).filter(function (child) {
+      return !child.waypoints && !child.labelTarget && !checkIfOnSystemBorder(shape, child);
+    });
+
+    context.minBounds = inner.length
+      ? computeChildrenBBox(inner, CHILDREN_PADDING)
+      : { x: shape.x, y: shape.y, width: MIN_SIZE, height: MIN_SIZE };
+  });
 
   this.preExecute('shape.resize', function (event) {
     const context = event.context;
@@ -68,8 +101,10 @@ export default function BoundaryStateResizeBehavior(eventBus, modeling) {
         return;
       }
       // A command of its own inside postExecute: it belongs to the same undo
-      // step as the resize.
-      modeling.moveElements([state], delta, shape);
+      // step as the resize. The hint says the state only follows its border;
+      // without it ShapeUpdater takes the move for a state newly placed on the
+      // border and asks the user to confirm it (see Szenario 6 there).
+      modeling.moveShape(state, delta, shape, { fpbBoundaryFollow: true });
     });
   });
 }

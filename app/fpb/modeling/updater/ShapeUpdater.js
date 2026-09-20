@@ -358,7 +358,15 @@ ShapeUpdater.prototype._handleMove = function (element, process_rootElement, con
   }
 
   // Scenario 6: Internal state is moved to the system boundary
-  if (isAny(element, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
+  //
+  // Not asked when the state only follows a resized border (hint of
+  // BoundaryStateResizeBehavior): it was on the border before and stays there,
+  // nothing becomes an input or output. The comparison below could not see
+  // that on its own, because it measures the old position of the state against
+  // the already resized system limit.
+  const isFollowingBorder = (context.hints || {}).fpbBoundaryFollow;
+
+  if (!isFollowingBorder && isAny(element, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
     if (process_rootElement.businessObject.isDecomposedProcessOperator) {
       const processSystemLimit = getSystemLimit(process_rootElement);
 

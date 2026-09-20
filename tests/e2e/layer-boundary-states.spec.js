@@ -84,3 +84,40 @@ test.describe('Szenario 3: Grenz-States in der Kind-Ebene', () => {
   });
 
 });
+
+/**
+ * Szenario 6: ein State aus dem Inneren wird auf die Grenze geschoben und wird
+ * damit zum Ein- oder Ausgang des Operators eine Ebene höher. Danach fragt der
+ * Editor nach.
+ *
+ * Hier abgesichert, weil BoundaryStateResizeBehavior seit 2026-09-20 genau
+ * diese Rückfrage unterdrückt, wenn ein Grenz-State nur seiner Kante folgt.
+ * Die echte Frage muss bleiben.
+ */
+test.describe('Szenario 6: State auf die Grenze schieben', () => {
+
+  test('das Verschieben auf die Grenze fragt nach', async ({ page }) => {
+    const importer = await laden(page);
+    await importer.switchToChildLayer();
+    await page.evaluate(() => {
+      window.__nachfragen = [];
+      window.fpbjs.get('eventBus').on('confirmation.required', (e) => { window.__nachfragen.push(e.title); });
+    });
+
+    const verschoben = await page.evaluate(() => {
+      const registry = window.fpbjs.get('elementRegistry');
+      const systemLimit = registry.filter((e) => e.type === 'fpb:SystemLimit')[0];
+      const unterkante = systemLimit.y + systemLimit.height;
+      const innen = registry
+        .filter((e) => ['fpb:Product', 'fpb:Energy', 'fpb:Information'].includes(e.type))
+        .filter((s) => Math.abs(s.y + s.height / 2 - unterkante) > 60 && Math.abs(s.y + s.height / 2 - systemLimit.y) > 60)[0];
+      if (!innen) return null;
+      window.fpbjs.get('modeling').moveElements([innen], { x: 0, y: unterkante - (innen.y + innen.height / 2) });
+      return innen.id;
+    });
+
+    expect(verschoben).not.toBeNull();
+    expect(await page.evaluate(() => window.__nachfragen)).toEqual(['Confirm boundary placement']);
+  });
+
+});
