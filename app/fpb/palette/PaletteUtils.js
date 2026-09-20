@@ -36,11 +36,13 @@ export class PaletteActionBuilder {
   /**
    * Creates a tool action with click handler
    */
-  static createToolAction(group, className, title, clickHandler) {
+  static createToolAction(group, className, title, clickHandler, shortcut) {
     return {
       group: group,
       className: className,
       title: title,
+      // diagram-js shows this next to the title in the tooltip of the entry
+      shortcut: shortcut,
       action: {
         click: clickHandler
       }

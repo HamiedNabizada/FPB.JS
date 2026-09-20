@@ -159,3 +159,71 @@ test.describe('Tastenkürzel', () => {
   });
 
 });
+
+/**
+ * Einzelne Tasten für die Werkzeuge der Palette, angezeigt in deren Tooltip
+ * (diagram-js zeichnet ihn seit Version 15 selbst und nimmt dafür
+ * `entry.shortcut`).
+ *
+ * Heikel daran: diagram-js bindet die Tastatur an die Zeichenfläche, und das
+ * Beschriften eines Elements passiert innerhalb davon. Ohne Schutz hätte der
+ * Name "Halbschale" beim ersten Buchstaben die Hand aktiviert.
+ */
+test.describe('Werkzeug-Tasten', () => {
+
+  const werkzeuge = (page) => page.evaluate(() => ({
+    hand: !!window.fpbjs.get('handTool').isActive(),
+    lasso: !!window.fpbjs.get('lassoTool').isActive(),
+    space: !!window.fpbjs.get('spaceTool').isActive(),
+  }));
+
+  test('H, L und S schalten die Werkzeuge an und wieder aus', async ({ page }) => {
+    await vorbereiten(page);
+    await klicke(page, 'Erhitzen');
+
+    await page.keyboard.press('h');
+    expect(await werkzeuge(page)).toMatchObject({ hand: true, lasso: false });
+    await page.keyboard.press('h');
+    expect(await werkzeuge(page)).toMatchObject({ hand: false });
+
+    await page.keyboard.press('l');
+    expect(await werkzeuge(page)).toMatchObject({ lasso: true, hand: false });
+    await page.keyboard.press('l');
+
+    await page.keyboard.press('s');
+    expect(await werkzeuge(page)).toMatchObject({ space: true });
+    await page.keyboard.press('s');
+    expect(await werkzeuge(page)).toMatchObject({ space: false });
+  });
+
+  test('Tippen beim Beschriften löst kein Werkzeug aus', async ({ page }) => {
+    await vorbereiten(page);
+
+    const punkt = await page.evaluate(() => {
+      const element = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:Product')[0];
+      const box = document.querySelector(`[data-element-id="${element.id}"]`).getBoundingClientRect();
+      return { id: element.id, x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    });
+    await page.mouse.dblclick(punkt.x, punkt.y);
+    await expect(page.locator('.djs-direct-editing-content')).toBeVisible();
+
+    await page.keyboard.press('Control+a');
+    await page.keyboard.type('Halbschale');
+    expect(await werkzeuge(page)).toEqual({ hand: false, lasso: false, space: false });
+
+    await page.keyboard.press('Escape');
+    await page.mouse.click(1300, 900);
+    await page.waitForTimeout(300);
+  });
+
+  test('das Kürzel steht im Tooltip des Palette-Eintrags', async ({ page }) => {
+    await vorbereiten(page);
+
+    await page.locator('.djs-palette .entry[data-action="hand-tool"]').hover();
+
+    const tooltip = page.locator('.djs-hover-tooltip');
+    await expect(tooltip).toBeVisible({ timeout: 3000 });
+    await expect(tooltip.locator('.djs-palette-tooltip-shortcut')).toHaveText('H');
+  });
+
+});

@@ -64,21 +64,24 @@ FpbPaletteProvider.prototype.getPaletteEntries = function () {
       PALETTE_GROUPS.TOOLS,
       TOOL_ICONS.LASSO,
       translate(TOOLTIP_KEYS.ACTIVATE_LASSO),
-      ToolActionHandlers.createLassoHandler(lassoTool)
+      ToolActionHandlers.createLassoHandler(lassoTool),
+      'L'
     ),
 
     [PALETTE_ENTRY_IDS.SPACE_TOOL]: PaletteActionBuilder.createToolAction(
       PALETTE_GROUPS.TOOLS,
       TOOL_ICONS.SPACE,
       translate(TOOLTIP_KEYS.ACTIVATE_SPACE),
-      ToolActionHandlers.createSpaceHandler(spaceTool)
+      ToolActionHandlers.createSpaceHandler(spaceTool),
+      'S'
     ),
 
     [PALETTE_ENTRY_IDS.HAND_TOOL]: PaletteActionBuilder.createToolAction(
       PALETTE_GROUPS.TOOLS,
       TOOL_ICONS.HAND,
       translate(TOOLTIP_KEYS.ACTIVATE_HAND),
-      ToolActionHandlers.createHandHandler(handTool)
+      ToolActionHandlers.createHandHandler(handTool),
+      'H'
     )
   };
 
