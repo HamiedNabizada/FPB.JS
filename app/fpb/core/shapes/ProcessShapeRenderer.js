@@ -4,6 +4,7 @@
  * Handles rendering of FPB process elements
  */
 import { BaseShapeRenderer } from './BaseShapeRenderer';
+import { colors } from '../colorScheme';
 import { attr as svgAttr, append as svgAppend, create as svgCreate } from 'tiny-svg';
 import { COLORS, DASH_PATTERNS, STROKE_WIDTHS, DECOMPOSITION_INDICATOR } from '../FpbConstants';
 
@@ -16,7 +17,7 @@ export class ProcessShapeRenderer extends BaseShapeRenderer {
     const { width, height } = element;
 
     const rect = this.renderShape(parentGfx, element, 'rect', {
-      fill: COLORS.FPB_PROCESS_OPERATOR
+      fill: colors().FPB_PROCESS_OPERATOR
     });
 
     svgAttr(rect, {
@@ -73,7 +74,7 @@ export class ProcessShapeRenderer extends BaseShapeRenderer {
     const ry = height / 2;
 
     const rect = this.renderShape(parentGfx, element, 'rect', {
-      fill: COLORS.FPB_TECHNICAL_RESOURCE
+      fill: colors().FPB_TECHNICAL_RESOURCE
     });
 
     svgAttr(rect, {

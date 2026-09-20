@@ -391,3 +391,32 @@
 .fpb-decomposition-preview:hover {
   border-color: #13ae4d;
 }
+
+
+/*
+ * Farbschema für Farbfehlsichtigkeit (siehe core/colorScheme.js).
+ *
+ * Die Symbole der Palette sind Hintergrundbilder mit fest eingebauten Farben,
+ * sie kommen also nicht über den Renderer. Hier stehen dieselben Bilder mit
+ * den Farben des zugänglichen Schemas; umgeschaltet wird über `data-colors`
+ * am Dokument, gesetzt vom ColorSchemeService.
+ */
+[data-colors="accessible"] .icon-fpb-energy {
+      background: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2246%22%20height%3D%2246%22%20fill%3D%22%2379B3EC%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%3E%0D%0A%3Cpolygon%20points%3D%22%0D%0A23%2C2%20%0D%0A43%2C%2023%0D%0A23%2C%2043%0D%0A2%2C23%0D%0A23%2C2%22%20%0D%0A%2F%3E%0D%0A%3C%2Fsvg%3E');
+    }
+
+[data-colors="accessible"] .icon-fpb-information {
+      background: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2246%22%20height%3D%2246%22%20fill%3D%22%233956AC%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%3E%0D%0A%3Cpolygon%20points%3D%22%0D%0A13%2C5.5%0D%0A33%2C5.5%0D%0A43%2C23%0D%0A33%2C40.5%0D%0A13%2C40.5%0D%0A3%2C23%0D%0A13%2C5.5%22%20%0D%0A%2F%3E%0D%0A%3C%2Fsvg%3E');
+    }
+
+[data-colors="accessible"] .icon-fpb-product {
+      background: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20%20width%3D%2246%22%20height%3D%2246%22%20fill%3D%22%23E50026%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%3E%0D%0A%20%20%20%3Ccircle%20cx%3D%2223%22%20cy%3D%2223%22%20r%3D%2220%22%2F%3E%0D%0A%3C%2Fsvg%3E');
+    }
+
+[data-colors="accessible"] .icon-fpb-processoperator {
+      background: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2246%22%20height%3D%2246%22%20fill%3D%22%234DFF97%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%3E%0D%0A%20%20%20%3Crect%20x%3D%222%22%20y%3D%225%22%20width%3D%2242%22%20height%3D%2225%22%2F%3E%0D%0A%3C%2Fsvg%3E');
+    }
+
+[data-colors="accessible"] .icon-fpb-technicalresource {
+      background: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2246%22%20height%3D%2246%22%20fill%3D%22%238C8C8C%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.5%22%3E%0D%0A%20%20%3Crect%20x%3D%222%22%20y%3D%2210%22%20rx%3D%229%22%20ry%3D%2211%22%20width%3D%2242%22%20height%3D%2220%22%2F%3E%0D%0A%3C%2Fsvg%3E');
+    }

@@ -12,9 +12,10 @@ import KeyboardAlignService from './KeyboardAlignService';
 import ToolClearService from './ToolClearService';
 import UiReadiness from './UiReadiness';
 import CanvasResizeNotifier from './CanvasResizeNotifier';
+import ColorSchemeService from './ColorSchemeService';
 
 export default {
-  __init__: ['gridService', 'settingsService', 'alignService', 'paletteAlignState', 'keyboardAlignService', 'toolClearService', 'uiReadiness', 'canvasResizeNotifier'],
+  __init__: ['gridService', 'settingsService', 'alignService', 'paletteAlignState', 'keyboardAlignService', 'toolClearService', 'uiReadiness', 'canvasResizeNotifier', 'colorSchemeService'],
   gridService: ['type', GridService],
   settingsService: ['type', SettingsService],
   alignService: ['type', AlignService],
@@ -22,5 +23,6 @@ export default {
   keyboardAlignService: ['type', KeyboardAlignService],
   toolClearService: ['type', ToolClearService],
   uiReadiness: ['type', UiReadiness],
-  canvasResizeNotifier: ['type', CanvasResizeNotifier]
+  canvasResizeNotifier: ['type', CanvasResizeNotifier],
+  colorSchemeService: ['type', ColorSchemeService]
 };

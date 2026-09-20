@@ -5,7 +5,10 @@ import { goToElement } from '../help/navigation';
 const OVERLAY_TYPE = 'fpb-validation';
 const DEBOUNCE = 250;
 const RANK = { error: 0, warning: 1, info: 2 };
-const SYMBOL = { error: '!', warning: '!', info: 'i' };
+// Error and warning used to share the '!', so only their colour told them
+// apart. Colour alone is no distinction for everyone (see core/colorScheme).
+const SYMBOL = { error: '✕', warning: '!', info: 'i' };
+const SEVERITY_LABEL = { error: 'Error', warning: 'Warning', info: 'Note' };
 
 /** "1 error, 2 warnings, 0 notes" */
 export function describeCounts(counts) {
@@ -190,7 +193,8 @@ FpbValidation.prototype._renderPanel = function () {
 
     const head = document.createElement('div');
     head.className = 'fpb-validation-item-head';
-    head.textContent = issue.rule + ' ' + RULES[issue.rule].title;
+    // The severity in words, not only as the colour of the left border
+    head.textContent = SEVERITY_LABEL[issue.severity] + ' · ' + issue.rule + ' ' + RULES[issue.rule].title;
     const text = document.createElement('div');
     text.className = 'fpb-validation-item-text';
     text.textContent = issue.message + (issue.process !== root ? ' (in ' + self._layerName(issue.process) + ')' : '');

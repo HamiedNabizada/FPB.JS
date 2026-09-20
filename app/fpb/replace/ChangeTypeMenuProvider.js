@@ -1,13 +1,14 @@
 import { is, isAny } from '../help/utils';
 import { STATE_TYPES, BRANCH_FLOW_TYPES } from './ChangeTypeHandler';
-import { ELEMENT_ICONS, BRANCH_ICONS } from '../help/menuIcons';
+import { elementIcon, BRANCH_ICONS } from '../help/menuIcons';
 
 export const CHANGE_TYPE_MENU = 'fpb-change-type';
 
-const STATE_ENTRIES = [
-  { type: 'fpb:Product', label: 'Product', imageHtml: ELEMENT_ICONS['fpb:Product'] },
-  { type: 'fpb:Energy', label: 'Energy', imageHtml: ELEMENT_ICONS['fpb:Energy'] },
-  { type: 'fpb:Information', label: 'Information', imageHtml: ELEMENT_ICONS['fpb:Information'] }
+// Built when the menu opens, so the icons follow the colour scheme
+const stateEntries = () => [
+  { type: 'fpb:Product', label: 'Product', imageHtml: elementIcon('fpb:Product') },
+  { type: 'fpb:Energy', label: 'Energy', imageHtml: elementIcon('fpb:Energy') },
+  { type: 'fpb:Information', label: 'Information', imageHtml: elementIcon('fpb:Information') }
 ];
 
 const BRANCH_ENTRIES = [
@@ -32,7 +33,7 @@ export function canChangeType(element) {
 
 ChangeTypeMenuProvider.prototype.getPopupMenuEntries = function (element) {
   const commandStack = this._commandStack;
-  const options = is(element, 'fpb:State') ? STATE_ENTRIES : (isAny(element, BRANCH_FLOW_TYPES) ? BRANCH_ENTRIES : []);
+  const options = is(element, 'fpb:State') ? stateEntries() : (isAny(element, BRANCH_FLOW_TYPES) ? BRANCH_ENTRIES : []);
   const entries = {};
   options.forEach(function (option) {
     const current = element.type === option.type;

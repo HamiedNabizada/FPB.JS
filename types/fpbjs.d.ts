@@ -350,6 +350,14 @@ export interface LayerUndoBoundary {
   keepHistory<T>(work: () => Promise<T> | T): Promise<T>;
 }
 
+/** Colour scheme of the elements: the colours of VDI 3682 or a scheme for colour vision deficiency */
+export interface ColorSchemeService {
+  get(): 'standard' | 'accessible';
+  getSchemes(): string[];
+  /** Switches, redraws and remembers the choice in this browser */
+  set(name: 'standard' | 'accessible', options?: { silent?: boolean }): string;
+}
+
 /** Readiness of the user interface components, used by the import */
 export interface UiReadiness {
   isReady(): boolean;
@@ -371,6 +379,7 @@ export interface FpbServiceMap {
   fpbCopyPaste: FpbCopyPaste;
   layerUndoBoundary: LayerUndoBoundary;
   uiReadiness: UiReadiness;
+  colorSchemeService: ColorSchemeService;
 }
 
 // ---------------------------------------------------------------------------

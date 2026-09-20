@@ -12,6 +12,7 @@ import ConfirmationModal from './components/ConfirmationModal';
 import ProcessTreeView from './components/ProcessTreeView';
 import { describeCounts } from '../validation/FpbValidation';
 import ThemeToggle from './components/ThemeToggle';
+import ColorSchemeToggle from './components/ColorSchemeToggle';
 import { useProcessManagement } from './hooks/useProcessManagement';
 import { useSelectedElements } from './hooks/useSelectedElements';
 import { useConfirmation } from './hooks/useConfirmation';
@@ -75,6 +76,7 @@ const LayerPanel = ({ modeler, config }) => {
                     selectedElements={selectedElements} 
                 />
                 <ThemeToggle />
+                <ColorSchemeToggle modeler={modeler} />
             </Collapse>
             {processes.length > 1 && (
                 <div>

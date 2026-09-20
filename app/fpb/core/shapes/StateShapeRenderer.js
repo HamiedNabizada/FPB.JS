@@ -4,8 +4,9 @@
  * Handles rendering of FPB state elements: Product (circle), Energy (diamond), Information (hexagon)
  */
 import { BaseShapeRenderer } from './BaseShapeRenderer';
+import { colors } from '../colorScheme';
 import { attr as svgAttr } from 'tiny-svg';
-import { COLORS } from '../FpbConstants';
+
 
 export class StateShapeRenderer extends BaseShapeRenderer {
   
@@ -19,7 +20,7 @@ export class StateShapeRenderer extends BaseShapeRenderer {
     const radius = Math.round((width + height) / 4);
 
     const circle = this.renderShape(parentGfx, element, 'circle', {
-      fill: COLORS.FPB_PRODUCT
+      fill: colors().FPB_PRODUCT
     });
 
     svgAttr(circle, { cx, cy, r: radius });
@@ -39,7 +40,7 @@ export class StateShapeRenderer extends BaseShapeRenderer {
     ];
 
     const polygon = this.renderShape(parentGfx, element, 'polygon', {
-      fill: COLORS.FPB_ENERGY
+      fill: colors().FPB_ENERGY
     });
 
     svgAttr(polygon, { points });
@@ -61,7 +62,7 @@ export class StateShapeRenderer extends BaseShapeRenderer {
     ];
 
     const polygon = this.renderShape(parentGfx, element, 'polygon', {
-      fill: COLORS.FPB_INFORMATION
+      fill: colors().FPB_INFORMATION
     });
 
     svgAttr(polygon, { points });

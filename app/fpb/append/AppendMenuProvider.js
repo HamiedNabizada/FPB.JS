@@ -1,4 +1,4 @@
-import { ELEMENT_ICONS } from '../help/menuIcons';
+import { elementIcon } from '../help/menuIcons';
 import { APPEND_MENU } from './FpbAppend';
 
 /**
@@ -18,7 +18,7 @@ AppendMenuProvider.prototype.getPopupMenuEntries = function (element) {
   fpbAppend.getOptions(element).forEach(function (option) {
     entries['append-' + option.type] = {
       label: option.label,
-      imageHtml: ELEMENT_ICONS[option.type],
+      imageHtml: elementIcon(option.type),
       action: function () {
         fpbAppend.append(element, option.type);
       }

@@ -1,4 +1,5 @@
 import { previewGeometry } from './PreviewGeometry';
+import { colors } from '../core/colorScheme';
 import { COLORS, DASH_PATTERNS } from '../core/FpbConstants';
 
 const OVERLAY_TYPE = 'fpb-decomposition-preview';
@@ -8,13 +9,14 @@ const DELAY = 450;
 // short grace period so the pointer can travel from the element onto the preview
 const HIDE_DELAY = 250;
 
-const FILLS = {
-  product: COLORS.FPB_PRODUCT,
-  energy: COLORS.FPB_ENERGY,
-  information: COLORS.FPB_INFORMATION,
-  operator: COLORS.FPB_PROCESS_OPERATOR,
-  resource: COLORS.FPB_TECHNICAL_RESOURCE
-};
+// Read when drawing, not once at import: the colour scheme can be switched
+const fills = () => ({
+  product: colors().FPB_PRODUCT,
+  energy: colors().FPB_ENERGY,
+  information: colors().FPB_INFORMATION,
+  operator: colors().FPB_PROCESS_OPERATOR,
+  resource: colors().FPB_TECHNICAL_RESOURCE
+});
 
 /**
  * Preview of the decomposition when hovering a decomposed ProcessOperator.
@@ -163,7 +165,7 @@ function draw(geometry) {
   });
 
   geometry.shapes.forEach(function (shape) {
-    const fill = FILLS[shape.kind];
+    const fill = fills()[shape.kind];
     if (!fill) {
       return;
     }

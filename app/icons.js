@@ -25,8 +25,12 @@ import { faImage } from '@fortawesome/free-solid-svg-icons/faImage';
 import { faFilePdf } from '@fortawesome/free-solid-svg-icons/faFilePdf';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons/faMagnifyingGlass';
 import { faListCheck } from '@fortawesome/free-solid-svg-icons/faListCheck';
+import { faEye } from '@fortawesome/free-solid-svg-icons/faEye';
+import { faEyeLowVision } from '@fortawesome/free-solid-svg-icons/faEyeLowVision';
 
 library.add(
+  faEye,
+  faEyeLowVision,
   faMagnifyingGlass,
   faListCheck,
   faAnglesRight,
