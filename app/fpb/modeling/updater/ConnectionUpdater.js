@@ -91,17 +91,31 @@ export default function ConnectionUpdater(
   // create and delete run updateConnection inside their journal (see above).
   this.executed([
     'connection.move',
-    'connection.reconnect',
     'connection.reconnectEnd',
     'connection.reconnectStart'
   ], ifFpb(updateConnection));
 
   this.reverted([
     'connection.move',
-    'connection.reconnect',
     'connection.reconnectEnd',
     'connection.reconnectStart'
   ], ifFpb(updateConnection));
+
+  // Dragging an end changes which flows share a source, so the tandem of
+  // parallel and alternative flows has to follow. Journaled like create and
+  // delete, otherwise undo would put the drawing back but not the model.
+  this.executed('connection.reconnect', ifFpb(function (e) {
+    const context = e.context;
+    context.fpbJournal = runJournaled(function () {
+      self._handleReconnect(context);
+      self.updateConnection(context);
+    });
+  }));
+
+  this.reverted('connection.reconnect', ifFpb(function (e) {
+    revertJournal(e.context.fpbJournal);
+    self.updateConnection(e.context);
+  }));
 
   // update waypoints //////////////////////
 
@@ -254,6 +268,55 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
     }
     addTracked(context.target.businessObject.isAssignedTo, context.source.businessObject);
   }
+};
+
+
+/**
+ * Move a branching flow to another source: it leaves the tandem it was in and
+ * joins the branching flows of its new source.
+ *
+ * A tandem means "these flows start at the same source". After dragging an end
+ * onto another element that no longer held, but both sides still listed each
+ * other, and the stale id landed in the export (the same kind of damage as
+ * bug B07, just through another door).
+ *
+ * Whether a flow left alone behind becomes a normal flow again is decided by
+ * ReplaceConnectionBehavior, which runs on the same command.
+ */
+ConnectionUpdater.prototype._handleReconnect = function (context) {
+  const connection = context.connection;
+  const newSource = context.newSource;
+
+  if (!newSource || newSource === context.oldSource || isLabel(connection)) {
+    return;
+  }
+  if (!isAny(connection, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
+    return;
+  }
+
+  const bo = connection.businessObject;
+
+  (bo.inTandemWith || []).slice().forEach(function (partner) {
+    if (!partner || typeof partner === 'string') {
+      return;
+    }
+    removeTracked(partner.inTandemWith, bo);
+    removeTracked(bo.inTandemWith, partner);
+  });
+
+  (newSource.outgoing || []).forEach(function (flow) {
+    if (flow === connection || !isAny(flow, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
+      return;
+    }
+    if (!flow.businessObject.inTandemWith) {
+      setTracked(flow.businessObject, 'inTandemWith', []);
+    }
+    if (!bo.inTandemWith) {
+      setTracked(bo, 'inTandemWith', []);
+    }
+    addTracked(flow.businessObject.inTandemWith, bo);
+    addTracked(bo.inTandemWith, flow.businessObject);
+  });
 };
 
 

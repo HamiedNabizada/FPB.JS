@@ -182,3 +182,66 @@ test.describe('Tandem - Rückgängig bei Verbindungen', () => {
   });
 
 });
+
+/**
+ * Ein Tandem heißt "diese Flüsse starten an derselben Quelle". Zieht man ein
+ * Ende auf ein anderes Element, gilt das für den umgehängten Fluss nicht mehr.
+ */
+test.describe('Tandem - Umhängen einer Verzweigung', () => {
+
+  /** Verbindungsanfang auf den Operator mit diesem Namen ziehen */
+  async function umhaengen(page, prefix, operatorName) {
+    return page.evaluate(({ prefix, operatorName }) => {
+      const registry = window.fpbjs.get('elementRegistry');
+      const verbindung = registry.filter((e) => e.waypoints && e.id.startsWith(prefix))[0];
+      const ziel = registry.filter((e) => e.type === 'fpb:ProcessOperator' && e.businessObject.name === operatorName)[0];
+      window.fpbjs.get('modeling').reconnectStart(verbindung, ziel, {
+        x: ziel.x + ziel.width / 2, y: ziel.y + ziel.height / 2
+      });
+    }, { prefix, operatorName });
+  }
+
+  test('der umgehängte Fluss verlässt sein Tandem und tritt dem der neuen Quelle bei', async ({ page }) => {
+    const importer = new ImportPage(page);
+    await importer.goto();
+    await importer.import(clone());
+
+    // Erhitzen verzweigt parallel (Abwärme, Warmprodukt), Prüfen alternativ
+    await umhaengen(page, ERHITZEN_ZU_ABWAERME, 'Prüfen');
+    const nachher = await exportiere(page);
+
+    const umgehaengt = finde(nachher, ERHITZEN_ZU_ABWAERME);
+    expect(umgehaengt.inTandemWith).not.toContain(finde(nachher, ERHITZEN_ZU_WARMPRODUKT).id);
+    expect(umgehaengt.inTandemWith.map((id) => id.slice(0, 8)).sort()).toEqual(['6551201a', 'baefb918']);
+    expect(veraltet(nachher)).toEqual([]);
+  });
+
+  test('der allein gebliebene Partner wird wieder ein normaler Flow', async ({ page }) => {
+    const importer = new ImportPage(page);
+    await importer.goto();
+    await importer.import(clone());
+
+    await umhaengen(page, ERHITZEN_ZU_ABWAERME, 'Prüfen');
+    const allein = finde(await exportiere(page), ERHITZEN_ZU_WARMPRODUKT);
+
+    expect(allein.$type).toBe('fpb:Flow');
+    expect(allein.inTandemWith || []).toEqual([]);
+  });
+
+  test('Rückgängig stellt Quelle und Tandem wieder her', async ({ page }) => {
+    const importer = new ImportPage(page);
+    await importer.goto();
+    await importer.import(clone());
+    const vorher = await exportiere(page);
+
+    await umhaengen(page, ERHITZEN_ZU_ABWAERME, 'Prüfen');
+    await rueckgaengig(page);
+    const nachher = await exportiere(page);
+
+    const flow = finde(nachher, ERHITZEN_ZU_ABWAERME);
+    expect(flow.sourceRef).toBe(finde(vorher, ERHITZEN_ZU_ABWAERME).sourceRef);
+    expect(flow.inTandemWith.slice().sort()).toEqual(finde(vorher, ERHITZEN_ZU_ABWAERME).inTandemWith.slice().sort());
+    expect(veraltet(nachher)).toEqual([]);
+  });
+
+});
