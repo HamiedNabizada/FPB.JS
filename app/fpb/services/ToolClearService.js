@@ -43,8 +43,14 @@ export default class ToolClearService {
         toolManager.setTool(null);
       }
 
-      // Fire tool-manager update event
-      this._eventBus.fire('tool-manager.update', { tool: null });
+      // Fire tool-manager update event, but only once the palette is drawn.
+      // diagram-js highlights the active tool by walking the palette entries
+      // (Palette.updateToolHighlight); called before the palette exists it
+      // runs into a null container and throws inside its own listener, which
+      // showed up as "unhandled error in event listener" on every start.
+      if (this._paletteRendered()) {
+        this._eventBus.fire('tool-manager.update', { tool: null });
+      }
 
       // Also try to clear any lasso tool activation
       const lassoTool = this._injector.get('lassoTool', false);
@@ -67,6 +73,17 @@ export default class ToolClearService {
     } catch (error) {
       // Silently handle any errors during tool clearing
       console.debug('Tool clearing completed');
+    }
+  }
+
+  /** Is the palette on the canvas already? */
+  _paletteRendered() {
+    try {
+      const canvas = this._injector.get('canvas', false);
+      const container = canvas && canvas.getContainer();
+      return !!(container && container.querySelector('.djs-palette-entries [data-group=tools]'));
+    } catch (error) {
+      return false;
     }
   }
 
