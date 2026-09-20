@@ -42,6 +42,7 @@ import OverlaysModule from 'diagram-js/lib/features/overlays';
 import GridModule from 'diagram-js-grid';
 import GridSnappingModule from 'diagram-js/lib/features/grid-snapping';
 import MinimapModule from 'diagram-js-minimap';
+import KeepSelectionVisibleModule from 'diagram-js/lib/features/keep-selection-visible';
 
 // Fpb Specific Module 
 import FpbCoreModule from './core'
@@ -132,6 +133,7 @@ FpbModeler.prototype._modules = [
     GridModule,
     GridSnappingModule,
     MinimapModule,
+    KeepSelectionVisibleModule,
     FpbCoreModule,
     LabelEditingModule,
     ContextPadModule,

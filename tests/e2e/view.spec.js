@@ -119,4 +119,49 @@ test.describe('Ansicht', () => {
     expect(cursor).toEqual({ n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize' });
   });
 
+  /**
+   * Die Panels nehmen der Zeichenfläche Breite weg. diagram-js beobachtet
+   * seinen Container nicht von sich aus, deshalb rechnete alles, was die
+   * sichtbare Fläche misst, mit dem alten Wert weiter (gemessen: Container
+   * 1033, Viewbox weiter 1281). `services/CanvasResizeNotifier` sagt Bescheid,
+   * das Modul `keep-selection-visible` von diagram-js hält die Auswahl im Bild.
+   */
+  test('beim Öffnen eines Panels folgt die Ansicht und die Auswahl bleibt sichtbar', async ({ page }) => {
+    await page.setViewportSize({ width: 1400, height: 900 });
+    const importer = new ImportPage(page);
+    await importer.goto();
+    await importer.import(clone());
+
+    await page.evaluate(() => {
+      const registry = window.fpbjs.get('elementRegistry');
+      const rechts = registry
+        .filter((e) => !e.waypoints && e.type !== 'label' && e.type !== 'fpb:Process')
+        .sort((a, b) => (b.x + b.width) - (a.x + a.width))[0];
+      window.fpbjs.get('selection').select(rechts);
+      window.fpbjs.get('canvas').scrollToElement(rechts);
+    });
+    await page.waitForTimeout(500);
+
+    const lage = async () => page.evaluate(() => {
+      const canvas = window.fpbjs.get('canvas');
+      const container = canvas.getContainer().getBoundingClientRect();
+      const auswahl = window.fpbjs.get('selection').get()[0];
+      const element = document.querySelector(`[data-element-id="${auswahl.id}"]`).getBoundingClientRect();
+      return {
+        breiteContainer: Math.round(container.width),
+        breiteViewbox: Math.round(canvas.viewbox().outer.width),
+        sichtbar: element.left >= container.left - 1 && element.right <= container.right + 1,
+      };
+    });
+
+    expect(await lage()).toMatchObject({ sichtbar: true });
+
+    await page.click('#openPropertiesPanelButton');
+    await page.waitForTimeout(800);
+
+    const nachher = await lage();
+    expect(nachher.breiteViewbox).toBe(nachher.breiteContainer);
+    expect(nachher.sichtbar).toBe(true);
+  });
+
 });
