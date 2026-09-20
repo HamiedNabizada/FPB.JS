@@ -7,6 +7,10 @@ export default defineConfig({
     // Integration-Tests im Browser
     include: ['tests/integration/**/*.test.js'],
 
+    // Die Browser-Integration deckt zurzeit die Playwright-Suite ab
+    // (tests/e2e). Ohne dieses Flag bricht `npm test` hier mit Code 1 ab.
+    passWithNoTests: true,
+
     // Browser-Konfiguration
     browser: {
       enabled: true,
