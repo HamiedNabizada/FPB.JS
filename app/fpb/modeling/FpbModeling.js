@@ -51,9 +51,17 @@ Modeling.prototype.connect = function (source, target, attrs, hints) {
   return this.createConnection(source, target, attrs, source.parent, hints);
 };
 
-Modeling.prototype.switchProcess = function (process) {
+/**
+ * Switch the canvas to another process (layer).
+ *
+ * `hints.fpbTransient` marks a switch that is only a means to an end, as in the
+ * PDF export, which walks through every layer and returns to the starting one.
+ * Such a walk keeps the undo history, see LayerUndoBoundary.
+ */
+Modeling.prototype.switchProcess = function (process, hints) {
   this._commandStack.execute('process.switch', {
-    process: process
+    process: process,
+    hints: hints || {}
   })
 };
 

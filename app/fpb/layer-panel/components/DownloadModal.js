@@ -184,23 +184,32 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
             const currentRoot = canvas.getRootElement();
             const layers = [];
 
-            // processes prop contains Shapes from useProcessManagement
-            for (const processShape of processes) {
-                modeling.switchProcess(processShape);
-                const svg = await new Promise((resolve, reject) => {
-                    modeler.saveSVG({}, (err, result) => {
-                        if (err) reject(err);
-                        else resolve(result);
-                    });
-                });
-                const png = await exportPNG(svg, { scale: 2 });
-                const name = processShape.businessObject?.identification?.shortName
-                    || processShape.businessObject?.name
-                    || processShape.id;
-                layers.push({ name, pngDataUrl: png });
-            }
+            // The walk through the layers is transient: it returns to the layer
+            // the user is on, so it must leave the undo history untouched.
+            const transient = { fpbTransient: true };
 
-            modeling.switchProcess(currentRoot);
+            await modeler.get('layerUndoBoundary').keepHistory(async () => {
+                try {
+                    // processes prop contains Shapes from useProcessManagement
+                    for (const processShape of processes) {
+                        modeling.switchProcess(processShape, transient);
+                        const svg = await new Promise((resolve, reject) => {
+                            modeler.saveSVG({}, (err, result) => {
+                                if (err) reject(err);
+                                else resolve(result);
+                            });
+                        });
+                        const png = await exportPNG(svg, { scale: 2 });
+                        const name = processShape.businessObject?.identification?.shortName
+                            || processShape.businessObject?.name
+                            || processShape.id;
+                        layers.push({ name, pngDataUrl: png });
+                    }
+                } finally {
+                    // Back to the starting layer, even if one layer failed
+                    modeling.switchProcess(currentRoot, transient);
+                }
+            });
 
             const pdfBlob = layers.length === 1
                 ? exportPDF(layers[0].pngDataUrl, { title: layers[0].name })
