@@ -7,6 +7,7 @@ import GlobalConnectModule from 'diagram-js/lib/features/global-connect';
 import translate from 'diagram-js/lib/i18n/translate';
 
 import FpbPaletteProvider from './FpbPaletteProvider';
+import PaletteTooltips from './PaletteTooltips';
 
 export default {
   __depends__: [
@@ -18,6 +19,7 @@ export default {
     GlobalConnectModule,
     translate
   ],
-  __init__: [ 'paletteProvider' ],
-  paletteProvider: [ 'type', FpbPaletteProvider ]
+  __init__: [ 'paletteProvider', 'paletteTooltips' ],
+  paletteProvider: [ 'type', FpbPaletteProvider ],
+  paletteTooltips: [ 'type', PaletteTooltips ]
 };

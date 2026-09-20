@@ -79,6 +79,19 @@ test.describe('Barrierefreiheit', () => {
     expect(await knoepfeOhneNamen(page)).toEqual([]);
   });
 
+  test('jeder Palette-Eintrag zeigt beim Überfahren seine Beschriftung', async ({ page }) => {
+    await laden(page);
+
+    // diagram-js 15 rendert den Titel nur als aria-label, das Tooltip holt
+    // PaletteTooltips zurück
+    const eintraege = await page.evaluate(() => [...document.querySelectorAll('.djs-palette .entry')]
+      .map((e) => ({ aktion: e.getAttribute('data-action'), title: e.getAttribute('title'), aria: e.getAttribute('aria-label') })));
+
+    expect(eintraege.length).toBeGreaterThan(5);
+    expect(eintraege.filter((e) => !e.title)).toEqual([]);
+    eintraege.forEach((e) => expect(e.title).toBe(e.aria));
+  });
+
   test('die Palette ist mit der Tastatur erreichbar und auslösbar', async ({ page }) => {
     await laden(page);
 
