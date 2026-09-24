@@ -177,7 +177,13 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                     modeling.switchProcess(project.entryPoint);
                     fitToViewport(this._canvas);
                 } catch (error) {
-                    console.error('JSONImporter: Process switch failed:', error);
+                    // The data is in, but the canvas does not show it. Say so
+                    // in the report instead of announcing a clean import.
+                    this._errorHandler.logWarning(
+                        'The entry layer could not be opened after the import',
+                        error && error.message ? error.message : String(error),
+                        'Open a layer in the layer panel. If that fails too, reload the page and import the file again.'
+                    );
                 }
                 this._errorHandler.finishReport();
                 // Everything is on the canvas now: the model check can look at it

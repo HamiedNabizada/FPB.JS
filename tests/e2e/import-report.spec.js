@@ -76,4 +76,21 @@ test.describe('Import report', () => {
       hint: expect.stringContaining('download the file again')
     }));
   });
+
+  test('a failed switch to the entry layer is reported, not hidden', async ({ page }) => {
+    const data = JSON.parse(fs.readFileSync(fixture, 'utf8'));
+    await page.goto('/');
+    await page.waitForFunction(() => window.fpbjs && window.fpbjs.get);
+    const warnings = await page.evaluate((json) => new Promise((resolve) => {
+      const modeling = window.fpbjs.get('modeling');
+      modeling.switchProcess = () => { throw new Error('switch broke'); };
+      window.fpbjs.get('eventBus').on('import.report', (event) => resolve(event.warnings));
+      window.fpbjs.get('eventBus').fire('FPBJS.import', { data: json });
+      setTimeout(() => resolve([]), 8000);
+    }), data);
+    expect(warnings).toEqual([expect.objectContaining({
+      message: expect.stringContaining('could not be opened'),
+      details: 'switch broke'
+    })]);
+  });
 });
