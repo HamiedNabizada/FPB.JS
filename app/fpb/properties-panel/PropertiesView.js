@@ -1,9 +1,7 @@
 import { is, isAny } from '../help/utils';
-import {
-  remove as collectionRemove
-} from 'diagram-js/lib/util/Collections';
 
 import { nextCharacteristicNumber } from './characteristicsNumbering';
+import { cloneModdle } from '../help/moddleClone';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -196,6 +194,18 @@ const ProcessStats = memo(({ modeler }) => {
   );
 });
 
+// Depth of model writes the panel itself is making. Its own changes must not
+// rebuild its fields, whether or not the focus is still in the panel.
+let panelWriteDepth = 0;
+function writeFromPanel(write) {
+  panelWriteDepth++;
+  try {
+    write();
+  } finally {
+    panelWriteDepth--;
+  }
+}
+
 const ElementProperties = memo(({ element, modeler, config, rerender }) => {
   const [, forceUpdate] = useState({});
 
@@ -214,8 +224,15 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
     const handleChanged = (e) => {
       const concernsElement = (e.elements || []).some((changed) =>
         changed === element || changed.labelTarget === element);
-      const typingInPanel = panelRef.current && panelRef.current.contains(document.activeElement);
-      if (concernsElement && !typingInPanel) {
+      const typingInPanel = panelWriteDepth > 0 ||
+        (panelRef.current && panelRef.current.contains(document.activeElement));
+      if (!concernsElement) {
+        return;
+      }
+      // Always redraw, so a characteristic added or removed shows up at once;
+      // rebuild the uncontrolled fields only for changes from outside.
+      forceUpdate({});
+      if (!typingInPanel) {
         setExternalRevision((revision) => revision + 1);
       }
     };
@@ -229,12 +246,14 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
     } else {
 
 
-      let identification = element.businessObject.get('identification');
+      // Change a copy: handing the same, already changed object to
+      // updateProperties made old and new value identical, so undo did nothing.
+      const identification = cloneModdle(modeler.get('fpbFactory'), element.businessObject.get('identification'));
       identification[property] = value;
       const modeling = modeler.get('modeling');
-      modeling.updateProperties(element, {
+      writeFromPanel(() => modeling.updateProperties(element, {
         'identification': identification
-      });
+      }));
     }
   };
 
@@ -299,7 +318,10 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
     const currentCharacteristics = element.businessObject.get('characteristics');
     if (currentCharacteristics !== undefined && currentCharacteristics.length > 0) {
       return currentCharacteristics.map(function (char, index) {
-        return <Characteristics key={index} element={element} modeler={modeler} config={config} rerender={rerender} index={index} />
+        // Keyed by the characteristic, not its place in the list: after removing
+        // one in the middle, index keys reused the fields of the removed one.
+        const identity = (char.category && char.category.uniqueIdent) || ('index-' + index);
+        return <Characteristics key={identity + '-' + externalRevision} element={element} modeler={modeler} config={config} rerender={rerender} index={index} />
       })
     }
     else {
@@ -434,13 +456,18 @@ const Characteristics = (props) => {
   };
 
   function removeCharacteristic() {
-    const characteristics = getCharacteristics();
-    collectionRemove(characteristics, characteristics[no]);
-    rerender(element);
+    // A new list through updateProperties: undoable, and the model check,
+    // search and panel hear about it. Removing from the list in place did not.
+    const remaining = getCharacteristics().filter((characteristic, position) => position !== no);
+    modeling.updateProperties(element, {
+      'characteristics': remaining
+    });
   }
 
   function updateCharacteristics(type, valueType, value, addOptions) {
-    const characteristics = getCharacteristics();
+    // Work on a copy, see updateIdentifactionProperty: otherwise undo has no
+    // old value to go back to.
+    const characteristics = cloneModdle(fpbFactory, getCharacteristics());
     if (addOptions) {
       let target = characteristics[no][type][valueType];
       if (Array.isArray(target)) {
@@ -452,16 +479,13 @@ const Characteristics = (props) => {
         target = target[0];
       }
       target[addOptions] = value;
-      modeling.updateProperties(element, {
-        'characteristics': characteristics
-      });
     }
     else {
       characteristics[no][type][valueType] = value;
-      modeling.updateProperties(element, {
-        'characteristics': characteristics
-      });
     }
+    writeFromPanel(() => modeling.updateProperties(element, {
+      'characteristics': characteristics
+    }));
     // Trigger re-render to update characteristic tab names and other UI elements
     rerender(element);
   }
