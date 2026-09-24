@@ -16,6 +16,28 @@ export class ConnectionRenderer {
     this.styles = styles;
     this.markerManager = markerManager;
     this._elementRegistry = elementRegistry;
+
+    // What each connection was last drawn from, see drawnFrom
+    this._drawnFrom = new WeakMap();
+  }
+
+  /**
+   * Waypoints and crossings a connection is drawn from, as a string. Two equal
+   * strings give the same line. `others` can be passed in when many
+   * connections are checked in one go.
+   */
+  drawingKey(connection, others) {
+    return JSON.stringify([
+      (connection.waypoints || []).map((p) => [p.x, p.y]),
+      this._findCrossings(connection, others)
+    ]);
+  }
+
+  /**
+   * True if the connection is on the canvas as drawn from exactly `key`.
+   */
+  isDrawnFrom(connection, key) {
+    return this._drawnFrom.get(connection) === key;
   }
 
   /**
@@ -62,14 +84,16 @@ export class ConnectionRenderer {
    * intersect with vertical segments of other connections.
    * Returns a map: { segmentIndex: [{x, y}, ...] }
    */
-  _findCrossings(connection) {
+  _findCrossings(connection, others) {
     if (!this._elementRegistry) return {};
 
     var waypoints = connection.waypoints;
     if (!waypoints || waypoints.length < 2) return {};
 
-    var allConnections = this._elementRegistry.filter(function(e) {
-      return e.waypoints && e !== connection;
+    var allConnections = (others || this._elementRegistry.filter(function(e) {
+      return e.waypoints;
+    })).filter(function(e) {
+      return e !== connection;
     });
 
     var crossingMap = {};
@@ -167,6 +191,11 @@ export class ConnectionRenderer {
    */
   _drawConnectionWithBridges(parentGfx, element, attrs) {
     var crossingMap = this._findCrossings(element);
+
+    this._drawnFrom.set(element, JSON.stringify([
+      element.waypoints.map((p) => [p.x, p.y]),
+      crossingMap
+    ]));
 
     if (Object.keys(crossingMap).length > 0) {
       var pathData = this._buildPathWithBridges(element.waypoints, crossingMap);

@@ -88,7 +88,10 @@ inherits(FpbRenderer, BaseRenderer);
 FpbRenderer.$inject = ['eventBus', 'styles', 'canvas', 'textRenderer', 'elementRegistry'];
 
 /**
- * Re-render all connections so crossing bridges reflect current positions.
+ * Re-render the connections whose crossing bridges no longer match the
+ * current positions. Redrawing every connection after each command cost
+ * quadratic time on large layers; a connection drawn from the same waypoints
+ * and crossings would come out the same.
  */
 FpbRenderer.prototype._updateCrossingBridges = function() {
   if (this._updatingBridges) return;
@@ -96,9 +99,13 @@ FpbRenderer.prototype._updateCrossingBridges = function() {
 
   var connections = this._elementRegistry.filter(function(e) { return e.waypoints; });
   var eventBus = this._eventBus;
+  var connectionRenderer = this.connectionRenderer;
 
   connections.forEach(function(connection) {
-    eventBus.fire('element.changed', { element: connection });
+    var key = connectionRenderer.drawingKey(connection, connections);
+    if (!connectionRenderer.isDrawnFrom(connection, key)) {
+      eventBus.fire('element.changed', { element: connection });
+    }
   });
 
   this._updatingBridges = false;
