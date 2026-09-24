@@ -16,6 +16,10 @@ const FORMAT_VERSION = 1;
  * the modeler options). The web app does, embeddings such as the AML editor
  * plugin do not: they store the model themselves.
  *
+ * Only unsaved work is kept: once the model is in a file again (imported,
+ * downloaded, back to that state by undo), the backup is removed, so a
+ * reload does not offer what the user already has.
+ *
  * A backup found at start is not loaded on its own. It waits in `getPending()`
  * until the user restores or discards it; until then nothing is written, so
  * the backup cannot be overwritten by accident.
@@ -158,12 +162,12 @@ Autosave.prototype.flush = function () {
     return;
   }
 
-  if (serialized === this._stored) {
+  if (!this._dirty || !hasContent(this._fpbjs)) {
+    this._remove();
     return;
   }
 
-  if (!hasContent(this._fpbjs)) {
-    this._remove();
+  if (serialized === this._stored) {
     return;
   }
 
