@@ -31,7 +31,8 @@ const AutosaveNotice = memo(({ modeler }) => {
         <Alert
             variant="info"
             className="position-fixed autosave-notice"
-            style={{ top: '20px', right: '20px', zIndex: 9998, minWidth: '320px', maxWidth: '480px' }}
+            // Top center: the panel toggles and buttons sit on the right
+            style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 9998, minWidth: '320px', maxWidth: '480px' }}
         >
             <Alert.Heading as="h2" className="h6">
                 <FontAwesomeIcon icon="clock-rotate-left" className="me-2" />

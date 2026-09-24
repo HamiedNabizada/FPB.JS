@@ -44,10 +44,11 @@ test.describe('Sicherung im Browser', () => {
 
     expect(await ungespeichert(page)).toBe(false);
     expect(await verlassenWarnt(page)).toBe(false);
-    expect((await sicherung(page)).model.length).toBeGreaterThan(0);
+    // der Stand steht in einer Datei: keine Sicherung, nach dem Neuladen kein Angebot
+    expect(await sicherung(page)).toBeNull();
 
     await umbenennen(page, 'Erwärmen');
-    await expect.poll(async () => JSON.stringify((await sicherung(page)).model)).toContain('Erwärmen');
+    await expect.poll(async () => JSON.stringify(((await sicherung(page)) || {}).model || null)).toContain('Erwärmen');
     expect(await ungespeichert(page)).toBe(true);
     expect(await verlassenWarnt(page)).toBe(true);
   });
@@ -140,6 +141,27 @@ test.describe('Sicherung im Browser', () => {
 
     await expect(page.getByRole('dialog')).toHaveCount(0);
     expect(await namen(page)).toEqual([]);
+  });
+
+  test('nach einem Import ohne Änderung bietet das Neuladen nichts an', async ({ page }) => {
+    await laden(page);
+    await page.evaluate(() => window.fpbjs.get('autosave').flush());
+
+    await page.reload();
+    await page.waitForFunction(() => window.fpbjs && window.fpbjs.get);
+    await page.waitForTimeout(300);
+    await expect(page.locator('.autosave-notice')).toHaveCount(0);
+  });
+
+  test('Rückgängig bis zum Dateistand entfernt die Sicherung wieder', async ({ page }) => {
+    await laden(page);
+    await umbenennen(page, 'Erwärmen');
+    await page.evaluate(() => window.fpbjs.get('autosave').flush());
+    expect(await sicherung(page)).not.toBeNull();
+
+    await page.evaluate(() => { window.fpbjs.get('commandStack').undo(); window.fpbjs.get('autosave').flush(); });
+    expect(await ungespeichert(page)).toBe(false);
+    expect(await sicherung(page)).toBeNull();
   });
 
   test('ein Download des ganzen Modells gilt als gespeichert', async ({ page }) => {

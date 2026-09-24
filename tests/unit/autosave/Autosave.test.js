@@ -120,14 +120,17 @@ describe('Autosave', () => {
     processes.push({ datei: true });
     eventBus.fire('import.done');
     expect(autosave.isDirty()).toBe(false);
-    expect(gespeichert().model).toEqual([{ datei: true }]);
+    // was in einer Datei steht, braucht keine Sicherung
+    expect(window.localStorage.getItem(KEY)).toBeNull();
 
     processes.push({ dazu: true });
     autosave.flush();
     expect(autosave.isDirty()).toBe(true);
+    expect(gespeichert().model).toEqual([{ datei: true }, { dazu: true }]);
 
     eventBus.fire('model.downloaded');
     expect(autosave.isDirty()).toBe(false);
+    expect(window.localStorage.getItem(KEY)).toBeNull();
   });
 
   it('ein neues Modell löscht die Sicherung', () => {
