@@ -21,6 +21,8 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - run: npm ci
+      # No package goes out with failing unit tests
+      - run: npm run test:unit
       - run: npm run build
       - run: npm publish --access public
 
