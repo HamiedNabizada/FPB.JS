@@ -33,7 +33,8 @@ async function importFixture(page, mutate) {
   if (mutate) {
     mutate(data);
   }
-  await page.goto('/');
+  // old React panel until the characteristics move to the new one (feature 016)
+  await page.goto('/?panel=legacy');
   await page.waitForFunction(() => window.fpbjs && window.fpbjs.get);
   await page.evaluate((json) => {
     window.fpbjs.get('eventBus').fire('FPBJS.import', { data: json });

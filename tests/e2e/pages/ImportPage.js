@@ -16,8 +16,8 @@ export class ImportPage {
     this.importDelay = 400;
   }
 
-  async goto() {
-    await this.page.goto('/');
+  async goto(path = '/') {
+    await this.page.goto(path);
     await this.page.waitForFunction(() => window.fpbjs && window.fpbjs.get);
     await this.page.waitForSelector('.djs-palette [data-group=tools]', { timeout: 20000 });
   }

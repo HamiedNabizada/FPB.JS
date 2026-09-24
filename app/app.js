@@ -1,6 +1,7 @@
 import FpbModeler from './fpb/FpbModeler';
 
 import PropertiesPanel from './fpb/properties-panel';
+import FpbPropertiesPanel from './fpb/properties-panel-next';
 import LayerOverview from './fpb/layer-panel';
 
 import configPP from './configPP';
@@ -45,11 +46,12 @@ var modeler = new FpbModeler({
 modeler.get('canvas').zoom('fit-viewport');
 if (configPP.propertiesPanel.showPanel) {
   try {
-    const propertiesPanel = new PropertiesPanel({
-      container: propertiesContainer,
-      modeler,
-      configPP
-    });
+    // New panel (Preact); ?panel=legacy shows the old React panel while
+    // the move is under way (FPB.JS_Docs Geplante-Features/016)
+    const legacyPanel = new URLSearchParams(window.location.search).get('panel') === 'legacy';
+    const propertiesPanel = legacyPanel
+      ? new PropertiesPanel({ container: propertiesContainer, modeler, configPP })
+      : new FpbPropertiesPanel({ container: propertiesContainer, modeler });
   } catch (e) {
     console.error('[FPB.JS] PropertiesPanel init failed:', e);
   }

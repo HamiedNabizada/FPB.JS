@@ -146,11 +146,11 @@ test.describe('Tastenkürzel', () => {
 
   test('Entf in einem Feld des Properties-Panels löscht kein Element', async ({ page }) => {
     const { importer } = await vorbereiten(page);
-    await page.click('#openPropertiesPanelButton');
+    await page.click('#propertiesPanelToggle');
     await klicke(page, 'Prüfen');
     const vorher = (await importer.elements()).length;
 
-    await page.locator('#pp_identification_shortName').click();
+    await page.locator('#bio-properties-panel-shortName').click();
     await page.keyboard.press('End');
     await taste(page, 'Backspace');
     await taste(page, 'Delete');

@@ -1,0 +1,109 @@
+/** @jsx h */
+import { h } from '@bpmn-io/properties-panel/preact';
+
+import { is } from '../help/utils';
+import { colors } from '../core/colorScheme';
+
+/**
+ * Head of the properties panel: symbol, type and name of the element, so it
+ * is clear what is being edited. The symbols are the VDI 3682 shapes in the
+ * active color scheme.
+ */
+
+const TYPES = [
+  ['fpb:Product', 'Product'],
+  ['fpb:Energy', 'Energy'],
+  ['fpb:Information', 'Information'],
+  ['fpb:ProcessOperator', 'Process operator'],
+  ['fpb:TechnicalResource', 'Technical resource'],
+  ['fpb:SystemLimit', 'System limit'],
+  ['fpb:ParallelFlow', 'Parallel flow'],
+  ['fpb:AlternativeFlow', 'Alternative flow'],
+  ['fpb:Usage', 'Usage'],
+  ['fpb:Flow', 'Flow'],
+  ['fpb:Process', 'Process']
+];
+
+export function getTypeLabel(element) {
+  const match = TYPES.find(([type]) => is(element, type));
+
+  return match ? match[1] : (element && element.type) || '';
+}
+
+export function getElementLabel(element) {
+  const bo = element && element.businessObject;
+  if (!bo) {
+    return '';
+  }
+
+  if (is(element, 'fpb:Process')) {
+    const operator = bo.isDecomposedProcessOperator;
+    return operator ? 'Decomposition of ' + nameOf(operator) : 'Top level';
+  }
+
+  return nameOf(bo);
+}
+
+function nameOf(bo) {
+  return (bo.identification && bo.identification.shortName) || bo.name || '';
+}
+
+function Svg(props) {
+  return (
+    <svg viewBox="0 0 32 32" width={props.width || 32} height={props.height || 32} aria-hidden="true">
+      {props.children}
+    </svg>
+  );
+}
+
+const STROKE = '#222';
+
+function shapeFor(element) {
+  const c = colors();
+
+  if (is(element, 'fpb:Product')) {
+    return <circle cx="16" cy="16" r="11" fill={c.FPB_PRODUCT} stroke={STROKE} stroke-width="1.5" />;
+  }
+  if (is(element, 'fpb:Energy')) {
+    return <polygon points="16,4 28,16 16,28 4,16" fill={c.FPB_ENERGY} stroke={STROKE} stroke-width="1.5" />;
+  }
+  if (is(element, 'fpb:Information')) {
+    return <polygon points="9,5 23,5 29,16 23,27 9,27 3,16" fill={c.FPB_INFORMATION} stroke={STROKE} stroke-width="1.5" />;
+  }
+  if (is(element, 'fpb:ProcessOperator')) {
+    return <rect x="4" y="8" width="24" height="16" fill={c.FPB_PROCESS_OPERATOR} stroke={STROKE} stroke-width="1.5" />;
+  }
+  if (is(element, 'fpb:TechnicalResource')) {
+    return <rect x="4" y="8" width="24" height="16" rx="6" fill={c.FPB_TECHNICAL_RESOURCE} stroke={STROKE} stroke-width="1.5" />;
+  }
+  if (is(element, 'fpb:SystemLimit')) {
+    return <rect x="4" y="5" width="24" height="22" fill="none" stroke={STROKE} stroke-width="1.5" stroke-dasharray="3 2" />;
+  }
+  if (is(element, 'fpb:Usage')) {
+    return <line x1="4" y1="16" x2="28" y2="16" stroke={STROKE} stroke-width="1.5" stroke-dasharray="3 2" />;
+  }
+  if (element && element.waypoints) {
+    return [
+      <line x1="4" y1="16" x2="25" y2="16" stroke={STROKE} stroke-width="1.5" />,
+      <polygon points="28,16 22,12 22,20" fill={STROKE} />
+    ];
+  }
+  // process: two stacked layers
+  return [
+    <rect x="8" y="5" width="18" height="14" fill="none" stroke={STROKE} stroke-width="1.5" />,
+    <rect x="5" y="12" width="18" height="14" fill="#fff" stroke={STROKE} stroke-width="1.5" />
+  ];
+}
+
+export function getElementIcon(element) {
+  return function ElementIcon(props) {
+    return <Svg width={props.width} height={props.height}>{shapeFor(element)}</Svg>;
+  };
+}
+
+export const headerProvider = {
+  getElementLabel,
+  getTypeLabel,
+  getElementIcon,
+  getDocumentationRef: () => null
+};

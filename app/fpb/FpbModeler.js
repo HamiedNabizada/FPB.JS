@@ -62,6 +62,7 @@ import ClipboardModule from './clipboard';
 import AccessibilityModule from './a11y';
 import PreviewModule from './preview';
 import AutosaveModule from './autosave';
+import { DebounceInputModule } from '@bpmn-io/properties-panel';
 import SnappingModule from 'diagram-js/lib/features/snapping';
 
 
@@ -152,7 +153,9 @@ FpbModeler.prototype._modules = [
     PreviewModule,
     AccessibilityModule,
     SnappingModule,
-    AutosaveModule
+    AutosaveModule,
+    // Debounced input for the properties panel: one undo step per pause
+    DebounceInputModule
     // AutoResize - disabled to allow free SystemLimit resize
 ];
 

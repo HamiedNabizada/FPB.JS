@@ -1,4 +1,5 @@
 const path = require('path');
+const aliases = require('./build/aliases');
 const webpack = require('webpack');
 
 module.exports = (env, argv) => {
@@ -8,6 +9,9 @@ module.exports = (env, argv) => {
     // UMD build for browsers
     {
       entry: './src/index.js',
+      resolve: {
+        alias: aliases
+      },
       output: {
         path: path.join(__dirname, 'dist'),
         filename: 'fpbjs.js',
@@ -88,6 +92,9 @@ if (typeof global !== 'undefined' && typeof document === 'undefined') {
     // ES Module build
     {
       entry: './src/index.js',
+      resolve: {
+        alias: aliases
+      },
       experiments: {
         outputModule: true
       },

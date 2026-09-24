@@ -16,7 +16,7 @@ const clone = () => JSON.parse(JSON.stringify(basis));
 
 async function panelMitOperator(page) {
   const importer = new ImportPage(page);
-  await importer.goto();
+  await importer.goto('/?panel=legacy');
   await importer.import(clone());
   await page.click('#openPropertiesPanelButton');
   await page.evaluate(() => {

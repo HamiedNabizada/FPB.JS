@@ -1,0 +1,61 @@
+/* Properties panel (Preact). Fixed width, so the canvas does not jump with
+   the content; closed it leaves only the toggle. */
+
+.fpb-properties {
+  display: flex;
+  height: 100%;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.fpb-properties-toggle {
+  align-self: flex-start;
+  width: 32px;
+  height: 44px;
+  margin: 4px 0;
+  border: 1px solid var(--bio-border, #bbb);
+  border-radius: 4px 0 0 4px;
+  background: var(--bio-surface-medium, #f2f2f2);
+  color: var(--bio-text, #222);
+  cursor: pointer;
+}
+
+.fpb-properties-toggle:focus-visible {
+  outline: 2px solid var(--bio-focus, #0066cc);
+}
+
+.fpb-properties-body {
+  width: 320px;
+  height: 100%;
+  overflow-y: auto;
+  border-left: 1px solid var(--bio-border, #bbb);
+}
+
+.fpb-properties-body .bio-properties-panel {
+  height: 100%;
+}
+
+/* Dark mode: the library's colors come from --bio-* variables */
+[data-theme="dark"] .fpb-properties .bio-theme-parent,
+[data-theme="dark"] .fpb-properties {
+  --bio-surface: hsl(220, 13%, 16%);
+  --bio-surface-overlay: hsl(220, 13%, 18%);
+  --bio-surface-subtle: hsl(220, 13%, 20%);
+  --bio-surface-medium: hsl(220, 13%, 22%);
+  --bio-surface-strong: hsl(220, 13%, 28%);
+  --bio-text: hsl(220, 14%, 90%);
+  --bio-text-subtle: hsl(220, 10%, 72%);
+  --bio-text-subtlest: hsl(220, 8%, 58%);
+  --bio-border: hsl(220, 10%, 34%);
+  --bio-border-subtle: hsl(220, 10%, 28%);
+  --bio-border-disabled: hsl(220, 10%, 24%);
+  --bio-border-input: hsl(220, 10%, 38%);
+  --bio-primary: hsl(205, 90%, 60%);
+  --bio-primary-hover: hsl(205, 90%, 66%);
+  --bio-primary-surface: hsl(205, 50%, 22%);
+  --bio-neutral: hsl(220, 10%, 65%);
+}
+
+/* dark-mode.css colors inputs globally; the panel takes its own */
+.fpb-properties .bio-properties-panel-input {
+  color: var(--bio-text);
+}
