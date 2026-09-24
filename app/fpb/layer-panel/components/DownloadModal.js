@@ -16,6 +16,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import XMLMapper from '../../xml/XMLMapper.js';
 import { exportPNG } from '../../export/PngExporter.js';
 import { exportPDF, exportMultiLayerPDF } from '../../export/PdfExporter.js';
+import { renderLayers } from '../../export/renderLayers.js';
 
 // Regex pattern for invalid filename characters (Windows/Unix compatible)
 const INVALID_FILENAME_CHARS = /[<>:"/\\|?*\x00-\x1f]/g;
@@ -179,37 +180,17 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
         setExportError(null);
 
         try {
-            const modeling = modeler.get('modeling');
-            const canvas = modeler.get('canvas');
-            const currentRoot = canvas.getRootElement();
-            const layers = [];
-
-            // The walk through the layers is transient: it returns to the layer
-            // the user is on, so it must leave the undo history untouched.
-            const transient = { fpbTransient: true };
-
-            await modeler.get('layerUndoBoundary').keepHistory(async () => {
-                try {
-                    // processes prop contains Shapes from useProcessManagement
-                    for (const processShape of processes) {
-                        modeling.switchProcess(processShape, transient);
-                        const svg = await new Promise((resolve, reject) => {
-                            modeler.saveSVG({}, (err, result) => {
-                                if (err) reject(err);
-                                else resolve(result);
-                            });
-                        });
-                        const png = await exportPNG(svg, { scale: 2 });
-                        const name = processShape.businessObject?.identification?.shortName
-                            || processShape.businessObject?.name
-                            || processShape.id;
-                        layers.push({ name, pngDataUrl: png });
-                    }
-                } finally {
-                    // Back to the starting layer, even if one layer failed
-                    modeling.switchProcess(currentRoot, transient);
-                }
+            // processes prop contains Shapes from useProcessManagement
+            const rendered = await renderLayers(modeler, processes, async () => {
+                const svg = await new Promise((resolve, reject) => {
+                    modeler.saveSVG({}, (err, result) => {
+                        if (err) reject(err);
+                        else resolve(result);
+                    });
+                });
+                return exportPNG(svg, { scale: 2 });
             });
+            const layers = rendered.map((layer) => ({ name: layer.name, pngDataUrl: layer.image }));
 
             const pdfBlob = layers.length === 1
                 ? exportPDF(layers[0].pngDataUrl, { title: layers[0].name })

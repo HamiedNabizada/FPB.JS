@@ -203,22 +203,13 @@ export async function createFpbModeler(options = {}) {
       const { allLayers = false, ...pdfOptions } = options;
 
       if (allLayers) {
+        const { renderLayers } = await import('../app/fpb/export/renderLayers');
         const processShapes = collectProcessShapes(modeler.getProjectDefinition());
 
-        const currentRoot = canvas.getRootElement();
-        const layers = [];
-
-        for (const processShape of processShapes) {
-          modeling.switchProcess(processShape);
-          const svg = await this.toSVG();
-          const png = await exportPNG(svg, options);
-          const name = processShape.businessObject?.identification?.shortName
-            || processShape.businessObject?.name
-            || processShape.id;
-          layers.push({ name, pngDataUrl: png });
-        }
-
-        modeling.switchProcess(currentRoot);
+        // Same walk as the download dialog: keeps the undo history and always
+        // returns to the layer the user is on.
+        const rendered = await renderLayers(modeler, processShapes, async () => exportPNG(await this.toSVG(), options));
+        const layers = rendered.map((layer) => ({ name: layer.name, pngDataUrl: layer.image }));
         return exportMultiLayerPDF(layers, pdfOptions);
       } else {
         const svg = await this.toSVG();
