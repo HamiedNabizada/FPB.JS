@@ -76,7 +76,10 @@ export default function DataBehavior(eventBus, fpbjs) {
         // Delete the process and all associated processes
         while (processIds.length > 0) {
             let id = processIds.pop();
-            processes.forEach((pro) => {
+            // Walk a snapshot: removing from the array being iterated skipped the
+            // entry right after each removed one, so a process registered twice
+            // kept its second entry.
+            processes.slice().forEach((pro) => {
                 if (pro.process && pro.process.id === id) {
                     (pro.process.consistsOfProcesses || []).forEach((childProcess) => {
                         processIds.push(childProcess.id)
