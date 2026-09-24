@@ -12,33 +12,35 @@ For details on VDI/VDE 3682 and its notation, see [VDI 3682 Overview](./docs/VDI
 
 ## Features
 
-- **Visual Modeling** – Drag & drop interface for Products, Energy, Information, Process Operators, and Technical Resources
-- **Process Hierarchy** – Decompose and compose process operators into sub-processes
-- **Parallel & Alternative Flows** – Model concurrent and alternative process paths
-- **XML Import/Export** – VDI 3682 compliant XML format
-- **SVG Export** – Export diagrams for documentation
+- **Visual Modeling:** drag and drop for Products, Energy, Information, Process Operators and Technical Resources
+- **Process Hierarchy:** decompose and compose process operators into sub-processes, with a preview of the layer below
+- **Parallel and Alternative Flows:** model concurrent and alternative process paths
+- **Model Check:** rules of the VDI 3682 catalogue, shown on the elements, at import and before export
+- **Import and Export:** JSON and VDI 3682 XML; export as SVG, PNG and PDF
+- **Editing:** undo, copy and paste, search across all layers, keyboard shortcuts
+- **Touch and Accessibility:** works on tablets and phones, keyboard operable panels, a colour scheme for colour vision deficiency
 
 ## Quick Start
 
 ### Local Installation
 
-Requires [Node.js](https://nodejs.org/)
+Requires [Node.js](https://nodejs.org/) 20 or newer.
 
 ```bash
 npm install
-npm run dev-local
+npm run dev
 ```
 
-Open `localhost:8080` in your browser.
+The development server opens `http://localhost:3001` in your browser.
 
 ### Docker
 
 ```bash
 docker build -t fpbjs .
-docker run -p 8080:8080 fpbjs
+docker run -p 8080:80 fpbjs
 ```
 
-Open `0.0.0.0:8080` in your browser.
+Open `http://localhost:8080` in your browser.
 
 ## NPM Package
 

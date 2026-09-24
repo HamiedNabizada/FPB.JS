@@ -1,14 +1,21 @@
-FROM node:10
+# Build the web app, then serve the static files with nginx.
+#
+# The built page loads its stylesheets from ../css, which the web build writes
+# next to dist/web (dist/css). Both folders end up in the web root, so /css
+# resolves the same way as on the development server.
 
-# Create app directory
-WORKDIR /usr/src/app
+FROM node:22-alpine AS build
+WORKDIR /app
 
-#Install app dependencies
 COPY package*.json ./
-RUN npm install
+# Without the prepare script: it would build the library as well
+RUN npm ci --ignore-scripts
 
 COPY . .
+RUN npm run build:web
 
-EXPOSE 8080
+FROM nginx:alpine
+COPY --from=build /app/dist/web /usr/share/nginx/html
+COPY --from=build /app/dist/css /usr/share/nginx/html/css
 
-CMD ["npm", "run" , "dev"]
+EXPOSE 80
