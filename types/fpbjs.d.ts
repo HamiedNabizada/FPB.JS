@@ -397,8 +397,24 @@ export interface CreateFpbModelerOptions {
   config?: Record<string, any>;
   /** Custom properties panel config (defaults to built-in configPP.json) */
   propertiesConfig?: Record<string, any>;
+  /**
+   * Backup of the model in the browser (localStorage) and a warning before
+   * leaving the page with changes that are in no file. Off by default; the
+   * web app turns it on. `true` uses the defaults.
+   */
+  autosave?: boolean | AutosaveOptions;
   /** Additional options passed to FpbModeler constructor */
   [key: string]: any;
+}
+
+/** Options for the browser backup */
+export interface AutosaveOptions {
+  /** Default true when an object is given */
+  enabled?: boolean;
+  /** localStorage key (default: 'fpbjs.autosave'); use your own per app */
+  storageKey?: string;
+  /** Milliseconds after the last change before the backup is written (default: 1000) */
+  delay?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -443,6 +459,9 @@ export interface FpbInstance {
 
   /** Import a diagram from a JSON object (FPB.JS internal format) */
   importJSON(json: FpbProjectData): void;
+
+  /** Start over with an empty model; also clears the browser backup if autosave is on */
+  newModel(): void;
 
   /** Import a diagram from a VDI 3682 XML string */
   importXML(xmlString: string): Promise<void>;

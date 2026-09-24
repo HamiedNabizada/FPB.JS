@@ -17,6 +17,7 @@ import XMLMapper from '../../xml/XMLMapper.js';
 import { exportPNG } from '../../export/PngExporter.js';
 import { exportPDF, exportMultiLayerPDF } from '../../export/PdfExporter.js';
 import { renderLayers } from '../../export/renderLayers.js';
+import { modelReplacer } from '../../export/serializeModel.js';
 
 // Regex pattern for invalid filename characters (Windows/Unix compatible)
 const INVALID_FILENAME_CHARS = /[<>:"/\\|?*\x00-\x1f]/g;
@@ -212,67 +213,8 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
         }
     }
 
-    function replacer(name, val) {
-        if (informationLevel === '2') {
-            if (name === 'elementVisualInformation') {
-                return undefined;
-            }
-        }
-        
-        // Helper function to extract ID from various object structures
-        const extractId = (item) => {
-            if (typeof item === 'string') return item;
-            if (!item) return item;
-            // Check for different ID properties
-            return item.id || item.uniqueIdent || item.$id || item;
-        };
-        
-        switch (name) {
-            case 'entryPoint':
-                // Single reference - extract ID
-                return extractId(val);
-                
-            case 'elementsContainer':
-            case 'consistsOfStates':
-            case 'consistsOfProcessOperator':
-            case 'consistsOfProcesses':
-            case 'inTandemWith':
-            case 'isAssignedTo':
-            case 'incoming':
-            case 'outgoing':
-                // Array references - extract IDs from each element
-                if (Array.isArray(val)) {
-                    return val.map(el => extractId(el));
-                }
-                return extractId(val);
-                
-            case 'sourceRef':
-            case 'targetRef':
-            case 'decomposedView':
-            case 'parent':
-            case 'consistsOfSystemLimit':
-                // Single references - extract ID
-                return extractId(val);
-                
-            case 'isDecomposedProcessOperator':
-                if (val === null || val === undefined) {
-                    return null;
-                }
-                return extractId(val);
-                
-            case 'di':
-            case 'children':
-            case 'labels':
-            case 'ProjectAssignment':
-            case 'TemporaryFlowHint':
-            // diagram-js keeps CSS markers of the canvas as a Set on the shape
-            case 'markers':
-                return undefined;
-                
-            default: 
-                return val;
-        }
-    }
+    // Same form as every other JSON of the model, see serializeModel
+    const replacer = modelReplacer({ withLayout: informationLevel !== '2' });
 
     async function go() {
         // Validate export options
@@ -330,6 +272,10 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
 
             if (exportAsDownload) {
                 download(dataStr, exportFormat);
+                // The whole model with its layout is now in a file
+                if (information === 'information1' && informationLevel !== '2') {
+                    eventBus.fire('model.downloaded', { format: exportFormat });
+                }
             }
 
             if (exportAsEvent) {

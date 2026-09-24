@@ -5,6 +5,7 @@ import LayerPanel from './LayerPanel';
 import ErrorBoundary from '../ErrorBoundary';
 import { ErrorProvider } from '../context/ErrorContext';
 import ImportNotificationBridge from '../components/ImportNotificationBridge';
+import AutosaveNotice from '../components/AutosaveNotice';
 
 export default class LayerOverview {
   constructor(options) {
@@ -19,6 +20,7 @@ export default class LayerOverview {
     root.render(
       <ErrorProvider>
         <ImportNotificationBridge modeler={modeler} />
+        <AutosaveNotice modeler={modeler} />
         <ErrorBoundary>
           <LayerPanel modeler={modeler} config={configPP} />
         </ErrorBoundary>

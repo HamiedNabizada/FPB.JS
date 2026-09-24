@@ -61,6 +61,7 @@ import AppendModule from './append';
 import ClipboardModule from './clipboard';
 import AccessibilityModule from './a11y';
 import PreviewModule from './preview';
+import AutosaveModule from './autosave';
 import SnappingModule from 'diagram-js/lib/features/snapping';
 
 
@@ -150,7 +151,8 @@ FpbModeler.prototype._modules = [
     ClipboardModule,
     PreviewModule,
     AccessibilityModule,
-    SnappingModule
+    SnappingModule,
+    AutosaveModule
     // AutoResize - disabled to allow free SystemLimit resize
 ];
 
@@ -254,6 +256,27 @@ FpbModeler.prototype.clear = function () {
 
     // remove drawn elements
     Diagram.prototype.clear.call(this);
+};
+
+/**
+ * Start over with an empty model: canvas, layers, project and undo history.
+ * The next shape placed creates a new project, as after a fresh start.
+ *
+ * Unlike clear() it empties the model lists in place, the data store and the
+ * importer hold references to them.
+ */
+FpbModeler.prototype.newModel = function () {
+    this._processes.length = 0;
+    this._fpbElements.length = 0;
+    this._project = null;
+
+    const eventBus = this.get('eventBus');
+    eventBus.fire('layerPanel.reset', {});
+
+    // Canvas, element registry and command stack
+    Diagram.prototype.clear.call(this);
+
+    eventBus.fire('model.new', {});
 };
 
 function ensureUnit(val) {

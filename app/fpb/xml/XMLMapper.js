@@ -4,6 +4,8 @@
  * Preserves original JSON structure for perfect round-trip conversion
  */
 
+import { modelReplacer } from '../export/serializeModel.js';
+
 class XMLMapper {
     // Constants
     static DEFAULT_WAYPOINTS = [
@@ -274,66 +276,12 @@ class XMLMapper {
 
     /**
      * Convert ModdleElements to proper JSON format (like normal JSON export)
-     * Uses the same replacer logic as DownloadModal.js
+     * Uses the same replacer as the download, see export/serializeModel
      */
     _convertModdleElementsToProperJSON(data) {
 
 
-        // Helper function to extract ID from various object structures
-        const extractId = (item) => {
-            if (typeof item === 'string') return item;
-            if (!item) return item;
-            // Check for different ID properties
-            return item.id || item.uniqueIdent || item.$id || item;
-        };
-
-        const replacer = (name, val) => {
-            switch (name) {
-                case 'entryPoint':
-                    // Single reference - extract ID
-                    return extractId(val);
-
-                case 'elementsContainer':
-                case 'consistsOfStates':
-                case 'consistsOfProcessOperator':
-                case 'consistsOfProcesses':
-                case 'inTandemWith':
-                case 'isAssignedTo':
-                case 'incoming':
-                case 'outgoing':
-                    // Array references - extract IDs from each element
-                    if (Array.isArray(val)) {
-                        return val.map(el => extractId(el));
-                    }
-                    return extractId(val);
-
-                case 'sourceRef':
-                case 'targetRef':
-                case 'decomposedView':
-                case 'parent':
-                case 'consistsOfSystemLimit':
-                    // Single references - extract ID
-                    return extractId(val);
-
-                case 'isDecomposedProcessOperator':
-                    if (val === null || val === undefined) {
-                        return null;
-                    }
-                    return extractId(val);
-
-                case 'di':
-                case 'children':
-                case 'labels':
-                case 'ProjectAssignment':
-                case 'TemporaryFlowHint':
-                // diagram-js keeps CSS markers of the canvas as a Set on the shape
-                case 'markers':
-                    return undefined;
-
-                default:
-                    return val;
-            }
-        };
+        const replacer = modelReplacer();
 
         try {
             const jsonString = JSON.stringify(data, replacer, 4);

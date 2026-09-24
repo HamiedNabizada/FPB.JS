@@ -6,6 +6,7 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import Collapse from 'react-collapse';
 
 import Import from './features/Import';
+import NewModel from './features/NewModel';
 import DownloadOptions from './features/DownloadOptions';
 import InfoModal from './components/InfoModal';
 import ConfirmationModal from './components/ConfirmationModal';
@@ -46,6 +47,12 @@ const LayerPanel = ({ modeler, config }) => {
     }, [modeler]);
     const shownFindings = checkCounts.error + checkCounts.warning;
 
+    // Starting over clears the browser backup, so it comes with the backup;
+    // hosts without it can ask for the button in the panel config.
+    const autosave = modeler.get('autosave', false);
+    const showNewModel = Boolean((autosave && autosave.isEnabled()) ||
+        (config && config.layerPanel && config.layerPanel.showNewModel));
+
 
     const tooltipsOptions = isOpenedOptions ? 'Hide Options' : 'Show Options';
     const isOpenedLayerButton = isOpenedLayerPanel ? 
@@ -68,6 +75,7 @@ const LayerPanel = ({ modeler, config }) => {
                 </Button>
             </OverlayTrigger>
             <Collapse isOpened={isOpenedOptions}>
+                {showNewModel && <NewModel modeler={modeler} />}
                 <Import modeler={modeler} />
                 <DownloadOptions 
                     modeler={modeler} 

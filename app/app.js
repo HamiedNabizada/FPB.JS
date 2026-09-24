@@ -35,7 +35,10 @@ var layerContainer = document.querySelector('#layer-container')
 // Fpb Modeler starten
 var modeler = new FpbModeler({
   container: container,
-  configFile
+  configFile,
+  // Backup in the browser and a warning before leaving with unsaved changes.
+  // Only the web app turns this on; the library leaves it off.
+  autosave: true
 });
 
 

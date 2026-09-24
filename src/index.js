@@ -164,6 +164,11 @@ export async function createFpbModeler(options = {}) {
       eventBus.fire('FPBJS.import', { data: json });
     },
 
+    /** Start over with an empty model (also clears the browser backup, if on) */
+    newModel() {
+      modeler.newModel();
+    },
+
     async importXML(xmlString) {
       const json = await xmlMapper.convertFromXML(xmlString);
       eventBus.fire('FPBJS.import', { data: json });

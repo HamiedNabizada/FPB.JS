@@ -23,6 +23,8 @@ import { faMoon } from '@fortawesome/free-solid-svg-icons/faMoon';
 import { faCheck } from '@fortawesome/free-solid-svg-icons/faCheck';
 import { faImage } from '@fortawesome/free-solid-svg-icons/faImage';
 import { faFilePdf } from '@fortawesome/free-solid-svg-icons/faFilePdf';
+import { faFileCirclePlus } from '@fortawesome/free-solid-svg-icons/faFileCirclePlus';
+import { faClockRotateLeft } from '@fortawesome/free-solid-svg-icons/faClockRotateLeft';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons/faMagnifyingGlass';
 import { faListCheck } from '@fortawesome/free-solid-svg-icons/faListCheck';
 import { faEye } from '@fortawesome/free-solid-svg-icons/faEye';
@@ -56,5 +58,7 @@ library.add(
   faMoon,
   faCheck,
   faImage,
+  faFileCirclePlus,
+  faClockRotateLeft,
   faFilePdf
 );
