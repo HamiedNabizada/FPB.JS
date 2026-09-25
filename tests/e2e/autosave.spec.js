@@ -1,5 +1,5 @@
 // tests/e2e/autosave.spec.js
-import { test, expect } from '@playwright/test';
+import { test, expect } from './support/test';
 import { ImportPage } from './pages/ImportPage';
 import basis from './fixtures/temperieren.json';
 
@@ -180,7 +180,8 @@ test.describe('Sicherung im Browser', () => {
       context.waitForEvent('page'),
       hinweis(page).getByRole('button', { name: /in a new tab/ }).click(),
     ]);
-    await neu.waitForFunction(() => window.fpbjs && window.fpbjs.get);
+    // a new tab loads the whole development bundle, slow under a full run
+    await neu.waitForFunction(() => window.fpbjs && window.fpbjs.get, null, { timeout: 30000 });
     await expect.poll(() => namen(neu)).toContain('Aus dem alten Tab');
     expect(neu.url()).not.toContain('fpbRestore');
 

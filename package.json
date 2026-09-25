@@ -33,6 +33,7 @@
     "test:e2e:firefox": "playwright test --project=firefox",
     "test:e2e:webkit": "playwright test --project=webkit",
     "test:e2e:browsers": "playwright test",
+    "test:e2e:coverage": "node -e \"require('fs').rmSync('coverage/e2e', { recursive: true, force: true })\" && playwright test --config playwright.coverage.config.js && nyc report --temp-dir coverage/e2e/.nyc_output --report-dir coverage/e2e --reporter=html --reporter=json-summary --reporter=text-summary",
     "test:e2e:ui": "playwright test --ui",
     "test:coverage": "vitest run --coverage --config vitest.config.js"
   },
@@ -73,6 +74,7 @@
     "@vitest/browser": "^3.0.0",
     "@vitest/coverage-v8": "^3.0.0",
     "babel-loader": "^9.2.1",
+    "babel-plugin-istanbul": "^8.0.0",
     "bootstrap": "^5.3.7",
     "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^7.1.2",
@@ -89,6 +91,7 @@
     "min-dom": "^5.3.0",
     "moddle": "^8.2.1",
     "npm-run-all": "^4.1.5",
+    "nyc": "^18.0.0",
     "playwright": "^1.50.0",
     "react": "^18.3.1",
     "react-arborist": "^3.4.3",

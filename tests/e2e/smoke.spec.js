@@ -1,5 +1,5 @@
 // tests/e2e/smoke.spec.js
-import { test, expect } from '@playwright/test';
+import { test, expect } from './support/test';
 import { ModelerPage } from './pages/ModelerPage';
 
 test.describe('Smoke Tests', () => {
