@@ -21,7 +21,11 @@ async function openModel(page) {
 
 function touchDriver(page, context) {
   let cdp;
-  const session = async () => cdp || (cdp = await context.newCDPSession(page));
+  const session = async () => {
+    // Finger moves are sent through CDP, which only Chromium offers
+    test.skip(context.browser().browserType().name() !== 'chromium', 'touch gestures need CDP (Chromium only)');
+    return cdp || (cdp = await context.newCDPSession(page));
+  };
   return {
     async drag([x1, y1], [x2, y2], steps = 12) {
       const client = await session();

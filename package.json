@@ -29,7 +29,10 @@
     "test:unit": "vitest run --config vitest.config.js",
     "test:unit:watch": "vitest --config vitest.config.js",
     "test:integration": "vitest run --config vitest.config.browser.js",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --project=chromium",
+    "test:e2e:firefox": "playwright test --project=firefox",
+    "test:e2e:webkit": "playwright test --project=webkit",
+    "test:e2e:browsers": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:coverage": "vitest run --coverage --config vitest.config.js"
   },
