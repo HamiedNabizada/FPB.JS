@@ -317,6 +317,34 @@ function defineOn(event, name, value) {
 }
 
 /**
+ * A copy of a touch event for another target. Safari has TouchEvent but
+ * rejects `new TouchEvent(...)` with a TypeError; there the legacy
+ * document.createEvent gives a real TouchEvent (diagram-js checks
+ * `instanceof TouchEvent`) and the touch lists are set on it.
+ */
+function copyTouchEvent(event) {
+  const init = {
+    bubbles: true,
+    cancelable: true,
+    view: window,
+    touches: Array.from(event.touches),
+    targetTouches: Array.from(event.targetTouches),
+    changedTouches: Array.from(event.changedTouches)
+  };
+
+  try {
+    return new TouchEvent(event.type, init);
+  } catch (error) {
+    const copy = document.createEvent('TouchEvent');
+    copy.initEvent(event.type, true, true);
+    defineOn(copy, 'touches', event.touches);
+    defineOn(copy, 'targetTouches', event.targetTouches);
+    defineOn(copy, 'changedTouches', event.changedTouches);
+    return copy;
+  }
+}
+
+/**
  * Re-dispatches the remaining touch events of a gesture on the document once
  * the node they are delivered to has left the DOM. Removes itself when the
  * gesture ends.
@@ -324,14 +352,7 @@ function defineOn(event, name, value) {
 function forwardDetachedTouches(node) {
   const forward = (event) => {
     if (!node.isConnected && typeof TouchEvent === 'function') {
-      document.dispatchEvent(new TouchEvent(event.type, {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-        touches: Array.from(event.touches),
-        targetTouches: Array.from(event.targetTouches),
-        changedTouches: Array.from(event.changedTouches)
-      }));
+      document.dispatchEvent(copyTouchEvent(event));
     }
     if (event.type !== 'touchmove') {
       ['touchmove', 'touchend', 'touchcancel'].forEach((type) => node.removeEventListener(type, forward));
