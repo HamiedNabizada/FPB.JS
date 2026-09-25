@@ -1,4 +1,6 @@
 import { serializeModel } from '../export/serializeModel.js';
+import { createBackupStore } from './BackupStore.js';
+import { createTabPresence } from './TabPresence.js';
 
 const DEFAULTS = {
   enabled: false,
@@ -6,51 +8,64 @@ const DEFAULTS = {
   delay: 1000
 };
 
-const FORMAT_VERSION = 1;
+// Backups of closed tabs kept at most; older ones are dropped
+const MAX_BACKUPS = 10;
+
+// URL parameter that makes a new tab restore a backup (see openInNewTab)
+const RESTORE_PARAM = 'fpbRestore';
 
 /**
- * Keeps a backup of the model in the browser (localStorage) and warns before
- * the page is left with changes that are in no file yet.
+ * Keeps unsaved work in the browser and warns before the page is left with
+ * changes that are in no file yet.
  *
  * Off unless the host turns it on (`autosave: true` or `autosave: { ... }` in
  * the modeler options). The web app does, embeddings such as the AML editor
  * plugin do not: they store the model themselves.
  *
+ * One backup per tab. Every page load is a new tab (TabPresence); at start a
+ * tab offers the backups of tabs that are gone (closed, reloaded, crashed),
+ * never those of tabs still open. Nothing is loaded without the user's choice.
+ *
  * Only unsaved work is kept: once the model is in a file again (imported,
- * downloaded, back to that state by undo), the backup is removed, so a
- * reload does not offer what the user already has.
+ * downloaded, back to that state by undo), the tab's backup is removed.
+ * "Unsaved" is compared on the serialized model, so switching layers does not
+ * count as a change.
  *
- * A backup found at start is not loaded on its own. It waits in `getPending()`
- * until the user restores or discards it; until then nothing is written, so
- * the backup cannot be overwritten by accident.
+ * Backups live in IndexedDB (BackupStore), which answers asynchronously. So
+ * that the last changes survive closing the tab, the page writes a rescue
+ * copy to localStorage when it goes away; the next start moves it over.
  *
- * "Unsaved" means: the model differs from the last one imported, downloaded
- * or started empty. Compared on the serialized model, so switching layers or
- * an undo back to the saved state does not count as a change.
- *
- * Events: `autosave.changed` whenever the pending backup or the unsaved state
- * changes, `autosave.failed` ({ error }) when the browser refuses to store.
+ * Events: `autosave.changed` ({ pending, dirty }) when the offered backups or
+ * the unsaved state change, `autosave.failed` ({ error }) when the browser
+ * refuses to store.
  */
 export default function Autosave(eventBus, fpbjs, config) {
   this._eventBus = eventBus;
   this._fpbjs = fpbjs;
   this._config = normalizeConfig(config);
 
-  this._pending = null;
-  this._restoring = false;
-  this._timer = null;
-  this._stored = null;
-  this._baseline = null;
+  this._pending = [];
   this._dirty = false;
+  this._baseline = serializeModel([], { indent: 0 });
+  this._latest = null;
+  this._written = null;
+  this._restoring = null;
+  this._timer = null;
 
-  if (!this._config.enabled || !storageAvailable()) {
+  if (!this._config.enabled || !localStorageAvailable()) {
     this._config.enabled = false;
+    this._ready = Promise.resolve();
     return;
   }
 
-  this._pending = this._read();
-  // The modeler starts empty; its lists do not exist yet at this point
-  this._baseline = serializeModel([], { indent: 0 });
+  const key = this._config.storageKey;
+  this._store = this._config.store || createBackupStore(key);
+  this._presence = this._config.presence || createTabPresence(key);
+  this._id = this._presence.id;
+  this._rescuePrefix = key + '.rescue.';
+
+  // The first version kept a single backup under the plain key
+  removeLocal(key);
 
   const self = this;
 
@@ -60,11 +75,11 @@ export default function Autosave(eventBus, fpbjs, config) {
 
   eventBus.on('import.done', function () {
     if (self._restoring) {
-      // A restored backup is in no file yet: it stays unsaved
-      self._restoring = false;
+      // The restored model is now this tab's; it stays unsaved
+      const restored = self._restoring;
+      self._restoring = null;
+      self._enqueue(() => self._store.remove(restored));
     } else {
-      // Another file replaces a backup that was still waiting
-      self._pending = null;
       self._baseline = self._serialize();
     }
     self.flush();
@@ -76,29 +91,36 @@ export default function Autosave(eventBus, fpbjs, config) {
   });
 
   eventBus.on('model.new', function () {
-    self._pending = null;
     self._clearTimer();
-    self._remove();
     self._baseline = self._serialize();
-    self._setDirty(false);
+    self.flush();
   });
 
   if (typeof window !== 'undefined') {
     this._onBeforeUnload = function (event) {
-      self.flush();
+      self._leaving();
       if (self._dirty) {
         event.preventDefault();
         // Older browsers show the dialog only with a returnValue
         event.returnValue = '';
       }
     };
+    this._onPageHide = function () {
+      self._leaving();
+    };
     window.addEventListener('beforeunload', this._onBeforeUnload);
+    window.addEventListener('pagehide', this._onPageHide);
 
     eventBus.on('diagram.destroy', function () {
       window.removeEventListener('beforeunload', self._onBeforeUnload);
+      window.removeEventListener('pagehide', self._onPageHide);
       self._clearTimer();
+      self._presence.stop();
     });
   }
+
+  this._ready = this._init();
+  this._queue = this._ready;
 }
 
 Autosave.$inject = ['eventBus', 'fpbjs', 'config.autosave'];
@@ -107,82 +129,258 @@ Autosave.prototype.isEnabled = function () {
   return this._config.enabled;
 };
 
+/** Resolves when the backups of other tabs are known */
+Autosave.prototype.ready = function () {
+  return this._ready;
+};
+
 /** True if the model has changes that are in no file */
 Autosave.prototype.isDirty = function () {
   return this._dirty;
 };
 
 /**
- * The backup found at start, until restored or discarded.
+ * Backups of tabs that are gone, newest first.
  *
- * @return {{ savedAt: string, model: Array } | null}
+ * @return {Array<{ id: string, savedAt: string, title: string, model: Array }>}
  */
 Autosave.prototype.getPending = function () {
   return this._pending;
 };
 
-/** Load the backup found at start */
-Autosave.prototype.restore = function () {
-  const pending = this._pending;
-  if (!pending) {
+/**
+ * Load a backup into this tab. If another tab took it in the meantime, it
+ * only leaves the list, so no model ends up open twice.
+ *
+ * @return {Promise<boolean>} whether the backup was loaded
+ */
+Autosave.prototype.restore = function (id) {
+  if (!this._take(id)) {
+    return Promise.resolve(false);
+  }
+
+  return this._store.get(id).then((record) => {
+    if (!record) {
+      return false;
+    }
+    this._restoring = id;
+    this._eventBus.fire('FPBJS.import', { data: record.model });
+    return true;
+  }).catch((error) => {
+    this._failed(error);
+    return false;
+  });
+};
+
+/**
+ * Load a backup into a new tab, so the unsaved model of this tab stays
+ * untouched. The new tab removes the backup once it has it.
+ */
+Autosave.prototype.openInNewTab = function (id) {
+  const record = this._take(id);
+  if (!record) {
     return;
   }
 
-  this._pending = null;
-  this._restoring = true;
-  this._changed();
-  this._eventBus.fire('FPBJS.import', { data: pending.model });
+  const url = new URL(window.location.href);
+  url.searchParams.set(RESTORE_PARAM, id);
+  window.open(url.toString(), '_blank');
 };
 
-/** Drop the backup found at start and back up the current model instead */
-Autosave.prototype.discard = function () {
-  if (!this._pending) {
+/** Delete a backup without loading it */
+Autosave.prototype.discard = function (id) {
+  if (!this._take(id)) {
     return;
   }
 
-  this._pending = null;
-  this._remove();
-  this._changed();
-  this.flush();
+  this._enqueue(() => this._store.remove(id));
 };
 
-/** Write the backup now instead of after the delay */
+/**
+ * Write this tab's backup now instead of after the delay.
+ *
+ * @return {Promise} resolves when the backup is stored
+ */
 Autosave.prototype.flush = function () {
   this._clearTimer();
 
   if (!this._config.enabled) {
+    return Promise.resolve();
+  }
+
+  const content = this._serialize();
+  this._setDirty(content !== this._baseline);
+  this._latest = {
+    content,
+    keep: this._dirty && hasContent(this._fpbjs),
+    title: titleOf(this._fpbjs)
+  };
+
+  return this._enqueue(() => this._write());
+};
+
+Autosave.prototype._init = function () {
+  let alive;
+  return this._presence.start()
+    .then(() => this._presence.aliveIds())
+    .then((ids) => {
+      alive = ids;
+      return this._moveRescueCopies(alive);
+    })
+    .then(() => this._store.list())
+    .then((records) => {
+      const orphans = records
+        .filter((record) => record.id !== this._id && !alive.has(record.id) &&
+          Array.isArray(record.model) && record.model.length)
+        .sort((a, b) => String(b.savedAt).localeCompare(String(a.savedAt)));
+
+      this._pending = orphans.slice(0, MAX_BACKUPS);
+      const dropped = orphans.slice(MAX_BACKUPS);
+      this._changed();
+
+      return Promise.all(dropped.map((record) => this._store.remove(record.id)));
+    })
+    .then(() => this._restoreRequested())
+    .catch((error) => this._failed(error));
+};
+
+/** A tab opened by openInNewTab restores the backup it was opened for */
+Autosave.prototype._restoreRequested = function () {
+  let url;
+  try {
+    url = new URL(window.location.href);
+  } catch (error) {
     return;
   }
 
-  const serialized = this._serialize();
-  this._setDirty(serialized !== this._baseline);
-
-  // Nothing may overwrite a backup the user has not decided on
-  if (this._pending) {
+  const id = url.searchParams.get(RESTORE_PARAM);
+  if (!id) {
     return;
   }
 
-  if (!this._dirty || !hasContent(this._fpbjs)) {
-    this._remove();
-    return;
+  url.searchParams.delete(RESTORE_PARAM);
+  window.history.replaceState(window.history.state, '', url.toString());
+
+  this.restore(id);
+};
+
+Autosave.prototype._take = function (id) {
+  const record = this._pending.find((entry) => entry.id === id);
+  if (!record) {
+    return null;
   }
 
-  if (serialized === this._stored) {
-    return;
+  this._pending = this._pending.filter((entry) => entry !== record);
+  this._changed();
+  return record;
+};
+
+Autosave.prototype._write = function () {
+  const latest = this._latest;
+  if (!latest) {
+    return Promise.resolve();
   }
 
-  const entry = '{"version":' + FORMAT_VERSION +
-    ',"savedAt":' + JSON.stringify(new Date().toISOString()) +
-    ',"model":' + serialized + '}';
+  if (!latest.keep) {
+    if (this._written === null) {
+      return Promise.resolve();
+    }
+    return this._store.remove(this._id).then(() => {
+      this._written = null;
+      removeLocal(this._rescuePrefix + this._id);
+    });
+  }
+
+  if (latest.content === this._written) {
+    return Promise.resolve();
+  }
+
+  return this._store.put(this._record(latest)).then(() => {
+    this._written = latest.content;
+    // stored for real: a rescue copy from a cancelled leave is outdated now
+    removeLocal(this._rescuePrefix + this._id);
+  });
+};
+
+Autosave.prototype._record = function (latest) {
+  return {
+    id: this._id,
+    savedAt: new Date().toISOString(),
+    title: latest.title,
+    model: JSON.parse(latest.content)
+  };
+};
+
+/**
+ * The page goes away: IndexedDB may not finish in time, so an unsaved state
+ * that is not stored yet goes to localStorage synchronously.
+ */
+Autosave.prototype._leaving = function () {
+  this._clearTimer();
+  const content = this._serialize();
+  this._setDirty(content !== this._baseline);
+
+  if (!this._dirty || !hasContent(this._fpbjs) || content === this._written) {
+    return;
+  }
 
   try {
-    window.localStorage.setItem(this._config.storageKey, entry);
-    this._stored = serialized;
+    const record = this._record({ content, title: titleOf(this._fpbjs) });
+    window.localStorage.setItem(this._rescuePrefix + this._id, JSON.stringify(record));
   } catch (error) {
-    // Quota exceeded or storage blocked: the model itself is not affected
-    console.warn('FPB.js autosave: the browser refused to store the backup', error);
-    this._eventBus.fire('autosave.failed', { error });
+    // nothing more can be done while the page closes
   }
+};
+
+/**
+ * Rescue copies of tabs that closed before their backup was stored. Copies
+ * of tabs still open are left alone: the user may have cancelled leaving,
+ * and that tab keeps storing on its own.
+ */
+Autosave.prototype._moveRescueCopies = function (alive) {
+  const copies = [];
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key && key.indexOf(this._rescuePrefix) === 0 && !alive.has(key.slice(this._rescuePrefix.length))) {
+        copies.push(key);
+      }
+    }
+  } catch (error) {
+    return Promise.resolve();
+  }
+
+  return copies.reduce((chain, key) => chain.then(() => {
+    let record = null;
+    try {
+      record = JSON.parse(window.localStorage.getItem(key));
+    } catch (error) {
+      record = null;
+    }
+    if (!record || !record.id || !Array.isArray(record.model)) {
+      removeLocal(key);
+      return null;
+    }
+    return this._store.get(record.id).then((stored) => {
+      if (!stored || String(stored.savedAt) < String(record.savedAt)) {
+        return this._store.put(record);
+      }
+      return null;
+    }).then(() => removeLocal(key));
+  }), Promise.resolve());
+};
+
+Autosave.prototype._enqueue = function (work) {
+  this._queue = this._queue
+    .then(work)
+    .catch((error) => this._failed(error));
+  return this._queue;
+};
+
+Autosave.prototype._failed = function (error) {
+  // Quota exceeded or storage blocked: the model itself is not affected
+  console.warn('FPB.js autosave: the browser refused to store the backup', error);
+  this._eventBus.fire('autosave.failed', { error });
 };
 
 Autosave.prototype._schedule = function () {
@@ -206,39 +404,6 @@ Autosave.prototype._serialize = function () {
   // Positions and names are copied into the model objects on this event
   this._eventBus.fire('dataStore.updateAll', {});
   return serializeModel(this._fpbjs.getProcesses() || [], { indent: 0 });
-};
-
-Autosave.prototype._read = function () {
-  let raw;
-  try {
-    raw = window.localStorage.getItem(this._config.storageKey);
-  } catch (error) {
-    return null;
-  }
-
-  if (!raw) {
-    return null;
-  }
-
-  try {
-    const entry = JSON.parse(raw);
-    if (entry && entry.version === FORMAT_VERSION && Array.isArray(entry.model) && entry.model.length) {
-      return { savedAt: entry.savedAt, model: entry.model };
-    }
-  } catch (error) {
-    // Unreadable: treated like no backup, the next save replaces it
-  }
-
-  return null;
-};
-
-Autosave.prototype._remove = function () {
-  this._stored = null;
-  try {
-    window.localStorage.removeItem(this._config.storageKey);
-  } catch (error) {
-    // nothing to remove if storage is blocked
-  }
 };
 
 Autosave.prototype._setDirty = function (dirty) {
@@ -272,7 +437,30 @@ function hasContent(fpbjs) {
   return Boolean(processes && processes.length);
 }
 
-function storageAvailable() {
+/** Name for the list of backups: the system limit of the top layer */
+function titleOf(fpbjs) {
+  try {
+    // entries are { process, elementDataInformation, ... }; the process is
+    // the data object, the top layer is the one no operator decomposes
+    const top = (fpbjs.getProcesses() || [])
+      .find((entry) => entry.process && !entry.process.isDecomposedProcessOperator);
+    const limit = top && (top.elementDataInformation || [])
+      .find((element) => element && element.$type === 'fpb:SystemLimit');
+    return (limit && limit.name) || 'Untitled model';
+  } catch (error) {
+    return 'Untitled model';
+  }
+}
+
+function removeLocal(key) {
+  try {
+    window.localStorage.removeItem(key);
+  } catch (error) {
+    // storage blocked
+  }
+}
+
+function localStorageAvailable() {
   try {
     const key = '__fpbjs_autosave_test__';
     window.localStorage.setItem(key, key);

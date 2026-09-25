@@ -4,15 +4,27 @@ import { ImportPage } from './pages/ImportPage';
 import basis from './fixtures/temperieren.json';
 
 /**
- * Sicherung im Browser in der Web-App: nach Änderungen liegt das Modell im
- * localStorage, nach dem Neuladen wird es angeboten, "New model" räumt auf,
- * beim Verlassen mit ungespeicherten Änderungen warnt der Browser.
+ * Sicherung im Browser in der Web-App, mit echter IndexedDB und echten
+ * Web Locks: eine Sicherung je Tab, angeboten werden nur Sicherungen von
+ * Tabs, die nicht mehr offen sind.
  */
 
 const clone = () => JSON.parse(JSON.stringify(basis));
-const KEY = 'fpbjs.autosave';
 
-const sicherung = (page) => page.evaluate((key) => JSON.parse(window.localStorage.getItem(key)), KEY);
+/** Alle Sicherungen in der IndexedDB der Seite */
+const sicherungen = (page) => page.evaluate(() => new Promise((resolve, reject) => {
+  const request = indexedDB.open('fpbjs.autosave', 1);
+  request.onupgradeneeded = () => request.result.createObjectStore('backups', { keyPath: 'id' });
+  request.onerror = () => reject(request.error);
+  request.onsuccess = () => {
+    const db = request.result;
+    const all = db.transaction('backups', 'readonly').objectStore('backups').getAll();
+    all.onsuccess = () => { db.close(); resolve(all.result); };
+  };
+}));
+const tabId = (page) => page.evaluate(() => window.fpbjs.get('autosave')._id);
+const bereit = (page) => page.evaluate(() => window.fpbjs.get('autosave').ready());
+const sichern = (page) => page.evaluate(() => window.fpbjs.get('autosave').flush());
 const namen = (page) => page.evaluate(() => window.fpbjs.get('elementRegistry')
   .filter((e) => e.businessObject && e.businessObject.name && e.type !== 'label')
   .map((e) => e.businessObject.name).sort());
@@ -23,33 +35,56 @@ const verlassenWarnt = (page) => page.evaluate(() => {
   return event.defaultPrevented;
 });
 
-/** Operator "Erhitzen" umbenennen, ein normaler Befehl */
-const umbenennen = (page, name) => page.evaluate((name) => {
+/** Einen Namen umbenennen, ein normaler Befehl */
+const umbenennen = (page, von, nach) => page.evaluate(([von, nach]) => {
   const registry = window.fpbjs.get('elementRegistry');
-  const operator = registry.filter((e) => e.businessObject && e.businessObject.name === 'Erhitzen' && e.type !== 'label')[0];
-  window.fpbjs.get('modeling').updateLabel(operator, name);
-}, name);
+  const element = registry.filter((e) => e.businessObject && e.businessObject.name === von && e.type !== 'label')[0];
+  window.fpbjs.get('modeling').updateLabel(element, nach);
+}, [von, nach]);
 
 async function laden(page) {
   const importer = new ImportPage(page);
   await importer.goto();
+  await bereit(page);
   await importer.import(clone());
   return importer;
 }
 
+async function oeffnen(page) {
+  await page.goto('/');
+  await page.waitForFunction(() => window.fpbjs && window.fpbjs.get);
+  await bereit(page);
+}
+
+async function neuLaden(page) {
+  await page.reload();
+  await page.waitForFunction(() => window.fpbjs && window.fpbjs.get);
+  await bereit(page);
+}
+
+const hinweis = (page) => page.locator('.autosave-notice');
+
+/** Der Browser gibt das Schloss eines geschlossenen Tabs nicht sofort frei */
+const schlossFrei = (page, id) => expect.poll(() => page.evaluate((id) => navigator.locks.query()
+  .then((state) => state.held.some((lock) => lock.name.endsWith('.tab.' + id))), id)).toBe(false);
+
 test.describe('Sicherung im Browser', () => {
 
-  test('ein importiertes Modell gilt als gespeichert, eine Änderung nicht', async ({ page }) => {
+  test('ein importiertes Modell braucht keine Sicherung, eine Änderung schon', async ({ page }) => {
     await laden(page);
+    await sichern(page);
 
     expect(await ungespeichert(page)).toBe(false);
     expect(await verlassenWarnt(page)).toBe(false);
-    // der Stand steht in einer Datei: keine Sicherung, nach dem Neuladen kein Angebot
-    expect(await sicherung(page)).toBeNull();
+    expect(await sicherungen(page)).toEqual([]);
 
-    await umbenennen(page, 'Erwärmen');
-    await expect.poll(async () => JSON.stringify(((await sicherung(page)) || {}).model || null)).toContain('Erwärmen');
-    expect(await ungespeichert(page)).toBe(true);
+    await umbenennen(page, 'Erhitzen', 'Erwärmen');
+    await sichern(page);
+    const liste = await sicherungen(page);
+    expect(liste).toHaveLength(1);
+    expect(liste[0].id).toBe(await tabId(page));
+    expect(liste[0].title).toBe('Aufheizen mit Prüfung');
+    expect(JSON.stringify(liste[0].model)).toContain('Erwärmen');
     expect(await verlassenWarnt(page)).toBe(true);
   });
 
@@ -61,49 +96,128 @@ test.describe('Sicherung im Browser', () => {
       const operator = fpb.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.decomposedView)[0];
       fpb.get('modeling').switchProcess(operator.businessObject.decomposedView);
     });
-    await page.evaluate(() => window.fpbjs.get('autosave').flush());
+    await sichern(page);
 
     expect(await ungespeichert(page)).toBe(false);
   });
 
   test('nach dem Neuladen wird die Sicherung angeboten und lässt sich wiederherstellen', async ({ page }) => {
     await laden(page);
-    await umbenennen(page, 'Erwärmen');
-    await page.evaluate(() => window.fpbjs.get('autosave').flush());
+    await umbenennen(page, 'Erhitzen', 'Erwärmen');
+    await sichern(page);
 
-    await page.reload();
-    await page.waitForFunction(() => window.fpbjs && window.fpbjs.get);
+    await neuLaden(page);
 
-    const hinweis = page.locator('.autosave-notice');
-    await expect(hinweis).toBeVisible();
-    await expect(hinweis).toContainText('Unsaved model found');
+    await expect(hinweis(page)).toBeVisible();
+    await expect(hinweis(page)).toContainText('Unsaved model found');
+    await expect(hinweis(page)).toContainText('Aufheizen mit Prüfung');
     expect(await namen(page)).toEqual([]);
 
-    await hinweis.getByRole('button', { name: 'Restore' }).click();
-    await expect(hinweis).toHaveCount(0);
+    await hinweis(page).getByRole('button', { name: 'Restore Aufheizen mit Prüfung' }).click();
+    await expect(hinweis(page)).toHaveCount(0);
     await expect.poll(() => namen(page)).toContain('Erwärmen');
-
-    // wiederhergestellt ist noch in keiner Datei
     expect(await ungespeichert(page)).toBe(true);
+
+    // die Sicherung gehört jetzt diesem Tab, keine zweite liegt herum
+    await sichern(page);
+    const liste = await sicherungen(page);
+    expect(liste.map((s) => s.id)).toEqual([await tabId(page)]);
+  });
+
+  test('zwei offene Tabs überschreiben sich nicht und bieten sich gegenseitig nichts an', async ({ context }) => {
+    const a = await context.newPage();
+    const b = await context.newPage();
+    await laden(a);
+    await laden(b);
+
+    await umbenennen(a, 'Erhitzen', 'Modell A');
+    await umbenennen(b, 'Erhitzen', 'Modell B');
+    await sichern(a);
+    await sichern(b);
+
+    const liste = await sicherungen(a);
+    expect(liste).toHaveLength(2);
+    const inhalt = Object.fromEntries(liste.map((s) => [s.id, JSON.stringify(s.model)]));
+    expect(inhalt[await tabId(a)]).toContain('Modell A');
+    expect(inhalt[await tabId(b)]).toContain('Modell B');
+
+    // ein dritter Tab sieht nichts: beide sind noch offen
+    const c = await context.newPage();
+    await oeffnen(c);
+    await c.waitForTimeout(300);
+    await expect(hinweis(c)).toHaveCount(0);
+
+    // B wird geschlossen: jetzt bietet ein neuer Tab dessen Modell an, nicht das von A
+    const idB = await tabId(b);
+    await b.close();
+    await schlossFrei(a, idB);
+    const d = await context.newPage();
+    await oeffnen(d);
+    await expect(hinweis(d)).toBeVisible();
+    await expect(hinweis(d).locator('.autosave-entry')).toHaveCount(1);
+    await hinweis(d).getByRole('button', { name: /^Restore/ }).click();
+    await expect.poll(() => namen(d)).toContain('Modell B');
+  });
+
+  test('mit eigener ungespeicherter Arbeit öffnet eine Sicherung in einem neuen Tab', async ({ context }) => {
+    const alt = await context.newPage();
+    await laden(alt);
+    await umbenennen(alt, 'Erhitzen', 'Aus dem alten Tab');
+    await sichern(alt);
+    const idAlt = await tabId(alt);
+    await alt.close();
+
+    const page = await context.newPage();
+    await oeffnen(page);
+    await schlossFrei(page, idAlt);
+    await neuLaden(page);
+    await new ImportPage(page).import(clone());
+    await umbenennen(page, 'Prüfen', 'Eigene Arbeit');
+    await sichern(page);
+
+    await expect(hinweis(page)).toBeVisible();
+    const [neu] = await Promise.all([
+      context.waitForEvent('page'),
+      hinweis(page).getByRole('button', { name: /in a new tab/ }).click(),
+    ]);
+    await neu.waitForFunction(() => window.fpbjs && window.fpbjs.get);
+    await expect.poll(() => namen(neu)).toContain('Aus dem alten Tab');
+    expect(neu.url()).not.toContain('fpbRestore');
+
+    // der eigene Tab bleibt, wie er war
+    expect(await namen(page)).toContain('Eigene Arbeit');
+    await expect(hinweis(page)).toHaveCount(0);
   });
 
   test('Verwerfen lässt die Zeichenfläche leer und die Sicherung ist weg', async ({ page }) => {
     await laden(page);
-    await umbenennen(page, 'Erwärmen');
-    await page.evaluate(() => window.fpbjs.get('autosave').flush());
+    await umbenennen(page, 'Erhitzen', 'Erwärmen');
+    await sichern(page);
 
-    await page.reload();
-    await page.waitForFunction(() => window.fpbjs && window.fpbjs.get);
-    await page.locator('.autosave-notice').getByRole('button', { name: 'Discard' }).click();
+    await neuLaden(page);
+    await hinweis(page).getByRole('button', { name: /^Discard/ }).click();
 
-    await expect(page.locator('.autosave-notice')).toHaveCount(0);
-    expect(await sicherung(page)).toBeNull();
+    await expect(hinweis(page)).toHaveCount(0);
+    await expect.poll(async () => (await sicherungen(page)).length).toBe(0);
     expect(await namen(page)).toEqual([]);
+  });
+
+  test('wer vor dem Speichern die Seite verlässt, verliert nichts', async ({ page }) => {
+    await laden(page);
+    // sofort weg, bevor die verzögerte Sicherung läuft
+    await umbenennen(page, 'Erhitzen', 'Kurz vor Schluss');
+    await page.goto('about:blank');
+
+    await oeffnen(page);
+    await expect(hinweis(page)).toBeVisible();
+    await hinweis(page).getByRole('button', { name: /^Restore/ }).click();
+    await expect.poll(() => namen(page)).toContain('Kurz vor Schluss');
   });
 
   test('New model fragt bei ungespeicherten Änderungen, leert alles und lässt neu modellieren', async ({ page }) => {
     await laden(page);
-    await umbenennen(page, 'Erwärmen');
+    await umbenennen(page, 'Erhitzen', 'Erwärmen');
+    await sichern(page);
 
     await page.getByRole('button', { name: 'Show Options' }).click();
     await page.locator('#newModelButton').click();
@@ -113,7 +227,7 @@ test.describe('Sicherung im Browser', () => {
 
     await expect(dialog).toHaveCount(0);
     expect(await namen(page)).toEqual([]);
-    expect(await sicherung(page)).toBeNull();
+    await expect.poll(async () => (await sicherungen(page)).length).toBe(0);
     expect(await ungespeichert(page)).toBe(false);
     await expect(page.locator('#openLayerButton')).toHaveCount(0);
 
@@ -130,7 +244,8 @@ test.describe('Sicherung im Browser', () => {
       };
     });
     expect(modell).toEqual({ prozesse: 1, projekt: true });
-    await expect.poll(async () => (await sicherung(page)) !== null).toBe(true);
+    await sichern(page);
+    expect(await sicherungen(page)).toHaveLength(1);
   });
 
   test('ohne Änderungen startet New model ohne Rückfrage', async ({ page }) => {
@@ -145,33 +260,35 @@ test.describe('Sicherung im Browser', () => {
 
   test('nach einem Import ohne Änderung bietet das Neuladen nichts an', async ({ page }) => {
     await laden(page);
-    await page.evaluate(() => window.fpbjs.get('autosave').flush());
+    await sichern(page);
 
-    await page.reload();
-    await page.waitForFunction(() => window.fpbjs && window.fpbjs.get);
+    await neuLaden(page);
     await page.waitForTimeout(300);
-    await expect(page.locator('.autosave-notice')).toHaveCount(0);
+    await expect(hinweis(page)).toHaveCount(0);
   });
 
   test('Rückgängig bis zum Dateistand entfernt die Sicherung wieder', async ({ page }) => {
     await laden(page);
-    await umbenennen(page, 'Erwärmen');
-    await page.evaluate(() => window.fpbjs.get('autosave').flush());
-    expect(await sicherung(page)).not.toBeNull();
+    await umbenennen(page, 'Erhitzen', 'Erwärmen');
+    await sichern(page);
+    expect(await sicherungen(page)).toHaveLength(1);
 
-    await page.evaluate(() => { window.fpbjs.get('commandStack').undo(); window.fpbjs.get('autosave').flush(); });
+    await page.evaluate(() => window.fpbjs.get('commandStack').undo());
+    await sichern(page);
     expect(await ungespeichert(page)).toBe(false);
-    expect(await sicherung(page)).toBeNull();
+    expect(await sicherungen(page)).toEqual([]);
   });
 
   test('ein Download des ganzen Modells gilt als gespeichert', async ({ page }) => {
     await laden(page);
-    await umbenennen(page, 'Erwärmen');
-    await page.evaluate(() => window.fpbjs.get('autosave').flush());
+    await umbenennen(page, 'Erhitzen', 'Erwärmen');
+    await sichern(page);
     expect(await ungespeichert(page)).toBe(true);
 
     await page.evaluate(() => window.fpbjs.get('eventBus').fire('model.downloaded', { format: 'json' }));
+    await sichern(page);
     expect(await ungespeichert(page)).toBe(false);
     expect(await verlassenWarnt(page)).toBe(false);
+    expect(await sicherungen(page)).toEqual([]);
   });
 });
