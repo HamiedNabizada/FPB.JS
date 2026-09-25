@@ -25,7 +25,9 @@ test.describe('Ansicht', () => {
       const flaeche = document.querySelector('#modeler-container .djs-container').getBoundingClientRect();
       return window.fpbjs.get('elementRegistry')
         .filter((e) => !e.waypoints && e.type !== 'label' && e.parent)
-        .map((e) => ({ id: e.id, box: document.querySelector(`[data-element-id="${e.id}"]`).getBoundingClientRect() }))
+        // the visible shape: Firefox counts the hidden selection outline
+        // into the group's box, Chromium does not
+        .map((e) => ({ id: e.id, box: document.querySelector(`[data-element-id="${e.id}"] .djs-visual`).getBoundingClientRect() }))
         .filter(({ box }) => box.left < flaeche.left - 1 || box.top < flaeche.top - 1
           || box.right > flaeche.right + 1 || box.bottom > flaeche.bottom + 1)
         .map(({ id }) => id);

@@ -39,10 +39,21 @@ export default defineConfig({
   },
 
   // Projekte (Browser)
+  // Chromium ist der Standard (`npm run test:e2e`). Firefox und WebKit (die
+  // Engine von Safari) laufen mit `--project=firefox` bzw. `--project=webkit`;
+  // einmalig vorher `npx playwright install firefox webkit`.
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
     },
   ],
 
