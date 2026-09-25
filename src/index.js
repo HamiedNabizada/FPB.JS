@@ -46,6 +46,7 @@ export const PropertiesPanel = PropertiesPanelStub;
 export const LayerOverview = LayerOverviewStub;
 
 import { collectProcessShapes, findProcessShape } from './processShapes';
+import { serializeModel } from '../app/fpb/export/serializeModel';
 
 // Automatic layout works on plain JSON, so it is available without a browser.
 export { layoutImportData, needsLayout } from '../app/fpb/layout/AutoLayout';
@@ -124,6 +125,7 @@ export async function createFpbModeler(options = {}) {
   const elementRegistry = modeler.get('elementRegistry');
   const modeling = modeler.get('modeling');
   const xmlMapper = new XMLMapper();
+  const listeners = createListenerRegistry();
 
   // Fit viewport by default
   canvas.zoom('fit-viewport');
@@ -137,20 +139,28 @@ export async function createFpbModeler(options = {}) {
     // --- Event API ---
 
     on(event, callback) {
+      // The event bus stops an event at the first listener that returns a
+      // value; a host callback such as `() => dirty = true` would silently
+      // cut off the modeler's own listeners. Hosts only observe.
+      const listener = listeners.wrap(event, callback);
       const mapped = EVENT_MAP[event];
       if (Array.isArray(mapped)) {
-        mapped.forEach(e => eventBus.on(e, callback));
+        mapped.forEach(e => eventBus.on(e, listener));
       } else {
-        eventBus.on(mapped || event, callback);
+        eventBus.on(mapped || event, listener);
       }
     },
 
     off(event, callback) {
+      const listener = listeners.unwrap(event, callback);
+      if (!listener) {
+        return;
+      }
       const mapped = EVENT_MAP[event];
       if (Array.isArray(mapped)) {
-        mapped.forEach(e => eventBus.off(e, callback));
+        mapped.forEach(e => eventBus.off(e, listener));
       } else {
-        eventBus.off(mapped || event, callback);
+        eventBus.off(mapped || event, listener);
       }
     },
 
@@ -174,9 +184,14 @@ export async function createFpbModeler(options = {}) {
       eventBus.fire('FPBJS.import', { data: json });
     },
 
+    /**
+     * The model as plain data, the same as the JSON download: references
+     * are ids, so the result can go to JSON.stringify, postMessage or
+     * importJSON. (It used to be the live object graph, which has cycles.)
+     */
     toJSON() {
       eventBus.fire('dataStore.updateAll', {});
-      return [...modeler.getProcesses()];
+      return JSON.parse(serializeModel(modeler.getProcesses(), { indent: 0 }));
     },
 
     async toXML() {
@@ -230,7 +245,8 @@ export async function createFpbModeler(options = {}) {
     },
 
     getZoom() {
-      return canvas.getZoom();
+      // diagram-js reads the level through zoom() without arguments
+      return canvas.zoom();
     },
 
     /**
@@ -284,6 +300,38 @@ export async function createFpbModeler(options = {}) {
       if (modeler && typeof modeler.destroy === 'function') {
         modeler.destroy();
       }
+    }
+  };
+}
+
+/**
+ * Host callbacks wrapped so they never return a value to the event bus, with
+ * the wrapper kept per event name and callback so off() finds it again.
+ */
+function createListenerRegistry() {
+  const byEvent = new Map();
+
+  return {
+    wrap(event, callback) {
+      if (!byEvent.has(event)) {
+        byEvent.set(event, new Map());
+      }
+      const wrappers = byEvent.get(event);
+      if (!wrappers.has(callback)) {
+        wrappers.set(callback, function (e) {
+          callback(e);
+        });
+      }
+      return wrappers.get(callback);
+    },
+
+    unwrap(event, callback) {
+      const wrappers = byEvent.get(event);
+      const wrapper = wrappers && wrappers.get(callback);
+      if (wrapper) {
+        wrappers.delete(callback);
+      }
+      return wrapper;
     }
   };
 }
