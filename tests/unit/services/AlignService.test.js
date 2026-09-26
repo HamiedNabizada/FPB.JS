@@ -26,12 +26,25 @@ describe('AlignService', () => {
       moveElements: vi.fn()
     };
 
-    mockCanvas = {};
+    mockCanvas = {
+      getRootElement: () => ({ id: 'root' })
+    };
+
+    // One alignment runs as one command (fpb.moveEach); the stand-in runs the
+    // registered handler right away, so moveElements is seen as before
+    const handlers = {};
+    const mockCommandStack = {
+      registerHandler: vi.fn((name, Handler) => { handlers[name] = new Handler(mockModeling); }),
+      execute: vi.fn((name, context) => handlers[name].preExecute(context))
+    };
 
     mockInjector = {
       get: vi.fn((name) => {
         if (name === 'modeling') return mockModeling;
         if (name === 'canvas') return mockCanvas;
+        if (name === 'commandStack') return mockCommandStack;
+        if (name === 'elementRegistry') return { filter: () => [] };
+        // no rules: every move allowed
         return null;
       })
     };
