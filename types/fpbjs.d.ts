@@ -137,6 +137,23 @@ export interface FpbEventMap {
   'import.error': { message: string; details?: string };
   /** The read-only mode was turned on or off */
   'readOnly.changed': { readOnly: boolean };
+  /** The AML file kept for the AML export changed (import, export, New model) */
+  'aml.sourceChanged': { source: AmlSource | null };
+}
+
+/** The AML file kept since importAML, written back by toAML */
+export interface AmlSource {
+  text: string;
+  fileName: string;
+  /** The FPD InstanceHierarchy the model came from; null for a file without FPD content */
+  hierarchyId: string | null;
+  hierarchyName: string | null;
+}
+
+/** An FPD process view (InstanceHierarchy) of an AML file */
+export interface AmlHierarchy {
+  id: string;
+  name: string;
 }
 
 /** One warning of an import report */
@@ -540,6 +557,28 @@ export interface FpbInstance {
 
   /** Switch to a different process layer by ID */
   switchProcess(id: string): void;
+
+  // --- AutomationML ---
+
+  /** The FPD process views of an AML text; empty when the file has none */
+  getAMLHierarchies(text: string): Promise<AmlHierarchy[]>;
+
+  /**
+   * Import an AML text. The rest of the file (other hierarchies, libraries,
+   * attributes and links) is kept and written back by toAML(). A file without
+   * FPD content opens an empty model; toAML() then adds the process to it.
+   */
+  importAML(text: string, options?: { instanceHierarchy?: string; fileName?: string }): Promise<{
+    hierarchies: AmlHierarchy[];
+    hierarchy: AmlHierarchy | null;
+    warnings?: string[];
+  }>;
+
+  /**
+   * The model as AML text: written into the imported file when there is one
+   * (everything else stays), else a new file with the FPD libraries.
+   */
+  toAML(): Promise<string>;
 
   // --- Read-only mode ---
 

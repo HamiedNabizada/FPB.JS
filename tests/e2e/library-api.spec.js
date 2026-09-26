@@ -1070,6 +1070,73 @@ test.describe('Events (on / off / fire)', () => {
 
 // ---------------------------------------------------------------------------
 
+test.describe('AutomationML (importAML, toAML)', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const inputs = path.join(__dirname, '..', 'unit', 'aml', 'oracle', 'inputs');
+  const mixed = fs.readFileSync(path.join(inputs, 'generated', 'mixed.aml'), 'utf8');
+
+  /** importAML and wait until the model is on the canvas */
+  const importAml = (page, text, options) => page.evaluate(({ text, options }) => new Promise((resolve, reject) => {
+    const done = () => {
+      window.fpb.off('import.done', done);
+      resolve(result);
+    };
+    let result;
+    window.fpb.on('import.done', done);
+    window.fpb.importAML(text, options).then((r) => {
+      result = r;
+    }, reject);
+  }), { text, options });
+
+  test('getAMLHierarchies names the process views of a file', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page);
+    const views = await page.evaluate((text) => window.fpb.getAMLHierarchies(text), mixed);
+    expect(views.map((v) => v.name)).toEqual(['FPD_Heating', 'FPBJS_Project']);
+  });
+
+  test('importAML opens the chosen view; toAML writes it back with the rest of the file', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page);
+    const views = await page.evaluate((text) => window.fpb.getAMLHierarchies(text), mixed);
+
+    const result = await importAml(page, mixed, { instanceHierarchy: views[1].id, fileName: 'Anlage.aml' });
+    expect(result.hierarchy).toEqual(views[1]);
+    const names = await page.evaluate(() => window.fpb.get('elementRegistry').filter((e) => e.businessObject && e.type === 'fpb:ProcessOperator').map((e) => e.businessObject.name));
+    expect(names).toContain('Erhitzen');
+
+    const aml = await page.evaluate(() => window.fpb.toAML());
+    expect(aml).toContain('Name="Behaelter_B1"');
+    expect(aml).toContain('Name="FPD_Heating"');
+    expect(aml).toContain('Name="FPBJS_Project"');
+  });
+
+  test('without an AML import toAML writes a new file with the FPD libraries', async ({ page }) => {
+    await withModel(page);
+    const aml = await page.evaluate(() => window.fpb.toAML());
+    expect(aml).toContain('<CAEXFile');
+    expect(aml).toContain('Name="VDI_FPD_SystemUnitClassLib"');
+    expect(aml).not.toContain('Behaelter_B1');
+  });
+
+  test('importJSON after importAML drops the kept file', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page);
+    await importAml(page, mixed, {});
+    expect(await importModel(page, clone())).toBe(true);
+    const aml = await page.evaluate(() => window.fpb.toAML());
+    expect(aml).not.toContain('Behaelter_B1');
+  });
+
+  test('importAML rejects a text that is no AutomationML', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page);
+    const message = await page.evaluate(() => window.fpb.importAML('<root/>').then(() => 'imported', (e) => e.message));
+    expect(message).toContain('no AutomationML');
+  });
+});
+
 test.describe('Read-only mode', () => {
 
   test('the readOnly option starts in read-only mode; setReadOnly switches and on() reports it', async ({ page }) => {

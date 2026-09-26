@@ -63,6 +63,7 @@ import AccessibilityModule from './a11y';
 import PreviewModule from './preview';
 import AutosaveModule from './autosave';
 import ReadOnlyModule from './read-only';
+import AmlModule from './aml';
 import SnappingModule from 'diagram-js/lib/features/snapping';
 
 
@@ -154,7 +155,8 @@ FpbModeler.prototype._modules = [
     AccessibilityModule,
     SnappingModule,
     AutosaveModule,
-    ReadOnlyModule
+    ReadOnlyModule,
+    AmlModule
     // AutoResize - disabled to allow free SystemLimit resize
 ];
 

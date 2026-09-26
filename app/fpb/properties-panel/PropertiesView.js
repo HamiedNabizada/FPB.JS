@@ -30,6 +30,7 @@ import Tooltip from 'react-bootstrap/Tooltip'
 
 import './PropertiesView.css';
 import useReadOnly from '../read-only/useReadOnly';
+import AmlContentItem from '../aml/AmlContent';
 
 const tooltips_text = {
   copyUniqueIdToClipboard: "Copy UniqueId to Clipboard"
@@ -428,6 +429,7 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
               </Accordion.Item>
             }
             {renderCharacteristics()}
+            <AmlContentItem modeler={modeler} elementId={element.id} />
           </div>
         }
       </Accordion >

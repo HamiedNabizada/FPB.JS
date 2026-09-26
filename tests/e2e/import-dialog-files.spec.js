@@ -14,7 +14,7 @@ import { openImportDialog, dropFile, pickFile, pressImport, importButton } from 
  */
 
 const LABEL = '.modal.show .fileLabel';
-const DEFAULT_TEXT = 'Import a local stored FPB.js JSON file or XML file, or drop it here';
+const DEFAULT_TEXT = 'Import a local stored FPB.js JSON file, XML file or AutomationML (.aml) file, or drop it here';
 
 function model(prefix, name) {
   const m = new ModelBuilder(name);
@@ -88,7 +88,7 @@ test.describe('Import dialog - choosing files', () => {
 
     await pickFile(page, JSON.stringify(model('x', 'X')), 'modell.txt', 'text/plain');
 
-    await expectError(page, 'Invalid file type', 'Please select a valid JSON (.json) or XML (.xml) file');
+    await expectError(page, 'Invalid file type', 'Please select a valid JSON (.json), XML (.xml) or AutomationML (.aml) file');
     await expect(page.locator(LABEL)).toHaveText(DEFAULT_TEXT);
     await expect(importButton(page)).toBeDisabled();
   });

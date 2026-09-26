@@ -8,11 +8,13 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import Container from 'react-bootstrap/Container';
 import Alert from 'react-bootstrap/Alert';
+import Form from 'react-bootstrap/Form';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useError } from '../../context/ErrorContext';
 import XMLMapper from '../../xml/XMLMapper.js';
 import useReadOnly from '../../read-only/useReadOnly';
+import { isAmlText as isAml } from '../../aml/AmlSupport';
 
 const ImportModal = memo(({ modeler }) => {
     const [show, setShow] = useState(false);
@@ -29,11 +31,14 @@ const ImportModal = memo(({ modeler }) => {
     const [fileName, setFileName] = useState('');
     const [fileType, setFileType] = useState('json');
     const [isDragging, setIsDragging] = useState(false);
+    // AutomationML: the text, its FPD hierarchies and the one to open (feature 028)
+    const [aml, setAml] = useState(null);
+    const [hierarchyId, setHierarchyId] = useState(null);
     const { showError } = useError();
     const fileLabelRef = useRef();
 
     const eventBus = modeler.get('eventBus');
-    const defaultText = 'Import a local stored FPB.js JSON file or XML file, or drop it here';
+    const defaultText = 'Import a local stored FPB.js JSON file, XML file or AutomationML (.aml) file, or drop it here';
     let fileReader;
     
     useEffect(() => {
@@ -58,7 +63,18 @@ const ImportModal = memo(({ modeler }) => {
     const handleFileRead = async (e) => {
         try {
             const fileContent = fileReader.result;
-            
+
+            // AutomationML: everything else in the file is kept for the AML export
+            if (isAml(fileContent)) {
+                setFileType('aml');
+                setFileData(null);
+                const hierarchies = await modeler.get('amlSupport').inspect(fileContent);
+                setAml({ text: fileContent, hierarchies });
+                setHierarchyId(hierarchies.length ? hierarchies[0].id : null);
+                return;
+            }
+            setAml(null);
+
             // Auto-detect file type using the mapper
             const detectedType = XMLMapper.detectFileType(fileContent);
             
@@ -104,10 +120,12 @@ const ImportModal = memo(({ modeler }) => {
                 detectedFileType = 'json';
             } else if (fileName.endsWith('.xml')) {
                 detectedFileType = 'xml';
+            } else if (fileName.endsWith('.aml')) {
+                detectedFileType = 'aml';
             } else {
                 showError(
                     'Invalid file type',
-                    'Please select a valid JSON (.json) or XML (.xml) file'
+                    'Please select a valid JSON (.json), XML (.xml) or AutomationML (.aml) file'
                 );
                 return;
             }
@@ -124,6 +142,8 @@ const ImportModal = memo(({ modeler }) => {
             
             setSelectedFile(file);
             setFileName(file.name);
+            setAml(null);
+            setFileData(null);
             fileReader = new FileReader();
 
             fileReader.onloadend = handleFileRead;
@@ -139,6 +159,20 @@ const ImportModal = memo(({ modeler }) => {
     }
 
     function go() {
+        if (aml) {
+            setIsImporting(true);
+            modeler.get('amlSupport').importAml(aml.text, { fileName, hierarchyId }).then((result) => {
+                // without FPD content the model starts empty: no import runs
+                if (!result.hierarchy) {
+                    setIsImporting(false);
+                }
+            }).catch((error) => {
+                showError('Import failed', `The AutomationML file could not be imported: ${error.message}`);
+                setIsImporting(false);
+            });
+            handleClose();
+            return;
+        }
         if (fileData) {
             setIsImporting(true);
             try {
@@ -167,6 +201,8 @@ const ImportModal = memo(({ modeler }) => {
             setSelectedFile(null);
             setFileData(null);
             setFileName('');
+            setAml(null);
+            setHierarchyId(null);
         }
     };
 
@@ -223,13 +259,42 @@ const ImportModal = memo(({ modeler }) => {
                             <input type="file"
                                 id='file'
                                 className='inputfile'
-                                accept='.json,.xml'
+                                accept='.json,.xml,.aml'
                                 onChange={e => handleFileChosen(e.target.files[0])} />
 
                             <label htmlFor="file" ref={fileLabelRef} className={isDragging ? 'fileLabel fileLabel--dragover' : 'fileLabel'}> 
                                 {fileName || defaultText} 
                             </label>
                         </Row>
+                        {aml && aml.hierarchies.length > 1 && (
+                            <Row className="aml-hierarchies">
+                                <Form.Label as="legend" id="aml-hierarchies-label">
+                                    The file contains {aml.hierarchies.length} process views. Which one should FPB.js open?
+                                    The others stay unchanged in the file.
+                                </Form.Label>
+                                <div role="radiogroup" aria-labelledby="aml-hierarchies-label">
+                                    {aml.hierarchies.map((h) => (
+                                        <Form.Check
+                                            key={h.id}
+                                            type="radio"
+                                            id={'aml-hierarchy-' + h.id}
+                                            name="aml-hierarchy"
+                                            label={h.name || h.id}
+                                            checked={hierarchyId === h.id}
+                                            onChange={() => setHierarchyId(h.id)}
+                                        />
+                                    ))}
+                                </div>
+                            </Row>
+                        )}
+                        {aml && !aml.hierarchies.length && (
+                            <Row>
+                                <Alert variant="info" className="aml-no-fpd">
+                                    The file contains no FPD process. FPB.js starts with an empty model;
+                                    exporting as AML adds the process to this file and keeps everything else in it.
+                                </Alert>
+                            </Row>
+                        )}
                     </Container>
                 </Modal.Body>
                 <Modal.Footer>
@@ -239,7 +304,7 @@ const ImportModal = memo(({ modeler }) => {
                         <Button 
                             variant="secondary" 
                             onClick={() => { go() }}
-                            disabled={!selectedFile || isImporting}
+                            disabled={!selectedFile || isImporting || (fileType === 'aml' && !aml)}
                         >
                             {isImporting ? (
                                 <>

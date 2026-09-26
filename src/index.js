@@ -204,6 +204,39 @@ export async function createFpbModeler(options = {}) {
       return xmlMapper.convertToXML(modeler.getProcesses());
     },
 
+    // --- AutomationML (feature 028) ---
+
+    /**
+     * The FPD process views (InstanceHierarchies) of an AML text, as
+     * [{ id, name }]; empty when the file has no FPD content.
+     */
+    getAMLHierarchies(text) {
+      return modeler.get('amlSupport').inspect(text);
+    },
+
+    /**
+     * Import an AML text. Everything in the file beyond the process view is
+     * kept and written back by toAML(). `instanceHierarchy` picks the process
+     * view by id (default: the first); a file without FPD content opens an
+     * empty model and toAML() adds the process to that file.
+     */
+    importAML(text, options = {}) {
+      return modeler.get('amlSupport').importAml(text, {
+        fileName: options.fileName,
+        hierarchyId: options.instanceHierarchy
+      });
+    },
+
+    /**
+     * The model as AML text. After importAML the model is written into the
+     * imported file and everything else in it stays; otherwise a new file is
+     * written. The result is kept for the next toAML().
+     */
+    async toAML() {
+      const result = await modeler.get('amlSupport').exportAml();
+      return result.text;
+    },
+
     toSVG() {
       return new Promise((resolve, reject) => {
         modeler.saveSVG({}, (err, svg) => {

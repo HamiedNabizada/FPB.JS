@@ -91,7 +91,7 @@ export async function exportViaDialog(page, { format = 'json', withLayout = true
   await expect(page.locator('#formatXML')).toBeVisible();
   return page.evaluate(({ format, withLayout }) => new Promise((resolve) => {
     window.fpbjs.get('eventBus').once('fpbjs', (e) => resolve(e.format === format ? e.data : null));
-    document.querySelector(format === 'xml' ? '#formatXML' : '#formatJSON').click();
+    document.querySelector({ xml: '#formatXML', aml: '#formatAML' }[format] || '#formatJSON').click();
     document.querySelector(withLayout ? '#informationLevel1' : '#informationLevel2').click();
     document.querySelector('#information1').click();
     document.querySelector('#export1').click();

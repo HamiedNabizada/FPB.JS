@@ -18,6 +18,7 @@ import { exportPNG } from '../../export/PngExporter.js';
 import { exportPDF, exportMultiLayerPDF } from '../../export/PdfExporter.js';
 import { renderLayers } from '../../export/renderLayers.js';
 import { modelReplacer } from '../../export/serializeModel.js';
+import { useError } from '../../context/ErrorContext';
 
 // Regex pattern for invalid filename characters (Windows/Unix compatible)
 const INVALID_FILENAME_CHARS = /[<>:"/\\|?*\x00-\x1f]/g;
@@ -64,6 +65,10 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
     const [isExporting, setIsExporting] = useState(false);
     const [exportError, setExportError] = useState(null);
     const [filenameError, setFilenameError] = useState(null);
+    const { showReport } = useError();
+    // the AutomationML file kept since an AML import, if any (feature 028)
+    const amlSupport = modeler.get('amlSupport', false);
+    const amlSource = amlSupport ? amlSupport.getSource() : null;
 
     const handleInformationLevel = (infoLevel) => {
         setInformationLevel(infoLevel);
@@ -94,9 +99,13 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
     
     const handleExportFormat = (format) => {
         setExportFormat(format);
-        // An XML document after VDI 3682 always describes the whole project
-        if (format === 'xml') {
+        // An XML document after VDI 3682 always describes the whole project,
+        // AML too: the process is written into the file as a whole, with layout
+        if (format === 'xml' || format === 'aml') {
             setInformation('information1');
+        }
+        if (format === 'aml') {
+            setInformationLevel('1');
         }
     };
 
@@ -223,6 +232,33 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
     // Same form as every other JSON of the model, see serializeModel
     const replacer = modelReplacer({ withLayout: informationLevel !== '2' });
 
+    /** AML: into the kept file, else a new one; bytes as Aml.Engine writes them */
+    async function exportAml() {
+        const result = await amlSupport.exportAml();
+        if (exportAsDownload) {
+            const url = URL.createObjectURL(new Blob([result.bytes], { type: 'application/xml' }));
+            try {
+                download(url, 'aml');
+            } finally {
+                setTimeout(() => URL.revokeObjectURL(url), 0);
+            }
+            eventBus.fire('model.downloaded', { format: 'aml' });
+        }
+        if (exportAsEvent) {
+            eventBus.fire(eventName, { data: result.text, format: 'aml' });
+        }
+        if (result.removedLinks.length) {
+            showReport({
+                title: `AML export: ${result.removedLinks.length} ${result.removedLinks.length === 1 ? 'link' : 'links'} removed`,
+                warnings: result.removedLinks.map((message) => ({
+                    message,
+                    details: null,
+                    hint: 'The element was deleted in FPB.js; the link pointed to it.'
+                }))
+            });
+        }
+    }
+
     async function go() {
         // Validate export options
         if (!exportAsDownload && !exportAsEvent) {
@@ -261,6 +297,12 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
             }
             if (data === undefined) {
                 throw new Error('No data available for export');
+            }
+
+            if (exportFormat === 'aml') {
+                await exportAml();
+                handleClose();
+                return;
             }
 
             // Export based on format selection
@@ -352,6 +394,7 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                                 current choices, so the form shows what the export will do */}
                             <Forms_Format
                                 exportFormat={exportFormat}
+                                amlSource={amlSource}
                                 informationLevel={informationLevel}
                                 exportAsEvent={exportAsEvent}
                                 exportAsDownload={exportAsDownload}
@@ -464,7 +507,7 @@ const Forms_Format = memo(function Forms_Format(props) {
                                 name="exportFormat"
                                 id="formatJSON"
                                 value="json"
-                                defaultChecked={props.exportFormat !== 'xml'}
+                                defaultChecked={props.exportFormat === 'json'}
                             />
                             <div>
                                 <Form.Check
@@ -488,22 +531,44 @@ const Forms_Format = memo(function Forms_Format(props) {
                                     </a>
                                 </div>
                             </div>
+                            <Form.Check
+                                type="radio"
+                                label="AutomationML (AML)"
+                                name="exportFormat"
+                                id="formatAML"
+                                value="aml"
+                                defaultChecked={props.exportFormat === 'aml'}
+                            />
+                            {props.exportFormat === 'aml' && (
+                                <Form.Text className="text-muted aml-target-hint">
+                                    {props.amlSource
+                                        ? `Writes the process into ${props.amlSource.fileName}; everything else in that file stays.`
+                                        : 'Writes a new AutomationML file with the FPD libraries.'}
+                                </Form.Text>
+                            )}
+                            {props.exportFormat !== 'aml' && props.amlSource && (
+                                <Form.Text className="text-muted aml-kept-hint">
+                                    {`Only an AML export keeps the rest of ${props.amlSource.fileName}.`}
+                                </Form.Text>
+                            )}
                         </Col>
                     </Form.Group>
                 </fieldset>
                 <fieldset>
-                    <Form.Group as={Row} onChange={(e) => { handleInformationLevelChange(e) }}>
+                    <Form.Group as={Row}>
                         <Form.Label as="legend" column sm={4}>
                             <h6>Information Level</h6>
                         </Form.Label>
                         <Col sm={6}>
+                            {/* controlled: choosing AML switches back to Total */}
                             <Form.Check
                                 type="radio"
                                 label="Total"
                                 name="informationLevel"
                                 id="informationLevel1"
                                 value="1"
-                                defaultChecked={props.informationLevel !== '2'}
+                                checked={props.informationLevel !== '2'}
+                                onChange={handleInformationLevelChange}
                             />
                             <Form.Check
                                 type="radio"
@@ -511,7 +576,9 @@ const Forms_Format = memo(function Forms_Format(props) {
                                 name="informationLevel"
                                 id="informationLevel2"
                                 value="2"
-                                defaultChecked={props.informationLevel === '2'}
+                                checked={props.informationLevel === '2'}
+                                onChange={handleInformationLevelChange}
+                                disabled={props.exportFormat === 'aml'}
                             />
                         </Col>
                     </Form.Group>
@@ -550,7 +617,7 @@ const Forms_Data = memo(function Forms_Data(props) {
     function handleChange(e) {
         props.onInformationChange(e.target.id)
     }
-    const xml = props.exportFormat === 'xml';
+    const xml = props.exportFormat === 'xml' || props.exportFormat === 'aml';
     return (
         <Card>
             <Card.Header as="h5">Data</Card.Header>
@@ -589,7 +656,7 @@ const Forms_Data = memo(function Forms_Data(props) {
                             />
                             {xml && (
                                 <Form.Text className="text-muted xml-scope-hint">
-                                    XML always contains the whole model.
+                                    {props.exportFormat === 'aml' ? 'AML' : 'XML'} always contains the whole model.
                                 </Form.Text>
                             )}
                         </Col>

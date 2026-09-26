@@ -39,9 +39,11 @@ const RESTORE_PARAM = 'fpbRestore';
  * the unsaved state change, `autosave.failed` ({ error }) when the browser
  * refuses to store.
  */
-export default function Autosave(eventBus, fpbjs, config) {
+export default function Autosave(eventBus, fpbjs, config, injector) {
   this._eventBus = eventBus;
   this._fpbjs = fpbjs;
+  // an AML file kept for the AML export goes into the backup too (feature 028)
+  this._amlSupport = injector ? injector.get('amlSupport', false) : null;
   this._config = normalizeConfig(config);
 
   this._pending = [];
@@ -123,7 +125,7 @@ export default function Autosave(eventBus, fpbjs, config) {
   this._queue = this._ready;
 }
 
-Autosave.$inject = ['eventBus', 'fpbjs', 'config.autosave'];
+Autosave.$inject = ['eventBus', 'fpbjs', 'config.autosave', 'injector'];
 
 Autosave.prototype.isEnabled = function () {
   return this._config.enabled;
@@ -164,7 +166,7 @@ Autosave.prototype.restore = function (id) {
       return false;
     }
     this._restoring = id;
-    this._eventBus.fire('FPBJS.import', { data: record.model });
+    this._eventBus.fire('FPBJS.import', { data: record.model, amlSource: record.aml || null });
     return true;
   }).catch((error) => {
     this._failed(error);
@@ -302,13 +304,18 @@ Autosave.prototype._write = function () {
   });
 };
 
-Autosave.prototype._record = function (latest) {
-  return {
+Autosave.prototype._record = function (latest, withAml = true) {
+  const record = {
     id: this._id,
     savedAt: new Date().toISOString(),
     title: latest.title,
     model: JSON.parse(latest.content)
   };
+  const aml = withAml && this._amlSupport ? this._amlSupport.getSource() : null;
+  if (aml) {
+    record.aml = aml;
+  }
+  return record;
 };
 
 /**
@@ -324,11 +331,16 @@ Autosave.prototype._leaving = function () {
     return;
   }
 
+  const latest = { content, title: titleOf(this._fpbjs) };
   try {
-    const record = this._record({ content, title: titleOf(this._fpbjs) });
-    window.localStorage.setItem(this._rescuePrefix + this._id, JSON.stringify(record));
+    window.localStorage.setItem(this._rescuePrefix + this._id, JSON.stringify(this._record(latest)));
   } catch (error) {
-    // nothing more can be done while the page closes
+    // a large AML file may not fit into localStorage: the model at least
+    try {
+      window.localStorage.setItem(this._rescuePrefix + this._id, JSON.stringify(this._record(latest, false)));
+    } catch (again) {
+      // nothing more can be done while the page closes
+    }
   }
 };
 

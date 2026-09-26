@@ -17,9 +17,10 @@ const ImportReportNotification = memo(({ report, onDismiss }) => {
     return null;
   }
 
-  const summary = warnings.length
+  // an export may report too (AML: links removed with deleted elements)
+  const summary = report.title || (warnings.length
     ? `Import completed with ${warnings.length} ${warnings.length === 1 ? 'note' : 'notes'}`
-    : 'Import completed';
+    : 'Import completed');
 
   return (
     <Alert

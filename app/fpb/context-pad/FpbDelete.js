@@ -9,10 +9,12 @@ import { ContextHelper } from './ContextPadUtils';
  * is affected, behind a confirmation when another layer is. Shared by the
  * context pad and the Delete key, so the key does not skip the dialog.
  */
-export default function FpbDelete(eventBus, modeling, canvas) {
+export default function FpbDelete(eventBus, modeling, canvas, injector) {
   this._eventBus = eventBus;
   this._modeling = modeling;
   this._contextHelper = new ContextHelper(canvas);
+  // links from the rest of a kept AML file (feature 028)
+  this._amlSupport = injector ? injector.get('amlSupport', false) : null;
 
   eventBus.on('confirmation.confirmed', function (event) {
     const action = event.action;
@@ -25,7 +27,7 @@ export default function FpbDelete(eventBus, modeling, canvas) {
   });
 }
 
-FpbDelete.$inject = ['eventBus', 'modeling', 'canvas'];
+FpbDelete.$inject = ['eventBus', 'modeling', 'canvas', 'injector'];
 
 /**
  * Cross-layer consequences of deleting the element, or null.
@@ -91,6 +93,47 @@ FpbDelete.prototype.getLayerConsequences = function (element) {
 };
 
 /**
+ * Links from the rest of the kept AML file into what the deletion removes: the
+ * elements, their contents and the layers of decomposed operators. The AML
+ * export removes such links with the element, so the user is told before.
+ *
+ * @return {Array<{ element: string, link: string, owner: string }>}
+ */
+FpbDelete.prototype.getAmlLinks = function (elements) {
+  const amlSupport = this._amlSupport;
+  if (!amlSupport || !amlSupport.getIndex()) {
+    return [];
+  }
+  const found = [];
+  const seen = new Set();
+  const visit = (element) => {
+    if (!element || seen.has(element)) {
+      return;
+    }
+    seen.add(element);
+    const content = amlSupport.getForeignContent(element.id);
+    (content ? content.links : []).forEach((l) => {
+      if (!found.some((f) => f.element === content.name && f.link === l.link && f.owner === l.owner)) {
+        found.push({ element: content.name, link: l.link, owner: l.owner });
+      }
+    });
+    (element.children || []).forEach(visit);
+    const bo = element.businessObject;
+    if (bo && bo.decomposedView) {
+      visit(bo.decomposedView);
+    }
+  };
+  (elements || []).forEach(visit);
+  return found;
+};
+
+function amlLinksText(links) {
+  const names = links.slice(0, 5).map((l) => `${l.link} (${l.owner}) to ${l.element}`);
+  const more = links.length > 5 ? `, and ${links.length - 5} more` : '';
+  return `Links: ${names.join(', ')}${more}. Exporting as AML removes them with the deleted elements.`;
+}
+
+/**
  * Removes the elements. With consequences for other layers the user confirms
  * first; the dialog then covers the whole selection.
  */
@@ -110,10 +153,11 @@ FpbDelete.prototype.remove = function (elements) {
   if (decomposition) {
     if (elements.length === 1) {
       const consequences = this.getLayerConsequences(decomposition);
+      const amlLinks = this.getAmlLinks([decomposition]);
       this._eventBus.fire('confirmation.required', {
         title: 'Remove Decomposition?',
-        message: consequences.message,
-        details: consequences.details,
+        message: consequences.message + (amlLinks.length ? ' Other parts of the AutomationML file link to elements of this layer.' : ''),
+        details: consequences.details + (amlLinks.length ? ' ' + amlLinksText(amlLinks) : ''),
         isBlocked: false,
         action: {
           type: 'remove_decomposition',
@@ -130,25 +174,38 @@ FpbDelete.prototype.remove = function (elements) {
   const withConsequences = elements
     .map((element) => this.getLayerConsequences(element))
     .filter(Boolean);
+  const amlLinks = this.getAmlLinks(elements);
 
-  if (!withConsequences.length) {
+  if (!withConsequences.length && !amlLinks.length) {
     this._modeling.removeElements(elements.slice());
     return;
   }
 
-  const first = withConsequences[0];
+  const layer = withConsequences[0] || null;
+  const aml = amlLinks.length ? {
+    message: 'Other parts of the AutomationML file link to ' +
+      (amlLinks.length === 1 ? 'an element' : 'elements') + ' you are deleting.',
+    details: amlLinksText(amlLinks)
+  } : null;
+
+  let message = layer ? layer.message : aml.message;
+  if (layer && (withConsequences.length > 1 || elements.length > 1)) {
+    message += ' The selection contains ' + elements.length + ' elements.';
+  }
+  if (layer && aml) {
+    message += ' ' + aml.message;
+  }
+
   this._eventBus.fire('confirmation.required', {
     title: 'Confirm deletion',
-    message: withConsequences.length === 1 && elements.length === 1
-      ? first.message
-      : first.message + ' The selection contains ' + elements.length + ' elements.',
-    details: first.details,
+    message,
+    details: [layer && layer.details, aml && aml.details].filter(Boolean).join(' '),
     isBlocked: false,
     action: {
       type: 'delete',
       element: elements[0],
       elements: elements,
-      consequenceType: first.type
+      consequenceType: layer ? layer.type : 'aml_links'
     }
   });
 };
