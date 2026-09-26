@@ -1,6 +1,14 @@
 // vitest.config.js
 import { defineConfig } from 'vitest/config';
 import path from 'path';
+import buildAliases from './build/aliases.js';
+
+// The editors of @bpmn-io/properties-panel are stubbed as in both webpack
+// builds (build/aliases.js, keys ending in $ match the exact name only)
+const editorStubs = Object.keys(buildAliases).map((name) => ({
+  find: new RegExp('^' + name.slice(0, -1).replace(/[.*+?^${}()|[\]\\/]/g, '\\$&') + '$'),
+  replacement: buildAliases[name],
+}));
 
 export default defineConfig({
   test: {
@@ -29,14 +37,22 @@ export default defineConfig({
 
     // Timeout für langsame Tests
     testTimeout: 10000,
+
+    // Through Vite, so the editor stubs above apply inside the package too
+    server: {
+      deps: {
+        inline: ['@bpmn-io/properties-panel'],
+      },
+    },
   },
 
   resolve: {
-    alias: {
+    alias: [
+      ...editorStubs,
       // Aliase für einfachere Imports
-      '@': path.resolve(__dirname, './app'),
-      '@fpb': path.resolve(__dirname, './app/fpb'),
-      '@tests': path.resolve(__dirname, './tests'),
-    },
+      { find: '@', replacement: path.resolve(__dirname, './app') },
+      { find: '@fpb', replacement: path.resolve(__dirname, './app/fpb') },
+      { find: '@tests', replacement: path.resolve(__dirname, './tests') },
+    ],
   },
 });

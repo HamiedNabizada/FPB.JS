@@ -3,7 +3,8 @@
  * imports. FPB.js uses none of its FEEL or JSON entries, and the editors
  * would add over 500 KB to the bundle (tree shaking does not drop them).
  *
- * Only Annotation.define runs when the library loads; everything else throws
+ * Only Annotation.define and jsonParseLinter run when the library loads
+ * (module level of @bpmn-io/properties-panel 3.55); everything else throws
  * if an entry that needs an editor is ever used.
  */
 function unavailable() {
@@ -32,6 +33,7 @@ export const closeBracketsKeymap = [];
 export const history = unavailable;
 export const defaultKeymap = [];
 export const historyKeymap = [];
-export const jsonParseLinter = unavailable;
+// called at load, the linter it returns only by the JSON entry
+export const jsonParseLinter = () => unavailable;
 export const json = unavailable;
 export const linter = unavailable;
