@@ -407,6 +407,9 @@ function isFpbConnection(element) {
     return element.type === 'fpb:connection' || element.type === 'fpb:Usage';
 }
 
+// room around the drawing in an SVG export, see saveSVG
+const SVG_EXPORT_MARGIN = 5;
+
 FpbModeler.prototype.saveSVG = function (options, done) {
     if (!done) {
         done = options;
@@ -450,7 +453,25 @@ FpbModeler.prototype.saveSVG = function (options, done) {
             cleanDefs = '<defs>' + innerSVG(defsClone) + '</defs>';
         }
 
-        const bbox = contentNode.getBBox();
+        // Measured without the selection and hover outlines, which diagram-js
+        // draws only when needed: with them the size of the export depended
+        // on what had been selected before. The margin keeps the outer half
+        // of the strokes at the edge (as bpmn-js does since 18.22.1).
+        const container = canvas.getContainer();
+        container.classList.add('djs-outline-hidden');
+        let measured;
+        try {
+            measured = contentNode.getBBox();
+        } finally {
+            container.classList.remove('djs-outline-hidden');
+        }
+        const margin = SVG_EXPORT_MARGIN;
+        const bbox = {
+            x: measured.x - margin,
+            y: measured.y - margin,
+            width: measured.width + 2 * margin,
+            height: measured.height + 2 * margin
+        };
 
         svg =
             '<?xml version="1.0" encoding="utf-8"?>\n' +
