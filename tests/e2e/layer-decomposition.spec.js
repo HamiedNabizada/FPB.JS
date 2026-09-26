@@ -556,7 +556,6 @@ test.describe('Connections to decomposed operators and technical resources', () 
   const assigned = (page, stateId) => page.evaluate((s) => window.__lr.byId(s).businessObject.isAssignedTo.map((o) => o.id).sort(), stateId);
 
   test('reconnecting a flow end moves the assignment of the state to the new operator', async ({ page }) => {
-    test.fail(true, 'BUG: connection.reconnect keeps isAssignedTo of the state on the old operator');
     await load(page);
     await page.evaluate(() => {
       const sl = window.__lr.sl(window.fpbjs.get('canvas').getRootElement());
@@ -570,7 +569,6 @@ test.describe('Connections to decomposed operators and technical resources', () 
   });
 
   test('reconnecting an input away from the decomposed operator takes the state off the child boundary', async ({ page }) => {
-    test.fail(true, 'BUG: connection.reconnect does not update the child layer of a decomposed operator');
     await load(page);
     await reconnect(page, { from: IDS.rohstoff, to: IDS.child, end: 'target', onto: IDS.pruefen });
     expect(await page.evaluate((IDS) => window.__lr.io(IDS.child, IDS.root).ins.includes(IDS.rohstoff), IDS)).toBe(false);
@@ -579,7 +577,6 @@ test.describe('Connections to decomposed operators and technical resources', () 
   });
 
   test('reconnecting an input onto the decomposed operator puts the state on the child boundary', async ({ page }) => {
-    test.fail(true, 'BUG: connection.reconnect does not update the child layer of a decomposed operator');
     await load(page);
     // a new state feeding Prüfen; its flow is then dragged over to Erhitzen
     await page.evaluate((IDS) => {
@@ -595,7 +592,6 @@ test.describe('Connections to decomposed operators and technical resources', () 
   });
 
   test('reconnecting the start of an output away from the decomposed operator takes the state off the child boundary', async ({ page }) => {
-    test.fail(true, 'BUG: connection.reconnect does not update the child layer of a decomposed operator');
     await load(page);
     await reconnect(page, { from: IDS.child, to: IDS.abwaerme, end: 'source', onto: IDS.pruefen });
     expect(await onBoundary(page, IDS.child, 'bottom', IDS.abwaerme)).toBe(false);
