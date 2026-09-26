@@ -162,13 +162,17 @@ test.describe('Labels inside shapes', () => {
   test('the long name from the properties panel becomes the tooltip', async ({ page }) => {
     await laden(page);
     const id = await idVon(page, 'Prüfen');
-    await page.click('#openPropertiesPanelButton');
+    await page.click('#propertiesPanelToggle');
     const p = await mitte(page, 'Prüfen');
     await page.mouse.click(p.x, p.y);
-    const feld = page.locator('#pp_identification_longName');
+    const feld = page.locator('#bio-properties-panel-longName');
     await expect(feld).toBeVisible();
     await feld.fill('Prüfen der Temperatur');
-    await page.waitForTimeout(300);
+    // the panel applies input after a pause of 300 ms (debounceInput)
+    await page.waitForFunction((id) => {
+      const identification = window.fpbjs.get('elementRegistry').get(id).businessObject.identification;
+      return identification && identification.longName === 'Prüfen der Temperatur';
+    }, id);
 
     expect(await tooltipBeiHover(page, id)).toBe('Prüfen der Temperatur');
 
