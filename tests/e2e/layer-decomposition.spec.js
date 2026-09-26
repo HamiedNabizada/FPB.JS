@@ -393,7 +393,6 @@ test.describe('The top system limit and the technical resource', () => {
   });
 
   test('deleting the top system limit with a decomposed operator in it asks first (it removes a sub layer)', async ({ page }) => {
-    test.fail(true, 'BUG: deleting the system limit removes the decomposed operator and its sub layer without the confirmation the operator alone gets');
     await load(page);
     await fpbDelete(page, [await topSl(page).then((s) => s.id)]);
     await expect(page.locator('.modal.show')).toHaveCount(1, { timeout: 2000 });
