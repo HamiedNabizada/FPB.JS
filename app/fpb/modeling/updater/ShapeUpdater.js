@@ -30,7 +30,7 @@ import {
  * - shape.move: elementsContainer update, Szenario 6 (boundary move detection)
  */
 export default function ShapeUpdater(
-  eventBus, fpbFactory, canvas, elementFactory, config, fpbjs, commandStack) {
+  eventBus, fpbFactory, canvas, elementFactory, config, fpbjs, commandStack, injector) {
 
   CommandInterceptor.call(this, eventBus);
 
@@ -41,6 +41,7 @@ export default function ShapeUpdater(
   this._eventBus = eventBus;
   this._fpbjs = fpbjs;
   this._commandStack = commandStack;
+  this._injector = injector;
 
   // States that landed on the boundary during the running command. Moving
   // several at once asked once per state, and the dialog kept only the last
@@ -87,7 +88,8 @@ ShapeUpdater.$inject = [
   'elementFactory',
   'config.configFile',
   'fpbjs',
-  'commandStack'
+  'commandStack',
+  'injector'
 ];
 
 
@@ -293,6 +295,11 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
                   removeTracked(parentProcessOperatorShape.incoming, flow);
                 }
               });
+
+              // A removed parallel or alternative flow must leave the tandem
+              // of its partners, as in the deep delete of ConnectionUpdater;
+              // it stayed in their inTandemWith and went into the export
+              this._injector.get('connectionUpdater')._unlinkRemovedTandems(flowsToRemove, parentSystemLimit);
             }
           }
         }

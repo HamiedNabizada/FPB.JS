@@ -783,7 +783,6 @@ test.describe('Confirmation: Szenario 2, deleting a boundary state on the child 
   });
 
   test('Yes on an output whose parent flow is a parallel branch leaves no stale branch partner', async ({ page }) => {
-    test.fail(true, 'BUG: parent flow removed by Szenario 2 stays in inTandemWith of its parallel partner');
     await load(page);
     await switchTo(page, IDS.child);
     await fpbDelete(page, [IDS.warmprodukt]);
