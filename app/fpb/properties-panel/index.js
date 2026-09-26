@@ -15,12 +15,20 @@ export default class PropertiesPanel {
     } = options;
     // The import waits for this panel instead of waiting a fixed time
     modeler.get('eventBus').fire('ui.componentRegistered', { component: 'propertiesPanel' });
-    const root = createRoot(container);
+    const root = this._root = createRoot(container);
     root.render(
       <ErrorBoundary>
         <PropertiesView modeler={modeler} config={configPP} />
       </ErrorBoundary>
     );
+  }
+
+  /** Unmounts the panel; its listeners on the modeler go with it */
+  destroy() {
+    if (this._root) {
+      this._root.unmount();
+      this._root = null;
+    }
   }
 }
 

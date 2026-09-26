@@ -226,7 +226,10 @@ FpbModeler.prototype.off = function (event, callback) {
 FpbModeler.prototype.getDefinitions = function () {
     return this._definitions;
 };*/
-/*
+/**
+ * diagram-js removes only its own canvas; the wrapper this modeler put into
+ * the host container stayed behind.
+ */
 FpbModeler.prototype.destroy = function () {
 
     // diagram destroy
@@ -234,7 +237,7 @@ FpbModeler.prototype.destroy = function () {
 
     // dom detach
     domRemove(this._container);
-};*/
+};
 
 FpbModeler.prototype.clear = function () {
 

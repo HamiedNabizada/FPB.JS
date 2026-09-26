@@ -1088,7 +1088,6 @@ test.describe('destroy', () => {
   });
 
   test('destroy leaves the host container empty', async ({ page }) => {
-    test.fail(true, 'BUG: destroy() leaves the outer .djs-container wrapper div of FpbModeler in the host container');
     await withModel(page);
 
     const children = await page.evaluate(() => {
@@ -1100,7 +1099,6 @@ test.describe('destroy', () => {
   });
 
   test('destroy unmounts the properties panel and the layer overview', async ({ page }) => {
-    test.fail(true, 'BUG: destroy() does not unmount the React panels (PropertiesPanel/LayerOverview have no destroy())');
     await withModel(page, { panels: true });
 
     const state = await page.evaluate(() => {
