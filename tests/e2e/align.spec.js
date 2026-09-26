@@ -6,10 +6,9 @@ import { exportiere, nachIds } from './helpers/modelExport';
 
 /**
  * E2E tests for aligning and distributing several selected elements
- * (services/AlignService, KeyboardAlignService, PaletteAlignState).
+ * (services/AlignService, KeyboardAlignService).
  *
- * The palette has no align entries any more (removed in 040fb1b; the handlers
- * in PaletteUtils and the PaletteAlignState service are left over), so the
+ * The palette has no align entries any more (removed in 040fb1b), so the
  * keyboard shortcuts listed in the info dialog are the only way in:
  *   Ctrl+Shift+L/C/R  left, center, right
  *   Ctrl+Shift+T/M/B  top, middle, bottom
@@ -475,17 +474,12 @@ test.describe('Align shortcuts do not trigger other actions', () => {
     await expect(suche).toHaveValue('erh');
   });
 
-  test('the palette offers no align entries, so PaletteAlignState has nothing to switch', async ({ page }) => {
+  test('the palette offers no align entries', async ({ page }) => {
     await vorbereiten(page);
     await waehle(page, NAMEN);
     const eintraege = await page.evaluate(() => [...document.querySelectorAll('.djs-palette .entry')].map((e) => e.getAttribute('data-action')));
     expect(eintraege).toEqual(expect.arrayContaining(['lasso-tool', 'space-tool', 'hand-tool']));
     expect(eintraege.filter((a) => /align|distribute/.test(a))).toEqual([]);
-    // the state is tracked nonetheless
-    expect(await page.evaluate(() => window.fpbjs.get('paletteAlignState').getCurrentState()))
-      .toEqual({ canAlign: true, canDistribute: true, selectedCount: 3 });
-    expect(await page.evaluate(() => window.fpbjs.get('alignService').getToolStates()))
-      .toEqual({ canAlign: true, canDistribute: true, selectedCount: 3 });
   });
 
   test('the lasso selection feeds the shortcuts too', async ({ page }) => {

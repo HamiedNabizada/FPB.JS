@@ -66,42 +66,6 @@ describe('AlignService', () => {
       expect(alignService._selection).toBe(mockSelection);
     });
 
-    it('sets up selection listener', () => {
-      expect(mockEventBus.on).toHaveBeenCalledWith('selection.changed', expect.any(Function));
-    });
-
-  });
-
-  // ============================================
-  // canExecute
-  // ============================================
-
-  describe('canExecute()', () => {
-
-    it('returns false for align when less than 2 elements selected', () => {
-      mockSelection.get.mockReturnValue([{ id: 'elem1' }]);
-      expect(alignService.canExecute('align')).toBe(false);
-    });
-
-    it('returns true for align when 2+ elements selected', () => {
-      mockSelection.get.mockReturnValue([{ id: 'elem1' }, { id: 'elem2' }]);
-      expect(alignService.canExecute('align')).toBe(true);
-    });
-
-    it('returns false for distribute when less than 3 elements selected', () => {
-      mockSelection.get.mockReturnValue([{ id: 'elem1' }, { id: 'elem2' }]);
-      expect(alignService.canExecute('distribute')).toBe(false);
-    });
-
-    it('returns true for distribute when 3+ elements selected', () => {
-      mockSelection.get.mockReturnValue([
-        { id: 'elem1' },
-        { id: 'elem2' },
-        { id: 'elem3' }
-      ]);
-      expect(alignService.canExecute('distribute')).toBe(true);
-    });
-
   });
 
   // ============================================
@@ -409,56 +373,6 @@ describe('AlignService', () => {
       alignService._sortElementsForDistribution(elements, 'horizontal');
 
       expect(elements[0].id).toBe('elem2');  // Original order preserved
-    });
-
-  });
-
-  // ============================================
-  // getToolStates
-  // ============================================
-
-  describe('getToolStates()', () => {
-
-    it('returns canAlign false with 0 elements', () => {
-      mockSelection.get.mockReturnValue([]);
-      const states = alignService.getToolStates();
-
-      expect(states.canAlign).toBe(false);
-      expect(states.canDistribute).toBe(false);
-    });
-
-    it('returns canAlign false with 1 element', () => {
-      mockSelection.get.mockReturnValue([{ id: 'elem1' }]);
-      const states = alignService.getToolStates();
-
-      expect(states.canAlign).toBe(false);
-    });
-
-    it('returns canAlign true with 2 elements', () => {
-      mockSelection.get.mockReturnValue([{ id: 'elem1' }, { id: 'elem2' }]);
-      const states = alignService.getToolStates();
-
-      expect(states.canAlign).toBe(true);
-      expect(states.canDistribute).toBe(false);
-    });
-
-    it('returns canDistribute true with 3 elements', () => {
-      mockSelection.get.mockReturnValue([
-        { id: 'elem1' },
-        { id: 'elem2' },
-        { id: 'elem3' }
-      ]);
-      const states = alignService.getToolStates();
-
-      expect(states.canAlign).toBe(true);
-      expect(states.canDistribute).toBe(true);
-    });
-
-    it('returns selectedCount', () => {
-      mockSelection.get.mockReturnValue([{ id: 'elem1' }, { id: 'elem2' }]);
-      const states = alignService.getToolStates();
-
-      expect(states.selectedCount).toBe(2);
     });
 
   });

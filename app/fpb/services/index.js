@@ -5,9 +5,7 @@
  */
 
 import GridService from './GridService';
-import SettingsService from './SettingsService';
 import AlignService from './AlignService';
-import PaletteAlignState from './PaletteAlignState';
 import KeyboardAlignService from './KeyboardAlignService';
 import ToolClearService from './ToolClearService';
 import UiReadiness from './UiReadiness';
@@ -15,11 +13,9 @@ import CanvasResizeNotifier from './CanvasResizeNotifier';
 import ColorSchemeService from './ColorSchemeService';
 
 export default {
-  __init__: ['gridService', 'settingsService', 'alignService', 'paletteAlignState', 'keyboardAlignService', 'toolClearService', 'uiReadiness', 'canvasResizeNotifier', 'colorSchemeService'],
+  __init__: ['gridService', 'alignService', 'keyboardAlignService', 'toolClearService', 'uiReadiness', 'canvasResizeNotifier', 'colorSchemeService'],
   gridService: ['type', GridService],
-  settingsService: ['type', SettingsService],
   alignService: ['type', AlignService],
-  paletteAlignState: ['type', PaletteAlignState],
   keyboardAlignService: ['type', KeyboardAlignService],
   toolClearService: ['type', ToolClearService],
   uiReadiness: ['type', UiReadiness],

@@ -20,9 +20,6 @@ export default class AlignService {
     // Bind methods to maintain context
     this.alignElements = this.alignElements.bind(this);
     this.distributeElements = this.distributeElements.bind(this);
-
-    // Listen to selection changes to update tool states
-    this._setupSelectionListener();
   }
 
   /**
@@ -70,17 +67,6 @@ export default class AlignService {
       this._applyDeltas(deltas);
       this._eventBus.fire('elements.distributed', { elements, orientation });
     }
-  }
-
-  /**
-   * Check if alignment/distribution is possible with current selection
-   * @param {string} operation - 'align' or 'distribute'
-   * @returns {boolean}
-   */
-  canExecute(operation) {
-    const selectedElements = this._selection.get();
-    const minElements = operation === 'distribute' ? 3 : 2;
-    return selectedElements.length >= minElements;
   }
 
   /**
@@ -264,44 +250,6 @@ export default class AlignService {
       point.y >= e.y && point.y <= e.y + e.height);
     hits.sort((a, b) => a.width * a.height - b.width * b.height);
     return hits[0] || root;
-  }
-
-  /**
-   * Setup selection listener to update tool states
-   * @private
-   */
-  _setupSelectionListener() {
-    this._eventBus.on('selection.changed', (event) => {
-      this._updateToolStates(event.newSelection);
-    });
-  }
-
-  /**
-   * Update tool states based on current selection
-   * @private
-   */
-  _updateToolStates(selectedElements) {
-    const canAlign = selectedElements.length >= 2;
-    const canDistribute = selectedElements.length >= 3;
-
-    this._eventBus.fire('align.stateChanged', {
-      canAlign,
-      canDistribute,
-      selectedCount: selectedElements.length
-    });
-  }
-
-  /**
-   * Get current tool states
-   * @returns {Object} Tool states
-   */
-  getToolStates() {
-    const selectedElements = this._selection.get();
-    return {
-      canAlign: selectedElements.length >= 2,
-      canDistribute: selectedElements.length >= 3,
-      selectedCount: selectedElements.length
-    };
   }
 }
 

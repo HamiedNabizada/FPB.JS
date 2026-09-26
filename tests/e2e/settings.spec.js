@@ -10,8 +10,8 @@ import basis from './fixtures/temperieren.json';
  *
  * Theme and colour scheme are remembered per browser in localStorage
  * ('fpb-theme', 'fpb-color-scheme'). The grid has no user setting: GridService
- * switches grid and snapping on at start, SettingsService is not called by
- * anything, so there is no grid size or on/off switch to test from the UI.
+ * switches grid and snapping on at start, so there is no grid size or on/off
+ * switch to test from the UI.
  *
  * app.js stores 'light' on the first start, so the ThemeToggle listener for a
  * change of the system setting only acts once the stored value is gone; the
