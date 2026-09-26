@@ -125,6 +125,8 @@ test.describe('Sicherung im Browser', () => {
   });
 
   test('zwei offene Tabs überschreiben sich nicht und bieten sich gegenseitig nichts an', async ({ context }) => {
+    // vier Seiten mit Import: im vollen Lauf reichten 60 s nicht immer
+    test.slow();
     const a = await context.newPage();
     const b = await context.newPage();
     await laden(a);
