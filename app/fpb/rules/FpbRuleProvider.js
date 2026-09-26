@@ -192,9 +192,12 @@ FpbRuleProvider.prototype.init = function () {
   });
 
   const canMove = (elements, target, position) => {
-    // allow default move check to start move operation
+    // allow default move check to start move operation (asked without a
+    // position). While dragging, no target means the pointer is over nothing,
+    // e.g. outside the canvas: dropping there moved elements anywhere, a
+    // boundary state out of its system limit included.
     if (!target) {
-      return true;
+      return !position;
     }
     return elements.every(element => canDrop(element, target, position, elements));
   };

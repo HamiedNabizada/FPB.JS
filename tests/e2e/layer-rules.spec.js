@@ -506,6 +506,8 @@ test.describe('Rules: elements.move', () => {
         resourceOnState: move(heiz, warm),
         resourceOnOperator: move(heiz, po),
         noTarget: rules.allowed('elements.move', { shapes: [warm], position: { x: 0, y: 0 } }),
+        // the start of a move is asked without target and position
+        noTargetAtStart: rules.allowed('elements.move', { shapes: [warm] }),
       };
     }, { IDS });
     expect(r).toEqual({
@@ -518,7 +520,10 @@ test.describe('Rules: elements.move', () => {
       resourceIntoSl: false,
       resourceOnState: false,
       resourceOnOperator: false,
-      noTarget: true,
+      // while dragging, no target means the pointer is over nothing (outside
+      // the canvas): refused, dropping there moved elements anywhere
+      noTarget: false,
+      noTargetAtStart: true,
     });
   });
 
@@ -655,6 +660,33 @@ test.describe('Feedback when the editor refuses a move or create (UI drags)', ()
     // it was on the boundary and stays there: no boundary placement dialog (Szenario 6)
     await page.waitForTimeout(200);
     await expect(page.locator('.modal.show')).toHaveCount(0);
+    expect(await issues(page)).toEqual([]);
+  });
+
+  test('Szenario 5: sliding works when the state is grabbed at its outer half too', async ({ page }) => {
+    await load(page);
+    await switchTo(page, IDS.child);
+    const before = await bounds(page, IDS.rohstoff);
+    const center = await screenPos(page, IDS.rohstoff);
+    // an input sits on the upper border: its outer half lies above the border,
+    // the pointer is over the layer there, not over the system limit
+    const from = { x: center.x, y: center.y - 12 };
+    await drag(page, from, { x: from.x - 80, y: from.y });
+    const after = await bounds(page, IDS.rohstoff);
+    expect(after.y).toBe(before.y);
+    expect(Math.abs(after.x - (before.x - 80))).toBeLessThan(15);
+    await expect(page.locator('.djs-tooltip.djs-tooltip-error')).toHaveCount(0);
+    expect(await issues(page)).toEqual([]);
+  });
+
+  test('Szenario 5: grabbed at its outer half, a boundary state still cannot be pulled off the border', async ({ page }) => {
+    await load(page);
+    await switchTo(page, IDS.child);
+    const before = await bounds(page, IDS.rohstoff);
+    const center = await screenPos(page, IDS.rohstoff);
+    const from = { x: center.x, y: center.y - 12 };
+    await drag(page, from, { x: from.x, y: from.y - 120 });
+    expect(await bounds(page, IDS.rohstoff)).toEqual(before);
     expect(await issues(page)).toEqual([]);
   });
 
