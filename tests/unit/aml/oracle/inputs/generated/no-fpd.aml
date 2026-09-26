@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CAEXFile SchemaVersion="3.0" FileName="" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.dke.de/CAEX">
+  <SuperiorStandardVersion>AutomationML 2.1</SuperiorStandardVersion>
+  <SourceDocumentInformation OriginName="" OriginID="" OriginVersion="" LastWritingDateTime="2026-09-26T18:56:17.7534662+02:00" />
+  <InstanceHierarchy Name="Anlage">
+    <Version>1.0.0</Version>
+    <InternalElement Name="Pumpe_P1" ID="d778f82f-d497-4e6e-8126-8a0f3e6699cf">
+      <Attribute Name="Foerderstrom" Unit="m3/h">
+        <Value>12</Value>
+      </Attribute>
+    </InternalElement>
+  </InstanceHierarchy>
+</CAEXFile>

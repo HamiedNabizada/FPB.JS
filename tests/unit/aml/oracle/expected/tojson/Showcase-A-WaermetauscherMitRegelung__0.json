@@ -1,0 +1,882 @@
+[
+  {
+    "$type": "fpb:Project",
+    "name": "FPD_Heating",
+    "targetNamespace": "http://www.hsu-ifa.de/fpbjs",
+    "entryPoint": "ea7afbcf-2f9f-482b-b62e-8f5fe707be30"
+  },
+  {
+    "process": {
+      "$type": "fpb:Process",
+      "id": "6d37cff1-a715-266d-7750-8ee6e7574a4c",
+      "elementsContainer": [
+        "6695a194-f5cd-718b-1983-04371668e17b"
+      ],
+      "isDecomposedProcessOperator": "6d37cff1-a715-266d-7750-8ee6e7574a4c",
+      "consistsOfStates": [
+        "005fa2ce-b396-7134-e6b8-3cbf81b843fd",
+        "dd4eb84c-c312-509d-25a0-10a5872a370e"
+      ],
+      "consistsOfSystemLimit": "6695a194-f5cd-718b-1983-04371668e17b",
+      "consistsOfProcesses": [],
+      "consistsOfProcessOperator": [
+        "cdbbc438-9e8c-826f-4d5f-097eb84f4816",
+        "7fd3c2e5-2766-aaaa-dff2-a9f90a69ce0f"
+      ],
+      "parent": "0af743ab-f96f-a476-cf50-a5ff03231bb8"
+    },
+    "elementDataInformation": [
+      {
+        "$type": "fpb:SystemLimit",
+        "id": "6695a194-f5cd-718b-1983-04371668e17b",
+        "elementsContainer": [
+          "cdbbc438-9e8c-826f-4d5f-097eb84f4816",
+          "7fd3c2e5-2766-aaaa-dff2-a9f90a69ce0f",
+          "005fa2ce-b396-7134-e6b8-3cbf81b843fd",
+          "dd4eb84c-c312-509d-25a0-10a5872a370e",
+          "97c35c78-d93e-45fe-0aca-8481973b42ef",
+          "ee2b711a-2f74-786f-d912-819b2c61bd8f",
+          "2b97725b-ca27-abbd-8fd6-714897f9f55a"
+        ],
+        "name": "Druckregelung Detail"
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "cdbbc438-9e8c-826f-4d5f-097eb84f4816",
+        "incoming": [
+          "2b97725b-ca27-abbd-8fd6-714897f9f55a"
+        ],
+        "outgoing": [
+          "ee2b711a-2f74-786f-d912-819b2c61bd8f"
+        ],
+        "isAssignedTo": [],
+        "name": "Stellventil bet\u00E4tigen",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "cdbbc438-9e8c-826f-4d5f-097eb84f4816",
+          "longName": "Stellventil bet\u00E4tigen",
+          "shortName": "Stellventil bet\u00E4tigen",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": [
+          {
+            "$type": "fpbch:Characteristics",
+            "category": {
+              "$type": "fpb:Identification",
+              "uniqueIdent": "19ce7ef7-e6b3-d253-59ee-7a74678e72f3",
+              "longName": "Maximale Stellgeschwindigkeit",
+              "shortName": "MaxStellgeschwindigkeit",
+              "versionNumber": "1.0",
+              "revisionNumber": "0"
+            },
+            "descriptiveElement": {
+              "$type": "fpbch:DescriptiveElement",
+              "valueDeterminationProcess": "Festlegung",
+              "representivity": "Sollwert",
+              "setpointValue": {
+                "$type": "fpbch:ValueWithUnit",
+                "value": "5",
+                "unit": "%/s"
+              },
+              "validityLimits": [],
+              "actualValues": []
+            },
+            "relationalElement": {
+              "$type": "fpbch:RelationalElement",
+              "view": "",
+              "model": "",
+              "regulationsForRelationalGeneration": ""
+            }
+          }
+        ]
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "7fd3c2e5-2766-aaaa-dff2-a9f90a69ce0f",
+        "incoming": [
+          "97c35c78-d93e-45fe-0aca-8481973b42ef"
+        ],
+        "outgoing": [
+          "2b97725b-ca27-abbd-8fd6-714897f9f55a"
+        ],
+        "isAssignedTo": [],
+        "name": "Druckmessung",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "7fd3c2e5-2766-aaaa-dff2-a9f90a69ce0f",
+          "longName": "Druckmessung",
+          "shortName": "Druckmessung",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "005fa2ce-b396-7134-e6b8-3cbf81b843fd",
+        "incoming": [
+          "ee2b711a-2f74-786f-d912-819b2c61bd8f"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "cdbbc438-9e8c-826f-4d5f-097eb84f4816"
+        ],
+        "name": "Geregelter Druck",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "005fa2ce-b396-7134-e6b8-3cbf81b843fd",
+          "longName": "Geregelter Druck",
+          "shortName": "Geregelter Druck",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "dd4eb84c-c312-509d-25a0-10a5872a370e",
+        "incoming": [],
+        "outgoing": [
+          "97c35c78-d93e-45fe-0aca-8481973b42ef"
+        ],
+        "isAssignedTo": [
+          "7fd3c2e5-2766-aaaa-dff2-a9f90a69ce0f"
+        ],
+        "name": "Roh-Druck",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "dd4eb84c-c312-509d-25a0-10a5872a370e",
+          "longName": "Roh-Druck",
+          "shortName": "Roh-Druck",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "97c35c78-d93e-45fe-0aca-8481973b42ef",
+        "sourceRef": "dd4eb84c-c312-509d-25a0-10a5872a370e",
+        "targetRef": "7fd3c2e5-2766-aaaa-dff2-a9f90a69ce0f"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "ee2b711a-2f74-786f-d912-819b2c61bd8f",
+        "sourceRef": "cdbbc438-9e8c-826f-4d5f-097eb84f4816",
+        "targetRef": "005fa2ce-b396-7134-e6b8-3cbf81b843fd"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "2b97725b-ca27-abbd-8fd6-714897f9f55a",
+        "sourceRef": "7fd3c2e5-2766-aaaa-dff2-a9f90a69ce0f",
+        "targetRef": "cdbbc438-9e8c-826f-4d5f-097eb84f4816"
+      }
+    ],
+    "elementVisualInformation": []
+  },
+  {
+    "process": {
+      "$type": "fpb:Process",
+      "id": "0af743ab-f96f-a476-cf50-a5ff03231bb8",
+      "elementsContainer": [
+        "bff79b5d-d0b4-f7b9-674a-7a7a9904613b"
+      ],
+      "isDecomposedProcessOperator": "0af743ab-f96f-a476-cf50-a5ff03231bb8",
+      "consistsOfStates": [
+        "4b419949-8315-c678-ad73-3d78f04f1192",
+        "dd4eb84c-c312-509d-25a0-10a5872a370e"
+      ],
+      "consistsOfSystemLimit": "bff79b5d-d0b4-f7b9-674a-7a7a9904613b",
+      "consistsOfProcesses": [
+        "6d37cff1-a715-266d-7750-8ee6e7574a4c"
+      ],
+      "consistsOfProcessOperator": [
+        "f44249c9-f7f4-2e3b-dbf8-110976a1fb02",
+        "6d37cff1-a715-266d-7750-8ee6e7574a4c"
+      ],
+      "parent": "ab7eea01-4aca-f679-ace3-4933ae99838a"
+    },
+    "elementDataInformation": [
+      {
+        "$type": "fpb:SystemLimit",
+        "id": "bff79b5d-d0b4-f7b9-674a-7a7a9904613b",
+        "elementsContainer": [
+          "f44249c9-f7f4-2e3b-dbf8-110976a1fb02",
+          "6d37cff1-a715-266d-7750-8ee6e7574a4c",
+          "4b419949-8315-c678-ad73-3d78f04f1192",
+          "dd4eb84c-c312-509d-25a0-10a5872a370e",
+          "10f10229-361d-84da-4217-c54ee7cd7fa5",
+          "cf23d08f-8e8d-c6f3-194a-1e4939c3071c",
+          "18a24c31-0ab0-0847-a938-0eb5e13a541e"
+        ],
+        "name": "Heizmedium aufbereiten Detail"
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "f44249c9-f7f4-2e3b-dbf8-110976a1fb02",
+        "incoming": [
+          "18a24c31-0ab0-0847-a938-0eb5e13a541e"
+        ],
+        "outgoing": [
+          "cf23d08f-8e8d-c6f3-194a-1e4939c3071c"
+        ],
+        "isAssignedTo": [],
+        "name": "Temperatur-Sollwert pr\u00FCfen",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "f44249c9-f7f4-2e3b-dbf8-110976a1fb02",
+          "longName": "Temperatur-Sollwert pr\u00FCfen",
+          "shortName": "Temperatur-Sollwert pr\u00FCfen",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": [
+          {
+            "$type": "fpbch:Characteristics",
+            "category": {
+              "$type": "fpb:Identification",
+              "uniqueIdent": "bf55266d-0c7a-7ef4-f07e-78162ec4f659",
+              "longName": "Eingestellter Temperatursollwert",
+              "shortName": "Sollwert",
+              "versionNumber": "1.0",
+              "revisionNumber": "0"
+            },
+            "descriptiveElement": {
+              "$type": "fpbch:DescriptiveElement",
+              "valueDeterminationProcess": "Festlegung",
+              "representivity": "Sollwert",
+              "setpointValue": {
+                "$type": "fpbch:ValueWithUnit",
+                "value": "120",
+                "unit": "\u00B0C"
+              },
+              "validityLimits": [],
+              "actualValues": []
+            },
+            "relationalElement": {
+              "$type": "fpbch:RelationalElement",
+              "view": "",
+              "model": "",
+              "regulationsForRelationalGeneration": ""
+            }
+          }
+        ]
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "6d37cff1-a715-266d-7750-8ee6e7574a4c",
+        "incoming": [
+          "10f10229-361d-84da-4217-c54ee7cd7fa5"
+        ],
+        "outgoing": [
+          "18a24c31-0ab0-0847-a938-0eb5e13a541e"
+        ],
+        "isAssignedTo": [],
+        "name": "Druckregelung",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "6d37cff1-a715-266d-7750-8ee6e7574a4c",
+          "longName": "Druckregelung",
+          "shortName": "Druckregelung",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": [],
+        "decomposedView": "6d37cff1-a715-266d-7750-8ee6e7574a4c"
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "4b419949-8315-c678-ad73-3d78f04f1192",
+        "incoming": [
+          "cf23d08f-8e8d-c6f3-194a-1e4939c3071c"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "f44249c9-f7f4-2e3b-dbf8-110976a1fb02"
+        ],
+        "name": "Heizmedium-Ausgang",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "4b419949-8315-c678-ad73-3d78f04f1192",
+          "longName": "Heizmedium-Ausgang",
+          "shortName": "Heizmedium-Ausgang",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "dd4eb84c-c312-509d-25a0-10a5872a370e",
+        "incoming": [],
+        "outgoing": [
+          "10f10229-361d-84da-4217-c54ee7cd7fa5"
+        ],
+        "isAssignedTo": [
+          "6d37cff1-a715-266d-7750-8ee6e7574a4c"
+        ],
+        "name": "Heizmedium-Eingang",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "dd4eb84c-c312-509d-25a0-10a5872a370e",
+          "longName": "Heizmedium-Eingang",
+          "shortName": "Heizmedium-Eingang",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "10f10229-361d-84da-4217-c54ee7cd7fa5",
+        "sourceRef": "dd4eb84c-c312-509d-25a0-10a5872a370e",
+        "targetRef": "6d37cff1-a715-266d-7750-8ee6e7574a4c"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "cf23d08f-8e8d-c6f3-194a-1e4939c3071c",
+        "sourceRef": "f44249c9-f7f4-2e3b-dbf8-110976a1fb02",
+        "targetRef": "4b419949-8315-c678-ad73-3d78f04f1192"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "18a24c31-0ab0-0847-a938-0eb5e13a541e",
+        "sourceRef": "6d37cff1-a715-266d-7750-8ee6e7574a4c",
+        "targetRef": "f44249c9-f7f4-2e3b-dbf8-110976a1fb02"
+      }
+    ],
+    "elementVisualInformation": []
+  },
+  {
+    "process": {
+      "$type": "fpb:Process",
+      "id": "ab7eea01-4aca-f679-ace3-4933ae99838a",
+      "elementsContainer": [
+        "09a1afc1-79d3-a4be-97ec-965af1a3fb00"
+      ],
+      "isDecomposedProcessOperator": "ab7eea01-4aca-f679-ace3-4933ae99838a",
+      "consistsOfStates": [
+        "8891b025-4d01-3179-be62-74c48ee6c819",
+        "0484884e-5dee-9bb0-043e-10c87ce2ea13",
+        "6a4e4dc8-adc7-3c6e-4e01-95c95e9571d5",
+        "dd4eb84c-c312-509d-25a0-10a5872a370e"
+      ],
+      "consistsOfSystemLimit": "09a1afc1-79d3-a4be-97ec-965af1a3fb00",
+      "consistsOfProcesses": [
+        "0af743ab-f96f-a476-cf50-a5ff03231bb8"
+      ],
+      "consistsOfProcessOperator": [
+        "ab489182-d5a0-7fed-4460-fd600360882c",
+        "0af743ab-f96f-a476-cf50-a5ff03231bb8"
+      ],
+      "parent": "ea7afbcf-2f9f-482b-b62e-8f5fe707be30"
+    },
+    "elementDataInformation": [
+      {
+        "$type": "fpb:SystemLimit",
+        "id": "09a1afc1-79d3-a4be-97ec-965af1a3fb00",
+        "elementsContainer": [
+          "ab489182-d5a0-7fed-4460-fd600360882c",
+          "0af743ab-f96f-a476-cf50-a5ff03231bb8",
+          "8891b025-4d01-3179-be62-74c48ee6c819",
+          "0484884e-5dee-9bb0-043e-10c87ce2ea13",
+          "6a4e4dc8-adc7-3c6e-4e01-95c95e9571d5",
+          "dd4eb84c-c312-509d-25a0-10a5872a370e",
+          "885f86f9-fb3e-7fe6-5dd4-753f0acc1449",
+          "7226b409-e9b5-1dd1-3cca-6084693b25ab",
+          "ad9293b9-5742-831d-6ac8-959d9ef24129",
+          "228e937b-dd43-45a9-728d-85678061d536",
+          "a0bb9ee5-1af8-72fd-a603-f9c26aeefba0"
+        ],
+        "name": "W\u00E4rme\u00FCbertragen Detail"
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "ab489182-d5a0-7fed-4460-fd600360882c",
+        "incoming": [
+          "7226b409-e9b5-1dd1-3cca-6084693b25ab",
+          "a0bb9ee5-1af8-72fd-a603-f9c26aeefba0"
+        ],
+        "outgoing": [
+          "ad9293b9-5742-831d-6ac8-959d9ef24129",
+          "228e937b-dd43-45a9-728d-85678061d536"
+        ],
+        "isAssignedTo": [],
+        "name": "Plattenw\u00E4rme\u00FCbertragung",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "ab489182-d5a0-7fed-4460-fd600360882c",
+          "longName": "Plattenw\u00E4rme\u00FCbertragung",
+          "shortName": "Plattenw\u00E4rme\u00FCbertragung",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": [
+          {
+            "$type": "fpbch:Characteristics",
+            "category": {
+              "$type": "fpb:Identification",
+              "uniqueIdent": "f71e674c-c134-f752-6ef3-c485ef3c680d",
+              "longName": "Auslegungs-W\u00E4rmeleistung",
+              "shortName": "AuslegungsLeistung",
+              "versionNumber": "1.0",
+              "revisionNumber": "0"
+            },
+            "descriptiveElement": {
+              "$type": "fpbch:DescriptiveElement",
+              "valueDeterminationProcess": "Festlegung",
+              "representivity": "Sollwert",
+              "setpointValue": {
+                "$type": "fpbch:ValueWithUnit",
+                "value": "250",
+                "unit": "kW"
+              },
+              "validityLimits": [],
+              "actualValues": []
+            },
+            "relationalElement": {
+              "$type": "fpbch:RelationalElement",
+              "view": "",
+              "model": "",
+              "regulationsForRelationalGeneration": ""
+            }
+          },
+          {
+            "$type": "fpbch:Characteristics",
+            "category": {
+              "$type": "fpb:Identification",
+              "uniqueIdent": "f91bf3e5-68c2-88c7-4b9f-0620493dd2a1",
+              "longName": "Anzahl Platten",
+              "shortName": "PlattenAnzahl",
+              "versionNumber": "1.0",
+              "revisionNumber": "0"
+            },
+            "descriptiveElement": {
+              "$type": "fpbch:DescriptiveElement",
+              "valueDeterminationProcess": "Festlegung",
+              "representivity": "Sollwert",
+              "setpointValue": {
+                "$type": "fpbch:ValueWithUnit",
+                "value": "40",
+                "unit": "Stk"
+              },
+              "validityLimits": [],
+              "actualValues": []
+            },
+            "relationalElement": {
+              "$type": "fpbch:RelationalElement",
+              "view": "",
+              "model": "",
+              "regulationsForRelationalGeneration": ""
+            }
+          }
+        ]
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "0af743ab-f96f-a476-cf50-a5ff03231bb8",
+        "incoming": [
+          "885f86f9-fb3e-7fe6-5dd4-753f0acc1449"
+        ],
+        "outgoing": [
+          "a0bb9ee5-1af8-72fd-a603-f9c26aeefba0"
+        ],
+        "isAssignedTo": [],
+        "name": "Heizmedium aufbereiten",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "0af743ab-f96f-a476-cf50-a5ff03231bb8",
+          "longName": "Heizmedium aufbereiten",
+          "shortName": "Heizmedium aufbereiten",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": [],
+        "decomposedView": "0af743ab-f96f-a476-cf50-a5ff03231bb8"
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "8891b025-4d01-3179-be62-74c48ee6c819",
+        "incoming": [
+          "228e937b-dd43-45a9-728d-85678061d536"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "ab489182-d5a0-7fed-4460-fd600360882c"
+        ],
+        "name": "Austritt Hei\u00DF (abgek\u00FChlt)",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "8891b025-4d01-3179-be62-74c48ee6c819",
+          "longName": "Austritt Hei\u00DF (abgek\u00FChlt)",
+          "shortName": "Austritt Hei\u00DF (abgek\u00FChlt)",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "0484884e-5dee-9bb0-043e-10c87ce2ea13",
+        "incoming": [
+          "ad9293b9-5742-831d-6ac8-959d9ef24129"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "ab489182-d5a0-7fed-4460-fd600360882c"
+        ],
+        "name": "Austritt Kalt (erw\u00E4rmt)",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "0484884e-5dee-9bb0-043e-10c87ce2ea13",
+          "longName": "Austritt Kalt (erw\u00E4rmt)",
+          "shortName": "Austritt Kalt (erw\u00E4rmt)",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "6a4e4dc8-adc7-3c6e-4e01-95c95e9571d5",
+        "incoming": [],
+        "outgoing": [
+          "7226b409-e9b5-1dd1-3cca-6084693b25ab"
+        ],
+        "isAssignedTo": [
+          "ab489182-d5a0-7fed-4460-fd600360882c"
+        ],
+        "name": "Eintritt Kalt",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "6a4e4dc8-adc7-3c6e-4e01-95c95e9571d5",
+          "longName": "Eintritt Kalt",
+          "shortName": "Eintritt Kalt",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "dd4eb84c-c312-509d-25a0-10a5872a370e",
+        "incoming": [],
+        "outgoing": [
+          "885f86f9-fb3e-7fe6-5dd4-753f0acc1449"
+        ],
+        "isAssignedTo": [
+          "0af743ab-f96f-a476-cf50-a5ff03231bb8"
+        ],
+        "name": "Eintritt Hei\u00DF",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "dd4eb84c-c312-509d-25a0-10a5872a370e",
+          "longName": "Eintritt Hei\u00DF",
+          "shortName": "Eintritt Hei\u00DF",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "885f86f9-fb3e-7fe6-5dd4-753f0acc1449",
+        "sourceRef": "dd4eb84c-c312-509d-25a0-10a5872a370e",
+        "targetRef": "0af743ab-f96f-a476-cf50-a5ff03231bb8"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "7226b409-e9b5-1dd1-3cca-6084693b25ab",
+        "sourceRef": "6a4e4dc8-adc7-3c6e-4e01-95c95e9571d5",
+        "targetRef": "ab489182-d5a0-7fed-4460-fd600360882c"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "ad9293b9-5742-831d-6ac8-959d9ef24129",
+        "sourceRef": "ab489182-d5a0-7fed-4460-fd600360882c",
+        "targetRef": "0484884e-5dee-9bb0-043e-10c87ce2ea13"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "228e937b-dd43-45a9-728d-85678061d536",
+        "sourceRef": "ab489182-d5a0-7fed-4460-fd600360882c",
+        "targetRef": "8891b025-4d01-3179-be62-74c48ee6c819"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "a0bb9ee5-1af8-72fd-a603-f9c26aeefba0",
+        "sourceRef": "0af743ab-f96f-a476-cf50-a5ff03231bb8",
+        "targetRef": "ab489182-d5a0-7fed-4460-fd600360882c"
+      }
+    ],
+    "elementVisualInformation": []
+  },
+  {
+    "process": {
+      "$type": "fpb:Process",
+      "id": "ea7afbcf-2f9f-482b-b62e-8f5fe707be30",
+      "elementsContainer": [
+        "54f458ab-a379-eadc-3a56-01e8bfb9858a",
+        "8dbe3703-0485-b372-7a39-54e1342684af",
+        "5eccd209-b2a3-ad7b-5b1e-0ab67efbd7de"
+      ],
+      "isDecomposedProcessOperator": "",
+      "consistsOfStates": [
+        "8891b025-4d01-3179-be62-74c48ee6c819",
+        "0484884e-5dee-9bb0-043e-10c87ce2ea13",
+        "6a4e4dc8-adc7-3c6e-4e01-95c95e9571d5",
+        "dd4eb84c-c312-509d-25a0-10a5872a370e"
+      ],
+      "consistsOfSystemLimit": "54f458ab-a379-eadc-3a56-01e8bfb9858a",
+      "consistsOfProcesses": [
+        "ab7eea01-4aca-f679-ace3-4933ae99838a"
+      ],
+      "consistsOfProcessOperator": [
+        "ab7eea01-4aca-f679-ace3-4933ae99838a"
+      ],
+      "parent": ""
+    },
+    "elementDataInformation": [
+      {
+        "$type": "fpb:SystemLimit",
+        "id": "54f458ab-a379-eadc-3a56-01e8bfb9858a",
+        "elementsContainer": [
+          "8891b025-4d01-3179-be62-74c48ee6c819",
+          "0484884e-5dee-9bb0-043e-10c87ce2ea13",
+          "ab7eea01-4aca-f679-ace3-4933ae99838a",
+          "6a4e4dc8-adc7-3c6e-4e01-95c95e9571d5",
+          "dd4eb84c-c312-509d-25a0-10a5872a370e",
+          "7e259e25-8ab3-5cdb-33c9-767a262301b7",
+          "54e5c6b6-d465-13c8-ad8c-9f83697bf295",
+          "6cba2962-26af-06cf-b70d-b59729a7a4cb",
+          "d5fd16c3-3c0c-0a69-c135-2c9b5da70174"
+        ],
+        "name": "W\u00E4rmetauschen"
+      },
+      {
+        "$type": "fpb:TechnicalResource",
+        "id": "8dbe3703-0485-b372-7a39-54e1342684af",
+        "incoming": [
+          "5eccd209-b2a3-ad7b-5b1e-0ab67efbd7de"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "ab7eea01-4aca-f679-ace3-4933ae99838a"
+        ],
+        "name": "Temperatursensor",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "8dbe3703-0485-b372-7a39-54e1342684af",
+          "longName": "Temperatursensor",
+          "shortName": "Temperatursensor",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "8891b025-4d01-3179-be62-74c48ee6c819",
+        "incoming": [
+          "d5fd16c3-3c0c-0a69-c135-2c9b5da70174"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "ab7eea01-4aca-f679-ace3-4933ae99838a"
+        ],
+        "name": "Abgek\u00FChltes Medium",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "8891b025-4d01-3179-be62-74c48ee6c819",
+          "longName": "Abgek\u00FChltes Medium",
+          "shortName": "Abgek\u00FChltes Medium",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": [
+          {
+            "$type": "fpbch:Characteristics",
+            "category": {
+              "$type": "fpb:Identification",
+              "uniqueIdent": "83e084da-e7ae-5f50-9823-e76b45597bd7",
+              "longName": "Soll-Temperatur am Austritt",
+              "shortName": "SollTemperatur",
+              "versionNumber": "1.0",
+              "revisionNumber": "0"
+            },
+            "descriptiveElement": {
+              "$type": "fpbch:DescriptiveElement",
+              "valueDeterminationProcess": "Festlegung",
+              "representivity": "Sollwert",
+              "setpointValue": {
+                "$type": "fpbch:ValueWithUnit",
+                "value": "30",
+                "unit": "\u00B0C"
+              },
+              "validityLimits": [],
+              "actualValues": []
+            },
+            "relationalElement": {
+              "$type": "fpbch:RelationalElement",
+              "view": "",
+              "model": "",
+              "regulationsForRelationalGeneration": ""
+            }
+          }
+        ]
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "0484884e-5dee-9bb0-043e-10c87ce2ea13",
+        "incoming": [
+          "6cba2962-26af-06cf-b70d-b59729a7a4cb"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "ab7eea01-4aca-f679-ace3-4933ae99838a"
+        ],
+        "name": "Erw\u00E4rmtes Medium",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "0484884e-5dee-9bb0-043e-10c87ce2ea13",
+          "longName": "Erw\u00E4rmtes Medium",
+          "shortName": "Erw\u00E4rmtes Medium",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": [
+          {
+            "$type": "fpbch:Characteristics",
+            "category": {
+              "$type": "fpb:Identification",
+              "uniqueIdent": "b8a04786-d9bd-8df1-0b26-8c0a43e3dd22",
+              "longName": "Soll-Temperatur am Austritt",
+              "shortName": "SollTemperatur",
+              "versionNumber": "1.0",
+              "revisionNumber": "0"
+            },
+            "descriptiveElement": {
+              "$type": "fpbch:DescriptiveElement",
+              "valueDeterminationProcess": "Festlegung",
+              "representivity": "Sollwert",
+              "setpointValue": {
+                "$type": "fpbch:ValueWithUnit",
+                "value": "75",
+                "unit": "\u00B0C"
+              },
+              "validityLimits": [],
+              "actualValues": []
+            },
+            "relationalElement": {
+              "$type": "fpbch:RelationalElement",
+              "view": "",
+              "model": "",
+              "regulationsForRelationalGeneration": ""
+            }
+          }
+        ]
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "ab7eea01-4aca-f679-ace3-4933ae99838a",
+        "incoming": [
+          "7e259e25-8ab3-5cdb-33c9-767a262301b7",
+          "54e5c6b6-d465-13c8-ad8c-9f83697bf295"
+        ],
+        "outgoing": [
+          "6cba2962-26af-06cf-b70d-b59729a7a4cb",
+          "d5fd16c3-3c0c-0a69-c135-2c9b5da70174",
+          "5eccd209-b2a3-ad7b-5b1e-0ab67efbd7de"
+        ],
+        "isAssignedTo": [
+          "8dbe3703-0485-b372-7a39-54e1342684af"
+        ],
+        "name": "W\u00E4rme\u00FCbertragen",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "ab7eea01-4aca-f679-ace3-4933ae99838a",
+          "longName": "W\u00E4rme\u00FCbertragen",
+          "shortName": "W\u00E4rme\u00FCbertragen",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": [],
+        "decomposedView": "ab7eea01-4aca-f679-ace3-4933ae99838a"
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "6a4e4dc8-adc7-3c6e-4e01-95c95e9571d5",
+        "incoming": [],
+        "outgoing": [
+          "54e5c6b6-d465-13c8-ad8c-9f83697bf295"
+        ],
+        "isAssignedTo": [
+          "ab7eea01-4aca-f679-ace3-4933ae99838a"
+        ],
+        "name": "Kaltes Medium",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "6a4e4dc8-adc7-3c6e-4e01-95c95e9571d5",
+          "longName": "Kaltes Medium",
+          "shortName": "Kaltes Medium",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "dd4eb84c-c312-509d-25a0-10a5872a370e",
+        "incoming": [],
+        "outgoing": [
+          "7e259e25-8ab3-5cdb-33c9-767a262301b7"
+        ],
+        "isAssignedTo": [
+          "ab7eea01-4aca-f679-ace3-4933ae99838a"
+        ],
+        "name": "Hei\u00DFes Medium",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "dd4eb84c-c312-509d-25a0-10a5872a370e",
+          "longName": "Hei\u00DFes Medium",
+          "shortName": "Hei\u00DFes Medium",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "7e259e25-8ab3-5cdb-33c9-767a262301b7",
+        "sourceRef": "dd4eb84c-c312-509d-25a0-10a5872a370e",
+        "targetRef": "ab7eea01-4aca-f679-ace3-4933ae99838a"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "54e5c6b6-d465-13c8-ad8c-9f83697bf295",
+        "sourceRef": "6a4e4dc8-adc7-3c6e-4e01-95c95e9571d5",
+        "targetRef": "ab7eea01-4aca-f679-ace3-4933ae99838a"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "6cba2962-26af-06cf-b70d-b59729a7a4cb",
+        "sourceRef": "ab7eea01-4aca-f679-ace3-4933ae99838a",
+        "targetRef": "0484884e-5dee-9bb0-043e-10c87ce2ea13"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "d5fd16c3-3c0c-0a69-c135-2c9b5da70174",
+        "sourceRef": "ab7eea01-4aca-f679-ace3-4933ae99838a",
+        "targetRef": "8891b025-4d01-3179-be62-74c48ee6c819"
+      },
+      {
+        "$type": "fpb:Usage",
+        "id": "5eccd209-b2a3-ad7b-5b1e-0ab67efbd7de",
+        "sourceRef": "ab7eea01-4aca-f679-ace3-4933ae99838a",
+        "targetRef": "8dbe3703-0485-b372-7a39-54e1342684af"
+      }
+    ],
+    "elementVisualInformation": []
+  }
+]

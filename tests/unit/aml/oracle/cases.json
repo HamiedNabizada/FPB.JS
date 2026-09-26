@@ -1,0 +1,787 @@
+{
+  "guidPattern": "00000000-0000-4000-8000-{n:x12}",
+  "now": "2026-01-01T00:00:00Z",
+  "cases": [
+    {
+      "kind": "convert",
+      "id": "fpbjs-MPS500-ohne-grafik",
+      "json": "inputs/json/fpbjs-MPS500-ohne-grafik.json",
+      "expected": "expected/convert/fpbjs-MPS500-ohne-grafik.aml",
+      "warnings": []
+    },
+    {
+      "kind": "convert",
+      "id": "fpbjs-Paper-at2026-ohne-grafik",
+      "json": "inputs/json/fpbjs-Paper-at2026-ohne-grafik.json",
+      "expected": "expected/convert/fpbjs-Paper-at2026-ohne-grafik.aml",
+      "warnings": []
+    },
+    {
+      "kind": "convert",
+      "id": "fpbjs-temperieren",
+      "json": "inputs/json/fpbjs-temperieren.json",
+      "expected": "expected/convert/fpbjs-temperieren.aml",
+      "warnings": []
+    },
+    {
+      "kind": "convert",
+      "id": "mapper-examples-Temperieren",
+      "json": "inputs/json/mapper-examples-Temperieren.json",
+      "expected": "expected/convert/mapper-examples-Temperieren.aml",
+      "warnings": []
+    },
+    {
+      "kind": "convert",
+      "id": "mapper-testdata-Temperieren",
+      "json": "inputs/json/mapper-testdata-Temperieren.json",
+      "expected": "expected/convert/mapper-testdata-Temperieren.aml",
+      "warnings": []
+    },
+    {
+      "kind": "find",
+      "id": "Showcase-A-WaermetauscherMitRegelung",
+      "aml": "inputs/aml/Showcase-A-WaermetauscherMitRegelung.aml",
+      "hierarchies": [
+        {
+          "id": "{f323df00-924e-4dda-9500-fc2bea77f669}",
+          "name": "FPD_Heating"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "kind": "tojson",
+      "id": "Showcase-A-WaermetauscherMitRegelung__0",
+      "aml": "inputs/aml/Showcase-A-WaermetauscherMitRegelung.aml",
+      "hierarchy": 0,
+      "expected": "expected/tojson/Showcase-A-WaermetauscherMitRegelung__0.json",
+      "warnings": []
+    },
+    {
+      "kind": "update",
+      "id": "Showcase-A-WaermetauscherMitRegelung__0__same",
+      "aml": "inputs/aml/Showcase-A-WaermetauscherMitRegelung.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/Showcase-A-WaermetauscherMitRegelung__0__same.json",
+      "expected": "expected/update/Showcase-A-WaermetauscherMitRegelung__0__same.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=24, added=0, connection-waypoints-updated=16, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "Showcase-A-WaermetauscherMitRegelung__0__rename",
+      "aml": "inputs/aml/Showcase-A-WaermetauscherMitRegelung.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/Showcase-A-WaermetauscherMitRegelung__0__rename.json",
+      "expected": "expected/update/Showcase-A-WaermetauscherMitRegelung__0__rename.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=24, added=0, connection-waypoints-updated=16, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "Showcase-A-WaermetauscherMitRegelung__0__delete-state",
+      "aml": "inputs/aml/Showcase-A-WaermetauscherMitRegelung.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/Showcase-A-WaermetauscherMitRegelung__0__delete-state.json",
+      "expected": "expected/update/Showcase-A-WaermetauscherMitRegelung__0__delete-state.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=22, added=0, connection-waypoints-updated=14, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=2, removed-connection-orphans=2, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "find",
+      "id": "Showcase-B-PharmaChargeUndReinigung",
+      "aml": "inputs/aml/Showcase-B-PharmaChargeUndReinigung.aml",
+      "hierarchies": [
+        {
+          "id": "{2cedb963-3703-41ac-ae99-5d5f52c2367e}",
+          "name": "FPD_Batch_Production"
+        },
+        {
+          "id": null,
+          "name": "FPD_Cleaning"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "kind": "tojson",
+      "id": "Showcase-B-PharmaChargeUndReinigung__0",
+      "aml": "inputs/aml/Showcase-B-PharmaChargeUndReinigung.aml",
+      "hierarchy": 0,
+      "expected": "expected/tojson/Showcase-B-PharmaChargeUndReinigung__0.json",
+      "warnings": []
+    },
+    {
+      "kind": "update",
+      "id": "Showcase-B-PharmaChargeUndReinigung__0__same",
+      "aml": "inputs/aml/Showcase-B-PharmaChargeUndReinigung.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/Showcase-B-PharmaChargeUndReinigung__0__same.json",
+      "expected": "expected/update/Showcase-B-PharmaChargeUndReinigung__0__same.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=17, added=0, connection-waypoints-updated=11, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "Showcase-B-PharmaChargeUndReinigung__0__rename",
+      "aml": "inputs/aml/Showcase-B-PharmaChargeUndReinigung.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/Showcase-B-PharmaChargeUndReinigung__0__rename.json",
+      "expected": "expected/update/Showcase-B-PharmaChargeUndReinigung__0__rename.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=17, added=0, connection-waypoints-updated=11, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "Showcase-B-PharmaChargeUndReinigung__0__delete-state",
+      "aml": "inputs/aml/Showcase-B-PharmaChargeUndReinigung.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/Showcase-B-PharmaChargeUndReinigung__0__delete-state.json",
+      "expected": "expected/update/Showcase-B-PharmaChargeUndReinigung__0__delete-state.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=15, added=0, connection-waypoints-updated=9, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=2, removed-connection-orphans=2, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "tojson",
+      "id": "Showcase-B-PharmaChargeUndReinigung__1",
+      "aml": "inputs/aml/Showcase-B-PharmaChargeUndReinigung.aml",
+      "hierarchy": 1,
+      "expected": "expected/tojson/Showcase-B-PharmaChargeUndReinigung__1.json",
+      "warnings": []
+    },
+    {
+      "kind": "update",
+      "id": "Showcase-B-PharmaChargeUndReinigung__1__same",
+      "aml": "inputs/aml/Showcase-B-PharmaChargeUndReinigung.aml",
+      "hierarchy": 1,
+      "json": "inputs/generated/update/Showcase-B-PharmaChargeUndReinigung__1__same.json",
+      "expected": "expected/update/Showcase-B-PharmaChargeUndReinigung__1__same.aml",
+      "warnings": [
+        "Process \u002745db3170-16d4-42c1-9d2d-7c8351c87c2d\u0027 has no SystemLimit.",
+        "Process \u002745db3170-16d4-42c1-9d2d-7c8351c87c2d\u0027 has no ProcessOperator.",
+        "UpdateInPlace summary: updated=0, added=0, connection-waypoints-updated=0, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "find",
+      "id": "Showcase-C-CncRobotikMontage",
+      "aml": "inputs/aml/Showcase-C-CncRobotikMontage.aml",
+      "hierarchies": [
+        {
+          "id": "{aaf183d8-eed7-447f-9e8b-c35d974eb5ab}",
+          "name": "FPD_Assembly"
+        },
+        {
+          "id": null,
+          "name": "FPD_Fasteners_Stock"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "kind": "tojson",
+      "id": "Showcase-C-CncRobotikMontage__0",
+      "aml": "inputs/aml/Showcase-C-CncRobotikMontage.aml",
+      "hierarchy": 0,
+      "expected": "expected/tojson/Showcase-C-CncRobotikMontage__0.json",
+      "warnings": []
+    },
+    {
+      "kind": "update",
+      "id": "Showcase-C-CncRobotikMontage__0__same",
+      "aml": "inputs/aml/Showcase-C-CncRobotikMontage.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/Showcase-C-CncRobotikMontage__0__same.json",
+      "expected": "expected/update/Showcase-C-CncRobotikMontage__0__same.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=24, added=0, connection-waypoints-updated=16, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "Showcase-C-CncRobotikMontage__0__rename",
+      "aml": "inputs/aml/Showcase-C-CncRobotikMontage.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/Showcase-C-CncRobotikMontage__0__rename.json",
+      "expected": "expected/update/Showcase-C-CncRobotikMontage__0__rename.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=24, added=0, connection-waypoints-updated=16, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "Showcase-C-CncRobotikMontage__0__delete-state",
+      "aml": "inputs/aml/Showcase-C-CncRobotikMontage.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/Showcase-C-CncRobotikMontage__0__delete-state.json",
+      "expected": "expected/update/Showcase-C-CncRobotikMontage__0__delete-state.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=21, added=0, connection-waypoints-updated=13, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=3, removed-connection-orphans=3, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "tojson",
+      "id": "Showcase-C-CncRobotikMontage__1",
+      "aml": "inputs/aml/Showcase-C-CncRobotikMontage.aml",
+      "hierarchy": 1,
+      "expected": "expected/tojson/Showcase-C-CncRobotikMontage__1.json",
+      "warnings": []
+    },
+    {
+      "kind": "update",
+      "id": "Showcase-C-CncRobotikMontage__1__same",
+      "aml": "inputs/aml/Showcase-C-CncRobotikMontage.aml",
+      "hierarchy": 1,
+      "json": "inputs/generated/update/Showcase-C-CncRobotikMontage__1__same.json",
+      "expected": "expected/update/Showcase-C-CncRobotikMontage__1__same.aml",
+      "warnings": [
+        "Process \u002790994947-b68b-48ad-8822-49dec294b1b8\u0027 has no SystemLimit.",
+        "Process \u002790994947-b68b-48ad-8822-49dec294b1b8\u0027 has no ProcessOperator.",
+        "UpdateInPlace summary: updated=0, added=0, connection-waypoints-updated=0, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "find",
+      "id": "convert-fpbjs-MPS500-ohne-grafik",
+      "aml": "expected/convert/fpbjs-MPS500-ohne-grafik.aml",
+      "hierarchies": [
+        {
+          "id": "{00000000-0000-4000-8000-000000000005}",
+          "name": "MPS500_FPB"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "kind": "tojson",
+      "id": "convert-fpbjs-MPS500-ohne-grafik__0",
+      "aml": "expected/convert/fpbjs-MPS500-ohne-grafik.aml",
+      "hierarchy": 0,
+      "expected": "expected/tojson/convert-fpbjs-MPS500-ohne-grafik__0.json",
+      "warnings": []
+    },
+    {
+      "kind": "update",
+      "id": "convert-fpbjs-MPS500-ohne-grafik__0__same",
+      "aml": "expected/convert/fpbjs-MPS500-ohne-grafik.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-fpbjs-MPS500-ohne-grafik__0__same.json",
+      "expected": "expected/update/convert-fpbjs-MPS500-ohne-grafik__0__same.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=70, added=0, connection-waypoints-updated=68, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-fpbjs-MPS500-ohne-grafik__0__rename",
+      "aml": "expected/convert/fpbjs-MPS500-ohne-grafik.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-fpbjs-MPS500-ohne-grafik__0__rename.json",
+      "expected": "expected/update/convert-fpbjs-MPS500-ohne-grafik__0__rename.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=70, added=0, connection-waypoints-updated=68, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-fpbjs-MPS500-ohne-grafik__0__delete-state",
+      "aml": "expected/convert/fpbjs-MPS500-ohne-grafik.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-fpbjs-MPS500-ohne-grafik__0__delete-state.json",
+      "expected": "expected/update/convert-fpbjs-MPS500-ohne-grafik__0__delete-state.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=68, added=0, connection-waypoints-updated=66, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=2, removed-connection-orphans=2, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "find",
+      "id": "convert-fpbjs-Paper-at2026-ohne-grafik",
+      "aml": "expected/convert/fpbjs-Paper-at2026-ohne-grafik.aml",
+      "hierarchies": [
+        {
+          "id": "{00000000-0000-4000-8000-000000000003}",
+          "name": "FPBJS_Project"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "kind": "tojson",
+      "id": "convert-fpbjs-Paper-at2026-ohne-grafik__0",
+      "aml": "expected/convert/fpbjs-Paper-at2026-ohne-grafik.aml",
+      "hierarchy": 0,
+      "expected": "expected/tojson/convert-fpbjs-Paper-at2026-ohne-grafik__0.json",
+      "warnings": []
+    },
+    {
+      "kind": "update",
+      "id": "convert-fpbjs-Paper-at2026-ohne-grafik__0__same",
+      "aml": "expected/convert/fpbjs-Paper-at2026-ohne-grafik.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-fpbjs-Paper-at2026-ohne-grafik__0__same.json",
+      "expected": "expected/update/convert-fpbjs-Paper-at2026-ohne-grafik__0__same.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=35, added=0, connection-waypoints-updated=33, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-fpbjs-Paper-at2026-ohne-grafik__0__rename",
+      "aml": "expected/convert/fpbjs-Paper-at2026-ohne-grafik.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-fpbjs-Paper-at2026-ohne-grafik__0__rename.json",
+      "expected": "expected/update/convert-fpbjs-Paper-at2026-ohne-grafik__0__rename.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=35, added=0, connection-waypoints-updated=33, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-fpbjs-Paper-at2026-ohne-grafik__0__delete-state",
+      "aml": "expected/convert/fpbjs-Paper-at2026-ohne-grafik.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-fpbjs-Paper-at2026-ohne-grafik__0__delete-state.json",
+      "expected": "expected/update/convert-fpbjs-Paper-at2026-ohne-grafik__0__delete-state.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=33, added=0, connection-waypoints-updated=31, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=2, removed-connection-orphans=2, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "find",
+      "id": "convert-fpbjs-temperieren",
+      "aml": "expected/convert/fpbjs-temperieren.aml",
+      "hierarchies": [
+        {
+          "id": "{00000000-0000-4000-8000-000000000003}",
+          "name": "FPBJS_Project"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "kind": "tojson",
+      "id": "convert-fpbjs-temperieren__0",
+      "aml": "expected/convert/fpbjs-temperieren.aml",
+      "hierarchy": 0,
+      "expected": "expected/tojson/convert-fpbjs-temperieren__0.json",
+      "warnings": []
+    },
+    {
+      "kind": "update",
+      "id": "convert-fpbjs-temperieren__0__same",
+      "aml": "expected/convert/fpbjs-temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-fpbjs-temperieren__0__same.json",
+      "expected": "expected/update/convert-fpbjs-temperieren__0__same.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=20, added=0, connection-waypoints-updated=19, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-fpbjs-temperieren__0__rename",
+      "aml": "expected/convert/fpbjs-temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-fpbjs-temperieren__0__rename.json",
+      "expected": "expected/update/convert-fpbjs-temperieren__0__rename.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=20, added=0, connection-waypoints-updated=19, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-fpbjs-temperieren__0__move",
+      "aml": "expected/convert/fpbjs-temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-fpbjs-temperieren__0__move.json",
+      "expected": "expected/update/convert-fpbjs-temperieren__0__move.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=20, added=0, connection-waypoints-updated=19, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-fpbjs-temperieren__0__delete-state",
+      "aml": "expected/convert/fpbjs-temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-fpbjs-temperieren__0__delete-state.json",
+      "expected": "expected/update/convert-fpbjs-temperieren__0__delete-state.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=19, added=0, connection-waypoints-updated=18, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=1, removed-connection-orphans=1, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-fpbjs-temperieren__0__add",
+      "aml": "expected/convert/fpbjs-temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-fpbjs-temperieren__0__add.json",
+      "expected": "expected/update/convert-fpbjs-temperieren__0__add.aml",
+      "warnings": [
+        "Flow \u00270badd000-0000-4000-8000-000000000002\u0027: not all endpoints live under process \u0027Aufheizen mit Pr\u00FCfung\u0027 \u2014 source lives in \u0027Aufheizen mit Pr\u00FCfung (id={00000000-0000-4000-8000-000000000001})\u0027, target lives in \u0027Aufheizen mit Pr\u00FCfung (id={00000000-0000-4000-8000-000000000001})\u0027 \u2014 link may target the wrong layer.",
+        "UpdateInPlace summary: updated=20, added=1, connection-waypoints-updated=19, connections-added=1, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "find",
+      "id": "convert-mapper-examples-Temperieren",
+      "aml": "expected/convert/mapper-examples-Temperieren.aml",
+      "hierarchies": [
+        {
+          "id": "{00000000-0000-4000-8000-000000000003}",
+          "name": "FPBJS_Project"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "kind": "tojson",
+      "id": "convert-mapper-examples-Temperieren__0",
+      "aml": "expected/convert/mapper-examples-Temperieren.aml",
+      "hierarchy": 0,
+      "expected": "expected/tojson/convert-mapper-examples-Temperieren__0.json",
+      "warnings": []
+    },
+    {
+      "kind": "update",
+      "id": "convert-mapper-examples-Temperieren__0__same",
+      "aml": "expected/convert/mapper-examples-Temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-mapper-examples-Temperieren__0__same.json",
+      "expected": "expected/update/convert-mapper-examples-Temperieren__0__same.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=20, added=0, connection-waypoints-updated=19, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-mapper-examples-Temperieren__0__rename",
+      "aml": "expected/convert/mapper-examples-Temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-mapper-examples-Temperieren__0__rename.json",
+      "expected": "expected/update/convert-mapper-examples-Temperieren__0__rename.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=20, added=0, connection-waypoints-updated=19, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-mapper-examples-Temperieren__0__move",
+      "aml": "expected/convert/mapper-examples-Temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-mapper-examples-Temperieren__0__move.json",
+      "expected": "expected/update/convert-mapper-examples-Temperieren__0__move.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=20, added=0, connection-waypoints-updated=19, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-mapper-examples-Temperieren__0__delete-state",
+      "aml": "expected/convert/mapper-examples-Temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-mapper-examples-Temperieren__0__delete-state.json",
+      "expected": "expected/update/convert-mapper-examples-Temperieren__0__delete-state.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=19, added=0, connection-waypoints-updated=18, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=1, removed-connection-orphans=1, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-mapper-examples-Temperieren__0__add",
+      "aml": "expected/convert/mapper-examples-Temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-mapper-examples-Temperieren__0__add.json",
+      "expected": "expected/update/convert-mapper-examples-Temperieren__0__add.aml",
+      "warnings": [
+        "Flow \u00270badd000-0000-4000-8000-000000000002\u0027: not all endpoints live under process \u0027Aufheizen mit Pr\u00FCfung\u0027 \u2014 source lives in \u0027Aufheizen mit Pr\u00FCfung (id={00000000-0000-4000-8000-000000000001})\u0027, target lives in \u0027Aufheizen mit Pr\u00FCfung (id={00000000-0000-4000-8000-000000000001})\u0027 \u2014 link may target the wrong layer.",
+        "UpdateInPlace summary: updated=20, added=1, connection-waypoints-updated=19, connections-added=1, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "find",
+      "id": "convert-mapper-testdata-Temperieren",
+      "aml": "expected/convert/mapper-testdata-Temperieren.aml",
+      "hierarchies": [
+        {
+          "id": "{00000000-0000-4000-8000-000000000003}",
+          "name": "FPBJS_Project"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "kind": "tojson",
+      "id": "convert-mapper-testdata-Temperieren__0",
+      "aml": "expected/convert/mapper-testdata-Temperieren.aml",
+      "hierarchy": 0,
+      "expected": "expected/tojson/convert-mapper-testdata-Temperieren__0.json",
+      "warnings": []
+    },
+    {
+      "kind": "update",
+      "id": "convert-mapper-testdata-Temperieren__0__same",
+      "aml": "expected/convert/mapper-testdata-Temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-mapper-testdata-Temperieren__0__same.json",
+      "expected": "expected/update/convert-mapper-testdata-Temperieren__0__same.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=20, added=0, connection-waypoints-updated=19, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-mapper-testdata-Temperieren__0__rename",
+      "aml": "expected/convert/mapper-testdata-Temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-mapper-testdata-Temperieren__0__rename.json",
+      "expected": "expected/update/convert-mapper-testdata-Temperieren__0__rename.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=20, added=0, connection-waypoints-updated=19, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-mapper-testdata-Temperieren__0__move",
+      "aml": "expected/convert/mapper-testdata-Temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-mapper-testdata-Temperieren__0__move.json",
+      "expected": "expected/update/convert-mapper-testdata-Temperieren__0__move.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=20, added=0, connection-waypoints-updated=19, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-mapper-testdata-Temperieren__0__delete-state",
+      "aml": "expected/convert/mapper-testdata-Temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-mapper-testdata-Temperieren__0__delete-state.json",
+      "expected": "expected/update/convert-mapper-testdata-Temperieren__0__delete-state.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=19, added=0, connection-waypoints-updated=18, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=1, removed-connection-orphans=1, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-mapper-testdata-Temperieren__0__add",
+      "aml": "expected/convert/mapper-testdata-Temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-mapper-testdata-Temperieren__0__add.json",
+      "expected": "expected/update/convert-mapper-testdata-Temperieren__0__add.aml",
+      "warnings": [
+        "Flow \u00270badd000-0000-4000-8000-000000000002\u0027: not all endpoints live under process \u0027Aufheizen mit Pr\u00FCfung\u0027 \u2014 source lives in \u0027Aufheizen mit Pr\u00FCfung (id={00000000-0000-4000-8000-000000000001})\u0027, target lives in \u0027Aufheizen mit Pr\u00FCfung (id={00000000-0000-4000-8000-000000000001})\u0027 \u2014 link may target the wrong layer.",
+        "UpdateInPlace summary: updated=20, added=1, connection-waypoints-updated=19, connections-added=1, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "find",
+      "id": "mixed",
+      "aml": "inputs/generated/mixed.aml",
+      "hierarchies": [
+        {
+          "id": "{f323df00-924e-4dda-9500-fc2bea77f669}",
+          "name": "FPD_Heating"
+        },
+        {
+          "id": "{00000000-0000-4000-8000-000000000003}",
+          "name": "FPBJS_Project"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "kind": "tojson",
+      "id": "mixed__0",
+      "aml": "inputs/generated/mixed.aml",
+      "hierarchy": 0,
+      "expected": "expected/tojson/mixed__0.json",
+      "warnings": []
+    },
+    {
+      "kind": "update",
+      "id": "mixed__0__same",
+      "aml": "inputs/generated/mixed.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/mixed__0__same.json",
+      "expected": "expected/update/mixed__0__same.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=24, added=0, connection-waypoints-updated=16, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "mixed__0__rename",
+      "aml": "inputs/generated/mixed.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/mixed__0__rename.json",
+      "expected": "expected/update/mixed__0__rename.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=24, added=0, connection-waypoints-updated=16, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "mixed__0__delete-state",
+      "aml": "inputs/generated/mixed.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/mixed__0__delete-state.json",
+      "expected": "expected/update/mixed__0__delete-state.aml",
+      "warnings": [
+        "Removed link \u0027B1_Prozess\u0027 in \u0027Behaelter_B1\u0027: it pointed to \u0027Abgek\u00FChltes Medium\u0027, which was deleted.",
+        "UpdateInPlace summary: updated=22, added=0, connection-waypoints-updated=14, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=2, removed-connection-orphans=2, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "tojson",
+      "id": "mixed__1",
+      "aml": "inputs/generated/mixed.aml",
+      "hierarchy": 1,
+      "expected": "expected/tojson/mixed__1.json",
+      "warnings": []
+    },
+    {
+      "kind": "update",
+      "id": "mixed__1__same",
+      "aml": "inputs/generated/mixed.aml",
+      "hierarchy": 1,
+      "json": "inputs/generated/update/mixed__1__same.json",
+      "expected": "expected/update/mixed__1__same.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=20, added=0, connection-waypoints-updated=19, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "mixed__1__rename",
+      "aml": "inputs/generated/mixed.aml",
+      "hierarchy": 1,
+      "json": "inputs/generated/update/mixed__1__rename.json",
+      "expected": "expected/update/mixed__1__rename.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=20, added=0, connection-waypoints-updated=19, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "mixed__1__move",
+      "aml": "inputs/generated/mixed.aml",
+      "hierarchy": 1,
+      "json": "inputs/generated/update/mixed__1__move.json",
+      "expected": "expected/update/mixed__1__move.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=20, added=0, connection-waypoints-updated=19, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "mixed__1__delete-state",
+      "aml": "inputs/generated/mixed.aml",
+      "hierarchy": 1,
+      "json": "inputs/generated/update/mixed__1__delete-state.json",
+      "expected": "expected/update/mixed__1__delete-state.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=19, added=0, connection-waypoints-updated=18, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=1, removed-connection-orphans=1, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "mixed__1__add",
+      "aml": "inputs/generated/mixed.aml",
+      "hierarchy": 1,
+      "json": "inputs/generated/update/mixed__1__add.json",
+      "expected": "expected/update/mixed__1__add.aml",
+      "warnings": [
+        "Flow \u00270badd000-0000-4000-8000-000000000002\u0027: not all endpoints live under process \u0027Aufheizen mit Pr\u00FCfung\u0027 \u2014 source lives in \u0027Aufheizen mit Pr\u00FCfung (id={00000000-0000-4000-8000-000000000001})\u0027, target lives in \u0027Aufheizen mit Pr\u00FCfung (id={00000000-0000-4000-8000-000000000001})\u0027 \u2014 link may target the wrong layer.",
+        "UpdateInPlace summary: updated=20, added=1, connection-waypoints-updated=19, connections-added=1, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "find",
+      "id": "no-fpd",
+      "aml": "inputs/generated/no-fpd.aml",
+      "hierarchies": [],
+      "warnings": []
+    },
+    {
+      "kind": "update",
+      "id": "no-fpd__add",
+      "aml": "inputs/generated/no-fpd.aml",
+      "hierarchy": null,
+      "json": "inputs/json/fpbjs-temperieren.json",
+      "expected": "expected/update/no-fpd__add.aml",
+      "warnings": [
+        "No existing FPD InstanceHierarchy found \u2014 appending a fresh hierarchy instead."
+      ]
+    },
+    {
+      "kind": "derive",
+      "id": "subprocess:abc",
+      "method": "DeriveSubProcessId",
+      "args": [
+        "abc"
+      ],
+      "result": "{9165b4a4-c031-455d-976a-ba3e1d4fe637}",
+      "warnings": []
+    },
+    {
+      "kind": "derive",
+      "id": "subprocess:6d37cff1-a715-266d-7750-8ee6e7574a4c",
+      "method": "DeriveSubProcessId",
+      "args": [
+        "6d37cff1-a715-266d-7750-8ee6e7574a4c"
+      ],
+      "result": "{421aba72-073f-5b5f-a49e-6c56a2958a56}",
+      "warnings": []
+    },
+    {
+      "kind": "derive",
+      "id": "subprocess:\u00C4\u20AC\uD83D\uDE00 unicode",
+      "method": "DeriveSubProcessId",
+      "args": [
+        "\u00C4\u20AC\uD83D\uDE00 unicode"
+      ],
+      "result": "{c3aebd00-2f21-c055-80ea-87ef3c837df4}",
+      "warnings": []
+    },
+    {
+      "kind": "derive",
+      "id": "boundary:s1@p1",
+      "method": "DeriveBoundaryStateId",
+      "args": [
+        "s1",
+        "p1"
+      ],
+      "result": "{393a8c68-8bb1-685e-b39f-c9b8a4534e65}",
+      "warnings": []
+    },
+    {
+      "kind": "derive",
+      "id": "boundary:dd4eb84c-c312-509d-25a0-10a5872a370e@c03bd9e7-bf00-4577-a4d3-fd0cb6d0e89b",
+      "method": "DeriveBoundaryStateId",
+      "args": [
+        "dd4eb84c-c312-509d-25a0-10a5872a370e",
+        "c03bd9e7-bf00-4577-a4d3-fd0cb6d0e89b"
+      ],
+      "result": "{d714c554-49c3-3454-9c16-1f070bdc6f97}",
+      "warnings": []
+    },
+    {
+      "kind": "derive",
+      "id": "boundary:x@",
+      "method": "DeriveBoundaryStateId",
+      "args": [
+        "x",
+        ""
+      ],
+      "result": "{21a9d564-cce6-b457-93e4-d747fe142663}",
+      "warnings": []
+    }
+  ]
+}

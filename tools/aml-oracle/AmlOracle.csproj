@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Reference for the JavaScript port of the FpbMapper (app/fpb/aml/mapper):
+    runs the C# mapper over tests/unit/aml/oracle/inputs and writes what it
+    produces to tests/unit/aml/oracle/expected. Needs the .NET 8 SDK and the
+    fpb-aml-mapper checkout next to FPB.JS (../AML/fpb-aml-mapper).
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\AML\fpb-aml-mapper\dotnet\FpbMapper.Conversion\FpbMapper.Conversion.csproj" />
+  </ItemGroup>
+
+</Project>

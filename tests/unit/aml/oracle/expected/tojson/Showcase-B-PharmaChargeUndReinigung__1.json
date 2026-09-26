@@ -1,0 +1,23 @@
+[
+  {
+    "$type": "fpb:Project",
+    "name": "FPD_Cleaning",
+    "targetNamespace": "http://www.hsu-ifa.de/fpbjs",
+    "entryPoint": "45db3170-16d4-42c1-9d2d-7c8351c87c2d"
+  },
+  {
+    "process": {
+      "$type": "fpb:Process",
+      "id": "45db3170-16d4-42c1-9d2d-7c8351c87c2d",
+      "elementsContainer": [],
+      "isDecomposedProcessOperator": "",
+      "consistsOfStates": [],
+      "consistsOfSystemLimit": "",
+      "consistsOfProcesses": [],
+      "consistsOfProcessOperator": [],
+      "parent": ""
+    },
+    "elementDataInformation": [],
+    "elementVisualInformation": []
+  }
+]

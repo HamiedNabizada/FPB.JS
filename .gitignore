@@ -7,6 +7,8 @@ tmp/
 # NPM package files
 dist/
 *.tgz
+# AmlEngine.js is not on npm; its tarball is the dependency (feature 028)
+!vendor/*.tgz
 
 # Build artifacts
 .cache/
@@ -24,3 +26,7 @@ examples/*/node_modules/
 examples/*/dist/
 examples/*/package-lock.json
 tests/e2e/screenshots/
+
+# build output of the C# oracle for the mapper port
+tools/aml-oracle/bin/
+tools/aml-oracle/obj/

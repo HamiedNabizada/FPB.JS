@@ -1,0 +1,23 @@
+[
+  {
+    "$type": "fpb:Project",
+    "name": "FPD_Fasteners_Stock",
+    "targetNamespace": "http://www.hsu-ifa.de/fpbjs",
+    "entryPoint": "90994947-b68b-48ad-8822-49dec294b1b8"
+  },
+  {
+    "process": {
+      "$type": "fpb:Process",
+      "id": "90994947-b68b-48ad-8822-49dec294b1b8",
+      "elementsContainer": [],
+      "isDecomposedProcessOperator": "",
+      "consistsOfStates": [],
+      "consistsOfSystemLimit": "",
+      "consistsOfProcesses": [],
+      "consistsOfProcessOperator": [],
+      "parent": ""
+    },
+    "elementDataInformation": [],
+    "elementVisualInformation": []
+  }
+]

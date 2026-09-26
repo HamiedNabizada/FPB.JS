@@ -1,0 +1,1131 @@
+[
+  {
+    "$type": "fpb:Project",
+    "name": "FPBJS_Project",
+    "targetNamespace": "http://www.hsu-ifa.de/fpbjs",
+    "entryPoint": "00000000-0000-4000-8000-000000000001"
+  },
+  {
+    "process": {
+      "$type": "fpb:Process",
+      "id": "11022dc6-cdf0-4108-b543-05b83c1cbdec",
+      "elementsContainer": [
+        "9591f40c-7f49-4c15-9a97-dda81a439e99",
+        "8c9934d3-3b22-4a5e-b577-db50de1d8d66",
+        "c30b33c5-9668-40ff-85d9-f1f4203ae32e",
+        "dfe93d01-0b35-48f0-93fa-319a2796c37a",
+        "67afba47-0ace-4c43-b5d0-a4f2781b8f4c",
+        "edd6d131-9ef1-4a70-b2fe-9e0d741210ec",
+        "7b77b19f-190e-4e93-be51-e3e11a187c2a",
+        "37337c1f-958c-4e2a-a087-d407776b876b",
+        "963969ec-5920-4d84-a466-af2dfd8afd9c",
+        "e99e7903-fcdc-4ed3-84bb-42778a67106e",
+        "d01588af-3717-4a7a-86e8-2863496d3690",
+        "4c4131fd-4c49-41f6-8a51-e56911228141",
+        "d0191091-8828-48fd-bcad-9c315665aaf8"
+      ],
+      "isDecomposedProcessOperator": "11022dc6-cdf0-4108-b543-05b83c1cbdec",
+      "consistsOfStates": [
+        "56f9e16b-77b8-4b45-aa90-b8ee3e9796c9",
+        "5863e225-ae31-4de5-8047-c9aa11d4b8bd",
+        "acd70ee4-b58a-4d42-b0cb-783f27acb25f",
+        "ad68918e-c9ca-4f5c-b16a-1cfa5adcde50",
+        "29029d54-ff4e-4b1d-8de4-8ca258122e7a",
+        "47f5caf5-0b06-4a72-bdee-1616a5bae094",
+        "bc95dc22-f824-408f-a7dd-f085f19020ca",
+        "bcc485fd-a580-4965-8a9a-c765dc9e0fd4",
+        "4811aa3c-6e66-4cc8-af2e-d0de739c3a8b",
+        "7d6b71fa-579f-4987-9849-b6ae887159d6",
+        "2f133709-1e29-46c4-a354-68e736e15df9",
+        "00c6cb8f-3b4c-4bc4-a86a-ee6d447ff262",
+        "74e05628-ac30-48e6-bc78-410461790c78"
+      ],
+      "consistsOfSystemLimit": "9591f40c-7f49-4c15-9a97-dda81a439e99",
+      "consistsOfProcesses": [],
+      "consistsOfProcessOperator": [
+        "53f21f10-368e-4b28-857d-f217e15e1115",
+        "1a484e69-f9aa-4f72-aec9-1317d5998397",
+        "fb218aca-3a65-431b-9a0e-db998cc7bebd",
+        "caaf949f-23e2-41b4-8744-1fedc7169042",
+        "f3ee1c6e-1a33-4e51-b136-a13f0a92a6c4",
+        "b3e0373d-f35c-407b-8c75-200bc74de992"
+      ],
+      "parent": "00000000-0000-4000-8000-000000000001"
+    },
+    "elementDataInformation": [
+      {
+        "$type": "fpb:SystemLimit",
+        "id": "9591f40c-7f49-4c15-9a97-dda81a439e99",
+        "elementsContainer": [
+          "56f9e16b-77b8-4b45-aa90-b8ee3e9796c9",
+          "5863e225-ae31-4de5-8047-c9aa11d4b8bd",
+          "acd70ee4-b58a-4d42-b0cb-783f27acb25f",
+          "ad68918e-c9ca-4f5c-b16a-1cfa5adcde50",
+          "29029d54-ff4e-4b1d-8de4-8ca258122e7a",
+          "53f21f10-368e-4b28-857d-f217e15e1115",
+          "1a484e69-f9aa-4f72-aec9-1317d5998397",
+          "47f5caf5-0b06-4a72-bdee-1616a5bae094",
+          "fb218aca-3a65-431b-9a0e-db998cc7bebd",
+          "caaf949f-23e2-41b4-8744-1fedc7169042",
+          "bc95dc22-f824-408f-a7dd-f085f19020ca",
+          "f3ee1c6e-1a33-4e51-b136-a13f0a92a6c4",
+          "bcc485fd-a580-4965-8a9a-c765dc9e0fd4",
+          "4811aa3c-6e66-4cc8-af2e-d0de739c3a8b",
+          "b3e0373d-f35c-407b-8c75-200bc74de992",
+          "7d6b71fa-579f-4987-9849-b6ae887159d6",
+          "2f133709-1e29-46c4-a354-68e736e15df9",
+          "00c6cb8f-3b4c-4bc4-a86a-ee6d447ff262",
+          "74e05628-ac30-48e6-bc78-410461790c78",
+          "adcec01b-e2db-4d1b-b582-599cd0fa2754",
+          "bdff2a5f-bfb8-47a0-bbe0-25823a01da84",
+          "64e65e7f-249a-4343-9fec-c0000eca4e8b",
+          "0c44fd99-6028-44df-80b0-519ce529a24d",
+          "157aad05-18f6-4c4a-b7e7-dbed41320a8b",
+          "9f8cb407-bfcf-491a-85fb-1cc565c47e90",
+          "0bd985f6-ed39-4fa8-94c3-af14866418a6",
+          "b3d1fb43-5ac0-445f-8c19-c27f63b5078c",
+          "8683eae0-a279-4b09-bf7e-b85b40c48e6e",
+          "f5a9ec58-a3e7-4cda-b19b-cf64c6e6844c",
+          "48745616-d9ff-4198-9281-4c7898a8ce7e",
+          "4411cd5d-f043-4cdc-be26-56ce9fc8e71d",
+          "db63e225-2a79-43d3-8de6-a3ce55fa53c0",
+          "bfc91f66-d900-4b2e-b0f8-cfef2cb0e2b4",
+          "e678917d-6bd9-4e0d-8689-2c4fd660db34",
+          "a1966b54-427e-4eb8-bc1a-462eed2d99f4",
+          "d8455f3c-2d54-42a1-9b92-bc2f47e7f552",
+          "9422289f-4363-4723-b28e-259757720796",
+          "e301cb67-1663-40fa-abb4-e812e9aaedf2",
+          "70a869b9-6a30-41ab-8db9-3ffa6aca114b"
+        ],
+        "name": "SL_Manufacture_Cylinder"
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "56f9e16b-77b8-4b45-aa90-b8ee3e9796c9",
+        "incoming": [
+          "9422289f-4363-4723-b28e-259757720796"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "1a484e69-f9aa-4f72-aec9-1317d5998397"
+        ],
+        "name": "Pneumatic_Cylinder",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "56f9e16b-77b8-4b45-aa90-b8ee3e9796c9",
+          "longName": "",
+          "shortName": "Pneumatic_Cylinder",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "5863e225-ae31-4de5-8047-c9aa11d4b8bd",
+        "incoming": [
+          "4411cd5d-f043-4cdc-be26-56ce9fc8e71d"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "caaf949f-23e2-41b4-8744-1fedc7169042"
+        ],
+        "name": "Cylinder_\nNOK",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "5863e225-ae31-4de5-8047-c9aa11d4b8bd",
+          "longName": "",
+          "shortName": "Cylinder_\nNOK",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "acd70ee4-b58a-4d42-b0cb-783f27acb25f",
+        "incoming": [
+          "48745616-d9ff-4198-9281-4c7898a8ce7e"
+        ],
+        "outgoing": [
+          "a1966b54-427e-4eb8-bc1a-462eed2d99f4"
+        ],
+        "isAssignedTo": [
+          "caaf949f-23e2-41b4-8744-1fedc7169042",
+          "fb218aca-3a65-431b-9a0e-db998cc7bebd"
+        ],
+        "name": "Cylinder_OK",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "acd70ee4-b58a-4d42-b0cb-783f27acb25f",
+          "longName": "",
+          "shortName": "Cylinder_OK",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "ad68918e-c9ca-4f5c-b16a-1cfa5adcde50",
+        "incoming": [
+          "e301cb67-1663-40fa-abb4-e812e9aaedf2"
+        ],
+        "outgoing": [
+          "bfc91f66-d900-4b2e-b0f8-cfef2cb0e2b4"
+        ],
+        "isAssignedTo": [
+          "fb218aca-3a65-431b-9a0e-db998cc7bebd",
+          "53f21f10-368e-4b28-857d-f217e15e1115"
+        ],
+        "name": "Lid",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "ad68918e-c9ca-4f5c-b16a-1cfa5adcde50",
+          "longName": "",
+          "shortName": "Lid",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "29029d54-ff4e-4b1d-8de4-8ca258122e7a",
+        "incoming": [
+          "70a869b9-6a30-41ab-8db9-3ffa6aca114b"
+        ],
+        "outgoing": [
+          "e678917d-6bd9-4e0d-8689-2c4fd660db34"
+        ],
+        "isAssignedTo": [
+          "fb218aca-3a65-431b-9a0e-db998cc7bebd",
+          "53f21f10-368e-4b28-857d-f217e15e1115"
+        ],
+        "name": "Spring",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "29029d54-ff4e-4b1d-8de4-8ca258122e7a",
+          "longName": "",
+          "shortName": "Spring",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "53f21f10-368e-4b28-857d-f217e15e1115",
+        "incoming": [
+          "963969ec-5920-4d84-a466-af2dfd8afd9c",
+          "bdff2a5f-bfb8-47a0-bbe0-25823a01da84",
+          "64e65e7f-249a-4343-9fec-c0000eca4e8b",
+          "0c44fd99-6028-44df-80b0-519ce529a24d"
+        ],
+        "outgoing": [
+          "0bd985f6-ed39-4fa8-94c3-af14866418a6",
+          "e301cb67-1663-40fa-abb4-e812e9aaedf2",
+          "70a869b9-6a30-41ab-8db9-3ffa6aca114b"
+        ],
+        "isAssignedTo": [
+          "edd6d131-9ef1-4a70-b2fe-9e0d741210ec"
+        ],
+        "name": "Distribute_Parts",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "53f21f10-368e-4b28-857d-f217e15e1115",
+          "longName": "",
+          "shortName": "Distribute_Parts",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "1a484e69-f9aa-4f72-aec9-1317d5998397",
+        "incoming": [
+          "4c4131fd-4c49-41f6-8a51-e56911228141",
+          "d8455f3c-2d54-42a1-9b92-bc2f47e7f552"
+        ],
+        "outgoing": [
+          "9422289f-4363-4723-b28e-259757720796"
+        ],
+        "isAssignedTo": [
+          "c30b33c5-9668-40ff-85d9-f1f4203ae32e"
+        ],
+        "name": "Distribute_Finished_Good",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "1a484e69-f9aa-4f72-aec9-1317d5998397",
+          "longName": "",
+          "shortName": "Distribute_Finished_Good",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "47f5caf5-0b06-4a72-bdee-1616a5bae094",
+        "incoming": [
+          "db63e225-2a79-43d3-8de6-a3ce55fa53c0"
+        ],
+        "outgoing": [
+          "d8455f3c-2d54-42a1-9b92-bc2f47e7f552"
+        ],
+        "isAssignedTo": [
+          "fb218aca-3a65-431b-9a0e-db998cc7bebd",
+          "1a484e69-f9aa-4f72-aec9-1317d5998397"
+        ],
+        "name": "Pneumatic_Cylinder",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "47f5caf5-0b06-4a72-bdee-1616a5bae094",
+          "longName": "",
+          "shortName": "Pneumatic_Cylinder",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "fb218aca-3a65-431b-9a0e-db998cc7bebd",
+        "incoming": [
+          "d01588af-3717-4a7a-86e8-2863496d3690",
+          "9f8cb407-bfcf-491a-85fb-1cc565c47e90",
+          "bfc91f66-d900-4b2e-b0f8-cfef2cb0e2b4",
+          "e678917d-6bd9-4e0d-8689-2c4fd660db34",
+          "a1966b54-427e-4eb8-bc1a-462eed2d99f4"
+        ],
+        "outgoing": [
+          "db63e225-2a79-43d3-8de6-a3ce55fa53c0"
+        ],
+        "isAssignedTo": [
+          "dfe93d01-0b35-48f0-93fa-319a2796c37a"
+        ],
+        "name": "Assemble_Parts",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "fb218aca-3a65-431b-9a0e-db998cc7bebd",
+          "longName": "",
+          "shortName": "Assemble_Parts",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "caaf949f-23e2-41b4-8744-1fedc7169042",
+        "incoming": [
+          "f5a9ec58-a3e7-4cda-b19b-cf64c6e6844c"
+        ],
+        "outgoing": [
+          "d0191091-8828-48fd-bcad-9c315665aaf8",
+          "48745616-d9ff-4198-9281-4c7898a8ce7e",
+          "4411cd5d-f043-4cdc-be26-56ce9fc8e71d"
+        ],
+        "isAssignedTo": [
+          "8c9934d3-3b22-4a5e-b577-db50de1d8d66"
+        ],
+        "name": "Check_Quality",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "caaf949f-23e2-41b4-8744-1fedc7169042",
+          "longName": "",
+          "shortName": "Check_Quality",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "bc95dc22-f824-408f-a7dd-f085f19020ca",
+        "incoming": [
+          "8683eae0-a279-4b09-bf7e-b85b40c48e6e"
+        ],
+        "outgoing": [
+          "f5a9ec58-a3e7-4cda-b19b-cf64c6e6844c"
+        ],
+        "isAssignedTo": [
+          "f3ee1c6e-1a33-4e51-b136-a13f0a92a6c4",
+          "caaf949f-23e2-41b4-8744-1fedc7169042"
+        ],
+        "name": "Cylinder",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "bc95dc22-f824-408f-a7dd-f085f19020ca",
+          "longName": "",
+          "shortName": "Cylinder",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "f3ee1c6e-1a33-4e51-b136-a13f0a92a6c4",
+        "incoming": [
+          "e99e7903-fcdc-4ed3-84bb-42778a67106e",
+          "b3d1fb43-5ac0-445f-8c19-c27f63b5078c"
+        ],
+        "outgoing": [
+          "8683eae0-a279-4b09-bf7e-b85b40c48e6e"
+        ],
+        "isAssignedTo": [
+          "67afba47-0ace-4c43-b5d0-a4f2781b8f4c"
+        ],
+        "name": "Create_Hole",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "f3ee1c6e-1a33-4e51-b136-a13f0a92a6c4",
+          "longName": "",
+          "shortName": "Create_Hole",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "bcc485fd-a580-4965-8a9a-c765dc9e0fd4",
+        "incoming": [
+          "157aad05-18f6-4c4a-b7e7-dbed41320a8b"
+        ],
+        "outgoing": [
+          "b3d1fb43-5ac0-445f-8c19-c27f63b5078c"
+        ],
+        "isAssignedTo": [
+          "b3e0373d-f35c-407b-8c75-200bc74de992",
+          "f3ee1c6e-1a33-4e51-b136-a13f0a92a6c4"
+        ],
+        "name": "Cylinder",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "bcc485fd-a580-4965-8a9a-c765dc9e0fd4",
+          "longName": "",
+          "shortName": "Cylinder",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "4811aa3c-6e66-4cc8-af2e-d0de739c3a8b",
+        "incoming": [
+          "0bd985f6-ed39-4fa8-94c3-af14866418a6"
+        ],
+        "outgoing": [
+          "9f8cb407-bfcf-491a-85fb-1cc565c47e90"
+        ],
+        "isAssignedTo": [
+          "fb218aca-3a65-431b-9a0e-db998cc7bebd",
+          "53f21f10-368e-4b28-857d-f217e15e1115"
+        ],
+        "name": "Piston",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "4811aa3c-6e66-4cc8-af2e-d0de739c3a8b",
+          "longName": "",
+          "shortName": "Piston",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "b3e0373d-f35c-407b-8c75-200bc74de992",
+        "incoming": [
+          "37337c1f-958c-4e2a-a087-d407776b876b",
+          "adcec01b-e2db-4d1b-b582-599cd0fa2754"
+        ],
+        "outgoing": [
+          "157aad05-18f6-4c4a-b7e7-dbed41320a8b"
+        ],
+        "isAssignedTo": [
+          "7b77b19f-190e-4e93-be51-e3e11a187c2a"
+        ],
+        "name": "Distribute_Cylinder",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "b3e0373d-f35c-407b-8c75-200bc74de992",
+          "longName": "",
+          "shortName": "Distribute_Cylinder",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "7d6b71fa-579f-4987-9849-b6ae887159d6",
+        "incoming": [],
+        "outgoing": [
+          "0c44fd99-6028-44df-80b0-519ce529a24d"
+        ],
+        "isAssignedTo": [
+          "53f21f10-368e-4b28-857d-f217e15e1115"
+        ],
+        "name": "Piston",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "7d6b71fa-579f-4987-9849-b6ae887159d6",
+          "longName": "",
+          "shortName": "Piston",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "2f133709-1e29-46c4-a354-68e736e15df9",
+        "incoming": [],
+        "outgoing": [
+          "64e65e7f-249a-4343-9fec-c0000eca4e8b"
+        ],
+        "isAssignedTo": [
+          "53f21f10-368e-4b28-857d-f217e15e1115"
+        ],
+        "name": "Spring",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "2f133709-1e29-46c4-a354-68e736e15df9",
+          "longName": "",
+          "shortName": "Spring",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "00c6cb8f-3b4c-4bc4-a86a-ee6d447ff262",
+        "incoming": [],
+        "outgoing": [
+          "bdff2a5f-bfb8-47a0-bbe0-25823a01da84"
+        ],
+        "isAssignedTo": [
+          "53f21f10-368e-4b28-857d-f217e15e1115"
+        ],
+        "name": "Lid",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "00c6cb8f-3b4c-4bc4-a86a-ee6d447ff262",
+          "longName": "",
+          "shortName": "Lid",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "74e05628-ac30-48e6-bc78-410461790c78",
+        "incoming": [],
+        "outgoing": [
+          "adcec01b-e2db-4d1b-b582-599cd0fa2754"
+        ],
+        "isAssignedTo": [
+          "b3e0373d-f35c-407b-8c75-200bc74de992"
+        ],
+        "name": "Cylinder",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "74e05628-ac30-48e6-bc78-410461790c78",
+          "longName": "",
+          "shortName": "Cylinder",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:TechnicalResource",
+        "id": "8c9934d3-3b22-4a5e-b577-db50de1d8d66",
+        "incoming": [
+          "d0191091-8828-48fd-bcad-9c315665aaf8"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "caaf949f-23e2-41b4-8744-1fedc7169042"
+        ],
+        "name": "QualitySystem",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "8c9934d3-3b22-4a5e-b577-db50de1d8d66",
+          "longName": "",
+          "shortName": "QualitySystem",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:TechnicalResource",
+        "id": "c30b33c5-9668-40ff-85d9-f1f4203ae32e",
+        "incoming": [],
+        "outgoing": [
+          "4c4131fd-4c49-41f6-8a51-e56911228141"
+        ],
+        "isAssignedTo": [
+          "1a484e69-f9aa-4f72-aec9-1317d5998397"
+        ],
+        "name": "FinishedGood_Distributor",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "c30b33c5-9668-40ff-85d9-f1f4203ae32e",
+          "longName": "",
+          "shortName": "FinishedGood_Distributor",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:TechnicalResource",
+        "id": "dfe93d01-0b35-48f0-93fa-319a2796c37a",
+        "incoming": [],
+        "outgoing": [
+          "d01588af-3717-4a7a-86e8-2863496d3690"
+        ],
+        "isAssignedTo": [
+          "fb218aca-3a65-431b-9a0e-db998cc7bebd"
+        ],
+        "name": "AssemblySystem",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "dfe93d01-0b35-48f0-93fa-319a2796c37a",
+          "longName": "",
+          "shortName": "AssemblySystem",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:TechnicalResource",
+        "id": "67afba47-0ace-4c43-b5d0-a4f2781b8f4c",
+        "incoming": [],
+        "outgoing": [
+          "e99e7903-fcdc-4ed3-84bb-42778a67106e"
+        ],
+        "isAssignedTo": [
+          "f3ee1c6e-1a33-4e51-b136-a13f0a92a6c4"
+        ],
+        "name": "DrillingSystem",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "67afba47-0ace-4c43-b5d0-a4f2781b8f4c",
+          "longName": "",
+          "shortName": "DrillingSystem",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:TechnicalResource",
+        "id": "edd6d131-9ef1-4a70-b2fe-9e0d741210ec",
+        "incoming": [],
+        "outgoing": [
+          "963969ec-5920-4d84-a466-af2dfd8afd9c"
+        ],
+        "isAssignedTo": [
+          "53f21f10-368e-4b28-857d-f217e15e1115"
+        ],
+        "name": "Part_Distributor",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "edd6d131-9ef1-4a70-b2fe-9e0d741210ec",
+          "longName": "",
+          "shortName": "Part_Distributor",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:TechnicalResource",
+        "id": "7b77b19f-190e-4e93-be51-e3e11a187c2a",
+        "incoming": [],
+        "outgoing": [
+          "37337c1f-958c-4e2a-a087-d407776b876b"
+        ],
+        "isAssignedTo": [
+          "b3e0373d-f35c-407b-8c75-200bc74de992"
+        ],
+        "name": "Cylinder_Distributor",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "7b77b19f-190e-4e93-be51-e3e11a187c2a",
+          "longName": "",
+          "shortName": "Cylinder_Distributor",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Usage",
+        "id": "37337c1f-958c-4e2a-a087-d407776b876b",
+        "sourceRef": "7b77b19f-190e-4e93-be51-e3e11a187c2a",
+        "targetRef": "b3e0373d-f35c-407b-8c75-200bc74de992"
+      },
+      {
+        "$type": "fpb:Usage",
+        "id": "963969ec-5920-4d84-a466-af2dfd8afd9c",
+        "sourceRef": "edd6d131-9ef1-4a70-b2fe-9e0d741210ec",
+        "targetRef": "53f21f10-368e-4b28-857d-f217e15e1115"
+      },
+      {
+        "$type": "fpb:Usage",
+        "id": "e99e7903-fcdc-4ed3-84bb-42778a67106e",
+        "sourceRef": "67afba47-0ace-4c43-b5d0-a4f2781b8f4c",
+        "targetRef": "f3ee1c6e-1a33-4e51-b136-a13f0a92a6c4"
+      },
+      {
+        "$type": "fpb:Usage",
+        "id": "d01588af-3717-4a7a-86e8-2863496d3690",
+        "sourceRef": "dfe93d01-0b35-48f0-93fa-319a2796c37a",
+        "targetRef": "fb218aca-3a65-431b-9a0e-db998cc7bebd"
+      },
+      {
+        "$type": "fpb:Usage",
+        "id": "4c4131fd-4c49-41f6-8a51-e56911228141",
+        "sourceRef": "c30b33c5-9668-40ff-85d9-f1f4203ae32e",
+        "targetRef": "1a484e69-f9aa-4f72-aec9-1317d5998397"
+      },
+      {
+        "$type": "fpb:Usage",
+        "id": "d0191091-8828-48fd-bcad-9c315665aaf8",
+        "sourceRef": "caaf949f-23e2-41b4-8744-1fedc7169042",
+        "targetRef": "8c9934d3-3b22-4a5e-b577-db50de1d8d66"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "adcec01b-e2db-4d1b-b582-599cd0fa2754",
+        "sourceRef": "74e05628-ac30-48e6-bc78-410461790c78",
+        "targetRef": "b3e0373d-f35c-407b-8c75-200bc74de992"
+      },
+      {
+        "$type": "fpb:ParallelFlow",
+        "id": "bdff2a5f-bfb8-47a0-bbe0-25823a01da84",
+        "sourceRef": "00c6cb8f-3b4c-4bc4-a86a-ee6d447ff262",
+        "targetRef": "53f21f10-368e-4b28-857d-f217e15e1115",
+        "inTandemWith": []
+      },
+      {
+        "$type": "fpb:ParallelFlow",
+        "id": "64e65e7f-249a-4343-9fec-c0000eca4e8b",
+        "sourceRef": "2f133709-1e29-46c4-a354-68e736e15df9",
+        "targetRef": "53f21f10-368e-4b28-857d-f217e15e1115",
+        "inTandemWith": []
+      },
+      {
+        "$type": "fpb:ParallelFlow",
+        "id": "0c44fd99-6028-44df-80b0-519ce529a24d",
+        "sourceRef": "7d6b71fa-579f-4987-9849-b6ae887159d6",
+        "targetRef": "53f21f10-368e-4b28-857d-f217e15e1115",
+        "inTandemWith": []
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "157aad05-18f6-4c4a-b7e7-dbed41320a8b",
+        "sourceRef": "b3e0373d-f35c-407b-8c75-200bc74de992",
+        "targetRef": "bcc485fd-a580-4965-8a9a-c765dc9e0fd4"
+      },
+      {
+        "$type": "fpb:ParallelFlow",
+        "id": "9f8cb407-bfcf-491a-85fb-1cc565c47e90",
+        "sourceRef": "4811aa3c-6e66-4cc8-af2e-d0de739c3a8b",
+        "targetRef": "fb218aca-3a65-431b-9a0e-db998cc7bebd",
+        "inTandemWith": []
+      },
+      {
+        "$type": "fpb:ParallelFlow",
+        "id": "0bd985f6-ed39-4fa8-94c3-af14866418a6",
+        "sourceRef": "53f21f10-368e-4b28-857d-f217e15e1115",
+        "targetRef": "4811aa3c-6e66-4cc8-af2e-d0de739c3a8b",
+        "inTandemWith": [
+          "e301cb67-1663-40fa-abb4-e812e9aaedf2",
+          "70a869b9-6a30-41ab-8db9-3ffa6aca114b"
+        ]
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "b3d1fb43-5ac0-445f-8c19-c27f63b5078c",
+        "sourceRef": "bcc485fd-a580-4965-8a9a-c765dc9e0fd4",
+        "targetRef": "f3ee1c6e-1a33-4e51-b136-a13f0a92a6c4"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "8683eae0-a279-4b09-bf7e-b85b40c48e6e",
+        "sourceRef": "f3ee1c6e-1a33-4e51-b136-a13f0a92a6c4",
+        "targetRef": "bc95dc22-f824-408f-a7dd-f085f19020ca"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "f5a9ec58-a3e7-4cda-b19b-cf64c6e6844c",
+        "sourceRef": "bc95dc22-f824-408f-a7dd-f085f19020ca",
+        "targetRef": "caaf949f-23e2-41b4-8744-1fedc7169042"
+      },
+      {
+        "$type": "fpb:AlternativeFlow",
+        "id": "48745616-d9ff-4198-9281-4c7898a8ce7e",
+        "sourceRef": "caaf949f-23e2-41b4-8744-1fedc7169042",
+        "targetRef": "acd70ee4-b58a-4d42-b0cb-783f27acb25f",
+        "inTandemWith": [
+          "4411cd5d-f043-4cdc-be26-56ce9fc8e71d"
+        ]
+      },
+      {
+        "$type": "fpb:AlternativeFlow",
+        "id": "4411cd5d-f043-4cdc-be26-56ce9fc8e71d",
+        "sourceRef": "caaf949f-23e2-41b4-8744-1fedc7169042",
+        "targetRef": "5863e225-ae31-4de5-8047-c9aa11d4b8bd",
+        "inTandemWith": [
+          "48745616-d9ff-4198-9281-4c7898a8ce7e"
+        ]
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "db63e225-2a79-43d3-8de6-a3ce55fa53c0",
+        "sourceRef": "fb218aca-3a65-431b-9a0e-db998cc7bebd",
+        "targetRef": "47f5caf5-0b06-4a72-bdee-1616a5bae094"
+      },
+      {
+        "$type": "fpb:ParallelFlow",
+        "id": "bfc91f66-d900-4b2e-b0f8-cfef2cb0e2b4",
+        "sourceRef": "ad68918e-c9ca-4f5c-b16a-1cfa5adcde50",
+        "targetRef": "fb218aca-3a65-431b-9a0e-db998cc7bebd",
+        "inTandemWith": []
+      },
+      {
+        "$type": "fpb:ParallelFlow",
+        "id": "e678917d-6bd9-4e0d-8689-2c4fd660db34",
+        "sourceRef": "29029d54-ff4e-4b1d-8de4-8ca258122e7a",
+        "targetRef": "fb218aca-3a65-431b-9a0e-db998cc7bebd",
+        "inTandemWith": []
+      },
+      {
+        "$type": "fpb:ParallelFlow",
+        "id": "a1966b54-427e-4eb8-bc1a-462eed2d99f4",
+        "sourceRef": "acd70ee4-b58a-4d42-b0cb-783f27acb25f",
+        "targetRef": "fb218aca-3a65-431b-9a0e-db998cc7bebd",
+        "inTandemWith": []
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "d8455f3c-2d54-42a1-9b92-bc2f47e7f552",
+        "sourceRef": "47f5caf5-0b06-4a72-bdee-1616a5bae094",
+        "targetRef": "1a484e69-f9aa-4f72-aec9-1317d5998397"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "9422289f-4363-4723-b28e-259757720796",
+        "sourceRef": "1a484e69-f9aa-4f72-aec9-1317d5998397",
+        "targetRef": "56f9e16b-77b8-4b45-aa90-b8ee3e9796c9"
+      },
+      {
+        "$type": "fpb:ParallelFlow",
+        "id": "e301cb67-1663-40fa-abb4-e812e9aaedf2",
+        "sourceRef": "53f21f10-368e-4b28-857d-f217e15e1115",
+        "targetRef": "ad68918e-c9ca-4f5c-b16a-1cfa5adcde50",
+        "inTandemWith": [
+          "0bd985f6-ed39-4fa8-94c3-af14866418a6",
+          "70a869b9-6a30-41ab-8db9-3ffa6aca114b"
+        ]
+      },
+      {
+        "$type": "fpb:ParallelFlow",
+        "id": "70a869b9-6a30-41ab-8db9-3ffa6aca114b",
+        "sourceRef": "53f21f10-368e-4b28-857d-f217e15e1115",
+        "targetRef": "29029d54-ff4e-4b1d-8de4-8ca258122e7a",
+        "inTandemWith": [
+          "0bd985f6-ed39-4fa8-94c3-af14866418a6",
+          "e301cb67-1663-40fa-abb4-e812e9aaedf2"
+        ]
+      }
+    ],
+    "elementVisualInformation": []
+  },
+  {
+    "process": {
+      "$type": "fpb:Process",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "elementsContainer": [
+        "dc1ee595-c70e-41f3-9e91-9c8a5235332d",
+        "31a51f9b-990e-4ba6-9337-aa8644410c2e",
+        "cbe8b4dd-b20b-401e-ae24-755feeeb2739"
+      ],
+      "isDecomposedProcessOperator": "",
+      "consistsOfStates": [
+        "56f9e16b-77b8-4b45-aa90-b8ee3e9796c9",
+        "5863e225-ae31-4de5-8047-c9aa11d4b8bd",
+        "74e05628-ac30-48e6-bc78-410461790c78",
+        "7d6b71fa-579f-4987-9849-b6ae887159d6",
+        "2f133709-1e29-46c4-a354-68e736e15df9",
+        "00c6cb8f-3b4c-4bc4-a86a-ee6d447ff262"
+      ],
+      "consistsOfSystemLimit": "dc1ee595-c70e-41f3-9e91-9c8a5235332d",
+      "consistsOfProcesses": [
+        "11022dc6-cdf0-4108-b543-05b83c1cbdec"
+      ],
+      "consistsOfProcessOperator": [
+        "11022dc6-cdf0-4108-b543-05b83c1cbdec"
+      ],
+      "parent": ""
+    },
+    "elementDataInformation": [
+      {
+        "$type": "fpb:SystemLimit",
+        "id": "dc1ee595-c70e-41f3-9e91-9c8a5235332d",
+        "elementsContainer": [
+          "56f9e16b-77b8-4b45-aa90-b8ee3e9796c9",
+          "5863e225-ae31-4de5-8047-c9aa11d4b8bd",
+          "11022dc6-cdf0-4108-b543-05b83c1cbdec",
+          "74e05628-ac30-48e6-bc78-410461790c78",
+          "7d6b71fa-579f-4987-9849-b6ae887159d6",
+          "2f133709-1e29-46c4-a354-68e736e15df9",
+          "00c6cb8f-3b4c-4bc4-a86a-ee6d447ff262",
+          "fdac6498-c163-41f9-950b-db045c8d805b",
+          "cf84cb26-2839-4136-9267-af1965c23982",
+          "33a35765-fd64-46cb-83d7-3d1079f6aac0",
+          "44aa4881-fd79-4276-b9e5-5b6ab28d0748",
+          "dc694c5a-bd73-48ad-97df-d90cdd3bb8ee",
+          "498965dd-b603-45b9-9594-c7d57c71ac46"
+        ],
+        "name": "SL_MPS500"
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "56f9e16b-77b8-4b45-aa90-b8ee3e9796c9",
+        "incoming": [
+          "498965dd-b603-45b9-9594-c7d57c71ac46"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "11022dc6-cdf0-4108-b543-05b83c1cbdec"
+        ],
+        "name": "Pneumatic_Cylinder",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "56f9e16b-77b8-4b45-aa90-b8ee3e9796c9",
+          "longName": "",
+          "shortName": "Pneumatic_Cylinder",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "5863e225-ae31-4de5-8047-c9aa11d4b8bd",
+        "incoming": [
+          "dc694c5a-bd73-48ad-97df-d90cdd3bb8ee"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "11022dc6-cdf0-4108-b543-05b83c1cbdec"
+        ],
+        "name": "Cylinder_\nNOK",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "5863e225-ae31-4de5-8047-c9aa11d4b8bd",
+          "longName": "",
+          "shortName": "Cylinder_\nNOK",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "11022dc6-cdf0-4108-b543-05b83c1cbdec",
+        "incoming": [
+          "cbe8b4dd-b20b-401e-ae24-755feeeb2739",
+          "fdac6498-c163-41f9-950b-db045c8d805b",
+          "cf84cb26-2839-4136-9267-af1965c23982",
+          "33a35765-fd64-46cb-83d7-3d1079f6aac0",
+          "44aa4881-fd79-4276-b9e5-5b6ab28d0748"
+        ],
+        "outgoing": [
+          "dc694c5a-bd73-48ad-97df-d90cdd3bb8ee",
+          "498965dd-b603-45b9-9594-c7d57c71ac46"
+        ],
+        "isAssignedTo": [
+          "31a51f9b-990e-4ba6-9337-aa8644410c2e"
+        ],
+        "name": "Manufacture_Cylinder",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "11022dc6-cdf0-4108-b543-05b83c1cbdec",
+          "longName": "",
+          "shortName": "Manufacture_Cylinder",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": [],
+        "decomposedView": "11022dc6-cdf0-4108-b543-05b83c1cbdec"
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "74e05628-ac30-48e6-bc78-410461790c78",
+        "incoming": [],
+        "outgoing": [
+          "44aa4881-fd79-4276-b9e5-5b6ab28d0748"
+        ],
+        "isAssignedTo": [
+          "11022dc6-cdf0-4108-b543-05b83c1cbdec"
+        ],
+        "name": "Cylinder",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "74e05628-ac30-48e6-bc78-410461790c78",
+          "longName": "",
+          "shortName": "Cylinder",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "7d6b71fa-579f-4987-9849-b6ae887159d6",
+        "incoming": [],
+        "outgoing": [
+          "33a35765-fd64-46cb-83d7-3d1079f6aac0"
+        ],
+        "isAssignedTo": [
+          "11022dc6-cdf0-4108-b543-05b83c1cbdec"
+        ],
+        "name": "Piston",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "7d6b71fa-579f-4987-9849-b6ae887159d6",
+          "longName": "",
+          "shortName": "Piston",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "2f133709-1e29-46c4-a354-68e736e15df9",
+        "incoming": [],
+        "outgoing": [
+          "cf84cb26-2839-4136-9267-af1965c23982"
+        ],
+        "isAssignedTo": [
+          "11022dc6-cdf0-4108-b543-05b83c1cbdec"
+        ],
+        "name": "Spring",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "2f133709-1e29-46c4-a354-68e736e15df9",
+          "longName": "",
+          "shortName": "Spring",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "00c6cb8f-3b4c-4bc4-a86a-ee6d447ff262",
+        "incoming": [],
+        "outgoing": [
+          "fdac6498-c163-41f9-950b-db045c8d805b"
+        ],
+        "isAssignedTo": [
+          "11022dc6-cdf0-4108-b543-05b83c1cbdec"
+        ],
+        "name": "Lid",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "00c6cb8f-3b4c-4bc4-a86a-ee6d447ff262",
+          "longName": "",
+          "shortName": "Lid",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:TechnicalResource",
+        "id": "31a51f9b-990e-4ba6-9337-aa8644410c2e",
+        "incoming": [],
+        "outgoing": [
+          "cbe8b4dd-b20b-401e-ae24-755feeeb2739"
+        ],
+        "isAssignedTo": [
+          "11022dc6-cdf0-4108-b543-05b83c1cbdec"
+        ],
+        "name": "MPS500",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "31a51f9b-990e-4ba6-9337-aa8644410c2e",
+          "longName": "",
+          "shortName": "MPS500",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Usage",
+        "id": "cbe8b4dd-b20b-401e-ae24-755feeeb2739",
+        "sourceRef": "31a51f9b-990e-4ba6-9337-aa8644410c2e",
+        "targetRef": "11022dc6-cdf0-4108-b543-05b83c1cbdec"
+      },
+      {
+        "$type": "fpb:ParallelFlow",
+        "id": "fdac6498-c163-41f9-950b-db045c8d805b",
+        "sourceRef": "00c6cb8f-3b4c-4bc4-a86a-ee6d447ff262",
+        "targetRef": "11022dc6-cdf0-4108-b543-05b83c1cbdec",
+        "inTandemWith": []
+      },
+      {
+        "$type": "fpb:ParallelFlow",
+        "id": "cf84cb26-2839-4136-9267-af1965c23982",
+        "sourceRef": "2f133709-1e29-46c4-a354-68e736e15df9",
+        "targetRef": "11022dc6-cdf0-4108-b543-05b83c1cbdec",
+        "inTandemWith": []
+      },
+      {
+        "$type": "fpb:ParallelFlow",
+        "id": "33a35765-fd64-46cb-83d7-3d1079f6aac0",
+        "sourceRef": "7d6b71fa-579f-4987-9849-b6ae887159d6",
+        "targetRef": "11022dc6-cdf0-4108-b543-05b83c1cbdec",
+        "inTandemWith": []
+      },
+      {
+        "$type": "fpb:ParallelFlow",
+        "id": "44aa4881-fd79-4276-b9e5-5b6ab28d0748",
+        "sourceRef": "74e05628-ac30-48e6-bc78-410461790c78",
+        "targetRef": "11022dc6-cdf0-4108-b543-05b83c1cbdec",
+        "inTandemWith": []
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "dc694c5a-bd73-48ad-97df-d90cdd3bb8ee",
+        "sourceRef": "11022dc6-cdf0-4108-b543-05b83c1cbdec",
+        "targetRef": "5863e225-ae31-4de5-8047-c9aa11d4b8bd"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "498965dd-b603-45b9-9594-c7d57c71ac46",
+        "sourceRef": "11022dc6-cdf0-4108-b543-05b83c1cbdec",
+        "targetRef": "56f9e16b-77b8-4b45-aa90-b8ee3e9796c9"
+      }
+    ],
+    "elementVisualInformation": []
+  }
+]

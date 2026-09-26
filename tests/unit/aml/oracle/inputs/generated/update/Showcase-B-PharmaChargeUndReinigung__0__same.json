@@ -1,0 +1,677 @@
+[
+  {
+    "$type": "fpb:Project",
+    "name": "FPD_Batch_Production",
+    "targetNamespace": "http://www.hsu-ifa.de/fpbjs",
+    "entryPoint": "49cb8063-fd55-4fe8-aca3-2051e548e6a2"
+  },
+  {
+    "process": {
+      "$type": "fpb:Process",
+      "id": "4b3e3a26-9ef3-70b0-698a-148e0d2b3c91",
+      "elementsContainer": [
+        "240a5e21-4e06-eb1a-7f03-6630c9ec6984"
+      ],
+      "isDecomposedProcessOperator": "4b3e3a26-9ef3-70b0-698a-148e0d2b3c91",
+      "consistsOfStates": [
+        "879b55a2-ec20-e6a7-e9eb-894c9ed3bc7b",
+        "88cfb0b6-63ff-3415-39e4-57c0f838a099"
+      ],
+      "consistsOfSystemLimit": "240a5e21-4e06-eb1a-7f03-6630c9ec6984",
+      "consistsOfProcesses": [],
+      "consistsOfProcessOperator": [
+        "5c40ba22-7b7a-6681-1049-653941328e38",
+        "4f0097f9-f677-2a9d-20a1-5dbd51931766"
+      ],
+      "parent": "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed"
+    },
+    "elementDataInformation": [
+      {
+        "$type": "fpb:SystemLimit",
+        "id": "240a5e21-4e06-eb1a-7f03-6630c9ec6984",
+        "elementsContainer": [
+          "5c40ba22-7b7a-6681-1049-653941328e38",
+          "4f0097f9-f677-2a9d-20a1-5dbd51931766",
+          "879b55a2-ec20-e6a7-e9eb-894c9ed3bc7b",
+          "88cfb0b6-63ff-3415-39e4-57c0f838a099",
+          "2f0cd18b-82b4-f613-e4a2-0ad127cdd218",
+          "14c0f39d-f4ac-ff2d-0b09-0d9106b3fb3a",
+          "be86c201-e5f1-091a-3782-b3880caeb23b"
+        ],
+        "name": "Dosieren Detail"
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "5c40ba22-7b7a-6681-1049-653941328e38",
+        "incoming": [
+          "be86c201-e5f1-091a-3782-b3880caeb23b"
+        ],
+        "outgoing": [
+          "14c0f39d-f4ac-ff2d-0b09-0d9106b3fb3a"
+        ],
+        "isAssignedTo": [],
+        "name": "\u00DCbergeben",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "5c40ba22-7b7a-6681-1049-653941328e38",
+          "longName": "\u00DCbergeben",
+          "shortName": "\u00DCbergeben",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "4f0097f9-f677-2a9d-20a1-5dbd51931766",
+        "incoming": [
+          "2f0cd18b-82b4-f613-e4a2-0ad127cdd218"
+        ],
+        "outgoing": [
+          "be86c201-e5f1-091a-3782-b3880caeb23b"
+        ],
+        "isAssignedTo": [],
+        "name": "Wiegen",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "4f0097f9-f677-2a9d-20a1-5dbd51931766",
+          "longName": "Wiegen",
+          "shortName": "Wiegen",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "879b55a2-ec20-e6a7-e9eb-894c9ed3bc7b",
+        "incoming": [
+          "14c0f39d-f4ac-ff2d-0b09-0d9106b3fb3a"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "5c40ba22-7b7a-6681-1049-653941328e38"
+        ],
+        "name": "Dosierter Wirkstoff",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "879b55a2-ec20-e6a7-e9eb-894c9ed3bc7b",
+          "longName": "Dosierter Wirkstoff",
+          "shortName": "Dosierter Wirkstoff",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "88cfb0b6-63ff-3415-39e4-57c0f838a099",
+        "incoming": [],
+        "outgoing": [
+          "2f0cd18b-82b4-f613-e4a2-0ad127cdd218"
+        ],
+        "isAssignedTo": [
+          "4f0097f9-f677-2a9d-20a1-5dbd51931766"
+        ],
+        "name": "Roh-Wirkstoff",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "88cfb0b6-63ff-3415-39e4-57c0f838a099",
+          "longName": "Roh-Wirkstoff",
+          "shortName": "Roh-Wirkstoff",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "2f0cd18b-82b4-f613-e4a2-0ad127cdd218",
+        "sourceRef": "88cfb0b6-63ff-3415-39e4-57c0f838a099",
+        "targetRef": "4f0097f9-f677-2a9d-20a1-5dbd51931766"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "14c0f39d-f4ac-ff2d-0b09-0d9106b3fb3a",
+        "sourceRef": "5c40ba22-7b7a-6681-1049-653941328e38",
+        "targetRef": "879b55a2-ec20-e6a7-e9eb-894c9ed3bc7b"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "be86c201-e5f1-091a-3782-b3880caeb23b",
+        "sourceRef": "4f0097f9-f677-2a9d-20a1-5dbd51931766",
+        "targetRef": "5c40ba22-7b7a-6681-1049-653941328e38"
+      }
+    ],
+    "elementVisualInformation": []
+  },
+  {
+    "process": {
+      "$type": "fpb:Process",
+      "id": "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed",
+      "elementsContainer": [
+        "e5ae7c03-0ee8-a51d-f7b1-63a9b001034a"
+      ],
+      "isDecomposedProcessOperator": "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed",
+      "consistsOfStates": [
+        "9843db41-62ad-613a-c53e-cf9339a6656c",
+        "b6c175fb-1c7d-480c-c678-94fbce9a2f86",
+        "88cfb0b6-63ff-3415-39e4-57c0f838a099"
+      ],
+      "consistsOfSystemLimit": "e5ae7c03-0ee8-a51d-f7b1-63a9b001034a",
+      "consistsOfProcesses": [
+        "4b3e3a26-9ef3-70b0-698a-148e0d2b3c91"
+      ],
+      "consistsOfProcessOperator": [
+        "5ce3daa5-6397-58ec-d271-ea1b6ab05660",
+        "4b3e3a26-9ef3-70b0-698a-148e0d2b3c91"
+      ],
+      "parent": "49cb8063-fd55-4fe8-aca3-2051e548e6a2"
+    },
+    "elementDataInformation": [
+      {
+        "$type": "fpb:SystemLimit",
+        "id": "e5ae7c03-0ee8-a51d-f7b1-63a9b001034a",
+        "elementsContainer": [
+          "5ce3daa5-6397-58ec-d271-ea1b6ab05660",
+          "4b3e3a26-9ef3-70b0-698a-148e0d2b3c91",
+          "9843db41-62ad-613a-c53e-cf9339a6656c",
+          "b6c175fb-1c7d-480c-c678-94fbce9a2f86",
+          "88cfb0b6-63ff-3415-39e4-57c0f838a099",
+          "c56a47ef-031b-f7d8-e629-66eea2d10109",
+          "8353d090-9e50-765c-9d80-949577592828",
+          "377efa54-1789-1146-ebaf-f9b09bae9b1c",
+          "c7e06daf-f504-147e-60e4-fd5c551cabf0"
+        ],
+        "name": "Herstellen Detail"
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "5ce3daa5-6397-58ec-d271-ea1b6ab05660",
+        "incoming": [
+          "8353d090-9e50-765c-9d80-949577592828",
+          "c7e06daf-f504-147e-60e4-fd5c551cabf0"
+        ],
+        "outgoing": [
+          "377efa54-1789-1146-ebaf-f9b09bae9b1c"
+        ],
+        "isAssignedTo": [],
+        "name": "Mischen",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "5ce3daa5-6397-58ec-d271-ea1b6ab05660",
+          "longName": "Mischen",
+          "shortName": "Mischen",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": [
+          {
+            "$type": "fpbch:Characteristics",
+            "category": {
+              "$type": "fpb:Identification",
+              "uniqueIdent": "f65786c3-f242-5560-d916-cd74f6f8cbba",
+              "longName": "Mischer-Drehzahl",
+              "shortName": "Drehzahl",
+              "versionNumber": "1.0",
+              "revisionNumber": "0"
+            },
+            "descriptiveElement": {
+              "$type": "fpbch:DescriptiveElement",
+              "valueDeterminationProcess": "Festlegung",
+              "representivity": "Sollwert",
+              "setpointValue": {
+                "$type": "fpbch:ValueWithUnit",
+                "value": "400",
+                "unit": "rpm"
+              },
+              "validityLimits": [],
+              "actualValues": []
+            },
+            "relationalElement": {
+              "$type": "fpbch:RelationalElement",
+              "view": "",
+              "model": "",
+              "regulationsForRelationalGeneration": ""
+            }
+          }
+        ]
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "4b3e3a26-9ef3-70b0-698a-148e0d2b3c91",
+        "incoming": [
+          "c56a47ef-031b-f7d8-e629-66eea2d10109"
+        ],
+        "outgoing": [
+          "c7e06daf-f504-147e-60e4-fd5c551cabf0"
+        ],
+        "isAssignedTo": [],
+        "name": "Wirkstoff dosieren",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "4b3e3a26-9ef3-70b0-698a-148e0d2b3c91",
+          "longName": "Wirkstoff dosieren",
+          "shortName": "Wirkstoff dosieren",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": [
+          {
+            "$type": "fpbch:Characteristics",
+            "category": {
+              "$type": "fpb:Identification",
+              "uniqueIdent": "65d8fe7e-8e14-2bd2-42b5-7d1b42edf80a",
+              "longName": "Dosierungs-Genauigkeit",
+              "shortName": "Genauigkeit",
+              "versionNumber": "1.0",
+              "revisionNumber": "0"
+            },
+            "descriptiveElement": {
+              "$type": "fpbch:DescriptiveElement",
+              "valueDeterminationProcess": "Festlegung",
+              "representivity": "Sollwert",
+              "setpointValue": {
+                "$type": "fpbch:ValueWithUnit",
+                "value": "0.5",
+                "unit": "%"
+              },
+              "validityLimits": [],
+              "actualValues": []
+            },
+            "relationalElement": {
+              "$type": "fpbch:RelationalElement",
+              "view": "",
+              "model": "",
+              "regulationsForRelationalGeneration": ""
+            }
+          }
+        ],
+        "decomposedView": "4b3e3a26-9ef3-70b0-698a-148e0d2b3c91"
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "9843db41-62ad-613a-c53e-cf9339a6656c",
+        "incoming": [
+          "377efa54-1789-1146-ebaf-f9b09bae9b1c"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "5ce3daa5-6397-58ec-d271-ea1b6ab05660"
+        ],
+        "name": "Wirkstoffl\u00F6sung (Ausgang)",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "9843db41-62ad-613a-c53e-cf9339a6656c",
+          "longName": "Wirkstoffl\u00F6sung (Ausgang)",
+          "shortName": "Wirkstoffl\u00F6sung (Ausgang)",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "b6c175fb-1c7d-480c-c678-94fbce9a2f86",
+        "incoming": [],
+        "outgoing": [
+          "8353d090-9e50-765c-9d80-949577592828"
+        ],
+        "isAssignedTo": [
+          "5ce3daa5-6397-58ec-d271-ea1b6ab05660"
+        ],
+        "name": "Hilfsstoff (Eingang)",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "b6c175fb-1c7d-480c-c678-94fbce9a2f86",
+          "longName": "Hilfsstoff (Eingang)",
+          "shortName": "Hilfsstoff (Eingang)",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "88cfb0b6-63ff-3415-39e4-57c0f838a099",
+        "incoming": [],
+        "outgoing": [
+          "c56a47ef-031b-f7d8-e629-66eea2d10109"
+        ],
+        "isAssignedTo": [
+          "4b3e3a26-9ef3-70b0-698a-148e0d2b3c91"
+        ],
+        "name": "Wirkstoff (Eingang)",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "88cfb0b6-63ff-3415-39e4-57c0f838a099",
+          "longName": "Wirkstoff (Eingang)",
+          "shortName": "Wirkstoff (Eingang)",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "c56a47ef-031b-f7d8-e629-66eea2d10109",
+        "sourceRef": "88cfb0b6-63ff-3415-39e4-57c0f838a099",
+        "targetRef": "4b3e3a26-9ef3-70b0-698a-148e0d2b3c91"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "8353d090-9e50-765c-9d80-949577592828",
+        "sourceRef": "b6c175fb-1c7d-480c-c678-94fbce9a2f86",
+        "targetRef": "5ce3daa5-6397-58ec-d271-ea1b6ab05660"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "377efa54-1789-1146-ebaf-f9b09bae9b1c",
+        "sourceRef": "5ce3daa5-6397-58ec-d271-ea1b6ab05660",
+        "targetRef": "9843db41-62ad-613a-c53e-cf9339a6656c"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "c7e06daf-f504-147e-60e4-fd5c551cabf0",
+        "sourceRef": "4b3e3a26-9ef3-70b0-698a-148e0d2b3c91",
+        "targetRef": "5ce3daa5-6397-58ec-d271-ea1b6ab05660"
+      }
+    ],
+    "elementVisualInformation": []
+  },
+  {
+    "process": {
+      "$type": "fpb:Process",
+      "id": "49cb8063-fd55-4fe8-aca3-2051e548e6a2",
+      "elementsContainer": [
+        "3bfcb536-0b3a-4948-9179-6909e67bfb9f",
+        "b31975c5-75fe-39b2-8c93-92d58bd497b2",
+        "370cf24e-8207-3c0e-c6a6-4467c0bcc94e"
+      ],
+      "isDecomposedProcessOperator": "",
+      "consistsOfStates": [
+        "9843db41-62ad-613a-c53e-cf9339a6656c",
+        "b6c175fb-1c7d-480c-c678-94fbce9a2f86",
+        "88cfb0b6-63ff-3415-39e4-57c0f838a099"
+      ],
+      "consistsOfSystemLimit": "3bfcb536-0b3a-4948-9179-6909e67bfb9f",
+      "consistsOfProcesses": [
+        "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed"
+      ],
+      "consistsOfProcessOperator": [
+        "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed"
+      ],
+      "parent": ""
+    },
+    "elementDataInformation": [
+      {
+        "$type": "fpb:SystemLimit",
+        "id": "3bfcb536-0b3a-4948-9179-6909e67bfb9f",
+        "elementsContainer": [
+          "9843db41-62ad-613a-c53e-cf9339a6656c",
+          "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed",
+          "b6c175fb-1c7d-480c-c678-94fbce9a2f86",
+          "88cfb0b6-63ff-3415-39e4-57c0f838a099",
+          "fd9273eb-5af7-9e25-2ebe-d888da32f27b",
+          "73e268b5-0876-e469-e900-a525c5d5bec4",
+          "9ebd5d2c-e1ee-d8d8-8c29-94af9cdf7898"
+        ],
+        "name": "Wirkstoffl\u00F6sung herstellen"
+      },
+      {
+        "$type": "fpb:TechnicalResource",
+        "id": "b31975c5-75fe-39b2-8c93-92d58bd497b2",
+        "incoming": [
+          "370cf24e-8207-3c0e-c6a6-4467c0bcc94e"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed"
+        ],
+        "name": "Mixer_1",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "b31975c5-75fe-39b2-8c93-92d58bd497b2",
+          "longName": "Mixer_1",
+          "shortName": "Mixer_1",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": [
+          {
+            "$type": "fpbch:Characteristics",
+            "category": {
+              "$type": "fpb:Identification",
+              "uniqueIdent": "c3544642-d690-6920-3c58-a3158a543894",
+              "longName": "Equipment-Identifier",
+              "shortName": "EquipmentId",
+              "versionNumber": "1.0",
+              "revisionNumber": "0"
+            },
+            "descriptiveElement": {
+              "$type": "fpbch:DescriptiveElement",
+              "valueDeterminationProcess": "Festlegung",
+              "representivity": "Sollwert",
+              "setpointValue": {
+                "$type": "fpbch:ValueWithUnit",
+                "value": "MX-OP-23",
+                "unit": ""
+              },
+              "validityLimits": [],
+              "actualValues": []
+            },
+            "relationalElement": {
+              "$type": "fpbch:RelationalElement",
+              "view": "",
+              "model": "",
+              "regulationsForRelationalGeneration": ""
+            }
+          },
+          {
+            "$type": "fpbch:Characteristics",
+            "category": {
+              "$type": "fpb:Identification",
+              "uniqueIdent": "24169e19-2233-9fbf-2370-3b1b4c8fb1d5",
+              "longName": "Letzter Reinigungsstatus",
+              "shortName": "LastCleaningStatus",
+              "versionNumber": "1.0",
+              "revisionNumber": "0"
+            },
+            "descriptiveElement": {
+              "$type": "fpbch:DescriptiveElement",
+              "valueDeterminationProcess": "Festlegung",
+              "representivity": "Sollwert",
+              "setpointValue": {
+                "$type": "fpbch:ValueWithUnit",
+                "value": "validated",
+                "unit": ""
+              },
+              "validityLimits": [],
+              "actualValues": []
+            },
+            "relationalElement": {
+              "$type": "fpbch:RelationalElement",
+              "view": "",
+              "model": "",
+              "regulationsForRelationalGeneration": ""
+            }
+          }
+        ]
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "9843db41-62ad-613a-c53e-cf9339a6656c",
+        "incoming": [
+          "9ebd5d2c-e1ee-d8d8-8c29-94af9cdf7898"
+        ],
+        "outgoing": [],
+        "isAssignedTo": [
+          "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed"
+        ],
+        "name": "Wirkstoffl\u00F6sung",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "9843db41-62ad-613a-c53e-cf9339a6656c",
+          "longName": "Wirkstoffl\u00F6sung",
+          "shortName": "Wirkstoffl\u00F6sung",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": [
+          {
+            "$type": "fpbch:Characteristics",
+            "category": {
+              "$type": "fpb:Identification",
+              "uniqueIdent": "5c6e1a3a-d0f0-ff75-b307-f1a71c0647f1",
+              "longName": "Chargen-Identifier",
+              "shortName": "BatchId",
+              "versionNumber": "1.0",
+              "revisionNumber": "0"
+            },
+            "descriptiveElement": {
+              "$type": "fpbch:DescriptiveElement",
+              "valueDeterminationProcess": "Festlegung",
+              "representivity": "Sollwert",
+              "setpointValue": {
+                "$type": "fpbch:ValueWithUnit",
+                "value": "B-2026-0042",
+                "unit": ""
+              },
+              "validityLimits": [],
+              "actualValues": []
+            },
+            "relationalElement": {
+              "$type": "fpbch:RelationalElement",
+              "view": "",
+              "model": "",
+              "regulationsForRelationalGeneration": ""
+            }
+          }
+        ]
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed",
+        "incoming": [
+          "fd9273eb-5af7-9e25-2ebe-d888da32f27b",
+          "73e268b5-0876-e469-e900-a525c5d5bec4"
+        ],
+        "outgoing": [
+          "9ebd5d2c-e1ee-d8d8-8c29-94af9cdf7898",
+          "370cf24e-8207-3c0e-c6a6-4467c0bcc94e"
+        ],
+        "isAssignedTo": [
+          "b31975c5-75fe-39b2-8c93-92d58bd497b2"
+        ],
+        "name": "Wirkstoffl\u00F6sung herstellen",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed",
+          "longName": "Wirkstoffl\u00F6sung herstellen",
+          "shortName": "Wirkstoffl\u00F6sung herstellen",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": [
+          {
+            "$type": "fpbch:Characteristics",
+            "category": {
+              "$type": "fpb:Identification",
+              "uniqueIdent": "e8cd5de5-7f46-41d7-ec7b-42e9813c4a04",
+              "longName": "Sicherheitsklasse",
+              "shortName": "SafetyClass",
+              "versionNumber": "1.0",
+              "revisionNumber": "0"
+            },
+            "descriptiveElement": {
+              "$type": "fpbch:DescriptiveElement",
+              "valueDeterminationProcess": "Festlegung",
+              "representivity": "Sollwert",
+              "setpointValue": {
+                "$type": "fpbch:ValueWithUnit",
+                "value": "SIL2",
+                "unit": ""
+              },
+              "validityLimits": [],
+              "actualValues": []
+            },
+            "relationalElement": {
+              "$type": "fpbch:RelationalElement",
+              "view": "",
+              "model": "",
+              "regulationsForRelationalGeneration": ""
+            }
+          }
+        ],
+        "decomposedView": "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed"
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "b6c175fb-1c7d-480c-c678-94fbce9a2f86",
+        "incoming": [],
+        "outgoing": [
+          "73e268b5-0876-e469-e900-a525c5d5bec4"
+        ],
+        "isAssignedTo": [
+          "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed"
+        ],
+        "name": "Hilfsstoff",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "b6c175fb-1c7d-480c-c678-94fbce9a2f86",
+          "longName": "Hilfsstoff",
+          "shortName": "Hilfsstoff",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Product",
+        "id": "88cfb0b6-63ff-3415-39e4-57c0f838a099",
+        "incoming": [],
+        "outgoing": [
+          "fd9273eb-5af7-9e25-2ebe-d888da32f27b"
+        ],
+        "isAssignedTo": [
+          "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed"
+        ],
+        "name": "Wirkstoff",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "88cfb0b6-63ff-3415-39e4-57c0f838a099",
+          "longName": "Wirkstoff",
+          "shortName": "Wirkstoff",
+          "versionNumber": "1.0",
+          "revisionNumber": "0"
+        },
+        "characteristics": []
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "fd9273eb-5af7-9e25-2ebe-d888da32f27b",
+        "sourceRef": "88cfb0b6-63ff-3415-39e4-57c0f838a099",
+        "targetRef": "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "73e268b5-0876-e469-e900-a525c5d5bec4",
+        "sourceRef": "b6c175fb-1c7d-480c-c678-94fbce9a2f86",
+        "targetRef": "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed"
+      },
+      {
+        "$type": "fpb:Flow",
+        "id": "9ebd5d2c-e1ee-d8d8-8c29-94af9cdf7898",
+        "sourceRef": "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed",
+        "targetRef": "9843db41-62ad-613a-c53e-cf9339a6656c"
+      },
+      {
+        "$type": "fpb:Usage",
+        "id": "370cf24e-8207-3c0e-c6a6-4467c0bcc94e",
+        "sourceRef": "ea9a190d-0dbb-990a-90bd-d6d285dfc3ed",
+        "targetRef": "b31975c5-75fe-39b2-8c93-92d58bd497b2"
+      }
+    ],
+    "elementVisualInformation": []
+  }
+]

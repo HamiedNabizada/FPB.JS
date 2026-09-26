@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Oracle files of the AML mapper port are compared byte for byte (CRLF as Aml.Engine writes)
+tests/unit/aml/oracle/** -text
