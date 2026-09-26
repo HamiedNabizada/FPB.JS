@@ -91,7 +91,6 @@ async function tooltipBeiHover(page, id) {
 test.describe('Labels inside shapes', () => {
 
   test('a long operator name is cut to one line with an ellipsis, the model keeps it whole', async ({ page }) => {
-    test.fail(true, 'BUG: cut text is measured without the label padding and wraps to a second line when drawn');
     const { fehler } = await laden(page);
     const id = await idVon(page, 'Erhitzen');
     await umbenennen(page, 'Erhitzen', LANG);
@@ -150,7 +149,6 @@ test.describe('Labels inside shapes', () => {
   });
 
   test('a technical resource with the same long name is cut to one line as well', async ({ page }) => {
-    test.fail(true, 'BUG: cut text is measured without the label padding and wraps to a second line when drawn');
     await laden(page);
     const id = await idVon(page, 'Heizplatte');
     await umbenennen(page, 'Heizplatte', LANG);
