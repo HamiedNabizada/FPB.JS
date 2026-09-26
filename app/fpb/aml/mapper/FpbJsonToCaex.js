@@ -783,13 +783,12 @@ function seedIfaceCounters(counters, elementId, ie) {
 }
 
 /**
- * IsDescendantOf: whether `ancestor` is on the CAEXParent path. Reference
- * equality as in C#; the engine hands out a new wrapper for every parent, so
- * this is false for wrappers obtained elsewhere (C# behaves the same).
+ * IsDescendantOf: whether `ancestor` is on the CAEXParent path. Compares the
+ * XML nodes: the engine hands out a new wrapper for every parent.
  */
 function isDescendantOf(node, ancestor) {
   for (let n = node?.caexParent ?? null; n != null; n = n.caexParent) {
-    if (n === ancestor) {
+    if (n.node === ancestor.node) {
       return true;
     }
   }

@@ -3171,13 +3171,13 @@
   <SystemUnitClassLib Name="VDI_FPD_SystemUnitClassLib">
     <Description>Instantiation templates with mirrored attributes and SUC inheritance.</Description>
     <Version>1.2.0</Version>
-    <SystemUnitClass Name="FPD_Process" ID="41f5d8d6-7c81-4f9e-a101-60f213ab34f8">
+    <SystemUnitClass Name="FPD_Process" ID="0f870d3f-3852-406f-9cec-656f4ca3243b">
       <Version>1.2.0</Version>
       <Attribute Name="refObj" AttributeDataType="xs:IDREF" RefAttributeType="ObjectReferences@AutomationML_ObjectReferences_AttributeTypeLib/refAbstractObj" />
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_Process" />
       <SupportedRoleClass RefRoleClassPath="AutomationMLBaseLibrariesAMLEd22_11_0@AutomationMLBaseRoleClassLib/AutomationMLBaseRole/Structure" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_SystemLimit" ID="e3f6e1bc-ff67-4342-b0c4-17abbb2dac38">
+    <SystemUnitClass Name="FPD_SystemLimit" ID="19d12179-cece-450a-b3d7-4d58d8d54d27">
       <Version>1.2.0</Version>
       <Attribute Name="Identification" AttributeDataType="xs:string" RefAttributeType="VDI_FPD_AttributeTypeLib/FPD_Identification">
         <Attribute Name="uniqueIdent" AttributeDataType="xs:string" />
@@ -3196,7 +3196,7 @@
       </Attribute>
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_SystemLimit" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_Object" ID="1e1cf13c-52ae-44d7-8c5a-234995f8d10b">
+    <SystemUnitClass Name="FPD_Object" ID="03ccd855-6322-4766-922c-442aaa725b5e">
       <Version>1.2.0</Version>
       <Attribute Name="Identification" AttributeDataType="xs:string" RefAttributeType="VDI_FPD_AttributeTypeLib/FPD_Identification">
         <Attribute Name="uniqueIdent" AttributeDataType="xs:string" />
@@ -3216,31 +3216,31 @@
       </Attribute>
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_Object" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_State" ID="7873478b-b304-43d2-9805-19c7c7e992c4" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_Object">
+    <SystemUnitClass Name="FPD_State" ID="c319604a-fa97-4617-9c25-c1f6f3d19d58" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_Object">
       <Version>1.2.0</Version>
       <Attribute Name="refObj" AttributeDataType="xs:IDREF" RefAttributeType="ObjectReferences@AutomationML_ObjectReferences_AttributeTypeLib/refBaseObj" />
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_State" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_Product" ID="2a39936b-42da-4611-8655-ddca2c1509e9" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_State">
+    <SystemUnitClass Name="FPD_Product" ID="36a4a2b5-07b7-4959-a086-f8d499ab9924" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_State">
       <Version>1.2.0</Version>
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_Product" />
       <SupportedRoleClass RefRoleClassPath="AutomationMLBaseLibrariesAMLEd22_11_0@AutomationMLBaseRoleClassLib/AutomationMLBaseRole/Product" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_Energy" ID="d1eae8ca-9e4b-4a8a-8c87-22c6437b4061" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_State">
+    <SystemUnitClass Name="FPD_Energy" ID="b0ee3914-41de-4e57-9808-3efa2c39f023" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_State">
       <Version>1.2.0</Version>
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_Energy" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_Information" ID="e17dc703-822e-4828-938d-79d085de5e05" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_State">
+    <SystemUnitClass Name="FPD_Information" ID="252c963c-d6eb-4fda-bd97-4266cae358b0" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_State">
       <Version>1.2.0</Version>
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_Information" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_ProcessOperator" ID="f5932961-84b4-42ea-b0a2-5592d4c7b009" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_Object">
+    <SystemUnitClass Name="FPD_ProcessOperator" ID="22692212-e8bb-4a18-8d1a-a854e06049e7" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_Object">
       <Version>1.2.0</Version>
       <Attribute Name="refProcess" AttributeDataType="xs:IDREF" RefAttributeType="ObjectReferences@AutomationML_ObjectReferences_AttributeTypeLib/refDetailObj" />
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_ProcessOperator" />
       <SupportedRoleClass RefRoleClassPath="AutomationMLBaseLibrariesAMLEd22_11_0@AutomationMLBaseRoleClassLib/AutomationMLBaseRole/Process" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_TechnicalResource" ID="156803b0-fef2-4737-907f-489f52ccfe35" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_Object">
+    <SystemUnitClass Name="FPD_TechnicalResource" ID="32bd792e-ff92-4d91-9eee-65f519ae037c" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_Object">
       <Version>1.2.0</Version>
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_TechnicalResource" />
       <SupportedRoleClass RefRoleClassPath="AutomationMLBaseLibrariesAMLEd22_11_0@AutomationMLBaseRoleClassLib/AutomationMLBaseRole/Resource" />
