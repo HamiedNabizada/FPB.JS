@@ -1,0 +1,16 @@
+/* Mark of an element with more from the AML file (AmlMarkers.js), off by default */
+.fpb-aml-marker {
+  font: 600 9px/1 sans-serif;
+  letter-spacing: 0.04em;
+  padding: 2px 3px;
+  border-radius: 3px;
+  color: #fff;
+  background: #5b6470;
+  cursor: help;
+  user-select: none;
+}
+
+[data-theme="dark"] .fpb-aml-marker {
+  background: #9aa4b1;
+  color: #1e1e1e;
+}

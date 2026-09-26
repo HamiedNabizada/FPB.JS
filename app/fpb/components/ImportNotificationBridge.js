@@ -10,13 +10,21 @@ import { useError } from '../context/ErrorContext';
 export default function ImportNotificationBridge({ modeler }) {
   const { showError, showReport } = useError();
   const warnungen = useRef([]);
+  // notes of an AML import (feature 028), shown with the report of that import
+  const amlNotes = useRef([]);
 
   useEffect(() => {
     const eventBus = modeler.get('eventBus');
-    const handleError = (event) => showError(event.message, event.details);
+    const handleError = (event) => {
+      amlNotes.current = [];
+      showError(event.message, event.details);
+    };
     const handleReport = (event) => {
       warnungen.current = event.warnings || [];
       showReport(event);
+    };
+    const handleAmlNotes = (event) => {
+      amlNotes.current = event.notes || [];
     };
 
     // After the import the model check runs; its result belongs in the report,
@@ -25,18 +33,21 @@ export default function ImportNotificationBridge({ modeler }) {
       const validation = modeler.get('fpbValidation', false);
       const counts = validation ? validation.run() && validation.getCounts() : null;
       showReport({
-        warnings: warnungen.current,
+        warnings: [...amlNotes.current, ...warnungen.current],
         check: counts,
         onOpenCheck: validation ? () => validation.openPanel() : null
       });
       warnungen.current = [];
+      amlNotes.current = [];
     };
 
     eventBus.on('import.error', handleError);
     eventBus.on('import.report', handleReport);
     eventBus.on('import.done', handleDone);
+    eventBus.on('aml.importNotes', handleAmlNotes);
 
     return () => {
+      eventBus.off('aml.importNotes', handleAmlNotes);
       eventBus.off('import.error', handleError);
       eventBus.off('import.report', handleReport);
       eventBus.off('import.done', handleDone);

@@ -1,6 +1,6 @@
 import { serializeModel } from '../export/serializeModel.js';
 
-import { buildAmlIndex } from './amlIndex.js';
+import { buildAmlIndex, buildAmlOverview } from './amlIndex.js';
 import { isAmlText } from './detect.js';
 
 /**
@@ -18,21 +18,29 @@ import { isAmlText } from './detect.js';
  * the web app).
  *
  * Events: `aml.sourceChanged` { source } when the kept file changes,
- * `aml.indexChanged` { index } when the foreign content per element is known.
+ * `aml.indexChanged` { index, overview } when the foreign content per element
+ * and the overview of the file are known, `aml.importNotes` { notes } with the
+ * notes of an AML import for the import report.
  */
 export default function AmlSupport(eventBus, fpbjs) {
   this._eventBus = eventBus;
   this._fpbjs = fpbjs;
   this._source = null;
   this._index = null;
+  this._overview = null;
   this._pendingSource = null;
+  // index and overview an import has built already, for the source it brings
+  this._prebuilt = null;
 
   const self = this;
 
   // Every import replaces the model: an AML import (or a restored backup)
   // brings its source along, any other import drops the kept file
   eventBus.on('FPBJS.import', 2000, function (event) {
-    self._setSource(event && event.amlSource ? event.amlSource : null);
+    const source = event && event.amlSource ? event.amlSource : null;
+    const prebuilt = self._prebuilt && self._prebuilt.source === source ? self._prebuilt : null;
+    self._prebuilt = null;
+    self._setSource(source, prebuilt);
   });
 
   eventBus.on('model.new', function () {
@@ -85,28 +93,49 @@ AmlSupport.prototype.getForeignContent = function (elementId) {
   return this._index ? this._index.get(elementId) || null : null;
 };
 
-AmlSupport.prototype._setSource = function (source) {
+/**
+ * Everything in the kept file, or null while it is not known: hierarchies,
+ * libraries, external references and the elements with foreign content
+ * (see buildAmlOverview), with the file name.
+ */
+AmlSupport.prototype.getOverview = function () {
+  return this._overview;
+};
+
+AmlSupport.prototype._setSource = function (source, prebuilt = null) {
   this._source = source || null;
   this._index = null;
+  this._overview = null;
   this._eventBus.fire('aml.sourceChanged', { source: this._source });
-  if (this._source) {
-    const indexed = this._source;
-    this._buildIndex(indexed).then((index) => {
-      if (this._source === indexed) {
-        this._index = index;
-        this._eventBus.fire('aml.indexChanged', { index });
-      }
-    }).catch(() => {
-      // the index is a help; import and export work without it
-    });
+  if (!this._source) {
+    return;
   }
+  if (prebuilt) {
+    this._useIndex(prebuilt);
+    return;
+  }
+  const indexed = this._source;
+  this._buildIndex(indexed).then((built) => {
+    if (this._source === indexed) {
+      this._useIndex(built);
+    }
+  }).catch(() => {
+    // the index is a help; import and export work without it
+  });
+};
+
+AmlSupport.prototype._useIndex = function ({ index, overview }) {
+  this._index = index;
+  this._overview = overview;
+  this._eventBus.fire('aml.indexChanged', { index, overview });
 };
 
 AmlSupport.prototype._buildIndex = function (source) {
   return this._load().then(({ engine, toJson }) => {
     const doc = engine.CAEXDocument.loadFromString(source.text);
-    const ih = source.hierarchyId ? findHierarchy(toJson, doc, source.hierarchyId) : null;
-    return buildAmlIndex(doc, ih);
+    const found = toJson.findFpdInstanceHierarchies(doc);
+    const ih = source.hierarchyId ? found.find((h) => h.id === source.hierarchyId) || null : null;
+    return describe(doc, ih, found, source);
   });
 };
 
@@ -154,10 +183,16 @@ AmlSupport.prototype.importAml = function (text, options = {}) {
     }
     const result = toJson.convertCaexToFpbJson(doc, ih);
     const hierarchy = { id: ih.id, name: ih.name };
+    const amlSource = { text, fileName, hierarchyId: hierarchy.id, hierarchyName: hierarchy.name };
+
+    // the document is loaded already: index and overview now, and a note for
+    // the import report where to find what the file carries beyond FPD
+    this._prebuilt = { source: amlSource, ...describe(doc, ih, found, amlSource) };
+    this._eventBus.fire('aml.importNotes', { notes: importNotes(this._prebuilt.overview) });
 
     this._eventBus.fire('FPBJS.import', {
       data: JSON.parse(result.value),
-      amlSource: { text, fileName, hierarchyId: hierarchy.id, hierarchyName: hierarchy.name }
+      amlSource
     });
     return { hierarchies, hierarchy, warnings: result.warnings };
   });
@@ -232,6 +267,27 @@ function parse(engine, text) {
     throw new Error('The file is no AutomationML (CAEX) document.');
   }
   return doc;
+}
+
+/** Index and overview of a loaded document */
+function describe(doc, ih, found, source) {
+  const index = buildAmlIndex(doc, ih);
+  const overview = Object.assign(buildAmlOverview(doc, ih, index, found), { fileName: source.fileName });
+  return { index, overview };
+}
+
+/** Notes for the import report: which elements carry more than FPD */
+function importNotes(overview) {
+  const elements = overview.elements;
+  if (!elements.length) {
+    return [];
+  }
+  const names = elements.slice(0, 5).map((e) => e.name).join(', ') + (elements.length > 5 ? ', …' : '');
+  return [{
+    message: `${elements.length} ${elements.length === 1 ? 'element carries' : 'elements carry'} more from the AML file: ${names}.`,
+    details: null,
+    hint: 'Select one to see it under "AML (read only)" in the properties panel. "AML file" in the options lists everything the file holds.'
+  }];
 }
 
 function findHierarchy(toJson, doc, id) {

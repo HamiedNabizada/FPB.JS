@@ -52,6 +52,10 @@ export function buildAmlIndex(doc, ih) {
     fpbIdOfElement.set(key(ie.id), fpbId);
 
     const entry = index.get(fpbId) || { name: ie.name, attributes: [], interfaces: [], links: [] };
+    // a boundary state copy may be named differently: the original names it
+    if (bare(ie.id) === fpbId) {
+      entry.name = ie.name;
+    }
     index.set(fpbId, entry);
 
     for (const attribute of ie.attribute) {
@@ -157,4 +161,66 @@ function forEachInterface(owner, visit) {
     visit(iface);
     forEachInterface(iface, visit);
   }
+}
+
+const LIBRARY_KINDS = [
+  ['instanceHierarchy', null],
+  ['systemUnitClassLib', 'System unit classes'],
+  ['roleClassLib', 'Role classes'],
+  ['interfaceClassLib', 'Interface classes'],
+  ['attributeTypeLib', 'Attribute types']
+];
+
+/** Libraries FPD brings along (FpdLibraries, OMG_DD) */
+const isFpdLibrary = (name) => /^VDI_FPD_/.test(name || '') || name === 'OMG_DD_AttributeTypeLib';
+
+/**
+ * Everything the kept file holds, for the overview: its hierarchies (the open
+ * process view, other process views, the rest), libraries, external
+ * references and the elements that carry more than FPD.
+ *
+ * @param fpdHierarchies the FPD InstanceHierarchies (CaexToFpbJson)
+ */
+export function buildAmlOverview(doc, ih, index, fpdHierarchies) {
+  const caex = doc.caexFile;
+  const fpdIds = new Set((fpdHierarchies || []).map((h) => h.id));
+
+  const hierarchies = [];
+  for (const hierarchy of caex.instanceHierarchy) {
+    let elements = 0;
+    walkInternalElements(hierarchy.internalElement, () => {
+      elements++;
+    });
+    hierarchies.push({
+      id: hierarchy.id,
+      name: hierarchy.name,
+      elements,
+      fpd: fpdIds.has(hierarchy.id),
+      open: !!ih && hierarchy.id === ih.id
+    });
+  }
+
+  const libraries = [];
+  LIBRARY_KINDS.forEach(([kind, label]) => {
+    if (!label) {
+      return;
+    }
+    for (const library of caex[kind]) {
+      libraries.push({ kind: label, name: library.name, fpd: isFpdLibrary(library.name) });
+    }
+  });
+
+  const externalReferences = [];
+  for (const reference of caex.externalReference) {
+    externalReferences.push({ alias: reference.alias, path: reference.path });
+  }
+
+  const elements = [];
+  for (const [id, entry] of index) {
+    if (entry.attributes.length || entry.interfaces.length || entry.links.length) {
+      elements.push({ id, name: entry.name, attributes: entry.attributes.length, interfaces: entry.interfaces.length, links: entry.links.length });
+    }
+  }
+
+  return { schemaVersion: caex.schemaVersion || '', hierarchies, libraries, externalReferences, elements };
 }

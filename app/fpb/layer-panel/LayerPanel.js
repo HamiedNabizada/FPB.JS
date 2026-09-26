@@ -14,6 +14,7 @@ import ProcessTreeView from './components/ProcessTreeView';
 import { describeCounts } from '../validation/FpbValidation';
 import ThemeToggle from './components/ThemeToggle';
 import ColorSchemeToggle from './components/ColorSchemeToggle';
+import AmlOverview from '../aml/AmlOverview';
 import { useProcessManagement } from './hooks/useProcessManagement';
 import { useSelectedElements } from './hooks/useSelectedElements';
 import { useConfirmation } from './hooks/useConfirmation';
@@ -83,6 +84,7 @@ const LayerPanel = ({ modeler, config }) => {
                     selectedProcess={selectedProcess} 
                     selectedElements={selectedElements} 
                 />
+                <AmlOverview modeler={modeler} />
                 {/* je ein eigener Block, sonst stehen die Knöpfe nebeneinander:
                     Import und Download bringen ihr eigenes div mit, die
                     Umschalter sind nackte Buttons und damit inline */}

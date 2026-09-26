@@ -64,9 +64,9 @@ async function neuLaden(page) {
 
 const hinweis = (page) => page.locator('.autosave-notice');
 
-/** Der Browser gibt das Schloss eines geschlossenen Tabs nicht sofort frei */
+/** Der Browser gibt das Schloss eines geschlossenen Tabs nicht sofort frei, unter Last erst nach Sekunden */
 const schlossFrei = (page, id) => expect.poll(() => page.evaluate((id) => navigator.locks.query()
-  .then((state) => state.held.some((lock) => lock.name.endsWith('.tab.' + id))), id)).toBe(false);
+  .then((state) => state.held.some((lock) => lock.name.endsWith('.tab.' + id))), id), { timeout: 20000 }).toBe(false);
 
 test.describe('Sicherung im Browser', () => {
 

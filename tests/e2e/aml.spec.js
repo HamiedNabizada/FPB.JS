@@ -222,6 +222,69 @@ test.describe('AutomationML import and export', () => {
     expect(await source(page)).toBe(null);
   });
 
+  test('the import report says which elements carry more from the file and where to see it', async ({ page }) => {
+    await start(page);
+    await importAml(page, MIXED);
+
+    const report = page.locator('.import-report');
+    await expect(report).toContainText('elements carry more from the AML file');
+    await expect(report).toContainText('Abgekühltes Medium');
+    await expect(report).toContainText('"AML (read only)" in the properties panel');
+  });
+
+  test('the AML file overview lists the whole file and jumps to an element on another layer', async ({ page }) => {
+    await start(page);
+    await importAml(page, MIXED);
+    await dismissNotifications(page);
+
+    await page.locator('#amlOverviewButton').click();
+    const modal = page.locator('.aml-overview-modal');
+    await expect(modal).toContainText('AML file: Anlage.aml');
+    const hierarchies = modal.locator('.aml-overview-hierarchies');
+    await expect(hierarchies.locator('tr', { hasText: 'FPD_Heating' })).toContainText('process view, open in FPB.js');
+    await expect(hierarchies.locator('tr', { hasText: 'FPBJS_Project' })).toContainText('process view');
+    await expect(hierarchies.locator('tr', { hasText: 'Anlage' })).toContainText('other content');
+    await expect(modal.locator('.aml-overview-libraries')).toContainText('VDI_FPD_SystemUnitClassLib');
+
+    // "Stellventil betätigen" sits on the layer "Druckregelung", not on the open one
+    await modal.getByRole('button', { name: 'Show Stellventil betätigen' }).click();
+    await expect(modal).toHaveCount(0);
+    const selected = await page.evaluate(() => window.fpbjs.get('selection').get().map((e) => e.businessObject.name));
+    expect(selected).toEqual(['Stellventil betätigen']);
+  });
+
+  test('marks on the canvas are off by default and can be switched on in the overview', async ({ page }) => {
+    await start(page);
+    await importAml(page, MIXED);
+    await dismissNotifications(page);
+    await expect(page.locator('.fpb-aml-marker')).toHaveCount(0);
+
+    await page.locator('#amlOverviewButton').click();
+    await page.locator('#amlMarkersSwitch').check();
+    await page.locator('.aml-overview-modal').getByRole('button', { name: 'Close AML file overview' }).click();
+    // on the open layer only the state carries more
+    await expect(page.locator('.fpb-aml-marker')).toHaveCount(1);
+    await expect(page.locator(`.djs-overlays[data-container-id="${LINKED_STATE}"] .fpb-aml-marker`)).toHaveCount(1);
+    expect(await page.evaluate(() => localStorage.getItem('fpbjs.amlMarkers'))).toBe('true');
+
+    // on another layer: the operator there carries a link into the plant
+    await page.locator('#amlOverviewButton').click();
+    await page.locator('.aml-overview-modal').getByRole('button', { name: 'Show Stellventil betätigen' }).click();
+    const operator = await page.evaluate(() => window.fpbjs.get('selection').get()[0].id);
+    await expect(page.locator(`.djs-overlays[data-container-id="${operator}"] .fpb-aml-marker`)).toHaveCount(1);
+
+    await page.evaluate(() => window.fpbjs.get('amlMarkers').setEnabled(false));
+    await expect(page.locator('.fpb-aml-marker')).toHaveCount(0);
+  });
+
+  test('without a kept AML file there is no AML file overview', async ({ page }) => {
+    const { importer } = await start(page);
+    await importer.import(JSON.parse(read('json/fpbjs-temperieren.json')));
+    await openImportDialog(page);
+    await page.getByRole('button', { name: 'Close import options' }).click();
+    await expect(page.locator('#amlOverviewButton')).toHaveCount(0);
+  });
+
   test('the browser backup keeps the AML file', async ({ page }) => {
     await start(page);
     await page.evaluate(() => window.fpbjs.get('autosave').ready());
