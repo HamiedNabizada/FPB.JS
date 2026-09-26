@@ -497,40 +497,31 @@ test.describe('Export dialog', () => {
       expect(events[0].data).not.toMatch(/visual:/);
     });
 
-    test('XML of the current process', async ({ page }) => {
-      test.fail(true, 'BUG: XML export of "Actual Process" fails (convertToXML expects the full model array)');
+    test('XML always exports the whole model: the other data scopes are switched off', async ({ page }) => {
       await load(page);
       await recordEvents(page, ['fpbjs']);
       await openDialog(page);
-      await dialog(page).locator('#formatXML').check();
       await dialog(page).locator('#information2').check();
+      await dialog(page).locator('#formatXML').check();
+
+      // choosing XML goes back to All Processes and locks the other two
+      await expect(dialog(page).locator('#information1')).toBeChecked();
+      await expect(dialog(page).locator('#information2')).toBeDisabled();
+      await expect(dialog(page).locator('#information3')).toBeDisabled();
+      await expect(dialog(page).locator('.xml-scope-hint')).toHaveText('XML always contains the whole model.');
+
       await dialog(page).locator('#export1').check();
       await sendButton(page).click();
       await expect(dialog(page).locator('.modal-footer .alert-danger')).toHaveCount(0);
-      await expect(dialog(page)).toHaveCount(0);
       const events = await recorded(page);
       expect(events).toHaveLength(1);
       expect(events[0].data).toContain(ROOT_ID);
-    });
 
-    test('XML of the selected elements', async ({ page }) => {
-      test.fail(true, 'BUG: XML export of "Selected Elements" fails (convertToXML expects the full model array)');
-      await load(page);
-      const id = await page.evaluate(() => {
-        const op = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
-        window.fpbjs.get('selection').select([op]);
-        return op.id;
-      });
-      await recordEvents(page, ['fpbjs']);
+      // back to JSON, the scopes are free again
       await openDialog(page);
-      await dialog(page).locator('#formatXML').check();
-      await dialog(page).locator('#information3').check();
-      await dialog(page).locator('#export1').check();
-      await sendButton(page).click();
-      await expect(dialog(page).locator('.modal-footer .alert-danger')).toHaveCount(0);
-      const events = await recorded(page);
-      expect(events).toHaveLength(1);
-      expect(events[0].data).toContain(id);
+      await dialog(page).locator('#formatJSON').check();
+      await expect(dialog(page).locator('#information2')).toBeEnabled();
+      await expect(dialog(page).locator('.xml-scope-hint')).toHaveCount(0);
     });
   });
 

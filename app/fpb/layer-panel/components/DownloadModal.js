@@ -94,6 +94,10 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
     
     const handleExportFormat = (format) => {
         setExportFormat(format);
+        // An XML document after VDI 3682 always describes the whole project
+        if (format === 'xml') {
+            setInformation('information1');
+        }
     };
 
     const eventBus = modeler.get('eventBus');
@@ -357,7 +361,7 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                                 onExportFormat={handleExportFormat} />
                         </Col>
                         <Col>
-                            <Forms_Data information={information} onInformationChange={handleInformation} />
+                            <Forms_Data information={information} exportFormat={exportFormat} onInformationChange={handleInformation} />
                         </Col>
                     </Row>
                     <Row>
@@ -546,6 +550,7 @@ const Forms_Data = memo(function Forms_Data(props) {
     function handleChange(e) {
         props.onInformationChange(e.target.id)
     }
+    const xml = props.exportFormat === 'xml';
     return (
         <Card>
             <Card.Header as="h5">Data</Card.Header>
@@ -561,7 +566,7 @@ const Forms_Data = memo(function Forms_Data(props) {
                                 label="All Processes"
                                 name="information"
                                 id="information1"
-                                defaultChecked={props.information === 'information1'}
+                                checked={props.information === 'information1'}
                                 onChange={(e) => handleChange(e)}
                             />
                             <Form.Check
@@ -569,7 +574,8 @@ const Forms_Data = memo(function Forms_Data(props) {
                                 label="Actual Process"
                                 name="information"
                                 id="information2"
-                                defaultChecked={props.information === 'information2'}
+                                checked={props.information === 'information2'}
+                                disabled={xml}
                                 onChange={(e) => handleChange(e)}
                             />
                             <Form.Check
@@ -577,9 +583,15 @@ const Forms_Data = memo(function Forms_Data(props) {
                                 label="Selected Elements"
                                 name="information"
                                 id="information3"
-                                defaultChecked={props.information === 'information3'}
+                                checked={props.information === 'information3'}
+                                disabled={xml}
                                 onChange={(e) => handleChange(e)}
                             />
+                            {xml && (
+                                <Form.Text className="text-muted xml-scope-hint">
+                                    XML always contains the whole model.
+                                </Form.Text>
+                            )}
                         </Col>
                     </Form.Group>
                 </fieldset>
