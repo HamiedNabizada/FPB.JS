@@ -4,6 +4,8 @@
  * Provides keyboard shortcuts for alignment operations
  */
 
+import { isReadOnly } from '../read-only/ReadOnly';
+
 // above the default keyboard bindings (1000)
 const KEYBOARD_PRIORITY = 1500;
 
@@ -82,7 +84,10 @@ export default class KeyboardAlignService {
     const shortcut = this._shortcuts[key];
 
     if (shortcut) {
-      shortcut();
+      // read-only: taken, so no binding below runs either, but nothing moves
+      if (!isReadOnly(this._injector)) {
+        shortcut();
+      }
       // handled: the keyboard prevents the default and no binding below runs
       return true;
     }

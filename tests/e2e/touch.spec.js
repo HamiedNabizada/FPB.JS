@@ -186,6 +186,34 @@ for (const [label, device] of [['tablet', devices['iPad (gen 7)']], ['phone', de
       expect(zoomAfter).toBeGreaterThan(zoomBefore * 1.3);
     });
 
+    test('read-only: a finger moves no element and opens no context pad, but pans and zooms', async ({ page, context }) => {
+      await openModel(page);
+      await page.evaluate(() => window.fpbjs.get('readOnly').set(true));
+      const touch = touchDriver(page, context);
+
+      const position = () => page.evaluate(() => {
+        const e = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Warmprodukt')[0];
+        return [e.x, e.y];
+      });
+      const before = await position();
+      const [x, y] = await elementCenter(page, 'Warmprodukt');
+      await page.touchscreen.tap(x, y);
+      await page.waitForTimeout(500);
+      expect(await page.evaluate(() => window.fpbjs.get('contextPad').isOpen())).toBe(false);
+      await touch.drag([x, y], [x + 60, y + 40]);
+      expect(await position()).toEqual(before);
+
+      const viewbox = () => page.evaluate(() => { const v = window.fpbjs.get('canvas').viewbox(); return [v.x, v.y]; });
+      const canvas = await page.locator('.djs-container').first().boundingBox();
+      const viewBefore = await viewbox();
+      await touch.drag([canvas.x + 120, canvas.y + canvas.height - 80], [canvas.x + 220, canvas.y + canvas.height - 180]);
+      expect(await viewbox()).not.toEqual(viewBefore);
+
+      const zoomBefore = await page.evaluate(() => window.fpbjs.get('canvas').zoom());
+      await touch.pinch([canvas.x + canvas.width / 2, canvas.y + canvas.height / 2], 40, 120);
+      expect(await page.evaluate(() => window.fpbjs.get('canvas').zoom())).toBeGreaterThan(zoomBefore * 1.3);
+    });
+
     test('creates elements from the palette by dragging and by tapping twice', async ({ page, context }) => {
       await openModel(page);
       const touch = touchDriver(page, context);

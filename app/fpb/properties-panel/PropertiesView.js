@@ -29,6 +29,7 @@ import Tooltip from 'react-bootstrap/Tooltip'
 
 
 import './PropertiesView.css';
+import useReadOnly from '../read-only/useReadOnly';
 
 const tooltips_text = {
   copyUniqueIdToClipboard: "Copy UniqueId to Clipboard"
@@ -208,6 +209,8 @@ function writeFromPanel(write) {
 
 const ElementProperties = memo(({ element, modeler, config, rerender }) => {
   const [, forceUpdate] = useState({});
+  // read-only: the fields show their values but take no input
+  const readOnly = useReadOnly(modeler);
 
   let characteristics = element.businessObject.get('characteristics');
   if (element.labelTarget) {
@@ -372,7 +375,7 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
                         <Row>
                           <Form.Group as={Col} controlId="pp_identification_longName">
                             <Form.Label>Long Name</Form.Label>
-                            <Form.Control defaultValue={element.businessObject.identification.longName} onChange={(event) => {
+                            <Form.Control readOnly={readOnly} defaultValue={element.businessObject.identification.longName} onChange={(event) => {
                               updateIdentifactionProperty('longName', event.target.value)
                             }} />
                           </Form.Group>
@@ -382,7 +385,7 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
                       <Row>
                         <Form.Group as={Col} controlId="pp_identification_shortName">
                           <Form.Label>Short Name</Form.Label>
-                          <Form.Control defaultValue={element.businessObject.identification.shortName} onChange={(event) => {
+                          <Form.Control readOnly={readOnly} defaultValue={element.businessObject.identification.shortName} onChange={(event) => {
                             updateIdentifactionProperty('shortName', event.target.value)
                           }} />
                         </Form.Group>
@@ -391,7 +394,7 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
                         <Row>
                           <Form.Group as={Col} controlId="pp_identification_versionNumber">
                             <Form.Label>Version Number</Form.Label>
-                            <Form.Control defaultValue={element.businessObject.identification.versionNumber} onChange={(event) => {
+                            <Form.Control readOnly={readOnly} defaultValue={element.businessObject.identification.versionNumber} onChange={(event) => {
                               updateIdentifactionProperty('versionNumber', event.target.value)
                             }} />
                           </Form.Group>
@@ -401,7 +404,7 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
                         <Row>
                           <Form.Group as={Col} controlId="pp_identification_revisionNumber">
                             <Form.Label>Revision Number</Form.Label>
-                            <Form.Control defaultValue={element.businessObject.identification.revisionNumber} onChange={(event) => {
+                            <Form.Control readOnly={readOnly} defaultValue={element.businessObject.identification.revisionNumber} onChange={(event) => {
                               updateIdentifactionProperty('revisionNumber', event.target.value)
                             }} />
                           </Form.Group>
@@ -419,7 +422,7 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
                 <Accordion.Body>
 
                     {config.propertiesPanel.actionsElements.addCharasterics &&
-                      <Button variant="secondary" onClick={addCharacteristics}>Add characteristics</Button>
+                      <Button variant="secondary" disabled={readOnly} onClick={addCharacteristics}>Add characteristics</Button>
                     }
                 </Accordion.Body>
               </Accordion.Item>
@@ -447,6 +450,7 @@ const Characteristics = (props) => {
   const getCharacteristics = () => element.businessObject.get('characteristics');
   const modeling = modeler.get('modeling');
   const fpbFactory = modeler.get('fpbFactory');
+  const readOnly = useReadOnly(modeler);
 
   // actualValues is a list in the schema (isMany); the panel shows and edits
   // its first entry. Older files may still carry a single object.
@@ -518,7 +522,7 @@ const Characteristics = (props) => {
                           <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_category_longName">
                               <Form.Label>Long Name</Form.Label>
-                              <Form.Control defaultValue={characteristics[no].category.longName} onChange={(event) => {
+                              <Form.Control readOnly={readOnly} defaultValue={characteristics[no].category.longName} onChange={(event) => {
                                 updateCharacteristics('category', 'longName', event.target.value)
                               }} />
                             </Form.Group>
@@ -528,7 +532,7 @@ const Characteristics = (props) => {
                         <Row>
                           <Form.Group as={Col} controlId="pp_characteristics_category_shortName">
                             <Form.Label>Short Name</Form.Label>
-                            <Form.Control defaultValue={characteristics[no].category.shortName} onChange={(event) => {
+                            <Form.Control readOnly={readOnly} defaultValue={characteristics[no].category.shortName} onChange={(event) => {
                               updateCharacteristics('category', 'shortName', event.target.value)
                             }} />
                           </Form.Group>
@@ -537,7 +541,7 @@ const Characteristics = (props) => {
                           <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_category_versionNumber">
                               <Form.Label>Version Number</Form.Label>
-                              <Form.Control defaultValue={characteristics[no].category.versionNumber} onChange={(event) => {
+                              <Form.Control readOnly={readOnly} defaultValue={characteristics[no].category.versionNumber} onChange={(event) => {
                                 updateCharacteristics('category', 'versionNumber', event.target.value)
                               }} />
                             </Form.Group>
@@ -547,7 +551,7 @@ const Characteristics = (props) => {
                           <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_category_revisionNumber">
                               <Form.Label>Revision Number</Form.Label>
-                              <Form.Control defaultValue={characteristics[no].category.revisionNumber} onChange={(event) => {
+                              <Form.Control readOnly={readOnly} defaultValue={characteristics[no].category.revisionNumber} onChange={(event) => {
                                 updateCharacteristics('category', 'revisionNumber', event.target.value)
                               }} />
                             </Form.Group>
@@ -568,7 +572,7 @@ const Characteristics = (props) => {
                           <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_descriptiveElement_vdp">
                               <Form.Label>Value Determination Process</Form.Label>
-                              <Form.Control defaultValue={characteristics[no].descriptiveElement.valueDeterminationProcess} onChange={(event) => {
+                              <Form.Control readOnly={readOnly} defaultValue={characteristics[no].descriptiveElement.valueDeterminationProcess} onChange={(event) => {
                                 updateCharacteristics('descriptiveElement', 'valueDeterminationProcess', event.target.value)
                               }} />
                             </Form.Group>
@@ -578,7 +582,7 @@ const Characteristics = (props) => {
                           <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_descriptiveElement_representivity">
                               <Form.Label>Representivity</Form.Label>
-                              <Form.Control defaultValue={characteristics[no].descriptiveElement.representivity} onChange={(event) => {
+                              <Form.Control readOnly={readOnly} defaultValue={characteristics[no].descriptiveElement.representivity} onChange={(event) => {
                                 updateCharacteristics('descriptiveElement', 'representivity', event.target.value)
                               }} />
                             </Form.Group>
@@ -589,10 +593,10 @@ const Characteristics = (props) => {
                             <Form.Group as={Col} controlId="pp_characteristics_descriptiveElement_setPointValue">
                               <Form.Label>Setpoint Value</Form.Label>
                               <InputGroup>
-                                <Form.Control placeholder="value" defaultValue={characteristics[no].descriptiveElement.setpointValue.value} onChange={(event) => {
+                                <Form.Control readOnly={readOnly} placeholder="value" defaultValue={characteristics[no].descriptiveElement.setpointValue.value} onChange={(event) => {
                                   updateCharacteristics('descriptiveElement', 'setpointValue', event.target.value, 'value')
                                 }} />
-                                <Form.Control placeholder="unit" defaultValue={characteristics[no].descriptiveElement.setpointValue.unit} onChange={(event) => {
+                                <Form.Control readOnly={readOnly} placeholder="unit" defaultValue={characteristics[no].descriptiveElement.setpointValue.unit} onChange={(event) => {
                                   updateCharacteristics('descriptiveElement', 'setpointValue', event.target.value, 'unit')
                                 }} />
                               </InputGroup>
@@ -604,10 +608,10 @@ const Characteristics = (props) => {
                             <Form.Group as={Col} controlId="pp_characteristics_descriptiveElement_actualValues">
                               <Form.Label>Actual Values</Form.Label>
                               <InputGroup>
-                                <Form.Control placeholder="value" defaultValue={firstActualValue(characteristics[no]).value || ''} onChange={(event) => {
+                                <Form.Control readOnly={readOnly} placeholder="value" defaultValue={firstActualValue(characteristics[no]).value || ''} onChange={(event) => {
                                   updateCharacteristics('descriptiveElement', 'actualValues', event.target.value, 'value')
                                 }} />
-                                <Form.Control placeholder="unit" defaultValue={firstActualValue(characteristics[no]).unit || ''} onChange={(event) => {
+                                <Form.Control readOnly={readOnly} placeholder="unit" defaultValue={firstActualValue(characteristics[no]).unit || ''} onChange={(event) => {
                                   updateCharacteristics('descriptiveElement', 'actualValues', event.target.value, 'unit')
                                 }} />
                               </InputGroup>
@@ -629,7 +633,7 @@ const Characteristics = (props) => {
                           <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_relationalElement_model">
                               <Form.Label>Model</Form.Label>
-                              <Form.Control defaultValue={characteristics[no].relationalElement.model} onChange={(event) => {
+                              <Form.Control readOnly={readOnly} defaultValue={characteristics[no].relationalElement.model} onChange={(event) => {
                                 updateCharacteristics('relationalElement', 'model', event.target.value)
                               }} />
                             </Form.Group>
@@ -639,7 +643,7 @@ const Characteristics = (props) => {
                           <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_relationalElement_rfrg">
                               <Form.Label>Regulations for Relational Generation</Form.Label>
-                              <Form.Control defaultValue={characteristics[no].relationalElement.regulationsForRelationalGeneration} onChange={(event) => {
+                              <Form.Control readOnly={readOnly} defaultValue={characteristics[no].relationalElement.regulationsForRelationalGeneration} onChange={(event) => {
                                 updateCharacteristics('relationalElement', 'regulationsForRelationalGeneration', event.target.value)
                               }} />
                             </Form.Group>
@@ -649,7 +653,7 @@ const Characteristics = (props) => {
                           <Row>
                             <Form.Group as={Col} controlId="pp_characteristics_relationalElement_view">
                               <Form.Label>View</Form.Label>
-                              <Form.Control defaultValue={characteristics[no].relationalElement.view} onChange={(event) => {
+                              <Form.Control readOnly={readOnly} defaultValue={characteristics[no].relationalElement.view} onChange={(event) => {
                                 updateCharacteristics('relationalElement', 'view', event.target.value)
                               }} />
 
@@ -666,7 +670,7 @@ const Characteristics = (props) => {
                    Removes the characteristic
                 </Tooltip>}>
 
-                <Button variant="secondary" aria-label={`Remove characteristic C_${no + 1}`} onClick={() => removeCharacteristic()}><FontAwesomeIcon icon="trash-can" /></Button>
+                <Button variant="secondary" disabled={readOnly} aria-label={`Remove characteristic C_${no + 1}`} onClick={() => removeCharacteristic()}><FontAwesomeIcon icon="trash-can" /></Button>
 
                 </OverlayTrigger>
             

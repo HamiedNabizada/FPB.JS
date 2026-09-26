@@ -12,9 +12,17 @@ import Alert from 'react-bootstrap/Alert';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useError } from '../../context/ErrorContext';
 import XMLMapper from '../../xml/XMLMapper.js';
+import useReadOnly from '../../read-only/useReadOnly';
 
 const ImportModal = memo(({ modeler }) => {
     const [show, setShow] = useState(false);
+    // read-only: an import would replace the model the user only looks at
+    const readOnly = useReadOnly(modeler);
+    useEffect(() => {
+        if (readOnly) {
+            setShow(false);
+        }
+    }, [readOnly]);
     const [selectedFile, setSelectedFile] = useState(null);
     const [isImporting, setIsImporting] = useState(false);
     const [fileData, setFileData] = useState(null);
@@ -184,14 +192,14 @@ const ImportModal = memo(({ modeler }) => {
             handleFileChosen(file);
         }
     };
-    let tooltTipImportOptions = 'Import Options';
+    let tooltTipImportOptions = readOnly ? 'Import (not in read-only mode)' : 'Import Options';
 
     return (
         <div className="upload-properties" key='ul-properties'>
             <OverlayTrigger trigger={['hover', 'focus']} placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId2_upload`}>
                 {tooltTipImportOptions}
             </Tooltip>}>
-                <Button variant="secondary-outline" onClick={handleShow} aria-label={tooltTipImportOptions}>
+                <Button id="importOptionsButton" variant="secondary-outline" onClick={handleShow} disabled={readOnly} aria-label={tooltTipImportOptions}>
                     <FontAwesomeIcon icon="upload" size="lg" />
                 </Button>
             </OverlayTrigger>

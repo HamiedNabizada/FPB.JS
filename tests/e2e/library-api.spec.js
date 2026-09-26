@@ -1070,6 +1070,63 @@ test.describe('Events (on / off / fire)', () => {
 
 // ---------------------------------------------------------------------------
 
+test.describe('Read-only mode', () => {
+
+  test('the readOnly option starts in read-only mode; setReadOnly switches and on() reports it', async ({ page }) => {
+    await withModel(page, { options: { readOnly: true } });
+
+    const state = await page.evaluate(() => {
+      const events = [];
+      window.fpb.on('readOnly.changed', (e) => events.push(e.readOnly));
+      const start = window.fpb.isReadOnly();
+      window.fpb.setReadOnly(false);
+      const off = window.fpb.isReadOnly();
+      window.fpb.setReadOnly(1);
+      return { start, off, on: window.fpb.isReadOnly(), events };
+    });
+
+    expect(state).toEqual({ start: true, off: false, on: true, events: [false, true] });
+  });
+
+  test('is off without the option', async ({ page }) => {
+    await withModel(page);
+    expect(await page.evaluate(() => window.fpb.isReadOnly())).toBe(false);
+  });
+
+  test('the host still imports, switches layers and changes the model', async ({ page }) => {
+    await withModel(page, { options: { readOnly: true } });
+
+    await page.evaluate((id) => window.fpb.switchProcess(id), CHILD);
+    expect(await currentRootId(page)).toBe(CHILD);
+
+    expect(await importModel(page, clone())).toBe(true);
+    expect(await currentRootId(page)).toBe(MAIN);
+
+    const moved = await page.evaluate(() => {
+      const shape = window.fpb.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+      const before = shape.x;
+      window.fpb.get('modeling').moveElements([shape], { x: 25, y: 0 });
+      return shape.x - before;
+    });
+    expect(moved).toBe(25);
+    expect(await page.evaluate(() => window.fpb.isReadOnly())).toBe(true);
+  });
+
+  test('with panels, the properties fields take no input from the start', async ({ page }) => {
+    await withModel(page, { panels: true, options: { readOnly: true } });
+
+    await page.evaluate(() => {
+      const operator = window.fpb.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+      window.fpb.get('selection').select(operator);
+    });
+    await page.locator('#openPropertiesPanelButton').click();
+    await expect(page.locator('#pp_identification_longName')).toHaveAttribute('readonly', '');
+
+    await page.evaluate(() => window.fpb.setReadOnly(false));
+    await expect(page.locator('#pp_identification_longName')).not.toHaveAttribute('readonly', '');
+  });
+});
+
 test.describe('destroy', () => {
 
   test('destroy removes the canvas from the host container', async ({ page }) => {

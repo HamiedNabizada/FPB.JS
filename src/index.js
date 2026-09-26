@@ -84,6 +84,7 @@ export async function createFpbModeler(options = {}) {
     layerContainer,
     config = configModule.default || configModule,
     propertiesConfig = propertiesConfigModule.default || propertiesConfigModule,
+    readOnly = false,
     ...modelingOptions
   } = options;
 
@@ -97,6 +98,10 @@ export async function createFpbModeler(options = {}) {
     configFile: config,
     ...modelingOptions
   });
+
+  // before the panels are built, so no field is editable for a moment
+  const readOnlyMode = modeler.get('readOnly');
+  readOnlyMode.set(readOnly);
 
   // Set up properties panel if container provided
   let propertiesPanel = null;
@@ -280,6 +285,21 @@ export async function createFpbModeler(options = {}) {
       if (shape) {
         modeling.switchProcess(shape);
       }
+    },
+
+    // --- Read-only mode ---
+
+    /**
+     * Look, don't touch: the user can zoom, pan, switch layers, search, check
+     * and export, but not change the model. The API itself stays writable
+     * (importJSON, switchProcess, modeling). Fires 'readOnly.changed'.
+     */
+    setReadOnly(flag) {
+      readOnlyMode.set(!!flag);
+    },
+
+    isReadOnly() {
+      return readOnlyMode.isEnabled();
     },
 
     // --- DI Access ---

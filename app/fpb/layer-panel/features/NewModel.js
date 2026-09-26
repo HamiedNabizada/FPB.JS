@@ -1,10 +1,11 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import ConfirmationModal from '../components/ConfirmationModal';
+import useReadOnly from '../../read-only/useReadOnly';
 
 /**
  * Starts over with an empty model. With the browser backup on, this is also
@@ -15,7 +16,15 @@ import ConfirmationModal from '../components/ConfirmationModal';
  */
 const NewModel = memo(({ modeler }) => {
     const [asking, setAsking] = useState(false);
-    const label = 'New model';
+    // read-only: the model the user only looks at stays
+    const readOnly = useReadOnly(modeler);
+    const label = readOnly ? 'New model (not in read-only mode)' : 'New model';
+
+    useEffect(() => {
+        if (readOnly) {
+            setAsking(false);
+        }
+    }, [readOnly]);
 
     const wouldLoseWork = () => {
         const autosave = modeler.get('autosave', false);
@@ -40,6 +49,7 @@ const NewModel = memo(({ modeler }) => {
                     id="newModelButton"
                     variant="secondary-outline"
                     aria-label={label}
+                    disabled={readOnly}
                     onClick={() => (wouldLoseWork() ? setAsking(true) : start())}
                 >
                     <FontAwesomeIcon icon="file-circle-plus" size="lg" />

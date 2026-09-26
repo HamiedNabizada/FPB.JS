@@ -135,6 +135,8 @@ export interface FpbEventMap {
   'import.done': Record<string, never>;
   /** An import failed; the previous model stays */
   'import.error': { message: string; details?: string };
+  /** The read-only mode was turned on or off */
+  'readOnly.changed': { readOnly: boolean };
 }
 
 /** One warning of an import report */
@@ -362,6 +364,12 @@ export interface ColorSchemeService {
   set(name: 'standard' | 'accessible', options?: { silent?: boolean }): string;
 }
 
+/** Read-only mode (setReadOnly and isReadOnly of the facade use it) */
+export interface ReadOnlyService {
+  set(readOnly: boolean): void;
+  isEnabled(): boolean;
+}
+
 /** Readiness of the user interface components, used by the import */
 export interface UiReadiness {
   isReady(): boolean;
@@ -384,6 +392,7 @@ export interface FpbServiceMap {
   layerUndoBoundary: LayerUndoBoundary;
   uiReadiness: UiReadiness;
   colorSchemeService: ColorSchemeService;
+  readOnly: ReadOnlyService;
 }
 
 // ---------------------------------------------------------------------------
@@ -407,6 +416,8 @@ export interface CreateFpbModelerOptions {
    * web app turns it on. `true` uses the defaults.
    */
   autosave?: boolean | AutosaveOptions;
+  /** Start in read-only mode, see setReadOnly(). Default false */
+  readOnly?: boolean;
   /** Additional options passed to FpbModeler constructor */
   [key: string]: any;
 }
@@ -529,6 +540,21 @@ export interface FpbInstance {
 
   /** Switch to a different process layer by ID */
   switchProcess(id: string): void;
+
+  // --- Read-only mode ---
+
+  /**
+   * Turn the read-only mode on or off. The user can then zoom, pan, switch
+   * layers, search, check and export, but not change the model: no moving,
+   * creating, connecting, deleting, renaming, undo or paste, the context pad
+   * stays closed, the panel fields take no input, New and Import are off.
+   * The API stays writable (importJSON, switchProcess, modeling).
+   * Fires 'readOnly.changed'.
+   */
+  setReadOnly(readOnly: boolean): void;
+
+  /** Is the read-only mode on? */
+  isReadOnly(): boolean;
 
   // --- DI Service Access ---
 
