@@ -116,7 +116,6 @@ test.describe('Export dialog', () => {
     });
 
     test('the data scope used by default (All Processes) is shown as selected', async ({ page }) => {
-      test.fail(true, 'BUG: no data scope radio is preselected although "All Processes" is exported');
       await load(page);
       await openDialog(page);
       await expect(dialog(page).locator('#information1')).toBeChecked();
@@ -130,7 +129,6 @@ test.describe('Export dialog', () => {
     });
 
     test('closes when the X button is clicked outside its icon', async ({ page }) => {
-      test.fail(true, 'BUG: the close handler sits on the icon, not on the button around it');
       await load(page);
       await openDialog(page);
       const button = dialog(page).locator('.modal-header button');
@@ -153,7 +151,6 @@ test.describe('Export dialog', () => {
     });
 
     test('after closing and reopening, the export does what the dialog shows', async ({ page }) => {
-      test.fail(true, 'BUG: the form resets on reopen but the dialog keeps the old format/method state');
       await load(page);
       await openDialog(page);
       await dialog(page).locator('#formatXML').check();
@@ -162,12 +159,12 @@ test.describe('Export dialog', () => {
       await expect(dialog(page)).toHaveCount(0);
 
       await openDialog(page);
-      // the reopened form shows JSON and no export method
-      await expect(dialog(page).locator('#formatJSON')).toBeChecked();
-      await expect(dialog(page).locator('#export2')).not.toBeChecked();
-      await expectNoDownload(page, () => sendButton(page).click());
-      await expect(dialog(page).locator('.modal-footer .alert-danger'))
-        .toContainText('Please select at least one export method');
+      // the reopened form shows the choices it keeps, and exports them
+      await expect(dialog(page).locator('#formatXML')).toBeChecked();
+      await expect(dialog(page).locator('#export2')).toBeChecked();
+      await expect(dialog(page).locator('#information1')).toBeChecked();
+      const file = await expectDownload(page, () => sendButton(page).click());
+      expect(file.name).toBe('FPB.xml');
     });
   });
 
@@ -488,7 +485,6 @@ test.describe('Export dialog', () => {
     });
 
     test('XML without graphic information contains no layout', async ({ page }) => {
-      test.fail(true, 'BUG: the information level is ignored for XML, the layout is always written');
       await load(page);
       await recordEvents(page, ['fpbjs', 'model.downloaded']);
       await openDialog(page);

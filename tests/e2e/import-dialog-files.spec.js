@@ -309,7 +309,6 @@ test.describe('Import dialog - cancel and re-import', () => {
   });
 
   test('importing a second file through the dialog replaces the first model', async ({ page }) => {
-    test.fail(true, 'BUG: ImportModal sets isImporting on import and only an import.error resets it; after a successful import the button stays "Importing..." and disabled');
     await start(page);
     await openImportDialog(page);
     await dropFile(page, JSON.stringify(model('first', 'Erstes')), 'erstes.json');

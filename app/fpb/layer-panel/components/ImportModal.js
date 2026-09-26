@@ -31,14 +31,19 @@ const ImportModal = memo(({ modeler }) => {
     useEffect(() => {
         // The notification itself comes from ImportNotificationBridge, which
         // is mounted even while the panel is collapsed.
-        const handleImportError = () => {
+        // Busy ends with the import, however it ends: before, only an error
+        // reset it, and after the first good import the button stayed on
+        // "Importing..." until the page was reloaded.
+        const handleImportEnd = () => {
             setIsImporting(false);
         };
 
-        eventBus.on('import.error', handleImportError);
+        eventBus.on('import.error', handleImportEnd);
+        eventBus.on('import.done', handleImportEnd);
 
         return () => {
-            eventBus.off('import.error', handleImportError);
+            eventBus.off('import.error', handleImportEnd);
+            eventBus.off('import.done', handleImportEnd);
         };
     }, [eventBus]);
 

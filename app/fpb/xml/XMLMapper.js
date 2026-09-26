@@ -48,11 +48,12 @@ class XMLMapper {
     /**
      * Convert JSON to XML while preserving original data
      */
-    async convertToXML(jsonData) {
+    async convertToXML(jsonData, options = {}) {
         try {
 
-            // Step 1: Convert ModdleElements to proper JSON format (like normal JSON export)
-            const properJsonData = this._convertModdleElementsToProperJSON(jsonData);
+            // Step 1: Convert ModdleElements to proper JSON format (like normal JSON export);
+            // `withLayout: false` leaves the visual information out
+            const properJsonData = this._convertModdleElementsToProperJSON(jsonData, options);
 
             // Use schema-compliant conversion
             const xmlString = this._convertJSONtoXML(properJsonData);
@@ -278,10 +279,10 @@ class XMLMapper {
      * Convert ModdleElements to proper JSON format (like normal JSON export)
      * Uses the same replacer as the download, see export/serializeModel
      */
-    _convertModdleElementsToProperJSON(data) {
+    _convertModdleElementsToProperJSON(data, options = {}) {
 
 
-        const replacer = modelReplacer();
+        const replacer = modelReplacer({ withLayout: options.withLayout !== false });
 
         try {
             const jsonString = JSON.stringify(data, replacer, 4);
