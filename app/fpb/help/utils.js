@@ -4,11 +4,6 @@ import {
 } from 'min-dash';
 
 
-export function isFpb(element) {
-  return element && /^fpb:/.test(element.type);
-}
-
-
 export function is(element, type) {
   const bo = getBusinessObject(element);
   return bo && bo.$instanceOf && (typeof bo.$instanceOf === 'function') && bo.$instanceOf(type);
@@ -23,20 +18,6 @@ export function isAny(element, types) {
   return some(types, function (t) {
     return is(element, t);
   });
-}
-
-export function getParent(element, anyType) {
-
-  if (typeof anyType === 'string') {
-    anyType = [anyType];
-  }
-
-  while ((element = element.parent)) {
-    if (isAny(element, anyType)) {
-      return element;
-    }
-  }
-  return null;
 }
 
 function getLabelAttr(semantic) {
@@ -77,8 +58,6 @@ export const DEFAULT_LABEL_SIZE = {
   width: 50,
   height: 20
 };
-
-export const FLOW_LABEL_INDENT = 15;
 
 
 export function isLabelExternal(semantic) {

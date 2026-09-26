@@ -91,15 +91,6 @@ export class FpbElementBuilder {
  * Tool action handlers
  */
 export class ToolActionHandlers {
-  
-  /**
-   * Creates select tool handler (clears any active tools)
-   */
-  static createSelectHandler(toolClearService) {
-    return function(event) {
-      toolClearService.clearTools();
-    };
-  }
 
   /**
    * Creates lasso tool activation handler
@@ -125,30 +116,6 @@ export class ToolActionHandlers {
   static createHandHandler(handTool) {
     return function(event) {
       handTool.activateHand(event);
-    };
-  }
-
-  /**
-   * Creates align tool handler
-   */
-  static createAlignHandler(alignService, selection, alignment) {
-    return function(event) {
-      const selectedElements = selection.get();
-      if (alignService.canExecute('align') && selectedElements.length >= 2) {
-        alignService.alignElements(selectedElements, alignment);
-      }
-    };
-  }
-
-  /**
-   * Creates distribute tool handler
-   */
-  static createDistributeHandler(alignService, selection, orientation) {
-    return function(event) {
-      const selectedElements = selection.get();
-      if (alignService.canExecute('distribute') && selectedElements.length >= 3) {
-        alignService.distributeElements(selectedElements, orientation);
-      }
     };
   }
 }

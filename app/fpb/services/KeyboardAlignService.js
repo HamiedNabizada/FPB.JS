@@ -4,6 +4,9 @@
  * Provides keyboard shortcuts for alignment operations
  */
 
+// above the default keyboard bindings (1000)
+const KEYBOARD_PRIORITY = 1500;
+
 export default class KeyboardAlignService {
   constructor(eventBus, injector, alignService, selection) {
     this._eventBus = eventBus;
@@ -44,35 +47,32 @@ export default class KeyboardAlignService {
    * @private
    */
   _setupKeyboardListener() {
-    // Listen to keyboard events on the canvas container
-    this._eventBus.on('canvas.init', () => {
-      const container = this._canvas.getContainer();
-      if (container) {
-        this._containerEl = container;
-        container.addEventListener('keydown', this._boundHandleKeyDown);
-      }
-    });
-
-    // Also listen globally to document in case canvas doesn't have focus
-    document.addEventListener('keydown', this._boundHandleKeyDown);
+    // Through the diagram-js keyboard, like every other shortcut: it only
+    // hears the canvas, so text fields keep Ctrl+Shift+V (paste as plain
+    // text). Above the default bindings, whose copy and paste ignore Shift,
+    // so Ctrl+Shift+C/V align and do not copy or paste as well.
+    this._keyboard = this._injector.get('keyboard', false);
+    if (this._keyboard) {
+      this._keyboard.addListener(KEYBOARD_PRIORITY, this._boundHandleKeyDown);
+    }
   }
 
   /**
    * Remove all event listeners to prevent memory leaks
    */
   destroy() {
-    if (this._containerEl) {
-      this._containerEl.removeEventListener('keydown', this._boundHandleKeyDown);
+    if (this._keyboard) {
+      this._keyboard.removeListener(this._boundHandleKeyDown);
     }
-    document.removeEventListener('keydown', this._boundHandleKeyDown);
   }
 
   /**
    * Handle keyboard events
    * @private
    */
-  _handleKeyDown(event) {
-    const key = this._getKeyCombo(event);
+  _handleKeyDown(context) {
+    const event = context && context.keyEvent;
+    const key = event && this._getKeyCombo(event);
 
     // Skip if key combo couldn't be determined
     if (!key) {
@@ -82,9 +82,9 @@ export default class KeyboardAlignService {
     const shortcut = this._shortcuts[key];
 
     if (shortcut) {
-      event.preventDefault();
-      event.stopPropagation();
       shortcut();
+      // handled: the keyboard prevents the default and no binding below runs
+      return true;
     }
   }
 

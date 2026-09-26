@@ -132,7 +132,7 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
     // sub-layer) the user may have renamed the SystemLimit; overwriting it
     // here silently reverted that rename.
     if (!systemLimit.businessObject.name) {
-        systemLimit.businessObject.name = "SL_" + processOperator.businessObject.name;
+        systemLimit.businessObject.name = "SL_" + (processOperator.businessObject.name || '');
     }
     // Calculate positioning of shapes
     const sizesAndPositions = calculateSizeAndPositions(systemLimit, incomingFlows, outgoingFlows);

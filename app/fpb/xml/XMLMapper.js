@@ -7,6 +7,12 @@
 import { modelReplacer } from '../export/serializeModel.js';
 
 class XMLMapper {
+    /** At least two points with numeric coordinates */
+    static _usableWaypoints(waypoints) {
+        return Array.isArray(waypoints) && waypoints.length >= 2 && waypoints.every((point) =>
+            point && Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y)));
+    }
+
     // Constants
     static DEFAULT_WAYPOINTS = [
         { "original": { "x": 100, "y": 100 }, "x": 100, "y": 100 },
@@ -48,11 +54,12 @@ class XMLMapper {
     /**
      * Convert JSON to XML while preserving original data
      */
-    async convertToXML(jsonData) {
+    async convertToXML(jsonData, options = {}) {
         try {
 
-            // Step 1: Convert ModdleElements to proper JSON format (like normal JSON export)
-            const properJsonData = this._convertModdleElementsToProperJSON(jsonData);
+            // Step 1: Convert ModdleElements to proper JSON format (like normal JSON export);
+            // `withLayout: false` leaves the visual information out
+            const properJsonData = this._convertModdleElementsToProperJSON(jsonData, options);
 
             // Use schema-compliant conversion
             const xmlString = this._convertJSONtoXML(properJsonData);
@@ -278,10 +285,10 @@ class XMLMapper {
      * Convert ModdleElements to proper JSON format (like normal JSON export)
      * Uses the same replacer as the download, see export/serializeModel
      */
-    _convertModdleElementsToProperJSON(data) {
+    _convertModdleElementsToProperJSON(data, options = {}) {
 
 
-        const replacer = modelReplacer();
+        const replacer = modelReplacer({ withLayout: options.withLayout !== false });
 
         try {
             const jsonString = JSON.stringify(data, replacer, 4);
@@ -452,6 +459,22 @@ class XMLMapper {
         // Extract systemLimit
         const systemLimit = processElement.getElementsByTagName('systemLimit')[0];
         let systemLimitData = null;
+        if (!systemLimit && (processElement.getElementsByTagName('state').length ||
+                processElement.getElementsByTagName('processOperator').length)) {
+            // States and operators live in the system limit. Without one they
+            // were all dropped without a word; a system limit is added, and
+            // the automatic layout places it.
+            const systemLimitId = processId + '_systemLimit';
+            processEntry.process.consistsOfSystemLimit = systemLimitId;
+            processEntry.process.elementsContainer.push(systemLimitId);
+            systemLimitData = {
+                "$type": "fpb:SystemLimit",
+                "id": systemLimitId,
+                "name": processElement.getAttribute('name') || '',
+                "elementsContainer": []
+            };
+            processEntry.elementDataInformation.push(systemLimitData);
+        }
         if (systemLimit) {
             const systemLimitId = systemLimit.getAttribute('id');
             processEntry.process.consistsOfSystemLimit = systemLimitId;
@@ -588,13 +611,17 @@ class XMLMapper {
                     "targetRef": flowInfo.targetRef
                 };
 
-                // Waypoints from the file if it carries them, otherwise minimal
-                // ones for the layout engine to recalculate.
+                // Waypoints from the file if it carries usable ones. Otherwise
+                // none: then the flow counts as not laid out and is routed
+                // between its ends. Placeholder waypoints counted as complete
+                // layout, and the flow was drawn far away from its elements.
                 const flowVisual = {
                     "id": flowId,
-                    "type": flowType,
-                    "waypoints": flowInfo.waypoints || XMLMapper.DEFAULT_WAYPOINTS
+                    "type": flowType
                 };
+                if (XMLMapper._usableWaypoints(flowInfo.waypoints)) {
+                    flowVisual.waypoints = flowInfo.waypoints;
+                }
 
                 processEntry.elementDataInformation.push(flowData);
                 processEntry.elementVisualInformation.push(flowVisual);

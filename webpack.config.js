@@ -7,6 +7,9 @@ const aliases = require('./build/aliases');
 module.exports = (env, argv) => {
   const isProduction = argv.mode === 'production';
   const shouldAnalyze = argv.analyze;
+  // `--env coverage`: instrument app and API for the E2E coverage run
+  // (playwright.coverage.config.js); never in a normal build
+  const withCoverage = Boolean(env && env.coverage);
 
   return {
     entry: {
@@ -29,7 +32,8 @@ module.exports = (env, argv) => {
           use: {
             loader: 'babel-loader',
             options: {
-              presets: ['@babel/preset-env', '@babel/preset-react']
+              presets: ['@babel/preset-env', '@babel/preset-react'],
+              plugins: withCoverage ? [['istanbul', { include: ['app/**', 'src/**'] }]] : []
             }
           }
         },
@@ -110,7 +114,7 @@ module.exports = (env, argv) => {
       ],
       compress: true,
       port: 3001,
-      open: true
+      open: !withCoverage
     }
   };
 };

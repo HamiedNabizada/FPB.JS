@@ -1,5 +1,5 @@
 // tests/e2e/element-lifecycle.spec.js
-import { test, expect } from '@playwright/test';
+import { test, expect } from './support/test';
 import { ModelerPage } from './pages/ModelerPage';
 
 /**

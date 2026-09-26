@@ -1,5 +1,5 @@
 // tests/e2e/decomposition-preview.spec.js
-import { test, expect } from '@playwright/test';
+import { test, expect } from './support/test';
 import { ImportPage } from './pages/ImportPage';
 import basis from './fixtures/temperieren.json';
 

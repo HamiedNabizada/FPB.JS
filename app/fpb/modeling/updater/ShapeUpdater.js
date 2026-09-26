@@ -30,7 +30,7 @@ import {
  * - shape.move: elementsContainer update, Szenario 6 (boundary move detection)
  */
 export default function ShapeUpdater(
-  eventBus, fpbFactory, canvas, elementFactory, config, fpbjs) {
+  eventBus, fpbFactory, canvas, elementFactory, config, fpbjs, commandStack, injector) {
 
   CommandInterceptor.call(this, eventBus);
 
@@ -40,6 +40,15 @@ export default function ShapeUpdater(
   this._config = config;
   this._eventBus = eventBus;
   this._fpbjs = fpbjs;
+  this._commandStack = commandStack;
+  this._injector = injector;
+
+  // States that landed on the boundary during the running command. Moving
+  // several at once asked once per state, and the dialog kept only the last
+  // question: the others stayed on the boundary, unconnected above. One
+  // question for all of them once the command is done.
+  this._boundaryItems = null;
+  eventBus.on('commandStack.changed', () => this._askForBoundary());
 
   const self = this;
 
@@ -78,7 +87,9 @@ ShapeUpdater.$inject = [
   'canvas',
   'elementFactory',
   'config.configFile',
-  'fpbjs'
+  'fpbjs',
+  'commandStack',
+  'injector'
 ];
 
 
@@ -150,18 +161,7 @@ ShapeUpdater.prototype._handleCreate = function (element, process_rootElement) {
       if (process_rootElement.businessObject.isDecomposedProcessOperator) {
         const borderPosition = checkIfOnSystemBorder(processSystemLimit, element);
         if (borderPosition === 'onUpperBorder' || borderPosition === 'onBottomBorder') {
-          this._eventBus.fire('confirmation.required', {
-            title: 'Confirm boundary placement',
-            message: 'This state will become an input/output of the parent process operator.',
-            details: 'The state will be created on the parent process and connected to the process operator.',
-            isBlocked: false,
-            action: {
-              type: 'create_on_boundary',
-              element: element,
-              borderPosition: borderPosition,
-              processRootElement: process_rootElement
-            }
-          });
+          this._queueBoundary('create_on_boundary', { element, borderPosition }, process_rootElement);
         }
       }
     } else {
@@ -295,6 +295,11 @@ ShapeUpdater.prototype._handleDelete = function (element, process_rootElement) {
                   removeTracked(parentProcessOperatorShape.incoming, flow);
                 }
               });
+
+              // A removed parallel or alternative flow must leave the tandem
+              // of its partners, as in the deep delete of ConnectionUpdater;
+              // it stayed in their inTandemWith and went into the export
+              this._injector.get('connectionUpdater')._unlinkRemovedTandems(flowsToRemove, parentSystemLimit);
             }
           }
         }
@@ -381,25 +386,62 @@ ShapeUpdater.prototype._handleMove = function (element, process_rootElement, con
 
         // Only if state was moved from inside to the boundary
         if (!wasOnBorder && (isNowOnBorder === 'onUpperBorder' || isNowOnBorder === 'onBottomBorder')) {
-          this._eventBus.fire('confirmation.required', {
-            title: 'Confirm boundary placement',
-            message: 'This state will become an input/output of the parent process operator.',
-            details: 'The state will be created on the parent process and connected to the process operator.',
-            isBlocked: false,
-            action: {
-              type: 'move_to_boundary',
-              element: element,
-              oldPosition: { x: oldX, y: oldY },
-              borderPosition: isNowOnBorder,
-              processRootElement: process_rootElement
-            }
-          });
+          this._queueBoundary('move_to_boundary', {
+            element,
+            oldPosition: { x: oldX, y: oldY },
+            borderPosition: isNowOnBorder
+          }, process_rootElement);
         }
       }
     }
   }
 };
 
+
+ShapeUpdater.prototype._queueBoundary = function (type, item, processRootElement) {
+  if (!this._boundaryItems) {
+    this._boundaryItems = { type, items: [], processRootElement };
+  }
+  this._boundaryItems.items.push(item);
+};
+
+/**
+ * Szenario 4 and 6: asks once, after the command, for all states the command
+ * put on the boundary. `stackIndex` lets a cancel take back exactly that
+ * command (see ConfirmationHandler).
+ */
+ShapeUpdater.prototype._askForBoundary = function () {
+  const pending = this._boundaryItems;
+  this._boundaryItems = null;
+
+  if (!pending) {
+    return;
+  }
+
+  const several = pending.items.length > 1;
+  const first = pending.items[0];
+
+  this._eventBus.fire('confirmation.required', {
+    title: 'Confirm boundary placement',
+    message: several
+      ? 'These ' + pending.items.length + ' states will become inputs/outputs of the parent process operator.'
+      : 'This state will become an input/output of the parent process operator.',
+    details: several
+      ? 'The states will be created on the parent process and connected to the process operator.'
+      : 'The state will be created on the parent process and connected to the process operator.',
+    isBlocked: false,
+    action: {
+      type: pending.type,
+      // one state: the fields as before; several: all of them in items
+      element: first.element,
+      oldPosition: first.oldPosition,
+      borderPosition: first.borderPosition,
+      items: pending.items,
+      processRootElement: pending.processRootElement,
+      stackIndex: this._commandStack ? this._commandStack._stackIdx : undefined
+    }
+  });
+};
 
 /////// helpers ///////////////////////////////////
 

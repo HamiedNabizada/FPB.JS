@@ -2,7 +2,7 @@
 // Touch input on an emulated tablet and phone. Drags are sent as real touch
 // sequences through the Chrome DevTools protocol; Playwright's own touchscreen
 // only knows taps.
-import { test, expect, devices } from '@playwright/test';
+import { test, expect, devices } from './support/test';
 import fs from 'fs';
 import path from 'path';
 
@@ -19,36 +19,84 @@ async function openModel(page) {
   await page.waitForTimeout(300);
 }
 
+/**
+ * Finger moves. Chromium gets real input events through CDP. Firefox and
+ * WebKit have no CDP; there the page receives TouchEvents built in the page,
+ * sent to the element under the first finger as a browser would.
+ */
 function touchDriver(page, context) {
+  const chromium = context.browser().browserType().name() === 'chromium';
   let cdp;
-  const session = async () => {
-    // Finger moves are sent through CDP, which only Chromium offers
-    test.skip(context.browser().browserType().name() !== 'chromium', 'touch gestures need CDP (Chromium only)');
-    return cdp || (cdp = await context.newCDPSession(page));
+  const session = async () => cdp || (cdp = await context.newCDPSession(page));
+
+  const send = async (type, points) => {
+    if (chromium) {
+      const client = await session();
+      await client.send('Input.dispatchTouchEvent', { type, touchPoints: points });
+      return;
+    }
+    await page.evaluate(({ type, points }) => {
+      const domType = { touchStart: 'touchstart', touchMove: 'touchmove', touchEnd: 'touchend' }[type];
+      if (type === 'touchStart') {
+        window.__touchTarget = document.elementFromPoint(points[0].x, points[0].y);
+      }
+      const target = window.__touchTarget || document.body;
+      const touchAt = (p, i) => {
+        const init = { identifier: i, target, clientX: p.x, clientY: p.y, pageX: p.x, pageY: p.y, screenX: p.x, screenY: p.y };
+        try {
+          return new Touch(init);
+        } catch (e) {
+          // WebKit has no Touch constructor
+          return init;
+        }
+      };
+      const touches = points.map(touchAt);
+      const last = window.__lastTouches || touches;
+      const init = {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        touches,
+        targetTouches: touches,
+        changedTouches: type === 'touchEnd' ? last : touches
+      };
+      let event;
+      try {
+        event = new TouchEvent(domType, init);
+      } catch (e) {
+        // WebKit (Safari) has no TouchEvent constructor either: the legacy way
+        event = document.createEvent('TouchEvent');
+        event.initEvent(domType, true, true);
+        ['touches', 'targetTouches', 'changedTouches'].forEach((name) => {
+          Object.defineProperty(event, name, { value: init[name] });
+        });
+      }
+      target.dispatchEvent(event);
+      window.__lastTouches = type === 'touchEnd' ? null : touches;
+      if (type === 'touchEnd') {
+        window.__touchTarget = null;
+      }
+    }, { type, points });
   };
+
   return {
     async drag([x1, y1], [x2, y2], steps = 12) {
-      const client = await session();
-      await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x1, y: y1 }] });
+      await send('touchStart', [{ x: x1, y: y1 }]);
       for (let i = 1; i <= steps; i++) {
-        await client.send('Input.dispatchTouchEvent', {
-          type: 'touchMove',
-          touchPoints: [{ x: x1 + (x2 - x1) * i / steps, y: y1 + (y2 - y1) * i / steps }]
-        });
+        await send('touchMove', [{ x: x1 + (x2 - x1) * i / steps, y: y1 + (y2 - y1) * i / steps }]);
         await page.waitForTimeout(25);
       }
-      await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      await send('touchEnd', []);
       await page.waitForTimeout(500);
     },
     async pinch([cx, cy], from, to, steps = 8) {
-      const client = await session();
       const at = (d) => [{ x: cx - d, y: cy }, { x: cx + d, y: cy }];
-      await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: at(from) });
+      await send('touchStart', at(from));
       for (let i = 1; i <= steps; i++) {
-        await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: at(from + (to - from) * i / steps) });
+        await send('touchMove', at(from + (to - from) * i / steps));
         await page.waitForTimeout(25);
       }
-      await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      await send('touchEnd', []);
       await page.waitForTimeout(300);
     }
   };
@@ -187,7 +235,12 @@ for (const [label, device] of [['tablet', devices['iPad (gen 7)']], ['phone', de
       expect(await countConnections(page)).toBe(before + 2);
     });
 
-    test('opens the label editor with a double tap', async ({ page }) => {
+    test('opens the label editor with a double tap', async ({ page, browserName }) => {
+      // Playwright's WebKit on Windows turns page.touchscreen.tap into mouse
+      // clicks before touchend, so the editor opens through its own emulated
+      // dblclick, not through the app's tap handling; that timing varies. A
+      // real iPad sends touches first, as Chromium and Firefox do here.
+      test.skip(browserName === 'webkit', 'WebKit tap emulation differs from iOS');
       await openModel(page);
       const [x, y] = await elementCenter(page, 'Gutprodukt');
       await page.touchscreen.tap(x, y);

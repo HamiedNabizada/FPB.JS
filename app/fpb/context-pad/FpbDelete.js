@@ -70,6 +70,21 @@ FpbDelete.prototype.getLayerConsequences = function (element) {
         details: 'You will be redirected to the parent process. All elements in this process will be deleted.'
       };
     }
+
+    // Elsewhere the system limit takes its contents along, decomposed
+    // operators and their layers included: the same question as for one of
+    // those operators on its own
+    const decomposed = (element.children || []).filter((child) =>
+      is(child, ELEMENT_TYPES.PROCESS_OPERATOR) && child.businessObject && child.businessObject.decomposedView);
+    if (decomposed.length) {
+      return {
+        type: 'decomposed_process_operator',
+        message: decomposed.length === 1
+          ? 'The system limit contains a decomposed process operator. Deleting it will also remove the subordinate layer.'
+          : 'The system limit contains ' + decomposed.length + ' decomposed process operators. Deleting it will also remove their subordinate layers.',
+        details: 'The entire subordinate processes will be deleted.'
+      };
+    }
   }
 
   return null;

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Hand written VDI 3682 file in the FPB.JS XML dialect: one process, every
+     state type, a parallel branching, a usage and a characteristic with
+     validity limits and actual values. -->
+<project xmlns="http://www.vdivde.de/3682" xmlns:visual="http://www.fpbjs.net/visual">
+  <projectInformation entryPoint="P1" name="Handgeschrieben" targetNamespace="http://example.org/fpb"/>
+  <process id="P1">
+    <systemLimit id="SL1" name="Fraesen" visual:x="100" visual:y="100" visual:width="600" visual:height="500"/>
+    <states>
+      <state stateType="product" visual:x="175" visual:y="75" visual:width="50" visual:height="50">
+        <identification uniqueIdent="S1" shortName="Rohteil" longName="Rohteil aus Aluminium" versionNumber="2" revisionNumber="1"/>
+        <characteristics>
+          <characteristic>
+            <identification uniqueIdent="C1" shortName="Laenge" longName="Laenge des Rohteils"/>
+            <descriptiveElement valueDeterminationProcess="Messung" representivity="Stichprobe" setpointValue="100" unit="mm">
+              <validityLimits limitType="range" from="90" to="110"/>
+              <actualValues value="101" unit="mm"/>
+              <actualValues value="99" unit="mm"/>
+            </descriptiveElement>
+            <relationalElement view="geometrisch" model="CAD" regulationsForRelationalGeneration="ISO 2768"/>
+          </characteristic>
+        </characteristics>
+        <assignments><assigned id="PO1"/></assignments>
+        <flows><flow id="F1"><entry id="S1"/><exit id="PO1"/></flow></flows>
+      </state>
+      <state stateType="energy" visual:x="375" visual:y="75" visual:width="50" visual:height="50">
+        <identification uniqueIdent="S2" shortName="Strom"/>
+        <assignments><assigned id="PO1"/></assignments>
+        <flows><flow id="F2"><entry id="S2"/><exit id="PO1"/></flow></flows>
+      </state>
+      <state stateType="information" visual:x="525" visual:y="75" visual:width="50" visual:height="50">
+        <identification uniqueIdent="S3" shortName="NC-Programm"/>
+        <assignments><assigned id="PO1"/></assignments>
+        <flows><flow id="F3"><entry id="S3"/><exit id="PO1"/></flow></flows>
+      </state>
+      <state stateType="product" visual:x="225" visual:y="575" visual:width="50" visual:height="50">
+        <identification uniqueIdent="S4" shortName="Fertigteil"/>
+        <assignments><assigned id="PO1"/></assignments>
+        <flows><flow id="F4"><entry id="PO1"/><exit id="S4"/></flow></flows>
+      </state>
+      <state stateType="product" visual:x="475" visual:y="575" visual:width="50" visual:height="50">
+        <identification uniqueIdent="S5" shortName="Spaene"/>
+        <assignments><assigned id="PO1"/></assignments>
+        <flows><flow id="F5"><entry id="PO1"/><exit id="S5"/></flow></flows>
+      </state>
+    </states>
+    <processOperators>
+      <processOperator visual:x="325" visual:y="300" visual:width="150" visual:height="80">
+        <identification uniqueIdent="PO1" shortName="Fraesen"/>
+        <assignments><assigned id="TR1"/></assignments>
+        <flows>
+          <flow id="F1"><entry id="S1"/><exit id="PO1"/></flow>
+          <flow id="F2"><entry id="S2"/><exit id="PO1"/></flow>
+          <flow id="F3"><entry id="S3"/><exit id="PO1"/></flow>
+          <flow id="F4"><entry id="PO1"/><exit id="S4"/></flow>
+          <flow id="F5"><entry id="PO1"/><exit id="S5"/></flow>
+        </flows>
+        <usages><usage id="U1"/></usages>
+      </processOperator>
+    </processOperators>
+    <technicalResources>
+      <technicalResource visual:x="800" visual:y="300" visual:width="150" visual:height="80">
+        <identification uniqueIdent="TR1" shortName="Fraesmaschine"/>
+        <assignments><assigned id="PO1"/></assignments>
+        <usages><usage id="U1"/></usages>
+      </technicalResource>
+    </technicalResources>
+    <flowContainer>
+      <flow id="F1" flowType="flow" visual:waypoints="200,125 200,320 325,320"/>
+      <flow id="F2" flowType="flow" visual:waypoints="400,125 400,300"/>
+      <flow id="F3" flowType="flow" visual:waypoints="550,125 550,320 475,320"/>
+      <flow id="F4" flowType="parallelFlow" visual:waypoints="400,380 400,480 250,480 250,575"/>
+      <flow id="F5" flowType="parallelFlow" visual:waypoints="400,380 400,480 500,480 500,575"/>
+      <flow id="U1" flowType="usage" visual:waypoints="475,340 800,340"/>
+    </flowContainer>
+  </process>
+</project>

@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useState } from 'react';
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Tree } from 'react-arborist';
 import Form from 'react-bootstrap/Form';
 import { createArboristTreeData, getPathToProcess } from '../utils/treeUtils';
@@ -13,6 +13,16 @@ const ProcessTreeView = memo(({ processes, namesRevision, selectedProcess, onPro
         if (!selectedProcess) return [];
         return getPathToProcess(selectedProcess, processes);
     }, [selectedProcess, processes]);
+
+    // initialOpenState only counts when the tree is first shown. A layer
+    // reached or created while the tree is open stayed hidden under a closed
+    // node: open the path to the current layer whenever it changes.
+    const treeRef = useRef(null);
+    useEffect(() => {
+        const tree = treeRef.current;
+        if (!tree) return;
+        initiallyOpenIds.forEach((id) => tree.open(id));
+    }, [initiallyOpenIds, treeData]);
 
     if (processes.length === 0) {
         return null;
@@ -84,6 +94,7 @@ const ProcessTreeView = memo(({ processes, namesRevision, selectedProcess, onPro
                 size="sm"
             />
             <Tree
+                ref={treeRef}
                 data={treeData}
                 disableDrag={true}
                 disableDrop={true}

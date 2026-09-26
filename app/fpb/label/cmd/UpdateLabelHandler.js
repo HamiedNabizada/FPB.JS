@@ -194,7 +194,7 @@ UpdateLabelHandler.prototype._syncSystemLimitName = function(element, ctx) {
   }
 
   const systemLimit = getSystemLimit(container);
-  const generatedName = (operatorName) => 'SL_' + operatorName;
+  const generatedName = (operatorName) => 'SL_' + (operatorName || '');
 
   if (!systemLimit || systemLimit.businessObject.name !== generatedName(ctx.oldLabel)) {
     return;

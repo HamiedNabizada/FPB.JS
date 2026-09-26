@@ -131,6 +131,10 @@ export interface FpbEventMap {
   'process.switched': { selectedProcess: Shape };
   /** An import went through with warnings (skipped elements, automatic layout) */
   'import.report': { warnings: ImportWarning[] };
+  /** An import is complete and the model is on the canvas (importJSON and importXML return before this) */
+  'import.done': Record<string, never>;
+  /** An import failed; the previous model stays */
+  'import.error': { message: string; details?: string };
 }
 
 /** One warning of an import report */
@@ -236,8 +240,8 @@ export interface Canvas {
   removeConnection(connection: any): void;
   getRootElement(): Shape;
   setRootElement(rootElement: any, override?: boolean): Shape;
-  zoom(level: number | 'fit-viewport'): number;
-  getZoom(): number;
+  /** Without argument: the current zoom level */
+  zoom(level?: number | 'fit-viewport'): number;
   scroll(delta: Point): void;
   viewbox(box?: any): any;
   getGraphics(element: Element, secondary?: boolean): SVGElement;
@@ -437,6 +441,8 @@ export interface FpbInstance {
    * Register an event listener.
    * Supports mapped event names ('changed', 'element.added', etc.)
    * and any custom or internal diagram-js event name.
+   * Listeners only observe: a returned value is ignored, so it cannot stop
+   * the event for the modeler's own listeners.
    */
   on<K extends FpbEventName>(event: K, callback: (payload: FpbEventMap[K]) => void): void;
   on(event: string, callback: (payload: any) => void): void;
@@ -466,7 +472,11 @@ export interface FpbInstance {
   /** Import a diagram from a VDI 3682 XML string */
   importXML(xmlString: string): Promise<void>;
 
-  /** Export the current diagram as a JSON object (ProjectDefinition + ProcessEntries) */
+  /**
+   * Export the current diagram as plain data (ProjectDefinition + ProcessEntries),
+   * the same as the JSON download: references are ids, so it can go straight
+   * to JSON.stringify, postMessage or importJSON.
+   */
   toJSON(): (ProjectDefinition | ProcessEntry)[];
 
   /** Export the current diagram as a VDI 3682 XML string */
@@ -503,8 +513,11 @@ export interface FpbInstance {
 
   // --- Selection ---
 
-  /** Select an element by its ID */
-  select(elementId: string): void;
+  /**
+   * Select an element by its ID; with `scroll: true` the view moves to it.
+   * Returns false if there is no such element (the selection stays).
+   */
+  select(elementId: string, options?: { scroll?: boolean }): boolean;
 
   /** Get currently selected elements */
   getSelected(): Element[];

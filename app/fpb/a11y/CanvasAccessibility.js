@@ -30,6 +30,14 @@ export default function CanvasAccessibility(canvas, palette, eventBus) {
     self._makePaletteFocusable();
   });
 
+  // A focusable palette entry keeps the focus after it was clicked; the
+  // diagram-js keyboard only listens on the canvas, so Ctrl+Z and every
+  // other shortcut did nothing after placing an element from the palette.
+  // After the gesture (create, lasso, hand) the canvas takes the focus back.
+  eventBus.on('drag.cleanup', function () {
+    self._focusCanvasFromPalette();
+  });
+
   // Elements get their name as a label when they are drawn. The priority is
   // above the one of FpbRenderer (2000): a renderer returns the drawn shape,
   // and a returned value ends the propagation, so a lower priority would never
@@ -77,6 +85,15 @@ CanvasAccessibility.prototype._makePaletteFocusable = function () {
       palette.triggerEntry(entry.getAttribute('data-action'), 'click', event);
     });
   });
+};
+
+CanvasAccessibility.prototype._focusCanvasFromPalette = function () {
+  const container = this._palette._container;
+  const active = document.activeElement;
+
+  if (container && active && container.contains(active)) {
+    this._canvas.focus();
+  }
 };
 
 CanvasAccessibility.prototype._describeElement = function (element, gfx) {

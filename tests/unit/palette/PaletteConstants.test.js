@@ -60,10 +60,6 @@ describe('PaletteConstants', () => {
       expect(PALETTE_GROUPS.TOOLS).toBe('tools');
     });
 
-    it('defines ALIGN group', () => {
-      expect(PALETTE_GROUPS.ALIGN).toBe('align');
-    });
-
   });
 
   // ============================================
@@ -104,20 +100,6 @@ describe('PaletteConstants', () => {
       expect(TOOL_ICONS.LASSO).toBe('palette-icon-lasso-tool');
       expect(TOOL_ICONS.SPACE).toBe('palette-icon-space-tool');
       expect(TOOL_ICONS.HAND).toBe('palette-icon-hand-tool');
-    });
-
-    it('defines alignment icons', () => {
-      expect(TOOL_ICONS.ALIGN_LEFT).toBe('palette-icon-align-left');
-      expect(TOOL_ICONS.ALIGN_CENTER).toBe('palette-icon-align-center');
-      expect(TOOL_ICONS.ALIGN_RIGHT).toBe('palette-icon-align-right');
-      expect(TOOL_ICONS.ALIGN_TOP).toBe('palette-icon-align-top');
-      expect(TOOL_ICONS.ALIGN_MIDDLE).toBe('palette-icon-align-middle');
-      expect(TOOL_ICONS.ALIGN_BOTTOM).toBe('palette-icon-align-bottom');
-    });
-
-    it('defines distribution icons', () => {
-      expect(TOOL_ICONS.DISTRIBUTE_HORIZONTAL).toBe('palette-icon-distribute-horizontal');
-      expect(TOOL_ICONS.DISTRIBUTE_VERTICAL).toBe('palette-icon-distribute-vertical');
     });
 
     it('all tool icons follow palette-icon-* convention', () => {
@@ -176,28 +158,6 @@ describe('PaletteConstants', () => {
 
     });
 
-    describe('Align Tool IDs', () => {
-
-      it('defines align separator', () => {
-        expect(PALETTE_ENTRY_IDS.ALIGN_SEPARATOR).toBe('align-separator');
-      });
-
-      it('defines alignment IDs', () => {
-        expect(PALETTE_ENTRY_IDS.ALIGN_LEFT).toBe('align-left');
-        expect(PALETTE_ENTRY_IDS.ALIGN_CENTER).toBe('align-center');
-        expect(PALETTE_ENTRY_IDS.ALIGN_RIGHT).toBe('align-right');
-        expect(PALETTE_ENTRY_IDS.ALIGN_TOP).toBe('align-top');
-        expect(PALETTE_ENTRY_IDS.ALIGN_MIDDLE).toBe('align-middle');
-        expect(PALETTE_ENTRY_IDS.ALIGN_BOTTOM).toBe('align-bottom');
-      });
-
-      it('defines distribution IDs', () => {
-        expect(PALETTE_ENTRY_IDS.DISTRIBUTE_HORIZONTAL).toBe('distribute-horizontal');
-        expect(PALETTE_ENTRY_IDS.DISTRIBUTE_VERTICAL).toBe('distribute-vertical');
-      });
-
-    });
-
   });
 
   // ============================================
@@ -240,24 +200,6 @@ describe('PaletteConstants', () => {
         expect(TOOLTIP_KEYS.ACTIVATE_LASSO).toBe('Activate Lasso Tool');
         expect(TOOLTIP_KEYS.ACTIVATE_SPACE).toBe('Activate the create/remove space tool');
         expect(TOOLTIP_KEYS.ACTIVATE_HAND).toBe('Activate the hand tool');
-      });
-
-    });
-
-    describe('Align Tooltips', () => {
-
-      it('defines alignment tooltips', () => {
-        expect(TOOLTIP_KEYS.ALIGN_LEFT).toBe('Align Left');
-        expect(TOOLTIP_KEYS.ALIGN_CENTER).toBe('Align Center');
-        expect(TOOLTIP_KEYS.ALIGN_RIGHT).toBe('Align Right');
-        expect(TOOLTIP_KEYS.ALIGN_TOP).toBe('Align Top');
-        expect(TOOLTIP_KEYS.ALIGN_MIDDLE).toBe('Align Middle');
-        expect(TOOLTIP_KEYS.ALIGN_BOTTOM).toBe('Align Bottom');
-      });
-
-      it('defines distribution tooltips', () => {
-        expect(TOOLTIP_KEYS.DISTRIBUTE_HORIZONTAL).toBe('Distribute Horizontally');
-        expect(TOOLTIP_KEYS.DISTRIBUTE_VERTICAL).toBe('Distribute Vertically');
       });
 
     });

@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!-- Foreign VDI 3682 file with unusual parts: visual attributes on the process,
+     visible/collapsed, an unknown stateType, a state without identification, a
+     characteristic without identification and relational element and one with
+     nothing but its identification, an unreadable validity limit, an empty
+     assignment, flows with one end or an end outside the file, an unknown
+     flowType, a lone alternative flow and a usage without waypoints. -->
+<project xmlns="http://www.vdivde.de/3682" xmlns:visual="http://www.fpbjs.net/visual">
+  <projectInformation entryPoint="P1" name="Seltsam" targetNamespace="http://example.org/x"/>
+  <process id="P1" visual:x="0" visual:y="0">
+    <systemLimit id="SL1" name="Grenze" visual:x="100" visual:y="100" visual:width="600" visual:height="500" visual:visible="true" visual:collapsed="false"/>
+    <states>
+      <state stateType="material" visual:x="175" visual:y="75" visual:width="50" visual:height="50">
+        <identification uniqueIdent="S1" shortName="Roh"/>
+        <characteristics>
+          <characteristic>
+            <descriptiveElement setpointValue="5" unit="kg"><validityLimits limitType="max" from="abc" to="7"/></descriptiveElement>
+          </characteristic>
+          <characteristic><identification uniqueIdent="C2" shortName="Nur Name"/></characteristic>
+        </characteristics>
+        <assignments><assigned id="PO1"/><assigned/></assignments>
+        <flows><flow id="F1"><entry id="S1"/><exit id="PO1"/></flow><flow><entry id="S1"/></flow></flows>
+      </state>
+      <state stateType="energy" visual:x="375" visual:y="75" visual:width="50" visual:height="50">
+        <flows><flow id="FX"><entry id="PO1"/><exit id="ELSEWHERE"/></flow></flows>
+      </state>
+      <state stateType="product" visual:x="275" visual:y="575" visual:width="50" visual:height="50">
+        <identification uniqueIdent="S3" shortName="Aus"/>
+        <flows><flow id="F3"><entry id="PO1"/><exit id="S3"/></flow></flows>
+      </state>
+    </states>
+    <processOperators>
+      <processOperator visual:x="325" visual:y="300" visual:width="150" visual:height="80">
+        <identification uniqueIdent="PO1" shortName="Tun"/>
+        <usages><usage id="U1"/></usages>
+      </processOperator>
+    </processOperators>
+    <technicalResources>
+      <technicalResource visual:x="800" visual:y="300" visual:width="150" visual:height="80">
+        <identification uniqueIdent="TR1" shortName="Maschine"/>
+        <characteristics><characteristic><identification uniqueIdent="C3" shortName="Leistung"/><descriptiveElement setpointValue="3" unit="kW"/></characteristic></characteristics>
+        <usages><usage id="U1"/></usages>
+      </technicalResource>
+    </technicalResources>
+    <flowContainer>
+      <flow id="F1" flowType="alternativeFlow" visual:waypoints="200,125 200,320 325,320"/>
+      <flow id="F3" flowType="somethingElse" visual:waypoints="300,380 300,575"/>
+      <flow id="U1" flowType="usage"/>
+    </flowContainer>
+  </process>
+</project>

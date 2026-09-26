@@ -109,6 +109,7 @@ export default function ConnectionUpdater(
     context.fpbJournal = runJournaled(function () {
       self._handleReconnect(context);
       self.updateConnection(context);
+      self._handleReconnectEnds(context);
     });
   }));
 
@@ -189,49 +190,7 @@ ConnectionUpdater.prototype._handleCreate = function (element, context, process_
       });
 
       // Layer consistency: Create state on child layer if not already present
-      const decomposedProcess = processOperatorShape.businessObject.decomposedView;
-      const childSystemLimit = getSystemLimit(decomposedProcess);
-      if (childSystemLimit && childSystemLimit.businessObject.elementsContainer) {
-        const existingStateInChild = getElementById(childSystemLimit.businessObject.elementsContainer, stateShape.businessObject.id);
-        if (!existingStateInChild) {
-          // Create state on child layer
-          const newStateShape = createStateShapeForNewLayer(this._elementFactory, stateShape.businessObject.$type, stateShape.businessObject);
-          addTracked(decomposedProcess.businessObject.consistsOfStates, newStateShape.businessObject);
-          addTracked(childSystemLimit.businessObject.elementsContainer, newStateShape);
-
-          // Set position based on direction (incoming/outgoing)
-          const isIncoming = is(context.source, 'fpb:State'); // State -> ProcessOperator = incoming
-          const stateWidth = 50;
-          const stateSpacing = 20;
-
-          const targetY = isIncoming
-            ? childSystemLimit.y - 25  // Upper boundary
-            : childSystemLimit.y + childSystemLimit.height - 25;  // Lower boundary
-
-          // Place right of the outermost state already sitting on that boundary.
-          // Counting them and multiplying by a fixed spacing assumed they were
-          // packed from the left, which put the new state on top of an existing
-          // one whenever they were not.
-          let rightEdge = null;
-          (childSystemLimit.businessObject.elementsContainer || []).forEach(function(el) {
-            if (el === newStateShape) {
-              return;
-            }
-            if (isAny(el, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
-              if (Math.abs(el.y - targetY) < 30) {
-                const edge = el.x + (el.width || stateWidth);
-                if (rightEdge === null || edge > rightEdge) {
-                  rightEdge = edge;
-                }
-              }
-            }
-          });
-
-          const startX = childSystemLimit.x + 50;
-          newStateShape.x = rightEdge === null ? startX : rightEdge + stateSpacing;
-          newStateShape.y = targetY;
-        }
-      }
+      this._addStateToChild(stateShape, processOperatorShape, is(context.source, 'fpb:State'));
     }
 
     if (isAny(element, ['fpb:ParallelFlow', 'fpb:AlternativeFlow'])) {
@@ -350,53 +309,7 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
     // the state's flows although nothing changed there.
     const replacing = context.hints && context.hints.fpbReplaceConnection;
     if (processOperatorShape.businessObject.decomposedView && !replacing) {
-      const decomposedProcesses = [processOperatorShape.businessObject.decomposedView];
-      while (decomposedProcesses.length > 0) {
-        const decomposedProcess = decomposedProcesses.shift();
-        const decomposedProcessSystemLimit = getSystemLimit(decomposedProcess);
-        if (!decomposedProcessSystemLimit) continue;
-        const stateInDecomposedProcess = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, stateShape.id);
-
-        if (!stateInDecomposedProcess) {
-          continue;
-        }
-
-        const removedFlows = (stateInDecomposedProcess.outgoing || []).concat(stateInDecomposedProcess.incoming || []);
-
-        (stateInDecomposedProcess.outgoing || []).forEach(function (flow) {
-          const flowElement = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, flow.id);
-          removeTracked(decomposedProcessSystemLimit.businessObject.elementsContainer, flowElement);
-          if (flow.businessObject.targetRef) {
-            removeTracked(flow.businessObject.targetRef.incoming, flow.businessObject);
-            if (flow.businessObject.targetRef.decomposedView) {
-              decomposedProcesses.push(flow.businessObject.targetRef.decomposedView);
-            }
-          }
-          // Shape references as well. A flow left behind in target.incoming is
-          // invisible but still counts as a connection, so canConnect refuses
-          // every new connection to that element afterwards.
-          if (flow.target) {
-            removeTracked(flow.target.incoming, flow);
-          }
-        });
-
-        (stateInDecomposedProcess.incoming || []).forEach(function (flow) {
-          const flowElement = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, flow.id);
-          removeTracked(decomposedProcessSystemLimit.businessObject.elementsContainer, flowElement);
-          if (flow.businessObject.sourceRef) {
-            removeTracked(flow.businessObject.sourceRef.outgoing, flow.businessObject);
-            if (flow.businessObject.sourceRef.decomposedView) {
-              decomposedProcesses.push(flow.businessObject.sourceRef.decomposedView);
-            }
-          }
-          if (flow.source) {
-            removeTracked(flow.source.outgoing, flow);
-          }
-        });
-        removeTracked(decomposedProcessSystemLimit.businessObject.elementsContainer, stateInDecomposedProcess);
-        removeTracked(decomposedProcess.businessObject.consistsOfStates, stateInDecomposedProcess.businessObject);
-        self._unlinkRemovedTandems(removedFlows, decomposedProcessSystemLimit);
-      }
+      this._removeStateFromLayersBelow(stateShape, processOperatorShape);
     }
 
     // Partners are taken from inTandemWith itself: looking only at the current
@@ -425,6 +338,166 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
   }
 };
 
+
+/**
+ * Layer consistency (Szenario 3): a state newly connected to a decomposed
+ * operator gets its place on the boundary of the child layer, upper for an
+ * input, lower for an output.
+ */
+ConnectionUpdater.prototype._addStateToChild = function (stateShape, processOperatorShape, isIncoming) {
+  // Layer consistency: Create state on child layer if not already present
+  const decomposedProcess = processOperatorShape.businessObject.decomposedView;
+  const childSystemLimit = getSystemLimit(decomposedProcess);
+  if (childSystemLimit && childSystemLimit.businessObject.elementsContainer) {
+    const existingStateInChild = getElementById(childSystemLimit.businessObject.elementsContainer, stateShape.businessObject.id);
+    if (!existingStateInChild) {
+      // Create state on child layer
+      const newStateShape = createStateShapeForNewLayer(this._elementFactory, stateShape.businessObject.$type, stateShape.businessObject);
+      addTracked(decomposedProcess.businessObject.consistsOfStates, newStateShape.businessObject);
+      addTracked(childSystemLimit.businessObject.elementsContainer, newStateShape);
+
+      // Set position based on direction (incoming/outgoing)
+      // isIncoming: State -> ProcessOperator
+      const stateWidth = 50;
+      const stateSpacing = 20;
+
+      const targetY = isIncoming
+        ? childSystemLimit.y - 25  // Upper boundary
+        : childSystemLimit.y + childSystemLimit.height - 25;  // Lower boundary
+
+      // Place right of the outermost state already sitting on that boundary.
+      // Counting them and multiplying by a fixed spacing assumed they were
+      // packed from the left, which put the new state on top of an existing
+      // one whenever they were not.
+      let rightEdge = null;
+      (childSystemLimit.businessObject.elementsContainer || []).forEach(function(el) {
+        if (el === newStateShape) {
+          return;
+        }
+        if (isAny(el, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
+          if (Math.abs(el.y - targetY) < 30) {
+            const edge = el.x + (el.width || stateWidth);
+            if (rightEdge === null || edge > rightEdge) {
+              rightEdge = edge;
+            }
+          }
+        }
+      });
+
+      const startX = childSystemLimit.x + 50;
+      newStateShape.x = rightEdge === null ? startX : rightEdge + stateSpacing;
+      newStateShape.y = targetY;
+    }
+  }
+};
+
+/**
+ * Layer consistency (Szenario 9): a state no longer connected to a decomposed
+ * operator leaves the child layer, with its flows there, and so on down.
+ */
+ConnectionUpdater.prototype._removeStateFromLayersBelow = function (stateShape, processOperatorShape) {
+  const self = this;
+  const decomposedProcesses = [processOperatorShape.businessObject.decomposedView];
+  while (decomposedProcesses.length > 0) {
+    const decomposedProcess = decomposedProcesses.shift();
+    const decomposedProcessSystemLimit = getSystemLimit(decomposedProcess);
+    if (!decomposedProcessSystemLimit) continue;
+    const stateInDecomposedProcess = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, stateShape.id);
+
+    if (!stateInDecomposedProcess) {
+      continue;
+    }
+
+    const removedFlows = (stateInDecomposedProcess.outgoing || []).concat(stateInDecomposedProcess.incoming || []);
+
+    (stateInDecomposedProcess.outgoing || []).forEach(function (flow) {
+      const flowElement = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, flow.id);
+      removeTracked(decomposedProcessSystemLimit.businessObject.elementsContainer, flowElement);
+      if (flow.businessObject.targetRef) {
+        removeTracked(flow.businessObject.targetRef.incoming, flow.businessObject);
+        if (flow.businessObject.targetRef.decomposedView) {
+          decomposedProcesses.push(flow.businessObject.targetRef.decomposedView);
+        }
+      }
+      // Shape references as well. A flow left behind in target.incoming is
+      // invisible but still counts as a connection, so canConnect refuses
+      // every new connection to that element afterwards.
+      if (flow.target) {
+        removeTracked(flow.target.incoming, flow);
+      }
+    });
+
+    (stateInDecomposedProcess.incoming || []).forEach(function (flow) {
+      const flowElement = getElementById(decomposedProcessSystemLimit.businessObject.elementsContainer, flow.id);
+      removeTracked(decomposedProcessSystemLimit.businessObject.elementsContainer, flowElement);
+      if (flow.businessObject.sourceRef) {
+        removeTracked(flow.businessObject.sourceRef.outgoing, flow.businessObject);
+        if (flow.businessObject.sourceRef.decomposedView) {
+          decomposedProcesses.push(flow.businessObject.sourceRef.decomposedView);
+        }
+      }
+      if (flow.source) {
+        removeTracked(flow.source.outgoing, flow);
+      }
+    });
+    removeTracked(decomposedProcessSystemLimit.businessObject.elementsContainer, stateInDecomposedProcess);
+    removeTracked(decomposedProcess.businessObject.consistsOfStates, stateInDecomposedProcess.businessObject);
+    self._unlinkRemovedTandems(removedFlows, decomposedProcessSystemLimit);
+  }
+};
+
+/**
+ * Dragging an end of a flow between a state and an operator is, for the
+ * model, removing the old connection and adding the new one: the assignment
+ * of the state moves to the new operator, and a decomposed operator on either
+ * side updates its child layer. Before, only the drawing followed.
+ */
+ConnectionUpdater.prototype._handleReconnectEnds = function (context) {
+  const connection = context.connection;
+  const before = stateAndOperator(context.oldSource, context.oldTarget);
+  const after = stateAndOperator(context.newSource || connection.source, context.newTarget || connection.target);
+
+  if (!before || !after) {
+    return;
+  }
+  if (before.state === after.state && before.operator === after.operator) {
+    return;
+  }
+
+  const connectedOtherwise = (state, operator) =>
+    (state.outgoing || []).concat(state.incoming || []).some(function (flow) {
+      return flow !== connection && (flow.source === operator || flow.target === operator);
+    });
+
+  if (!connectedOtherwise(before.state, before.operator)) {
+    removeTracked(before.state.businessObject.isAssignedTo, before.operator.businessObject);
+    if (before.operator.businessObject.decomposedView) {
+      this._removeStateFromLayersBelow(before.state, before.operator);
+    }
+  }
+
+  const bo = after.state.businessObject;
+  if (!Array.isArray(bo.isAssignedTo)) {
+    setTracked(bo, 'isAssignedTo', bo.isAssignedTo ? [ bo.isAssignedTo ] : []);
+  }
+  if (bo.isAssignedTo.indexOf(after.operator.businessObject) === -1) {
+    addTracked(bo.isAssignedTo, after.operator.businessObject);
+  }
+  if (after.operator.businessObject.decomposedView) {
+    this._addStateToChild(after.state, after.operator, after.state === (context.newSource || connection.source));
+  }
+};
+
+/** The state and the operator of a flow, or null for any other pair */
+function stateAndOperator(source, target) {
+  if (is(source, 'fpb:State') && is(target, 'fpb:ProcessOperator')) {
+    return { state: source, operator: target };
+  }
+  if (is(source, 'fpb:ProcessOperator') && is(target, 'fpb:State')) {
+    return { state: target, operator: source };
+  }
+  return null;
+}
 
 /**
  * The deep delete in child layers removes flows without a command, so neither

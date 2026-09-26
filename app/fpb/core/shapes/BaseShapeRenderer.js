@@ -52,7 +52,8 @@ export class BaseShapeRenderer {
     // Truncate text if element type has a line limit
     const maxLines = this._getMaxLines(element.type);
     if (maxLines) {
-      const result = this._truncateText(displayText, element.width, maxLines);
+      // measured at the width the label is drawn in, i.e. without its padding
+      const result = this._truncateText(displayText, element.width - this._horizontalPadding(element), maxLines);
       displayText = result.text;
       wasTruncated = result.truncated;
     }
@@ -110,11 +111,11 @@ export class BaseShapeRenderer {
    * Returns { text, truncated } where truncated indicates if text was shortened.
    */
   _truncateText(text, boxWidth, maxLines) {
-    const layout = this.textRenderer.textUtil.layoutText(text, {
+    const lines = (candidate) => this.textRenderer.textUtil.layoutText(candidate, {
       box: { width: boxWidth, height: 1000 }
-    });
+    }).element.querySelectorAll('tspan');
 
-    const tspans = layout.element.querySelectorAll('tspan');
+    const tspans = lines(text);
     if (tspans.length <= maxLines) {
       return { text: text, truncated: false };
     }
@@ -125,9 +126,26 @@ export class BaseShapeRenderer {
       if (i > 0) truncatedText += ' ';
       truncatedText += tspans[i].textContent;
     }
-    truncatedText = truncatedText.trimEnd() + '\u2026';
+    truncatedText = truncatedText.trimEnd();
 
-    return { text: truncatedText, truncated: true };
+    // The ellipsis needs room too: shorten until text and ellipsis fit,
+    // otherwise the last word wrapped onto a line of its own
+    while (truncatedText.length > 1 && lines(truncatedText + '\u2026').length > maxLines) {
+      truncatedText = truncatedText.slice(0, -1).trimEnd();
+    }
+
+    return { text: truncatedText + '\u2026', truncated: true };
+  }
+
+  /**
+   * Left plus right padding the embedded label is drawn with
+   */
+  _horizontalPadding(element) {
+    if (element.type === 'fpb:ProcessOperator' || element.type === 'fpb:TechnicalResource') {
+      const config = LABEL_CONFIG.padding.processOperator;
+      return config.left + config.right;
+    }
+    return LABEL_CONFIG.padding.default * 2;
   }
 
   /**

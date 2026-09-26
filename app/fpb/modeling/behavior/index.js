@@ -6,6 +6,7 @@ import SystemLimitSmartResizeHandler from './SystemLimitSmartResizeHandler';
 import SystemLimitDropFeedbackBlocker from './SystemLimitDropFeedbackBlocker';
 import LayerUndoBoundary from './LayerUndoBoundary';
 import BoundaryStateResizeBehavior from './BoundaryStateResizeBehavior';
+import BoundaryStateMoveBehavior from './BoundaryStateMoveBehavior';
 import SystemLimitResizeHandles from './SystemLimitResizeHandles';
 import FpbFactory from '../FpbFactory';
 
@@ -19,6 +20,7 @@ export default {
     'systemLimitDropFeedbackBlocker',
     'layerUndoBoundary',
     'boundaryStateResizeBehavior',
+    'boundaryStateMoveBehavior',
     'systemLimitResizeHandles'
   ],
   __depends__: [
@@ -32,5 +34,6 @@ export default {
   systemLimitDropFeedbackBlocker: ['type', SystemLimitDropFeedbackBlocker],
   layerUndoBoundary: ['type', LayerUndoBoundary],
   boundaryStateResizeBehavior: ['type', BoundaryStateResizeBehavior],
+  boundaryStateMoveBehavior: ['type', BoundaryStateMoveBehavior],
   systemLimitResizeHandles: ['type', SystemLimitResizeHandles]
 };

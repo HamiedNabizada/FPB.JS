@@ -12,161 +12,168 @@ import {
  * - Szenario 4 & 6: State on boundary (create/move) - confirmed/cancelled
  * - Szenario 14/12: SystemLimit deletion - request/confirm
  */
-export default function ConfirmationHandler(eventBus, modeling, elementFactory) {
+export default function ConfirmationHandler(eventBus, modeling, elementFactory, commandStack) {
 
   // Scenario 4 & 6: State created/moved on boundary - confirmation
   eventBus.on('confirmation.confirmed', function(event) {
     if (event.action && (event.action.type === 'move_to_boundary' || event.action.type === 'create_on_boundary')) {
-      const element = event.action.element;
-      const borderPosition = event.action.borderPosition;
-      const processRootElement = event.action.processRootElement;
+      boundaryItems(event.action).forEach(function(item) {
+        connectOnParent(item.element, item.borderPosition, event.action.processRootElement);
+      });
+    }
+  });
 
-      // Update parent layer (create State + Connection)
-      const parentProcessOperator = processRootElement.businessObject.isDecomposedProcessOperator;
-      const parentProcess = processRootElement.businessObject.parent;
+  function connectOnParent(element, borderPosition, processRootElement) {
+    // Update parent layer (create State + Connection)
+    const parentProcessOperator = processRootElement.businessObject.isDecomposedProcessOperator;
+    const parentProcess = processRootElement.businessObject.parent;
 
-      if (parentProcess) {
-        const parentSystemLimit = getElementsFromElementsContainer(
-          parentProcess.businessObject.elementsContainer,
-          'fpb:SystemLimit'
-        )[0];
+    if (parentProcess) {
+      const parentSystemLimit = getElementsFromElementsContainer(
+        parentProcess.businessObject.elementsContainer,
+        'fpb:SystemLimit'
+      )[0];
 
-        if (parentSystemLimit) {
-          // Check if state already exists on parent layer
-          let existingParentState = getElementById(
-            parentSystemLimit.businessObject.elementsContainer,
-            element.businessObject.id
+      if (parentSystemLimit) {
+        // Check if state already exists on parent layer
+        let existingParentState = getElementById(
+          parentSystemLimit.businessObject.elementsContainer,
+          element.businessObject.id
+        );
+
+        if (!existingParentState) {
+          // Create state on parent layer
+          const parentStateShape = createStateShapeForNewLayer(
+            elementFactory,
+            element.businessObject.$type,
+            element.businessObject
           );
+          collectionAdd(parentProcess.businessObject.consistsOfStates, parentStateShape.businessObject);
+          collectionAdd(parentSystemLimit.businessObject.elementsContainer, parentStateShape);
 
-          if (!existingParentState) {
-            // Create state on parent layer
-            const parentStateShape = createStateShapeForNewLayer(
-              elementFactory,
-              element.businessObject.$type,
-              element.businessObject
-            );
-            collectionAdd(parentProcess.businessObject.consistsOfStates, parentStateShape.businessObject);
-            collectionAdd(parentSystemLimit.businessObject.elementsContainer, parentStateShape);
-
-            // Set position next to the ProcessOperator
-            const parentPOShape = getElementById(
-              parentSystemLimit.businessObject.elementsContainer,
-              parentProcessOperator.id
-            );
-            if (parentPOShape) {
-              if (borderPosition === 'onUpperBorder') {
-                parentStateShape.x = parentPOShape.x + (parentPOShape.width / 2) - 25;
-                parentStateShape.y = parentPOShape.y - 100;
-              } else {
-                parentStateShape.x = parentPOShape.x + (parentPOShape.width / 2) - 25;
-                parentStateShape.y = parentPOShape.y + parentPOShape.height + 50;
-              }
-            }
-            existingParentState = parentStateShape;
-          }
-
-          // Create connection between State and ProcessOperator on parent layer
-          let connectionExists = false;
+          // Set position next to the ProcessOperator
           const parentPOShape = getElementById(
             parentSystemLimit.businessObject.elementsContainer,
             parentProcessOperator.id
           );
-
-          if (existingParentState.outgoing) {
-            existingParentState.outgoing.forEach(function(flow) {
-              if (flow.businessObject.targetRef === parentProcessOperator) {
-                connectionExists = true;
-              }
-            });
+          if (parentPOShape) {
+            placeNextToOperator(parentStateShape, parentPOShape, parentSystemLimit, borderPosition);
           }
-          if (existingParentState.incoming) {
-            existingParentState.incoming.forEach(function(flow) {
-              if (flow.businessObject.sourceRef === parentProcessOperator) {
-                connectionExists = true;
-              }
-            });
-          }
+          existingParentState = parentStateShape;
+        }
 
-          if (!connectionExists && parentPOShape) {
-            // Calculate waypoints
-            const sourceShape = borderPosition === 'onUpperBorder' ? existingParentState : parentPOShape;
-            const targetShape = borderPosition === 'onUpperBorder' ? parentPOShape : existingParentState;
+        // Create connection between State and ProcessOperator on parent layer
+        let connectionExists = false;
+        const parentPOShape = getElementById(
+          parentSystemLimit.businessObject.elementsContainer,
+          parentProcessOperator.id
+        );
 
-            const sourceCenter = {
-              x: sourceShape.x + (sourceShape.width || 50) / 2,
-              y: sourceShape.y + (sourceShape.height || 50) / 2
-            };
-            const targetCenter = {
-              x: targetShape.x + (targetShape.width || 50) / 2,
-              y: targetShape.y + (targetShape.height || 50) / 2
-            };
-
-            const newFlow = elementFactory.createConnection({
-              type: 'fpb:Flow',
-              source: sourceShape,
-              target: targetShape,
-              waypoints: [sourceCenter, targetCenter]
-            });
-
-            collectionAdd(parentSystemLimit.businessObject.elementsContainer, newFlow);
-
-            // Set BusinessObject references
-            if (borderPosition === 'onUpperBorder') {
-              newFlow.businessObject.sourceRef = existingParentState.businessObject;
-              newFlow.businessObject.targetRef = parentProcessOperator;
-              if (!existingParentState.businessObject.outgoing) existingParentState.businessObject.outgoing = [];
-              if (!parentProcessOperator.incoming) parentProcessOperator.incoming = [];
-              collectionAdd(existingParentState.businessObject.outgoing, newFlow.businessObject);
-              collectionAdd(parentProcessOperator.incoming, newFlow.businessObject);
-            } else {
-              newFlow.businessObject.sourceRef = parentProcessOperator;
-              newFlow.businessObject.targetRef = existingParentState.businessObject;
-              if (!parentProcessOperator.outgoing) parentProcessOperator.outgoing = [];
-              if (!existingParentState.businessObject.incoming) existingParentState.businessObject.incoming = [];
-              collectionAdd(parentProcessOperator.outgoing, newFlow.businessObject);
-              collectionAdd(existingParentState.businessObject.incoming, newFlow.businessObject);
+        if (existingParentState.outgoing) {
+          existingParentState.outgoing.forEach(function(flow) {
+            if (flow.businessObject.targetRef === parentProcessOperator) {
+              connectionExists = true;
             }
-
-            // Set shape references
-            if (borderPosition === 'onUpperBorder') {
-              if (!existingParentState.outgoing) existingParentState.outgoing = [];
-              if (!parentPOShape.incoming) parentPOShape.incoming = [];
-              collectionAdd(existingParentState.outgoing, newFlow);
-              collectionAdd(parentPOShape.incoming, newFlow);
-            } else {
-              if (!parentPOShape.outgoing) parentPOShape.outgoing = [];
-              if (!existingParentState.incoming) existingParentState.incoming = [];
-              collectionAdd(parentPOShape.outgoing, newFlow);
-              collectionAdd(existingParentState.incoming, newFlow);
+          });
+        }
+        if (existingParentState.incoming) {
+          existingParentState.incoming.forEach(function(flow) {
+            if (flow.businessObject.sourceRef === parentProcessOperator) {
+              connectionExists = true;
             }
+          });
+        }
 
-            // Update isAssignedTo
-            if (!existingParentState.businessObject.isAssignedTo) existingParentState.businessObject.isAssignedTo = [];
-            collectionAdd(existingParentState.businessObject.isAssignedTo, parentProcessOperator);
+        if (!connectionExists && parentPOShape) {
+          // Calculate waypoints
+          const sourceShape = borderPosition === 'onUpperBorder' ? existingParentState : parentPOShape;
+          const targetShape = borderPosition === 'onUpperBorder' ? parentPOShape : existingParentState;
+
+          const sourceCenter = {
+            x: sourceShape.x + (sourceShape.width || 50) / 2,
+            y: sourceShape.y + (sourceShape.height || 50) / 2
+          };
+          const targetCenter = {
+            x: targetShape.x + (targetShape.width || 50) / 2,
+            y: targetShape.y + (targetShape.height || 50) / 2
+          };
+
+          const newFlow = elementFactory.createConnection({
+            type: 'fpb:Flow',
+            source: sourceShape,
+            target: targetShape,
+            waypoints: [sourceCenter, targetCenter]
+          });
+
+          collectionAdd(parentSystemLimit.businessObject.elementsContainer, newFlow);
+
+          // Set BusinessObject references
+          if (borderPosition === 'onUpperBorder') {
+            newFlow.businessObject.sourceRef = existingParentState.businessObject;
+            newFlow.businessObject.targetRef = parentProcessOperator;
+            if (!existingParentState.businessObject.outgoing) existingParentState.businessObject.outgoing = [];
+            if (!parentProcessOperator.incoming) parentProcessOperator.incoming = [];
+            collectionAdd(existingParentState.businessObject.outgoing, newFlow.businessObject);
+            collectionAdd(parentProcessOperator.incoming, newFlow.businessObject);
+          } else {
+            newFlow.businessObject.sourceRef = parentProcessOperator;
+            newFlow.businessObject.targetRef = existingParentState.businessObject;
+            if (!parentProcessOperator.outgoing) parentProcessOperator.outgoing = [];
+            if (!existingParentState.businessObject.incoming) existingParentState.businessObject.incoming = [];
+            collectionAdd(parentProcessOperator.outgoing, newFlow.businessObject);
+            collectionAdd(existingParentState.businessObject.incoming, newFlow.businessObject);
           }
+
+          // Set shape references
+          if (borderPosition === 'onUpperBorder') {
+            if (!existingParentState.outgoing) existingParentState.outgoing = [];
+            if (!parentPOShape.incoming) parentPOShape.incoming = [];
+            collectionAdd(existingParentState.outgoing, newFlow);
+            collectionAdd(parentPOShape.incoming, newFlow);
+          } else {
+            if (!parentPOShape.outgoing) parentPOShape.outgoing = [];
+            if (!existingParentState.incoming) existingParentState.incoming = [];
+            collectionAdd(parentPOShape.outgoing, newFlow);
+            collectionAdd(existingParentState.incoming, newFlow);
+          }
+
+          // Update isAssignedTo
+          if (!existingParentState.businessObject.isAssignedTo) existingParentState.businessObject.isAssignedTo = [];
+          collectionAdd(existingParentState.businessObject.isAssignedTo, parentProcessOperator);
         }
       }
     }
-  });
+  }
 
   // Scenario 6: State moved to boundary - rejection
   // Scenario 4: State created on boundary - rejection
   eventBus.on('confirmation.cancelled', function(event) {
-    if (event.action && event.action.type === 'move_to_boundary') {
-      const element = event.action.element;
-      const oldPosition = event.action.oldPosition;
-
-      // Move state back to old position
-      const deltaX = oldPosition.x - element.x;
-      const deltaY = oldPosition.y - element.y;
-      modeling.moveShape(element, { x: deltaX, y: deltaY });
-    }
-
-    if (event.action && event.action.type === 'create_on_boundary') {
-      const element = event.action.element;
-
-      // Delete state, as it must not remain on the boundary without parent connection
-      modeling.removeElements([element]);
+    const action = event.action;
+    if (action && (action.type === 'move_to_boundary' || action.type === 'create_on_boundary')) {
+      // The question follows the command that put the states on the
+      // boundary. Cancel takes exactly that command back and leaves no redo:
+      // a compensating move or delete could itself be undone, and undo then
+      // brought the state back onto the boundary, unconnected above.
+      if (typeof action.stackIndex === 'number' &&
+          commandStack._stackIdx === action.stackIndex && commandStack.canUndo()) {
+        commandStack.undo();
+        commandStack._stack.length = commandStack._stackIdx + 1;
+        eventBus.fire('commandStack.changed', { trigger: 'fpb.boundaryCancelled' });
+      } else {
+        // Something happened in between: compensate and end the history,
+        // as a confirmed dialog does
+        boundaryItems(action).forEach(function(item) {
+          if (action.type === 'move_to_boundary' && item.oldPosition) {
+            modeling.moveShape(item.element, {
+              x: item.oldPosition.x - item.element.x,
+              y: item.oldPosition.y - item.element.y
+            });
+          } else if (action.type === 'create_on_boundary') {
+            modeling.removeElements([ item.element ]);
+          }
+        });
+        commandStack.clear();
+      }
     }
 
     // Scenario 14/12: SystemLimit deletion rejected - do nothing
@@ -237,5 +244,46 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory) 
 ConfirmationHandler.$inject = [
   'eventBus',
   'modeling',
-  'elementFactory'
-];
+  'elementFactory', 'commandStack'];
+
+/** The states of a boundary question: several, or the one of older payloads */
+function boundaryItems(action) {
+  if (Array.isArray(action.items) && action.items.length) {
+    return action.items;
+  }
+  return [ { element: action.element, borderPosition: action.borderPosition, oldPosition: action.oldPosition } ];
+}
+
+/**
+ * Where the new state goes on the parent layer: above the operator for an
+ * input, below for an output, always inside the parent system limit and off
+ * its border. On a child layer a state on the border would count as an input
+ * or output of the operator one level up, unconnected there. Without room
+ * above or below, beside the operator.
+ */
+function placeNextToOperator(stateShape, operatorShape, systemLimit, borderPosition) {
+  const size = stateShape.height || 50;
+  // center at least 50 inside the edge; the border counts within 30
+  const inset = 50 - size / 2;
+
+  let x = operatorShape.x + operatorShape.width / 2 - size / 2;
+  let y = borderPosition === 'onUpperBorder'
+    ? operatorShape.y - 100
+    : operatorShape.y + operatorShape.height + 50;
+
+  if (systemLimit) {
+    const minY = systemLimit.y + inset;
+    const maxY = systemLimit.y + systemLimit.height - size - inset;
+    const clamped = Math.min(Math.max(y, minY), maxY);
+
+    if (clamped !== y) {
+      y = clamped;
+      if (y + size > operatorShape.y && y < operatorShape.y + operatorShape.height) {
+        x = operatorShape.x - size - 30;
+      }
+    }
+  }
+
+  stateShape.x = x;
+  stateShape.y = y;
+}

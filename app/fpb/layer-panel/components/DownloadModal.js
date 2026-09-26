@@ -57,6 +57,8 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
     const [exportAsDownload, setExportAsDownload] = useState(false);
     const [information, setInformation] = useState('information1');
     const [filename, setFilename] = useState('FPB');
+    // what was typed, shown again on reopen; `filename` is the sanitized one
+    const [filenameInput, setFilenameInput] = useState('FPB');
     const [eventName, setEventName] = useState('fpbjs');
     const [exportFormat, setExportFormat] = useState('json');
     const [isExporting, setIsExporting] = useState(false);
@@ -80,6 +82,7 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
     };
     
     const handleFilename = (fn) => {
+        setFilenameInput(fn);
         const validation = validateFilename(fn);
         setFilenameError(validation.valid ? null : validation.error);
         setFilename(validation.sanitized);
@@ -91,6 +94,10 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
     
     const handleExportFormat = (format) => {
         setExportFormat(format);
+        // An XML document after VDI 3682 always describes the whole project
+        if (format === 'xml') {
+            setInformation('information1');
+        }
     };
 
     const eventBus = modeler.get('eventBus');
@@ -262,7 +269,7 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                 contentType = "data:text/json;charset=utf-8,";
             } else if (exportFormat === 'xml') {
                 const xmlMapper = new XMLMapper();
-                dataEdited = await xmlMapper.convertToXML(data);
+                dataEdited = await xmlMapper.convertToXML(data, { withLayout: informationLevel !== '2' });
                 contentType = "data:text/xml;charset=utf-8,";
             } else {
                 throw new Error(`Unsupported export format: ${exportFormat}`);
@@ -324,8 +331,8 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                         <Row as={Modal.Title}>
                             <Col>Export Options</Col>
                             <Col md="auto">
-                                <Button variant="secondary" size="sm">
-                                <FontAwesomeIcon  icon="rectangle-xmark" size="lg" onClick={handleClose} />
+                                <Button variant="secondary" size="sm" aria-label="Close export options" onClick={handleClose}>
+                                <FontAwesomeIcon icon="rectangle-xmark" size="lg" />
                                 </Button>
                                 </Col>
                         </Row>
@@ -341,18 +348,28 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                     )}
                     <Row>
                         <Col>
-                            <Forms_Format onInformationLevel={handleInformationLevel} onExportAsEvent={handleExportAsEvent} onExportAsDownload={handleExportAsDownload} onExportFormat={handleExportFormat} />
+                            {/* The body is rebuilt on every open: the parts start from the
+                                current choices, so the form shows what the export will do */}
+                            <Forms_Format
+                                exportFormat={exportFormat}
+                                informationLevel={informationLevel}
+                                exportAsEvent={exportAsEvent}
+                                exportAsDownload={exportAsDownload}
+                                onInformationLevel={handleInformationLevel}
+                                onExportAsEvent={handleExportAsEvent}
+                                onExportAsDownload={handleExportAsDownload}
+                                onExportFormat={handleExportFormat} />
                         </Col>
                         <Col>
-                            <Forms_Data onInformationChange={handleInformation} />
+                            <Forms_Data information={information} exportFormat={exportFormat} onInformationChange={handleInformation} />
                         </Col>
                     </Row>
                     <Row>
                         <Col>
-                            <Forms_Event onEventnameChange={handleEventname} />
+                            <Forms_Event eventName={eventName} onEventnameChange={handleEventname} />
                         </Col>
                         <Col>
-                            <Forms_Download onFileNameChange={handleFilename} />
+                            <Forms_Download filename={filenameInput} onFileNameChange={handleFilename} />
                         </Col>
                     </Row>
                 </Modal.Body>
@@ -447,7 +464,7 @@ const Forms_Format = memo(function Forms_Format(props) {
                                 name="exportFormat"
                                 id="formatJSON"
                                 value="json"
-                                defaultChecked
+                                defaultChecked={props.exportFormat !== 'xml'}
                             />
                             <div>
                                 <Form.Check
@@ -456,6 +473,7 @@ const Forms_Format = memo(function Forms_Format(props) {
                                     name="exportFormat"
                                     id="formatXML"
                                     value="xml"
+                                    defaultChecked={props.exportFormat === 'xml'}
                                 />
                                 <div style={{fontSize: '11px', color: '#6c757d', marginTop: '2px', marginLeft: '20px'}}>
                                     Based on: <a
@@ -485,7 +503,7 @@ const Forms_Format = memo(function Forms_Format(props) {
                                 name="informationLevel"
                                 id="informationLevel1"
                                 value="1"
-                                defaultChecked
+                                defaultChecked={props.informationLevel !== '2'}
                             />
                             <Form.Check
                                 type="radio"
@@ -493,6 +511,7 @@ const Forms_Format = memo(function Forms_Format(props) {
                                 name="informationLevel"
                                 id="informationLevel2"
                                 value="2"
+                                defaultChecked={props.informationLevel === '2'}
                             />
                         </Col>
                     </Form.Group>
@@ -508,6 +527,7 @@ const Forms_Format = memo(function Forms_Format(props) {
                                 label="Event"
                                 name="export"
                                 id="export1"
+                                defaultChecked={!!props.exportAsEvent}
                                 onChange={(e) => { handleExportAsEventChange(e) }}
                             />
                             <Form.Check
@@ -515,6 +535,7 @@ const Forms_Format = memo(function Forms_Format(props) {
                                 label="Download"
                                 name="export"
                                 id="export2"
+                                defaultChecked={!!props.exportAsDownload}
                                 onChange={(e) => { handleExportAsDownloadChange(e) }}
                             />
                         </Col>
@@ -529,6 +550,7 @@ const Forms_Data = memo(function Forms_Data(props) {
     function handleChange(e) {
         props.onInformationChange(e.target.id)
     }
+    const xml = props.exportFormat === 'xml';
     return (
         <Card>
             <Card.Header as="h5">Data</Card.Header>
@@ -544,6 +566,7 @@ const Forms_Data = memo(function Forms_Data(props) {
                                 label="All Processes"
                                 name="information"
                                 id="information1"
+                                checked={props.information === 'information1'}
                                 onChange={(e) => handleChange(e)}
                             />
                             <Form.Check
@@ -551,6 +574,8 @@ const Forms_Data = memo(function Forms_Data(props) {
                                 label="Actual Process"
                                 name="information"
                                 id="information2"
+                                checked={props.information === 'information2'}
+                                disabled={xml}
                                 onChange={(e) => handleChange(e)}
                             />
                             <Form.Check
@@ -558,8 +583,15 @@ const Forms_Data = memo(function Forms_Data(props) {
                                 label="Selected Elements"
                                 name="information"
                                 id="information3"
+                                checked={props.information === 'information3'}
+                                disabled={xml}
                                 onChange={(e) => handleChange(e)}
                             />
+                            {xml && (
+                                <Form.Text className="text-muted xml-scope-hint">
+                                    XML always contains the whole model.
+                                </Form.Text>
+                            )}
                         </Col>
                     </Form.Group>
                 </fieldset>
@@ -584,7 +616,7 @@ const Forms_Event = memo(function Forms_Event(props) {
                     <Form.Group as={Row} controlId="formEvent">
                         <Form.Label as="legend" column sm={4}><h6>Eventname</h6></Form.Label>
                         <Col>
-                            <Form.Control type="text" defaultValue="fpbjs" onChange={(e) => { handleEventNameChange(e) }} />
+                            <Form.Control type="text" defaultValue={props.eventName} onChange={(e) => { handleEventNameChange(e) }} />
                         </Col>
                     </Form.Group>
                 </Form>
@@ -594,7 +626,10 @@ const Forms_Event = memo(function Forms_Event(props) {
 });
 
 const Forms_Download = memo(function Forms_Download(props) {
-    const [localError, setLocalError] = useState(null);
+    const [localError, setLocalError] = useState(() => {
+        const validation = validateFilename(props.filename);
+        return validation.valid ? null : validation.error;
+    });
 
     function handleFilenameChange(e) {
         const value = e.target.value;
@@ -612,7 +647,7 @@ const Forms_Download = memo(function Forms_Download(props) {
                         <Col>
                             <Form.Control
                                 type="text"
-                                defaultValue="FPB"
+                                defaultValue={props.filename}
                                 onChange={(e) => { handleFilenameChange(e) }}
                                 isInvalid={!!localError}
                             />

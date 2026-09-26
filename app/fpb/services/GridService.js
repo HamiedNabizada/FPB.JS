@@ -5,7 +5,7 @@
  */
 
 export default class GridService {
-  constructor(eventBus, injector, config, settingsService) {
+  constructor(eventBus, injector, config) {
     this._eventBus = eventBus;
     this._injector = injector;
     this._canvas = injector.get('canvas');
@@ -36,4 +36,4 @@ export default class GridService {
 }
 
 // Dependency injection configuration
-GridService.$inject = ['eventBus', 'injector', 'config', 'settingsService'];
+GridService.$inject = ['eventBus', 'injector', 'config'];

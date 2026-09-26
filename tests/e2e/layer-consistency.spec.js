@@ -1,5 +1,5 @@
 // tests/e2e/layer-consistency.spec.js
-import { test, expect } from '@playwright/test';
+import { test, expect } from './support/test';
 import { ModelerPage } from './pages/ModelerPage';
 
 /**

@@ -11,13 +11,15 @@ export default class AlignService {
     this._selection = selection;
     this._modeling = injector.get('modeling');
     this._canvas = injector.get('canvas');
+    this._elementRegistry = injector.get('elementRegistry');
+    this._rules = injector.get('rules', false);
+
+    // One alignment is one command: a single undo takes it back as a whole
+    injector.get('commandStack').registerHandler('fpb.moveEach', MoveEachHandler);
 
     // Bind methods to maintain context
     this.alignElements = this.alignElements.bind(this);
     this.distributeElements = this.distributeElements.bind(this);
-
-    // Listen to selection changes to update tool states
-    this._setupSelectionListener();
   }
 
   /**
@@ -26,7 +28,8 @@ export default class AlignService {
    * @param {string} alignment - 'left', 'center', 'right', 'top', 'middle', 'bottom'
    */
   alignElements(elements, alignment) {
-    if (!elements || elements.length < 2) {
+    elements = this._alignable(elements);
+    if (elements.length < 2) {
       return;
     }
 
@@ -52,7 +55,8 @@ export default class AlignService {
    * @param {string} orientation - 'horizontal' or 'vertical'
    */
   distributeElements(elements, orientation) {
-    if (!elements || elements.length < 3) {
+    elements = this._alignable(elements);
+    if (elements.length < 3) {
       return;
     }
 
@@ -63,17 +67,6 @@ export default class AlignService {
       this._applyDeltas(deltas);
       this._eventBus.fire('elements.distributed', { elements, orientation });
     }
-  }
-
-  /**
-   * Check if alignment/distribution is possible with current selection
-   * @param {string} operation - 'align' or 'distribute'
-   * @returns {boolean}
-   */
-  canExecute(operation) {
-    const selectedElements = this._selection.get();
-    const minElements = operation === 'distribute' ? 3 : 2;
-    return selectedElements.length >= minElements;
   }
 
   /**
@@ -195,49 +188,85 @@ export default class AlignService {
    * @private
    */
   _applyDeltas(deltas) {
-    deltas.forEach(({ element, delta }) => {
-      this._modeling.moveElements([element], delta);
-    });
+    // The same rules as dragging with the mouse: a boundary state stays on
+    // the border, a technical resource outside the system limit
+    const moves = deltas.filter(({ element, delta }) => this._moveAllowed(element, delta));
+    if (moves.length) {
+      this._injector.get('commandStack').execute('fpb.moveEach', { moves });
+    }
   }
 
   /**
-   * Setup selection listener to update tool states
+   * The shapes of a selection that can be aligned. Ctrl+A and the lasso also
+   * select connections (no x/y) and external labels (they follow their
+   * element); the layer itself never moves.
    * @private
    */
-  _setupSelectionListener() {
-    this._eventBus.on('selection.changed', (event) => {
-      this._updateToolStates(event.newSelection);
-    });
+  _alignable(elements) {
+    const root = this._canvas.getRootElement();
+    return (elements || []).filter((element) => element &&
+      !element.waypoints &&
+      element.type !== 'label' &&
+      !element.labelTarget &&
+      element !== root &&
+      Number.isFinite(element.x) && Number.isFinite(element.y));
   }
 
   /**
-   * Update tool states based on current selection
+   * Asks the move rule as a drag would: with the new center as position and
+   * the shape found there as target.
    * @private
    */
-  _updateToolStates(selectedElements) {
-    const canAlign = selectedElements.length >= 2;
-    const canDistribute = selectedElements.length >= 3;
-
-    this._eventBus.fire('align.stateChanged', {
-      canAlign,
-      canDistribute,
-      selectedCount: selectedElements.length
-    });
-  }
-
-  /**
-   * Get current tool states
-   * @returns {Object} Tool states
-   */
-  getToolStates() {
-    const selectedElements = this._selection.get();
-    return {
-      canAlign: selectedElements.length >= 2,
-      canDistribute: selectedElements.length >= 3,
-      selectedCount: selectedElements.length
+  _moveAllowed(element, delta) {
+    if (!this._rules) {
+      return true;
+    }
+    const position = {
+      x: element.x + element.width / 2 + delta.x,
+      y: element.y + element.height / 2 + delta.y
     };
+    const target = this._targetAt(position, element);
+    return this._rules.allowed('elements.move', { shapes: [ element ], delta, position, target }) !== false;
+  }
+
+  /**
+   * The innermost shape at a point, not counting the moved element itself and
+   * its children; the layer when there is none.
+   * @private
+   */
+  _targetAt(point, moved) {
+    const root = this._canvas.getRootElement();
+    const inside = (child) => {
+      for (let e = child; e; e = e.parent) {
+        if (e === moved) {
+          return true;
+        }
+      }
+      return false;
+    };
+    const hits = this._elementRegistry.filter((e) => e !== root &&
+      !e.waypoints && e.type !== 'label' && !e.labelTarget && !inside(e) &&
+      point.x >= e.x && point.x <= e.x + e.width &&
+      point.y >= e.y && point.y <= e.y + e.height);
+    hits.sort((a, b) => a.width * a.height - b.width * b.height);
+    return hits[0] || root;
   }
 }
 
 // Dependency injection configuration
 AlignService.$inject = ['eventBus', 'injector', 'selection'];
+
+/**
+ * Moves each element by its own delta, all in one command.
+ */
+function MoveEachHandler(modeling) {
+  this._modeling = modeling;
+}
+
+MoveEachHandler.$inject = ['modeling'];
+
+MoveEachHandler.prototype.preExecute = function (context) {
+  context.moves.forEach(({ element, delta }) => {
+    this._modeling.moveElements([ element ], delta);
+  });
+};

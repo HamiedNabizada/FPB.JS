@@ -2,61 +2,17 @@
 import { describe, it, expect } from 'vitest';
 
 import {
-  isFpb,
   is,
   getBusinessObject,
   isAny,
-  getParent,
   getLabel,
   setLabel,
   isLabel,
   DEFAULT_LABEL_SIZE,
-  FLOW_LABEL_INDENT,
   getExternalLabelMid
 } from '../../../app/fpb/help/utils.js';
 
 describe('utils.js', () => {
-
-  // ============================================
-  // isFpb
-  // ============================================
-
-  describe('isFpb(element)', () => {
-
-    it('returns true for fpb:Product', () => {
-      const element = { type: 'fpb:Product' };
-      expect(isFpb(element)).toBe(true);
-    });
-
-    it('returns true for fpb:Energy', () => {
-      const element = { type: 'fpb:Energy' };
-      expect(isFpb(element)).toBe(true);
-    });
-
-    it('returns true for fpb:ProcessOperator', () => {
-      const element = { type: 'fpb:ProcessOperator' };
-      expect(isFpb(element)).toBe(true);
-    });
-
-    it('returns false for non-fpb types', () => {
-      const element = { type: 'bpmn:Task' };
-      expect(isFpb(element)).toBe(false);
-    });
-
-    it('returns falsy for null element', () => {
-      expect(isFpb(null)).toBeFalsy();
-    });
-
-    it('returns falsy for undefined element', () => {
-      expect(isFpb(undefined)).toBeFalsy();
-    });
-
-    it('returns falsy for element without type', () => {
-      const element = { id: 'test' };
-      expect(isFpb(element)).toBeFalsy();
-    });
-
-  });
 
   // ============================================
   // getBusinessObject
@@ -146,59 +102,6 @@ describe('utils.js', () => {
     it('returns false for empty types array', () => {
       const element = createMockElement('fpb:Product');
       expect(isAny(element, [])).toBe(false);
-    });
-
-  });
-
-  // ============================================
-  // getParent
-  // ============================================
-
-  describe('getParent(element, anyType)', () => {
-
-    it('finds parent of specified type', () => {
-      const systemLimit = createMockElement('fpb:SystemLimit');
-      const process = createMockElement('fpb:Process');
-      process.parent = systemLimit;
-      const product = createMockElement('fpb:Product');
-      product.parent = process;
-
-      const result = getParent(product, 'fpb:SystemLimit');
-      expect(result).toBe(systemLimit);
-    });
-
-    it('returns null when no parent matches', () => {
-      const product = createMockElement('fpb:Product');
-      product.parent = createMockElement('fpb:Process');
-
-      const result = getParent(product, 'fpb:TechnicalResource');
-      expect(result).toBeNull();
-    });
-
-    it('handles string type parameter', () => {
-      const systemLimit = createMockElement('fpb:SystemLimit');
-      const product = createMockElement('fpb:Product');
-      product.parent = systemLimit;
-
-      const result = getParent(product, 'fpb:SystemLimit');
-      expect(result).toBe(systemLimit);
-    });
-
-    it('handles array of types', () => {
-      const process = createMockElement('fpb:Process');
-      const product = createMockElement('fpb:Product');
-      product.parent = process;
-
-      const result = getParent(product, ['fpb:SystemLimit', 'fpb:Process']);
-      expect(result).toBe(process);
-    });
-
-    it('returns null for element without parent', () => {
-      const product = createMockElement('fpb:Product');
-      product.parent = null;
-
-      const result = getParent(product, 'fpb:SystemLimit');
-      expect(result).toBeNull();
     });
 
   });
@@ -325,10 +228,6 @@ describe('utils.js', () => {
     it('DEFAULT_LABEL_SIZE has correct values', () => {
       expect(DEFAULT_LABEL_SIZE.width).toBe(50);
       expect(DEFAULT_LABEL_SIZE.height).toBe(20);
-    });
-
-    it('FLOW_LABEL_INDENT is 15', () => {
-      expect(FLOW_LABEL_INDENT).toBe(15);
     });
 
   });

@@ -16,7 +16,7 @@ export default class LayerOverview {
     } = options;
     // The import waits for this panel instead of waiting a fixed time
     modeler.get('eventBus').fire('ui.componentRegistered', { component: 'layerPanel' });
-    const root = createRoot(container);
+    const root = this._root = createRoot(container);
     root.render(
       <ErrorProvider>
         <ImportNotificationBridge modeler={modeler} />
@@ -26,6 +26,14 @@ export default class LayerOverview {
         </ErrorBoundary>
       </ErrorProvider>
     );
+  }
+
+  /** Unmounts the panel; its listeners on the modeler go with it */
+  destroy() {
+    if (this._root) {
+      this._root.unmount();
+      this._root = null;
+    }
   }
 }
 

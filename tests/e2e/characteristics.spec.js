@@ -1,5 +1,5 @@
 // tests/e2e/characteristics.spec.js
-import { test, expect } from '@playwright/test';
+import { test, expect } from './support/test';
 import fs from 'fs';
 import path from 'path';
 

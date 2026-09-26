@@ -115,25 +115,4 @@ export class PathCalculator {
 
     return componentsToPath(pathComponents);
   }
-
-  /**
-   * Calculates path for connections (waypoints)
-   */
-  getConnectionPath(connection) {
-    const waypoints = connection.waypoints.map(p => p.original || p);
-    
-    if (waypoints.length < 2) {
-      return '';
-    }
-
-    const pathComponents = [
-      ['M', waypoints[0].x, waypoints[0].y]
-    ];
-
-    waypoints.slice(1).forEach(waypoint => {
-      pathComponents.push(['L', waypoint.x, waypoint.y]);
-    });
-
-    return componentsToPath(pathComponents);
-  }
 }

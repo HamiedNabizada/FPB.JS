@@ -280,10 +280,35 @@ JSONImporter.prototype.constructProjectDefinition = function (data) {
     }
 
     const projectData = projectValidation.project;
+
+    // The entry layer is opened at the end of the import. Checked here, before
+    // the old model is touched: a file whose entry layer cannot be opened left
+    // the new model in the data store behind the old one on the canvas.
+    const processes = data.filter((entry) => entry && entry.process && entry.process.id);
+    if (processes.length === 0) {
+        this._errorHandler.handleProjectDefinitionError(
+            'Invalid file format: No process found',
+            'The file has a project definition but no process to show.'
+        );
+        return null;
+    }
+    let entryPoint = projectData.entryPoint;
+    if (!processes.some((entry) => entry.process.id === entryPoint)) {
+        const top = processes.find((entry) => !entry.process.isDecomposedProcessOperator) || processes[0];
+        this._errorHandler.logWarning(
+            entryPoint
+                ? `The entry point ${entryPoint} names no process - opened ${top.process.id} instead`
+                : `The project names no entry point - opened ${top.process.id} instead`,
+            null,
+            'Set entryPoint in the project definition to the id of the top process and download the file again.'
+        );
+        entryPoint = top.process.id;
+    }
+
     const project = this._fpbFactory.create(FPB_TYPES.PROJECT, {
         name: projectData.name,
         targetNamespace: projectData.targetNamespace,
-        entryPoint: projectData.entryPoint
+        entryPoint
     });
 
     return project;
@@ -321,10 +346,11 @@ JSONImporter.prototype.buildProcesses = function (data, projectDefinition) {
             process_rootElement.businessObject.parent = projectDefinition;
         }
 
-        const no = this._processes.push({ 
-            id: pro.id, 
-            process: process_rootElement, 
-            updateElements: [] 
+        const no = this._processes.push({
+            id: pro.id,
+            process: process_rootElement,
+            updateElements: [],
+            builtIds: new Set()
         });
         
         // First store IDs in the Process
@@ -337,6 +363,11 @@ JSONImporter.prototype.buildProcesses = function (data, projectDefinition) {
     }
     return true; // Return true to indicate success
 }
+
+const KNOWN_TYPES = [
+    'fpb:SystemLimit', 'fpb:ProcessOperator', 'fpb:Product', 'fpb:Information', 'fpb:Energy',
+    'fpb:Flow', 'fpb:AlternativeFlow', 'fpb:ParallelFlow', 'fpb:TechnicalResource', 'fpb:Usage'
+];
 
 JSONImporter.prototype.filterElements = function (id, eVI, eDI, process, parent, no) {
     let dataInformation;
@@ -352,6 +383,17 @@ JSONImporter.prototype.filterElements = function (id, eVI, eDI, process, parent,
             break;
         }
     }
+    const built = this._processes[no - 1].builtIds;
+    if (built && built.has(id)) {
+        // A second entry with the same id was built as a second shape, and
+        // opening the layer then failed on "element already exists".
+        this._errorHandler.logWarning(
+            `Element ${id} is listed twice in this process - the second entry was skipped`,
+            null,
+            'Give every element its own id.'
+        );
+        return;
+    }
     if (!dataInformation) {
         // An ID without data (typo, element dropped by an external generator)
         // used to abort the whole import. Skip it and keep the rest of the model.
@@ -362,6 +404,9 @@ JSONImporter.prototype.filterElements = function (id, eVI, eDI, process, parent,
         );
         return;
     }
+    if (built) {
+        built.add(id);
+    }
     for (let el of eVI) {
         if (id === el.id) {
             visualInformation = el;
@@ -370,6 +415,28 @@ JSONImporter.prototype.filterElements = function (id, eVI, eDI, process, parent,
         }
     };
     
+
+    // Without $type the layout usually still names the type
+    if (!type && visualInformation && visualInformation.type) {
+        type = visualInformation.type;
+        dataInformation.$type = type;
+        this._errorHandler.logWarning(
+            `Element ${id} has no $type - its type ${type} was taken from its layout`,
+            null,
+            'Add $type to the element in elementDataInformation.'
+        );
+    }
+    if (!KNOWN_TYPES.includes(type)) {
+        // Unknown types ended in buildTRandUsage and vanished without a word
+        this._errorHandler.logWarning(
+            type
+                ? `Element ${id} has an unknown type (${type}) - skipped`
+                : `Element ${id} has no type - skipped`,
+            null,
+            'Use one of the VDI 3682 types, e.g. fpb:Product, fpb:ProcessOperator or fpb:Flow.'
+        );
+        return;
+    }
 
     if (type === 'fpb:SystemLimit') {
         this.buildSystemLimit(visualInformation, dataInformation, process, eVI, eDI, no);
