@@ -219,7 +219,6 @@ test.describe('Decompose', () => {
   });
 
   test('the system limit of a new layer is named after the operator, also when the operator has no name', async ({ page }) => {
-    test.fail(true, 'BUG: decomposing an operator without a name names the system limit "SL_undefined"');
     await load(page);
     const name = await page.evaluate((IDS) => {
       const modeling = window.fpbjs.get('modeling');
@@ -884,7 +883,6 @@ test.describe('Confirmation: Szenario 4, creating a state on the child boundary'
   });
 
   test('a new input on the child boundary lands inside the parent system limit, even with the operator near its edge', async ({ page }) => {
-    test.fail(true, 'BUG: ConfirmationHandler places the new parent state 100px above the operator, outside the system limit');
     await load(page);
     // Erhitzen close below the upper edge of the top system limit
     await page.evaluate((IDS) => {
@@ -923,7 +921,6 @@ test.describe('Confirmation: Szenario 4, creating a state on the child boundary'
   });
 
   test('one level down with the operator near the child edge: the new state does not land on the child boundary', async ({ page }) => {
-    test.fail(true, 'BUG: ConfirmationHandler places the new state 100px above the operator, here onto the boundary of the child layer, unconnected above');
     await load(page);
     await switchTo(page, IDS.child);
     // Vorwärmen close below the upper edge of the child system limit
@@ -972,7 +969,6 @@ test.describe('Confirmation: Szenario 4, creating a state on the child boundary'
   });
 
   test('undo after Cancel does not bring back an unconnected boundary state', async ({ page }) => {
-    test.fail(true, 'BUG: undo after a cancelled boundary placement restores the state on the boundary without the parent connection');
     await load(page);
     await switchTo(page, IDS.child);
     await createOnEdge(page, 'b_undo', 'upper');
@@ -1021,7 +1017,6 @@ test.describe('Confirmation: Szenario 6, moving an internal state onto the child
   });
 
   test('undo after Cancel does not put the state back on the boundary unconnected', async ({ page }) => {
-    test.fail(true, 'BUG: undo after a cancelled move to the boundary leaves the state on the boundary without the parent connection');
     await load(page);
     await switchTo(page, IDS.child);
     await moveToEdge(page, IDS.vorgewaermt, 'upper');
@@ -1050,7 +1045,6 @@ test.describe('Confirmation: Szenario 6, moving an internal state onto the child
   }), IDS);
 
   test('two states moved onto the edge together: Yes makes both inputs of the operator above', async ({ page }) => {
-    test.fail(true, 'BUG: one dialog per state is fired, the second replaces the first, only the last state is connected above');
     await load(page);
     await switchTo(page, IDS.child);
     await addSecondState(page);
@@ -1063,7 +1057,6 @@ test.describe('Confirmation: Szenario 6, moving an internal state onto the child
   });
 
   test('two states moved onto the edge together: Cancel moves both back', async ({ page }) => {
-    test.fail(true, 'BUG: one dialog per state is fired, the second replaces the first, only the last state is moved back');
     await load(page);
     await switchTo(page, IDS.child);
     await addSecondState(page);

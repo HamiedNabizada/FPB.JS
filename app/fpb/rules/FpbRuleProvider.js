@@ -196,15 +196,18 @@ FpbRuleProvider.prototype.init = function () {
     if (!target) {
       return true;
     }
-    return elements.every(element => canDrop(element, target, position));
+    return elements.every(element => canDrop(element, target, position, elements));
   };
 
   /**
    * Can an element be dropped into the target element
    */
-  const canDrop = (element, target, position) => {
-    if (is(element, 'label')) {
-      return false;
+  const canDrop = (element, target, position, moved) => {
+    // Labels are not moved on their own (Modeling-Regeln), only together with
+    // their element, e.g. in a lasso selection. is(element, 'label') never
+    // matched: a label shares the business object of its element.
+    if (isLabel(element)) {
+      return !!moved && moved.includes(element.labelTarget);
     }
 
     // Boundary states on child layers must not be moved away from the system boundary
@@ -292,9 +295,13 @@ function canConnect(source, target) {
     return;
   }
   
+  // A Usage only joins a process operator and a technical resource
+  // (Modeling-Regeln); with the Usage hint a state is no target
+  const usage = source.TemporaryFlowHint === FLOW_HINTS.USAGE;
+
   // Connection from States to ProcessOperator
   if (isAny(source, ELEMENT_GROUPS.STATES)) {
-    if (is(target, ELEMENT_TYPES.PROCESS_OPERATOR)) {
+    if (is(target, ELEMENT_TYPES.PROCESS_OPERATOR) && !usage) {
       return getConnectionType(source, source.TemporaryFlowHint);
     }
     return;
@@ -304,6 +311,9 @@ function canConnect(source, target) {
   if (is(source, ELEMENT_TYPES.PROCESS_OPERATOR)) {
     // to States
     if (isAny(target, ELEMENT_GROUPS.STATES)) {
+      if (usage) {
+        return;
+      }
       return getConnectionType(source, source.TemporaryFlowHint);
     }
     // to TechnicalResource

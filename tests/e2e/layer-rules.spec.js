@@ -96,7 +96,6 @@ test.describe('Rules: connection.create between every pair of element types', ()
   }
 
   test('a Usage never ends at a state (operator with the Usage hint over a state)', async ({ page }) => {
-    test.fail(true, 'BUG: canConnect returns fpb:Usage for ProcessOperator -> State when the Usage hint is set');
     await load(page);
     const r = await page.evaluate(() => {
       const factory = window.fpbjs.get('elementFactory');
@@ -117,7 +116,6 @@ test.describe('Rules: connection.create between every pair of element types', ()
   });
 
   test('UI: the Usage entry of an operator dropped on a state creates no Usage', async ({ page }) => {
-    test.fail(true, 'BUG: the Usage entry of the context pad connects an operator to a state with a Usage');
     await load(page);
     await openPad(page, IDS.pruefen);
     await page.locator('.djs-context-pad .entry[data-action="connect_usage"]').click();
@@ -674,7 +672,6 @@ test.describe('Feedback when the editor refuses a move or create (UI drags)', ()
   });
 
   test('the move rule refuses labels (Modeling-Regeln: Labels duerfen nicht bewegt werden)', async ({ page }) => {
-    test.fail(true, 'BUG: elements.move rule allows labels, is(element, "label") never matches');
     await load(page);
     const allowed = await page.evaluate((id) => {
       const l = window.fpbjs.get('elementRegistry').get(id).labels[0];
