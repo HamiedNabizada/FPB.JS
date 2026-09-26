@@ -1,13 +1,15 @@
 import { ElementToSuc, InterfaceToFlow, stripAlias } from './mapper/mappings.js';
 import { getRefObjOrDerived } from './mapper/references.js';
 import { walkDocumentInternalElements, walkInternalElements } from './mapper/walker.js';
+import { InstanceHierarchyType } from 'amlengine-js';
 
 /**
- * What an AML file holds for each FPB element beyond FPD: attributes,
+ * What an AML file holds for each FPB element: where it stands in the file
+ * (path, ID, class, roles), its flows, and what goes beyond FPD: attributes,
  * interfaces and the InternalLinks that reach it from elsewhere (a plant
  * hierarchy, links drawn in another tool). The properties panel shows it
- * (read only), deleting an element with such links asks first, since the
- * AML export removes those links with it.
+ * (read only); deleting an element with such links asks first, since the AML
+ * export removes those links with it.
  *
  * Keyed by the FPB element id, as CaexToFpbJson gives it: the AML id without
  * braces; a boundary state copy on a sub-process layer counts for the state
@@ -31,7 +33,9 @@ const isFpdInterface = (iface) => {
 /**
  * @param doc CAEXDocument of the kept file
  * @param ih its FPD InstanceHierarchy, or null
- * @return {Map<string, { name: string, attributes: Array, interfaces: Array, links: Array }>}
+ * @return {Map<string, { name, amlId, path, systemUnitClass, roles, copies, flows, attributes, interfaces, links }>}
+ *   `links` are the foreign ones (not flows of the model); `copies` the paths of
+ *   the copies of a boundary state on sub-process layers
  */
 export function buildAmlIndex(doc, ih) {
   const index = new Map();
@@ -51,10 +55,18 @@ export function buildAmlIndex(doc, ih) {
     const fpbId = bare(shared || ie.id);
     fpbIdOfElement.set(key(ie.id), fpbId);
 
-    const entry = index.get(fpbId) || { name: ie.name, attributes: [], interfaces: [], links: [] };
+    const entry = index.get(fpbId) || {
+      name: ie.name, amlId: ie.id, path: pathOf(ie), systemUnitClass: ie.refBaseSystemUnitPath || '',
+      roles: rolesOf(ie), copies: [], flows: [], attributes: [], interfaces: [], links: []
+    };
     // a boundary state copy may be named differently: the original names it
     if (bare(ie.id) === fpbId) {
-      entry.name = ie.name;
+      if (index.has(fpbId)) {
+        entry.copies.push(entry.path);
+      }
+      Object.assign(entry, { name: ie.name, amlId: ie.id, path: pathOf(ie), systemUnitClass: ie.refBaseSystemUnitPath || '', roles: rolesOf(ie) });
+    } else if (index.has(fpbId)) {
+      entry.copies.push(pathOf(ie));
     }
     index.set(fpbId, entry);
 
@@ -77,8 +89,8 @@ export function buildAmlIndex(doc, ih) {
     forEachInterface(ie, (iface) => allInterfaces.set(key(iface.id), { ie, iface }));
   });
 
-  // InternalLinks anywhere in the document that reach an FPD element; the
-  // flows of the model itself join two FPD ports and are no foreign content
+  // InternalLinks anywhere in the document that reach an FPD element. The
+  // flows of the model join two FPD ports; everything else is foreign
   walkDocumentInternalElements(doc, (owner) => {
     for (const link of owner.internalLink) {
       const a = resolve(link.refPartnerSideA, interfaces, fpbIdOfElement);
@@ -86,19 +98,30 @@ export function buildAmlIndex(doc, ih) {
       if (!a && !b) {
         continue;
       }
-      if (a && b && a.iface && b.iface && isFpdInterface(a.iface) && isFpdInterface(b.iface)) {
-        continue;
-      }
+      const flow = !!(a && b && a.iface && b.iface && isFpdInterface(a.iface) && isFpdInterface(b.iface));
       [[a, link.refPartnerSideB, b], [b, link.refPartnerSideA, a]].forEach(([side, otherRef, other]) => {
         if (!side) {
           return;
         }
         const entry = index.get(side.fpbId);
-        if (entry && !entry.links.some((l) => l.link === link.name && l.owner === owner.name)) {
+        if (!entry) {
+          return;
+        }
+        const partnerSide = other || allInterfaces.get(key(otherRef));
+        if (flow) {
+          const own = InterfaceToFlow.get(stripAlias(side.iface.refBaseClassPath));
+          entry.flows.push({
+            link: link.name,
+            type: own ? own.flowType : '',
+            direction: own ? own.direction : '',
+            partner: describe(partnerSide, otherRef)
+          });
+        } else if (!entry.links.some((l) => l.link === link.name && l.owner === owner.name)) {
           entry.links.push({
             link: link.name,
             owner: owner.name,
-            partner: describe(other || allInterfaces.get(key(otherRef)), otherRef)
+            partner: describe(partnerSide, otherRef),
+            hierarchy: partnerSide && partnerSide.ie ? hierarchyOf(partnerSide.ie) : ''
           });
         }
       });
@@ -106,6 +129,37 @@ export function buildAmlIndex(doc, ih) {
   });
 
   return index;
+}
+
+/** Names from the InstanceHierarchy down to the element */
+function pathOf(ie) {
+  const names = [];
+  for (let node = ie; node; node = node.caexParent) {
+    names.unshift(node.name);
+    if (node instanceof InstanceHierarchyType) {
+      break;
+    }
+  }
+  return names;
+}
+
+function hierarchyOf(ie) {
+  for (let node = ie; node; node = node.caexParent) {
+    if (node instanceof InstanceHierarchyType) {
+      return node.name;
+    }
+  }
+  return '';
+}
+
+function rolesOf(ie) {
+  const roles = [];
+  for (const requirement of ie.roleRequirements) {
+    if (requirement.refBaseRoleClassPath) {
+      roles.push(requirement.refBaseRoleClassPath);
+    }
+  }
+  return roles;
 }
 
 /** A partner side: an interface id (CAEX 3.0) or "element id:interface name" (CAEX 2.15) */

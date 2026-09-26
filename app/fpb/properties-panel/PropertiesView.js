@@ -429,10 +429,11 @@ const ElementProperties = memo(({ element, modeler, config, rerender }) => {
               </Accordion.Item>
             }
             {renderCharacteristics()}
-            <AmlContentItem modeler={modeler} elementId={element.id} />
           </div>
         }
       </Accordion >
+      {/* an accordion of its own: its open state is remembered across elements */}
+      <AmlContentItem modeler={modeler} elementId={element.id} />
       <br />
     </div >
   );

@@ -119,6 +119,9 @@ FpbDelete.prototype.getAmlLinks = function (elements) {
     });
     (element.children || []).forEach(visit);
     const bo = element.businessObject;
+    // layers not on the canvas have no children there: their elements are in
+    // the elementsContainer of the process and its system limit
+    ((bo && bo.elementsContainer) || []).forEach(visit);
     if (bo && bo.decomposedView) {
       visit(bo.decomposedView);
     }

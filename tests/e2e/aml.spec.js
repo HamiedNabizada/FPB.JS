@@ -117,6 +117,23 @@ test.describe('AutomationML import and export', () => {
     await expect(page.locator('.import-report')).toContainText("Removed link 'B1_Prozess' in 'Behaelter_B1'");
   });
 
+  test('deleting a decomposed operator names the links on its layers below', async ({ page }) => {
+    await start(page);
+    await importAml(page, read('aml/Showcase-A-WaermetauscherMitRegelung.aml'), 'Showcase-A.aml');
+    await indexReady(page);
+
+    // "Wärmeübertragen" is decomposed; "Plattenwärmeübertragung" below links to the plant
+    await page.evaluate(() => {
+      const po = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+      window.fpbjs.get('fpbDelete').remove([po]);
+    });
+    const dialog = page.locator('.modal.show');
+    await expect(dialog).toContainText('decomposed layer');
+    await expect(dialog).toContainText('Other parts of the AutomationML file link to elements you are deleting.');
+    await expect(dialog).toContainText('PlatteToTempSensor (Plattenwärmeübertragung)');
+    await expect(dialog).toContainText('VentilToPressureCtl (Stellventil betätigen)');
+  });
+
   test('cancelling that question keeps the state', async ({ page }) => {
     await start(page);
     await importAml(page, MIXED);
@@ -129,7 +146,7 @@ test.describe('AutomationML import and export', () => {
     expect(await page.evaluate((id) => !!window.fpbjs.get('elementRegistry').get(id), LINKED_STATE)).toBe(true);
   });
 
-  test('the properties panel shows the foreign content of the element, read only', async ({ page }) => {
+  test('the properties panel shows what the file says about the element, read only', async ({ page }) => {
     await start(page);
     await importAml(page, MIXED);
     await indexReady(page);
@@ -145,28 +162,43 @@ test.describe('AutomationML import and export', () => {
     await expect(section).toBeVisible();
     await section.getByRole('button', { name: 'AML (read only)' }).click();
     const table = section.locator('.pp-aml-table');
-    await expect(table).toContainText('Materialnummer');
-    await expect(table).toContainText('4711');
+    await expect(table).toContainText('Anlage.aml');
+    await expect(table).toContainText('FPD_Heating ›');
+    await expect(table).toContainText('{8891b025-4d01-3179-be62-74c48ee6c819}');
+    await expect(table).toContainText('VDI_FPD_SystemUnitClassLib/FPD_Product');
+    await expect(table).toContainText('VDI_FPD_RoleClassLib/FPD_Product');
+    await expect(table).toContainText('Austritt Heiß (abgekühlt)');
+    await expect(table.locator('.pp-aml-flow').first()).toBeVisible();
+    await expect(table.locator('.pp-aml-link')).toContainText('Behaelter_B1 (ZumProzess)');
+    await expect(table.locator('.pp-aml-link')).toContainText('B1_Prozess in Anlage');
+    await expect(table).toContainText('Materialnummer = 4711');
     await expect(table).toContainText('Anlagenbezug');
-    await expect(table).toContainText('B1_Prozess');
-    await expect(table).toContainText('Behaelter_B1 (ZumProzess)');
     expect(await table.locator('input, textarea, select').count()).toBe(0);
   });
 
-  test('an element without foreign content has no AML section', async ({ page }) => {
+  test('every element from the file has the section; once opened it stays open', async ({ page }) => {
     await start(page);
     await importAml(page, MIXED);
     await indexReady(page);
-
-    // the import report sits over the panel button
     await dismissNotifications(page);
     await page.locator('#openPropertiesPanelButton').click();
-    await page.evaluate(() => {
-      const plain = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:Product' && e.id !== '8891b025-4d01-3179-be62-74c48ee6c819')[0];
-      window.fpbjs.get('selection').select(plain);
-    });
-    await expect(page.locator('#pp_identification_longName')).toBeVisible();
-    await expect(page.locator('.pp-aml')).toHaveCount(0);
+
+    const select = (type) => page.evaluate((type) => {
+      const element = window.fpbjs.get('elementRegistry').filter((e) => e.type === type)[0];
+      window.fpbjs.get('selection').select(element);
+    }, type);
+
+    await select('fpb:ProcessOperator');
+    const section = page.locator('.pp-aml');
+    await expect(section).toBeVisible();
+    await expect(section.locator('.pp-aml-table')).toBeHidden();
+    await section.getByRole('button', { name: 'AML (read only)' }).click();
+    await expect(section.locator('.pp-aml-table')).toContainText('VDI_FPD_SystemUnitClassLib/FPD_ProcessOperator');
+
+    // another element: still open
+    await select('fpb:SystemLimit');
+    await expect(page.locator('.pp-aml .pp-aml-table')).toContainText('VDI_FPD_SystemUnitClassLib/FPD_SystemLimit');
+    expect(await page.evaluate(() => localStorage.getItem('fpbjs.amlSection.open'))).toBe('true');
   });
 
   test('a file without FPD content opens empty; the AML export adds the process to that file', async ({ page }) => {
@@ -189,6 +221,14 @@ test.describe('AutomationML import and export', () => {
     const canvas = await page.getByRole('application', { name: /Process diagram/ }).boundingBox();
     await page.mouse.click(canvas.x + canvas.width / 2, canvas.y + canvas.height / 2);
     await expect.poll(() => page.evaluate(() => window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:SystemLimit').length)).toBe(1);
+
+    // the new system limit is not in the file yet
+    await page.locator('#openPropertiesPanelButton').click();
+    await page.evaluate(() => {
+      window.fpbjs.get('selection').select(window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:SystemLimit')[0]);
+    });
+    await page.locator('.pp-aml').getByRole('button', { name: 'AML (read only)' }).click();
+    await expect(page.locator('.pp-aml .pp-aml-new')).toContainText('Not in the AML file yet. The AML export adds it to Pumpen.aml.');
 
     const aml = await exportViaDialog(page, { format: 'aml' });
     expect(aml).toContain('Name="Pumpe_P1"');
@@ -283,6 +323,13 @@ test.describe('AutomationML import and export', () => {
     await openImportDialog(page);
     await page.getByRole('button', { name: 'Close import options' }).click();
     await expect(page.locator('#amlOverviewButton')).toHaveCount(0);
+
+    await page.locator('#openPropertiesPanelButton').click();
+    await page.evaluate(() => {
+      window.fpbjs.get('selection').select(window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0]);
+    });
+    await expect(page.locator('#pp_identification_longName')).toBeVisible();
+    await expect(page.locator('.pp-aml')).toHaveCount(0);
   });
 
   test('the browser backup keeps the AML file', async ({ page }) => {
