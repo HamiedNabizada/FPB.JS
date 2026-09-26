@@ -90,7 +90,6 @@ test.describe('Creating elements by dragging a palette entry', () => {
   }
 
   test('Ctrl+Z right after creating an element from the palette takes it back', async ({ page }) => {
-    test.fail(true, 'BUG: the palette entry keeps the keyboard focus after the create gesture (tabindex from a11y/CanvasAccessibility), the diagram-js keyboard on the canvas SVG gets no key');
     await laden(page);
     const vorher = await alleIds(page);
     // create by click and click, as the palette tooltip suggests

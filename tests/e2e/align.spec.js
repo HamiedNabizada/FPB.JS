@@ -64,6 +64,9 @@ async function punkt(page, name) {
 
 /** Select by clicking the first name and shift-clicking the others, as a user does */
 async function waehle(page, namen) {
+  // start empty: diagram-js deselects an element that is clicked while it is
+  // the only one selected
+  await page.evaluate(() => window.fpbjs.get('selection').select(null));
   for (let i = 0; i < namen.length; i++) {
     const p = await punkt(page, namen[i]);
     if (i === 0) {
@@ -264,7 +267,6 @@ test.describe('Align by keyboard', () => {
 test.describe('Align and undo', () => {
 
   test('one Ctrl+Z takes back a whole alignment', async ({ page }) => {
-    test.fail(true, 'BUG: AlignService moves every element in its own command, one Ctrl+Z restores only one element');
     await vorbereiten(page);
     await waehle(page, NAMEN);
     const vorher = await lage(page, NAMEN);
@@ -312,7 +314,6 @@ test.describe('Align and undo', () => {
 test.describe('Align with mixed selections and the modeling rules', () => {
 
   test('after Ctrl+A the shortcut aligns the shapes and keeps every position a number', async ({ page }) => {
-    test.fail(true, 'BUG: AlignService takes the connections of the selection as elements (no x/y), every delta becomes NaN');
     const { fehler } = await vorbereiten(page);
     await waehle(page, ['TR_A']);
     await taste(page, 'Control+a');
@@ -337,7 +338,6 @@ test.describe('Align with mixed selections and the modeling rules', () => {
   });
 
   test('states selected together with their labels keep their places when they are aligned already', async ({ page }) => {
-    test.fail(true, 'BUG: AlignService aligns the external labels of a lasso selection as elements of their own, the states move to the top of their labels');
     const importer = new ImportPage(page);
     await page.setViewportSize({ width: 1600, height: 1000 });
     await importer.goto();
@@ -377,7 +377,6 @@ test.describe('Align with mixed selections and the modeling rules', () => {
   });
 
   test('aligning does not pull a boundary state of a decomposition off the system limit', async ({ page }) => {
-    test.fail(true, 'BUG: AlignService moves with modeling.moveElements and skips the rule that keeps boundary states on the border');
     const importer = new ImportPage(page);
     await page.setViewportSize({ width: 1600, height: 1000 });
     await importer.goto();
@@ -401,7 +400,6 @@ test.describe('Align with mixed selections and the modeling rules', () => {
   });
 
   test('aligning does not move a technical resource into the system limit', async ({ page }) => {
-    test.fail(true, 'BUG: AlignService moves with modeling.moveElements and skips the rule that keeps resources outside the system limit');
     const importer = new ImportPage(page);
     await page.setViewportSize({ width: 1600, height: 1000 });
     await importer.goto();
@@ -428,7 +426,6 @@ test.describe('Align with mixed selections and the modeling rules', () => {
 test.describe('Align shortcuts do not trigger other actions', () => {
 
   test('Ctrl+Shift+V distributes and does not paste the clipboard', async ({ page }) => {
-    test.fail(true, 'BUG: Ctrl+Shift+V also triggers the diagram-js paste binding (isPaste ignores Shift)');
     await vorbereiten(page);
     // something in the clipboard
     await waehle(page, ['TR_A']);
@@ -442,7 +439,6 @@ test.describe('Align shortcuts do not trigger other actions', () => {
   });
 
   test('Ctrl+Shift+C aligns and does not replace the clipboard', async ({ page }) => {
-    test.fail(true, 'BUG: Ctrl+Shift+C also triggers the diagram-js copy binding (isCopy ignores Shift)');
     await vorbereiten(page);
     await waehle(page, ['Heizplatte']);
     await taste(page, 'Control+c');
@@ -458,7 +454,6 @@ test.describe('Align shortcuts do not trigger other actions', () => {
 
   test('Ctrl+Shift+V in a text field pastes there and leaves the diagram alone', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'clipboard permissions are a Chromium feature of Playwright');
-    test.fail(true, 'BUG: KeyboardAlignService listens on document and ignores the focus, it swallows paste as plain text and distributes the canvas selection');
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
     await vorbereiten(page);
     // uneven vertical spacing, so a distribution would show

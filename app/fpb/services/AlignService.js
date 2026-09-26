@@ -11,6 +11,11 @@ export default class AlignService {
     this._selection = selection;
     this._modeling = injector.get('modeling');
     this._canvas = injector.get('canvas');
+    this._elementRegistry = injector.get('elementRegistry');
+    this._rules = injector.get('rules', false);
+
+    // One alignment is one command: a single undo takes it back as a whole
+    injector.get('commandStack').registerHandler('fpb.moveEach', MoveEachHandler);
 
     // Bind methods to maintain context
     this.alignElements = this.alignElements.bind(this);
@@ -26,7 +31,8 @@ export default class AlignService {
    * @param {string} alignment - 'left', 'center', 'right', 'top', 'middle', 'bottom'
    */
   alignElements(elements, alignment) {
-    if (!elements || elements.length < 2) {
+    elements = this._alignable(elements);
+    if (elements.length < 2) {
       return;
     }
 
@@ -52,7 +58,8 @@ export default class AlignService {
    * @param {string} orientation - 'horizontal' or 'vertical'
    */
   distributeElements(elements, orientation) {
-    if (!elements || elements.length < 3) {
+    elements = this._alignable(elements);
+    if (elements.length < 3) {
       return;
     }
 
@@ -195,9 +202,68 @@ export default class AlignService {
    * @private
    */
   _applyDeltas(deltas) {
-    deltas.forEach(({ element, delta }) => {
-      this._modeling.moveElements([element], delta);
-    });
+    // The same rules as dragging with the mouse: a boundary state stays on
+    // the border, a technical resource outside the system limit
+    const moves = deltas.filter(({ element, delta }) => this._moveAllowed(element, delta));
+    if (moves.length) {
+      this._injector.get('commandStack').execute('fpb.moveEach', { moves });
+    }
+  }
+
+  /**
+   * The shapes of a selection that can be aligned. Ctrl+A and the lasso also
+   * select connections (no x/y) and external labels (they follow their
+   * element); the layer itself never moves.
+   * @private
+   */
+  _alignable(elements) {
+    const root = this._canvas.getRootElement();
+    return (elements || []).filter((element) => element &&
+      !element.waypoints &&
+      element.type !== 'label' &&
+      !element.labelTarget &&
+      element !== root &&
+      Number.isFinite(element.x) && Number.isFinite(element.y));
+  }
+
+  /**
+   * Asks the move rule as a drag would: with the new center as position and
+   * the shape found there as target.
+   * @private
+   */
+  _moveAllowed(element, delta) {
+    if (!this._rules) {
+      return true;
+    }
+    const position = {
+      x: element.x + element.width / 2 + delta.x,
+      y: element.y + element.height / 2 + delta.y
+    };
+    const target = this._targetAt(position, element);
+    return this._rules.allowed('elements.move', { shapes: [ element ], delta, position, target }) !== false;
+  }
+
+  /**
+   * The innermost shape at a point, not counting the moved element itself and
+   * its children; the layer when there is none.
+   * @private
+   */
+  _targetAt(point, moved) {
+    const root = this._canvas.getRootElement();
+    const inside = (child) => {
+      for (let e = child; e; e = e.parent) {
+        if (e === moved) {
+          return true;
+        }
+      }
+      return false;
+    };
+    const hits = this._elementRegistry.filter((e) => e !== root &&
+      !e.waypoints && e.type !== 'label' && !e.labelTarget && !inside(e) &&
+      point.x >= e.x && point.x <= e.x + e.width &&
+      point.y >= e.y && point.y <= e.y + e.height);
+    hits.sort((a, b) => a.width * a.height - b.width * b.height);
+    return hits[0] || root;
   }
 
   /**
@@ -241,3 +307,18 @@ export default class AlignService {
 
 // Dependency injection configuration
 AlignService.$inject = ['eventBus', 'injector', 'selection'];
+
+/**
+ * Moves each element by its own delta, all in one command.
+ */
+function MoveEachHandler(modeling) {
+  this._modeling = modeling;
+}
+
+MoveEachHandler.$inject = ['modeling'];
+
+MoveEachHandler.prototype.preExecute = function (context) {
+  context.moves.forEach(({ element, delta }) => {
+    this._modeling.moveElements([ element ], delta);
+  });
+};
