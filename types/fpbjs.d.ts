@@ -606,6 +606,8 @@ export interface FpbInstance {
    */
   get<K extends keyof FpbServiceMap>(serviceName: K): FpbServiceMap[K];
   get(serviceName: string): any;
+  /** With `strict` false: null instead of an error when the service is not there (e.g. amlSupport without the AML module) */
+  get(serviceName: string, strict: false): any | null;
 
   // --- Lifecycle ---
 

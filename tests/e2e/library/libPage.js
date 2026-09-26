@@ -28,7 +28,9 @@ const FILES = {
   '/react.js': path.join(ROOT, 'node_modules', 'react', 'umd', 'react.production.min.js'),
   '/react-dom.js': path.join(ROOT, 'node_modules', 'react-dom', 'umd', 'react-dom.production.min.js'),
   '/fpbjs.js': path.join(LIB_DIR, 'fpbjs.js'),
-  '/fpbjs.esm.js': path.join(LIB_DIR, 'fpbjs.esm.js')
+  '/fpbjs.esm.js': path.join(LIB_DIR, 'fpbjs.esm.js'),
+  // the AutomationML add-on: loaded, but only used where a test passes it
+  '/fpbjs-aml.js': path.join(LIB_DIR, 'fpbjs-aml.js')
 };
 
 const HTML = `<!DOCTYPE html>
@@ -45,6 +47,7 @@ const HTML = `<!DOCTYPE html>
   <script src="/react.js"></script>
   <script src="/react-dom.js"></script>
   <script src="/fpbjs.js"></script>
+  <script src="/fpbjs-aml.js"></script>
 </head>
 <body>
   <div id="modeler"></div>
@@ -94,16 +97,20 @@ export async function openLibraryPage(page) {
 /**
  * Create a modeler in the page and keep it as window.fpb.
  * `panels`: also mount the properties panel and the layer overview.
+ * `aml`: add the AutomationML module (fpbjs-aml.js).
  */
-export async function createModeler(page, { panels = false, options = {} } = {}) {
-  await page.evaluate(async ({ panels, options }) => {
+export async function createModeler(page, { panels = false, options = {}, aml = false } = {}) {
+  await page.evaluate(async ({ panels, options, aml }) => {
     const opts = Object.assign({ container: document.getElementById('modeler') }, options);
     if (panels) {
       opts.propertiesContainer = document.getElementById('properties');
       opts.layerContainer = document.getElementById('layers');
     }
+    if (aml) {
+      opts.additionalModules = [window.FpbJSAml.AmlModule];
+    }
     window.fpb = await window.FpbJS.createFpbModeler(opts);
-  }, { panels, options });
+  }, { panels, options, aml });
 }
 
 /**

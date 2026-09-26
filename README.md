@@ -16,7 +16,7 @@ For details on VDI/VDE 3682 and its notation, see [VDI 3682 Overview](./docs/VDI
 - **Process Hierarchy:** decompose and compose process operators into sub-processes, with a preview of the layer below
 - **Parallel and Alternative Flows:** model concurrent and alternative process paths
 - **Model Check:** rules of the VDI 3682 catalogue, shown on the elements, at import and before export
-- **Import and Export:** JSON and VDI 3682 XML; export as SVG, PNG and PDF
+- **Import and Export:** JSON, VDI 3682 XML and AutomationML (AML, keeps the rest of an imported file); export as SVG, PNG and PDF
 - **Editing:** undo, copy and paste, search across all layers, keyboard shortcuts
 - **Touch and Accessibility:** works on tablets and phones, keyboard operable panels, a colour scheme for colour vision deficiency
 
@@ -51,6 +51,17 @@ npm install fpbjs
 ```
 
 [View on NPM](https://www.npmjs.com/package/fpbjs)
+
+AutomationML import and export are an add-on, off by default like the browser backup, so the package stays without the AML engine:
+
+```js
+import { createFpbModeler } from 'fpbjs';
+import { AmlModule } from 'fpbjs/aml';
+
+const fpb = await createFpbModeler({ container, additionalModules: [AmlModule] });
+```
+
+With script tags, load `dist/fpbjs-aml.js` after `dist/fpbjs.js` and pass `FpbJSAml.AmlModule`. The web app has it on.
 
 ## Citation
 

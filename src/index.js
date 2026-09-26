@@ -211,7 +211,7 @@ export async function createFpbModeler(options = {}) {
      * [{ id, name }]; empty when the file has no FPD content.
      */
     getAMLHierarchies(text) {
-      return modeler.get('amlSupport').inspect(text);
+      return requireAml(modeler).then((aml) => aml.inspect(text));
     },
 
     /**
@@ -221,10 +221,10 @@ export async function createFpbModeler(options = {}) {
      * empty model and toAML() adds the process to that file.
      */
     importAML(text, options = {}) {
-      return modeler.get('amlSupport').importAml(text, {
+      return requireAml(modeler).then((aml) => aml.importAml(text, {
         fileName: options.fileName,
         hierarchyId: options.instanceHierarchy
-      });
+      }));
     },
 
     /**
@@ -233,7 +233,7 @@ export async function createFpbModeler(options = {}) {
      * written. The result is kept for the next toAML().
      */
     async toAML() {
-      const result = await modeler.get('amlSupport').exportAml();
+      const result = await (await requireAml(modeler)).exportAml();
       return result.text;
     },
 
@@ -337,8 +337,9 @@ export async function createFpbModeler(options = {}) {
 
     // --- DI Access ---
 
-    get(serviceName) {
-      return modeler.get(serviceName);
+    /** A service; with `strict` false, null instead of an error when it is not there */
+    get(serviceName, strict) {
+      return modeler.get(serviceName, strict);
     },
 
     // --- Lifecycle ---
@@ -355,6 +356,17 @@ export async function createFpbModeler(options = {}) {
       }
     }
   };
+}
+
+/**
+ * The AML service, or a rejection that says how to get it: AML is an add-on
+ * like the browser backup, off unless the host passes the module.
+ */
+function requireAml(modeler) {
+  const aml = modeler.get('amlSupport', false);
+  return aml
+    ? Promise.resolve(aml)
+    : Promise.reject(new Error('AutomationML is not enabled: create the modeler with the AML module in additionalModules (fpbjs/aml).'));
 }
 
 /**

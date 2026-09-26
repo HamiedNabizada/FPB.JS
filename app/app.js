@@ -5,6 +5,7 @@ import LayerOverview from './fpb/layer-panel';
 
 import configPP from './configPP';
 import configFile from './config';
+import AmlModule from './fpb/aml';
 
 import './icons';
 
@@ -38,7 +39,10 @@ var modeler = new FpbModeler({
   configFile,
   // Backup in the browser and a warning before leaving with unsaved changes.
   // Only the web app turns this on; the library leaves it off.
-  autosave: true
+  autosave: true,
+  // AutomationML import and export, likewise only here; library hosts add
+  // the module themselves (fpbjs/aml). The engine loads on first use.
+  additionalModules: [AmlModule]
 });
 
 

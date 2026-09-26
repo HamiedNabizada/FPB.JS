@@ -1,6 +1,7 @@
 import { serializeModel } from '../export/serializeModel.js';
 
 import { buildAmlIndex } from './amlIndex.js';
+import { isAmlText } from './detect.js';
 
 /**
  * AutomationML import and export (feature 028).
@@ -214,13 +215,6 @@ AmlSupport.prototype.exportAml = function () {
     };
   });
 };
-
-/** An AutomationML (CAEX) document: its root element is CAEXFile */
-export function isAmlText(content) {
-  const text = String(content);
-  const withoutBom = text.charCodeAt(0) === 0xfeff ? text.substring(1) : text;
-  return /^\s*(<\?xml[^>]*\?>\s*)?(<!--[\s\S]*?-->\s*)*<CAEXFile\b/.test(withoutBom);
-}
 
 /** CAEXDocument of a text, or an error that says what is wrong */
 function parse(engine, text) {

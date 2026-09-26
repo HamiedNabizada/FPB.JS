@@ -10,6 +10,11 @@
       "types": "./types/fpbjs.d.ts",
       "import": "./dist/fpbjs.esm.js",
       "require": "./dist/fpbjs.js"
+    },
+    "./aml": {
+      "types": "./types/fpbjs-aml.d.ts",
+      "import": "./dist/fpbjs-aml.esm.js",
+      "require": "./dist/fpbjs-aml.js"
     }
   },
   "files": [

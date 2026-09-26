@@ -74,6 +74,16 @@ module.exports = (env, argv) => {
             name: 'react',
             chunks: 'all',
             priority: 20,
+          },
+          // The AutomationML engine loads with the first AML import or export
+          // (feature 028); without this group it went into vendors, which
+          // every page loads at the start
+          amlEngine: {
+            test: /[\\/]node_modules[\\/](amlengine-js|fflate)[\\/]/,
+            name: 'aml-engine',
+            chunks: 'async',
+            priority: 30,
+            enforce: true,
           }
         }
       }

@@ -14,7 +14,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useError } from '../../context/ErrorContext';
 import XMLMapper from '../../xml/XMLMapper.js';
 import useReadOnly from '../../read-only/useReadOnly';
-import { isAmlText as isAml } from '../../aml/AmlSupport';
+import { isAmlText as isAml } from '../../aml/detect';
 
 const ImportModal = memo(({ modeler }) => {
     const [show, setShow] = useState(false);
@@ -38,7 +38,11 @@ const ImportModal = memo(({ modeler }) => {
     const fileLabelRef = useRef();
 
     const eventBus = modeler.get('eventBus');
-    const defaultText = 'Import a local stored FPB.js JSON file, XML file or AutomationML (.aml) file, or drop it here';
+    // AML only when the host added the AML module (the web app does)
+    const amlSupport = modeler.get('amlSupport', false);
+    const defaultText = amlSupport
+        ? 'Import a local stored FPB.js JSON file, XML file or AutomationML (.aml) file, or drop it here'
+        : 'Import a local stored FPB.js JSON file or XML file, or drop it here';
     let fileReader;
     
     useEffect(() => {
@@ -66,9 +70,12 @@ const ImportModal = memo(({ modeler }) => {
 
             // AutomationML: everything else in the file is kept for the AML export
             if (isAml(fileContent)) {
+                if (!amlSupport) {
+                    throw new Error('AutomationML files are not supported in this installation of FPB.js.');
+                }
                 setFileType('aml');
                 setFileData(null);
-                const hierarchies = await modeler.get('amlSupport').inspect(fileContent);
+                const hierarchies = await amlSupport.inspect(fileContent);
                 setAml({ text: fileContent, hierarchies });
                 setHierarchyId(hierarchies.length ? hierarchies[0].id : null);
                 return;
@@ -120,12 +127,14 @@ const ImportModal = memo(({ modeler }) => {
                 detectedFileType = 'json';
             } else if (fileName.endsWith('.xml')) {
                 detectedFileType = 'xml';
-            } else if (fileName.endsWith('.aml')) {
+            } else if (amlSupport && fileName.endsWith('.aml')) {
                 detectedFileType = 'aml';
             } else {
                 showError(
                     'Invalid file type',
-                    'Please select a valid JSON (.json), XML (.xml) or AutomationML (.aml) file'
+                    amlSupport
+                        ? 'Please select a valid JSON (.json), XML (.xml) or AutomationML (.aml) file'
+                        : 'Please select a valid JSON (.json) or XML (.xml) file'
                 );
                 return;
             }
@@ -161,7 +170,7 @@ const ImportModal = memo(({ modeler }) => {
     function go() {
         if (aml) {
             setIsImporting(true);
-            modeler.get('amlSupport').importAml(aml.text, { fileName, hierarchyId }).then((result) => {
+            amlSupport.importAml(aml.text, { fileName, hierarchyId }).then((result) => {
                 // without FPD content the model starts empty: no import runs
                 if (!result.hierarchy) {
                     setIsImporting(false);
@@ -259,7 +268,7 @@ const ImportModal = memo(({ modeler }) => {
                             <input type="file"
                                 id='file'
                                 className='inputfile'
-                                accept='.json,.xml,.aml'
+                                accept={amlSupport ? '.json,.xml,.aml' : '.json,.xml'}
                                 onChange={e => handleFileChosen(e.target.files[0])} />
 
                             <label htmlFor="file" ref={fileLabelRef} className={isDragging ? 'fileLabel fileLabel--dragover' : 'fileLabel'}> 

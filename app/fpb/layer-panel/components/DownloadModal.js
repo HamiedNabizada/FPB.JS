@@ -394,6 +394,7 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                                 current choices, so the form shows what the export will do */}
                             <Forms_Format
                                 exportFormat={exportFormat}
+                                amlAvailable={!!amlSupport}
                                 amlSource={amlSource}
                                 informationLevel={informationLevel}
                                 exportAsEvent={exportAsEvent}
@@ -531,14 +532,16 @@ const Forms_Format = memo(function Forms_Format(props) {
                                     </a>
                                 </div>
                             </div>
-                            <Form.Check
-                                type="radio"
-                                label="AutomationML (AML)"
-                                name="exportFormat"
-                                id="formatAML"
-                                value="aml"
-                                defaultChecked={props.exportFormat === 'aml'}
-                            />
+                            {props.amlAvailable && (
+                                <Form.Check
+                                    type="radio"
+                                    label="AutomationML (AML)"
+                                    name="exportFormat"
+                                    id="formatAML"
+                                    value="aml"
+                                    defaultChecked={props.exportFormat === 'aml'}
+                                />
+                            )}
                             {props.exportFormat === 'aml' && (
                                 <Form.Text className="text-muted aml-target-hint">
                                     {props.amlSource

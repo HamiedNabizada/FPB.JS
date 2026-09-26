@@ -4,7 +4,7 @@ const webpack = require('webpack');
 module.exports = (env, argv) => {
   const isProduction = argv.mode === 'production';
 
-  return [
+  const [umd, esm] = [
     // UMD build for browsers
     {
       entry: './src/index.js',
@@ -158,5 +158,21 @@ if (typeof global !== 'undefined' && typeof document === 'undefined') {
       mode: isProduction ? 'production' : 'development',
       devtool: isProduction ? 'source-map' : 'eval-source-map'
     }
+  ];
+
+  // The AutomationML add-on (src/aml.js) as bundles of its own, so the core
+  // library stays without the engine: fpbjs-aml.js (UMD, global FpbJSAml)
+  // and fpbjs-aml.esm.js
+  const amlBundle = (base, filename, library) => ({
+    ...base,
+    entry: './src/aml.js',
+    output: { ...base.output, filename, ...(library ? { library } : {}) }
+  });
+
+  return [
+    umd,
+    esm,
+    amlBundle(umd, 'fpbjs-aml.js', 'FpbJSAml'),
+    amlBundle(esm, 'fpbjs-aml.esm.js')
   ];
 };
