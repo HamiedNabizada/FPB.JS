@@ -7,6 +7,12 @@
 import { modelReplacer } from '../export/serializeModel.js';
 
 class XMLMapper {
+    /** At least two points with numeric coordinates */
+    static _usableWaypoints(waypoints) {
+        return Array.isArray(waypoints) && waypoints.length >= 2 && waypoints.every((point) =>
+            point && Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y)));
+    }
+
     // Constants
     static DEFAULT_WAYPOINTS = [
         { "original": { "x": 100, "y": 100 }, "x": 100, "y": 100 },
@@ -453,6 +459,22 @@ class XMLMapper {
         // Extract systemLimit
         const systemLimit = processElement.getElementsByTagName('systemLimit')[0];
         let systemLimitData = null;
+        if (!systemLimit && (processElement.getElementsByTagName('state').length ||
+                processElement.getElementsByTagName('processOperator').length)) {
+            // States and operators live in the system limit. Without one they
+            // were all dropped without a word; a system limit is added, and
+            // the automatic layout places it.
+            const systemLimitId = processId + '_systemLimit';
+            processEntry.process.consistsOfSystemLimit = systemLimitId;
+            processEntry.process.elementsContainer.push(systemLimitId);
+            systemLimitData = {
+                "$type": "fpb:SystemLimit",
+                "id": systemLimitId,
+                "name": processElement.getAttribute('name') || '',
+                "elementsContainer": []
+            };
+            processEntry.elementDataInformation.push(systemLimitData);
+        }
         if (systemLimit) {
             const systemLimitId = systemLimit.getAttribute('id');
             processEntry.process.consistsOfSystemLimit = systemLimitId;
@@ -589,13 +611,17 @@ class XMLMapper {
                     "targetRef": flowInfo.targetRef
                 };
 
-                // Waypoints from the file if it carries them, otherwise minimal
-                // ones for the layout engine to recalculate.
+                // Waypoints from the file if it carries usable ones. Otherwise
+                // none: then the flow counts as not laid out and is routed
+                // between its ends. Placeholder waypoints counted as complete
+                // layout, and the flow was drawn far away from its elements.
                 const flowVisual = {
                     "id": flowId,
-                    "type": flowType,
-                    "waypoints": flowInfo.waypoints || XMLMapper.DEFAULT_WAYPOINTS
+                    "type": flowType
                 };
+                if (XMLMapper._usableWaypoints(flowInfo.waypoints)) {
+                    flowVisual.waypoints = flowInfo.waypoints;
+                }
 
                 processEntry.elementDataInformation.push(flowData);
                 processEntry.elementVisualInformation.push(flowVisual);

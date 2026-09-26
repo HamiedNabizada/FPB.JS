@@ -183,7 +183,6 @@ test.describe('XML import - hand written files', () => {
   test('flows of a positioned file without flowContainer still touch their elements', async ({ page }) => {
     // Shapes carry positions, the optional flowContainer (waypoints, flow type)
     // is missing: the flows must be drawn between their ends.
-    test.fail(true, 'BUG: XMLMapper gives such flows DEFAULT_WAYPOINTS (100,100)-(200,200), which count as complete layout');
     await start(page);
     const xml = fixture('handgeschrieben.xml').replace(/<flowContainer>[\s\S]*<\/flowContainer>/, '');
 
@@ -369,7 +368,6 @@ test.describe('XML import - broken files', () => {
   });
 
   test('a process without systemLimit does not lose its states and operators silently', async ({ page }) => {
-    test.fail(true, 'BUG: XMLMapper reads states and processOperators only when a systemLimit exists; without it they are dropped without a word');
     await start(page);
     const xml = fixture('handgeschrieben.xml').replace(/<systemLimit[^>]*\/>/, '');
 
