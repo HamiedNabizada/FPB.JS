@@ -103,6 +103,11 @@ export class ErrorHandler {
    * Handles and logs import errors
    */
   handleError(error) {
+    // handle*Error reports and then throws, and the importer's catch hands
+    // the same error in again: report it once
+    if (error && error.fpbReported) {
+      return;
+    }
     console.error('Import Error:', error);
     
     if (error instanceof ImportError) {
@@ -115,6 +120,9 @@ export class ErrorHandler {
         IMPORT_ERRORS.UNEXPECTED_ERROR
       );
       this.eventBus.fire('import.error', importError.toEventData());
+    }
+    if (error && typeof error === 'object') {
+      error.fpbReported = true;
     }
   }
 

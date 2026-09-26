@@ -198,7 +198,6 @@ test.describe('Import errors - rejected files leave the previous model untouched
   });
 
   test('fires import.error once per rejected import', async ({ page }) => {
-    test.fail(true, 'BUG: ErrorHandler.handle*Error fires import.error, then the rethrown error is fired again by the catch in JSONImporter');
     await withOldModel(page);
 
     const result = await attempt(page, []);
@@ -240,7 +239,6 @@ test.describe('Import errors - model and canvas never go out of sync', () => {
   }
 
   test('a file with a project but no processes', async ({ page }) => {
-    test.fail(true, 'BUG: import resets the data store, then cannot open any layer; the old model stays on the canvas');
     const { before } = await withOldModel(page);
 
     const result = await attempt(page, smallModel().m.build().slice(0, 1));
@@ -251,7 +249,6 @@ test.describe('Import errors - model and canvas never go out of sync', () => {
   });
 
   test('a project without entryPoint', async ({ page }) => {
-    test.fail(true, 'BUG: entryPoint is not validated; store holds the new model, canvas keeps the old one');
     const { before } = await withOldModel(page);
     const d = smallModel().m.build();
     delete d[0].entryPoint;
@@ -263,7 +260,6 @@ test.describe('Import errors - model and canvas never go out of sync', () => {
   });
 
   test('an entryPoint that names no process', async ({ page }) => {
-    test.fail(true, 'BUG: unknown entryPoint is not validated; store holds the new model, canvas keeps the old one');
     const { before } = await withOldModel(page);
     const d = smallModel().m.build();
     d[0].entryPoint = 'no-such-process';
@@ -305,7 +301,6 @@ test.describe('Import errors - model and canvas never go out of sync', () => {
   }
 
   test('duplicate element ids inside one process', async ({ page }) => {
-    test.fail(true, 'BUG: a duplicate id is built twice; switchProcess fails with "element already exists", layer stays half drawn');
     const { before } = await withOldModel(page);
     const { m, ids } = smallModel();
     const d = m.build();
@@ -574,7 +569,6 @@ test.describe('Import errors - repaired files load with a report', () => {
   });
 
   test('an element of an unknown type is reported, not dropped silently', async ({ page }) => {
-    test.fail(true, 'BUG: unknown $type ends in buildTRandUsage with element undefined; nothing in the report');
     const { m } = smallModel();
     const d = m.build();
     processEntry(d).elementDataInformation.push({ $type: 'fpb:Unicorn', id: 'unicorn-1', name: 'Einhorn' });
@@ -586,7 +580,6 @@ test.describe('Import errors - repaired files load with a report', () => {
   });
 
   test('an element of an unknown type inside the SystemLimit is reported, not dropped silently', async ({ page }) => {
-    test.fail(true, 'BUG: unknown $type in the SystemLimit container ends in buildTRandUsage with element undefined; nothing in the report');
     const { m } = smallModel();
     const d = m.build();
     processEntry(d).elementDataInformation.push({ $type: 'fpb:Unicorn', id: 'unicorn-2', name: 'Einhorn' });
@@ -612,7 +605,6 @@ test.describe('Import errors - repaired files load with a report', () => {
   });
 
   test('an element without $type is reported by its own id', async ({ page }) => {
-    test.fail(true, 'BUG: a state without $type is skipped silently; only its flows show up in the report');
     const { m, ids } = smallModel();
     const d = m.build();
     delete processEntry(d).elementDataInformation.find((e) => e.id === ids.e).$type;
