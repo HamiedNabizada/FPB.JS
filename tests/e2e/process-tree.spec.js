@@ -222,7 +222,6 @@ test.describe('Process tree', () => {
   });
 
   test('a decomposition made while the tree is open shows the new layer marked', async ({ page }) => {
-    test.fail(true, 'BUG: the tree opens the path to the current layer only when it is mounted (initialOpenState), a new layer under a closed node stays hidden');
     await laden(page);
     await baumOeffnen(page);
     await knoten(page, 'Erhitzen').click();
