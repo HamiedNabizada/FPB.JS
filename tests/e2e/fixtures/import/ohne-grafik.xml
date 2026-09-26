@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Foreign VDI 3682 file with only the logical structure: no visual
+     attributes, no flowContainer, no characteristics or assignments, a state
+     without stateType. -->
+<project xmlns="http://www.vdivde.de/3682">
+  <projectInformation entryPoint="P1" name="Ohne Grafik" targetNamespace="http://example.org/fpb"/>
+  <process id="P1">
+    <systemLimit id="SL1" name="Montage"/>
+    <states>
+      <state stateType="product">
+        <identification uniqueIdent="A"/>
+        <flows><flow id="FA"><entry id="A"/><exit id="OP1"/></flow></flows>
+      </state>
+      <state>
+        <identification uniqueIdent="B" shortName="Schraube"/>
+        <flows><flow id="FB"><entry id="B"/><exit id="OP1"/></flow></flows>
+      </state>
+      <state stateType="information">
+        <identification uniqueIdent="Z" shortName="Zwischenstand"/>
+        <flows>
+          <flow id="FZ1"><entry id="OP1"/><exit id="Z"/></flow>
+          <flow id="FZ2"><entry id="Z"/><exit id="OP2"/></flow>
+        </flows>
+      </state>
+      <state stateType="product">
+        <identification uniqueIdent="C" shortName="Baugruppe"/>
+        <flows><flow id="FC"><entry id="OP2"/><exit id="C"/></flow></flows>
+      </state>
+    </states>
+    <processOperators>
+      <processOperator><identification uniqueIdent="OP1" shortName="Fuegen"/></processOperator>
+      <processOperator><identification uniqueIdent="OP2" shortName="Pruefen"/></processOperator>
+    </processOperators>
+  </process>
+</project>
