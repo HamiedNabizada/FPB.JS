@@ -12,7 +12,7 @@ const clone = () => JSON.parse(JSON.stringify(basis));
 async function vorbereiten(page) {
   await page.setViewportSize({ width: 1600, height: 1000 });
   const importer = new ImportPage(page);
-  await importer.goto();
+  await importer.goto('/?panel=next');
   await importer.import(clone());
   // starts closed, like the old panel
   await expect(page.locator('#propertiesPanelToggle')).toHaveAttribute('aria-expanded', 'false');

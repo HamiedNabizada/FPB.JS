@@ -19,7 +19,7 @@ const OPERATOR = 'Prüfen';
 async function vorbereiten(page) {
   await page.setViewportSize({ width: 1600, height: 1000 });
   const importer = new ImportPage(page);
-  await importer.goto('/?panel=legacy');
+  await importer.goto();
   await importer.import(clone());
   await page.evaluate((name) => {
     const element = window.fpbjs.get('elementRegistry')

@@ -46,12 +46,12 @@ var modeler = new FpbModeler({
 modeler.get('canvas').zoom('fit-viewport');
 if (configPP.propertiesPanel.showPanel) {
   try {
-    // New panel (Preact); ?panel=legacy shows the old React panel while
-    // the move is under way (FPB.JS_Docs Geplante-Features/016)
-    const legacyPanel = new URLSearchParams(window.location.search).get('panel') === 'legacy';
-    const propertiesPanel = legacyPanel
-      ? new PropertiesPanel({ container: propertiesContainer, modeler, configPP })
-      : new FpbPropertiesPanel({ container: propertiesContainer, modeler });
+    // Old React panel until the new one covers everything; ?panel=next shows
+    // the new Preact panel (FPB.JS_Docs Geplante-Features/016, 029 phase B)
+    const nextPanel = new URLSearchParams(window.location.search).get('panel') === 'next';
+    const propertiesPanel = nextPanel
+      ? new FpbPropertiesPanel({ container: propertiesContainer, modeler })
+      : new PropertiesPanel({ container: propertiesContainer, modeler, configPP });
   } catch (e) {
     console.error('[FPB.JS] PropertiesPanel init failed:', e);
   }
