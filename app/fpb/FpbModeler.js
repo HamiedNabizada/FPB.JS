@@ -63,6 +63,7 @@ import AccessibilityModule from './a11y';
 import PreviewModule from './preview';
 import AutosaveModule from './autosave';
 import ReadOnlyModule from './read-only';
+import { DebounceInputModule } from '@bpmn-io/properties-panel';
 import SnappingModule from 'diagram-js/lib/features/snapping';
 
 
@@ -154,7 +155,9 @@ FpbModeler.prototype._modules = [
     AccessibilityModule,
     SnappingModule,
     AutosaveModule,
-    ReadOnlyModule
+    ReadOnlyModule,
+    // Debounced input for the properties panel: one undo step per pause
+    DebounceInputModule
     // AML (./aml) is optional like the browser backup: the web app adds it,
     // library hosts pass it in additionalModules (fpbjs/aml)
     // AutoResize - disabled to allow free SystemLimit resize

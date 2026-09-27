@@ -2,6 +2,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
+const aliases = require('./build/aliases');
 
 module.exports = (env, argv) => {
   const isProduction = argv.mode === 'production';
@@ -13,6 +14,9 @@ module.exports = (env, argv) => {
   return {
     entry: {
       bundle: ['./app/app.js']
+    },
+    resolve: {
+      alias: aliases
     },
     output: {
       path: path.join(__dirname, 'dist/web'),

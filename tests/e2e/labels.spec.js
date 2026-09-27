@@ -24,12 +24,12 @@ const clone = () => JSON.parse(JSON.stringify(basis));
 
 const LANG = 'Erhitzen der Rohstoffe auf die vorgegebene Zieltemperatur mit anschließender Haltezeit';
 
-async function laden(page) {
+async function laden(page, path = '/') {
   const fehler = [];
   page.on('pageerror', (e) => fehler.push(e.message));
   await page.setViewportSize({ width: 1600, height: 1000 });
   const importer = new ImportPage(page);
-  await importer.goto();
+  await importer.goto(path);
   await importer.import(clone());
   return { importer, fehler };
 }
@@ -176,6 +176,24 @@ test.describe('Labels inside shapes', () => {
     await page.evaluate((id) => window.fpbjs.get('modeling').updateLabel(window.fpbjs.get('elementRegistry').get(id), 'Prüfen ' + 'x'.repeat(5) + ' mit einer sehr langen Beschreibung des Vorgangs'), id);
     await page.waitForTimeout(200);
     expect(await tooltipBeiHover(page, id)).toBe('Prüfen xxxxx mit einer sehr langen Beschreibung des Vorgangs\nPrüfen der Temperatur');
+  });
+
+  test('the long name from the new properties panel becomes the tooltip', async ({ page }) => {
+    await laden(page, '/?panel=next');
+    const id = await idVon(page, 'Prüfen');
+    await page.click('#propertiesPanelToggle');
+    const p = await mitte(page, 'Prüfen');
+    await page.mouse.click(p.x, p.y);
+    const feld = page.locator('#bio-properties-panel-longName');
+    await expect(feld).toBeVisible();
+    await feld.fill('Prüfen der Temperatur');
+    // the panel applies input after a pause of 300 ms (debounceInput)
+    await page.waitForFunction((id) => {
+      const identification = window.fpbjs.get('elementRegistry').get(id).businessObject.identification;
+      return identification && identification.longName === 'Prüfen der Temperatur';
+    }, id);
+
+    expect(await tooltipBeiHover(page, id)).toBe('Prüfen der Temperatur');
   });
 });
 
