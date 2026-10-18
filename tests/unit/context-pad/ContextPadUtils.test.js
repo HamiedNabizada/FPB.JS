@@ -293,14 +293,15 @@ describe('ContextPadUtils', () => {
         expect(ElementValidationUtils.technicalResourcesAvailable(source, technicalResources)).toBe(false);
       });
 
-      // As the context pad passes them: business objects from the process
-      // container, whose isAssignedTo is a list of process operators (B13)
-      describe('with business objects as in the model', () => {
+      // As the context pad passes them: shapes from the process container;
+      // isAssignedTo is a list of process operators on their business
+      // objects, the shapes have none (B13)
+      describe('with shapes as in the model', () => {
         const po = { id: 'po1' };
         const other = { id: 'po2' };
-        const tr1 = { id: 'tr1', isAssignedTo: [po] };
-        const tr2 = { id: 'tr2', isAssignedTo: [other] };
-        po.isAssignedTo = [tr1];
+        const tr1 = { id: 'tr1', businessObject: { id: 'tr1', isAssignedTo: [po] } };
+        const tr2 = { id: 'tr2', businessObject: { id: 'tr2', isAssignedTo: [other] } };
+        po.isAssignedTo = [tr1.businessObject];
         const source = { id: 'po1', businessObject: po };
 
         it('returns false when the operator already uses every resource', () => {

@@ -175,10 +175,11 @@ export class ElementValidationUtils {
     }
 
     // A resource is free for this operator while neither side lists the
-    // other; isAssignedTo is a list on both (PO <-> TR)
+    // other. The container holds shapes; isAssignedTo is a list on the
+    // business objects of both (PO <-> TR)
     const used = source.businessObject.isAssignedTo.map(tr => tr.id);
     const freeTechnicalResources = filter(technicalResources, tr => {
-      const users = [].concat(tr.isAssignedTo || []);
+      const users = [].concat((tr.businessObject || tr).isAssignedTo || []);
       return used.indexOf(tr.id) === -1 && !some(users, po => po && po.id === source.id);
     });
 
