@@ -31,6 +31,8 @@ export default function AmlSupport(eventBus, fpbjs) {
   this._pendingSource = null;
   // index and overview an import has built already, for the source it brings
   this._prebuilt = null;
+  // the kept file before the running import, put back if the import fails
+  this._beforeImport = null;
 
   const self = this;
 
@@ -40,7 +42,26 @@ export default function AmlSupport(eventBus, fpbjs) {
     const source = event && event.amlSource ? event.amlSource : null;
     const prebuilt = self._prebuilt && self._prebuilt.source === source ? self._prebuilt : null;
     self._prebuilt = null;
+    self._beforeImport = {
+      source: self._source,
+      built: self._index ? { index: self._index, overview: self._overview } : null
+    };
     self._setSource(source, prebuilt);
+  });
+
+  // The importer refuses invalid content while FPBJS.import runs and keeps
+  // the model it had: that model keeps its file too
+  eventBus.on('import.error', function () {
+    const before = self._beforeImport;
+    if (before) {
+      self._beforeImport = null;
+      self._setSource(before.source, before.built);
+    }
+  });
+
+  // after the importer: an import that got this far went through
+  eventBus.on('FPBJS.import', 1, function () {
+    self._beforeImport = null;
   });
 
   eventBus.on('model.new', function () {
