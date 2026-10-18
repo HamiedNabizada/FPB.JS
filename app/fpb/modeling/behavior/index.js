@@ -8,6 +8,7 @@ import LayerUndoBoundary from './LayerUndoBoundary';
 import BoundaryStateResizeBehavior from './BoundaryStateResizeBehavior';
 import BoundaryStateMoveBehavior from './BoundaryStateMoveBehavior';
 import SystemLimitResizeHandles from './SystemLimitResizeHandles';
+import StateCopySyncBehavior from './StateCopySyncBehavior';
 import FpbFactory from '../FpbFactory';
 
 export default {
@@ -21,7 +22,8 @@ export default {
     'layerUndoBoundary',
     'boundaryStateResizeBehavior',
     'boundaryStateMoveBehavior',
-    'systemLimitResizeHandles'
+    'systemLimitResizeHandles',
+    'stateCopySyncBehavior'
   ],
   __depends__: [
     FpbFactory
@@ -35,5 +37,6 @@ export default {
   layerUndoBoundary: ['type', LayerUndoBoundary],
   boundaryStateResizeBehavior: ['type', BoundaryStateResizeBehavior],
   boundaryStateMoveBehavior: ['type', BoundaryStateMoveBehavior],
-  systemLimitResizeHandles: ['type', SystemLimitResizeHandles]
+  systemLimitResizeHandles: ['type', SystemLimitResizeHandles],
+  stateCopySyncBehavior: ['type', StateCopySyncBehavior]
 };

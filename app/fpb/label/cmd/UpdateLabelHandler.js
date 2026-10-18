@@ -15,7 +15,8 @@ import {
   isAny
 } from '../../help/utils';
 import { isEmptyText } from '../utils/LabelUtils';
-import { getElementById, checkIfOnSystemBorder, getSystemLimit } from '../../help/helpUtils';
+import { getSystemLimit } from '../../help/helpUtils';
+import { stateCopies } from '../../help/processShapes';
 
 const NULL_DIMENSIONS = {
   width: 0,
@@ -37,18 +38,20 @@ function trackedWrite(ctx, target, key, value) {
   target[key] = value;
 }
 
-export default function UpdateLabelHandler(modeling, textRenderer, eventBus, canvas) {
+export default function UpdateLabelHandler(modeling, textRenderer, eventBus, canvas, fpbjs) {
   this._modeling = modeling;
   this._textRenderer = textRenderer;
   this._eventBus = eventBus;
   this._canvas = canvas;
+  this._fpbjs = fpbjs;
 }
 
 UpdateLabelHandler.$inject = [
   'modeling',
   'textRenderer',
   'eventBus',
-  'canvas'
+  'canvas',
+  'fpbjs'
 ];
 
 /**
@@ -242,70 +245,17 @@ UpdateLabelHandler.prototype._handleStateElementResize = function(element, label
 };
 
 /**
- * Scenario 7 & 8: Bidirectional state name synchronization
- * - When state renamed on parent: sync to child layers
- * - When boundary state renamed on child: sync to parent layer
+ * Scenario 7 & 8: a state renamed on one layer is renamed on every layer it
+ * shows on. It used to reach only the layer right below (through the
+ * operators the state flows to) or right above (from a boundary state), so a
+ * name changed two layers down stayed there (B14). All copies share the id
+ * of the state (help/processShapes.stateCopies).
  */
 UpdateLabelHandler.prototype._handleStateNameSync = function(element, newLabel, ctx) {
-  const process = this._canvas.getRootElement();
-  const stateId = element.businessObject.id;
-
-  // Scenario 7: State on parent layer renamed - sync to child layers
-  // Find all ProcessOperators connected to this state that have decomposed views
-  if (element.businessObject.isAssignedTo) {
-    element.businessObject.isAssignedTo.forEach(processOperator => {
-      if (processOperator.decomposedView) {
-        const childProcess = processOperator.decomposedView;
-        const childSystemLimit = getSystemLimit(childProcess);
-
-        if (childSystemLimit && childSystemLimit.businessObject.elementsContainer) {
-          const stateInChild = getElementById(
-            childSystemLimit.businessObject.elementsContainer,
-            stateId
-          );
-
-          if (stateInChild && stateInChild.businessObject) {
-            // Update name on child layer
-            trackedWrite(ctx, stateInChild.businessObject, 'name', newLabel);
-            if (stateInChild.businessObject.identification) {
-              trackedWrite(ctx, stateInChild.businessObject.identification, 'shortName', newLabel);
-            }
-          }
-        }
-      }
-    });
-  }
-
-  // Scenario 8: Boundary state on child layer renamed - sync to parent layer
-  if (process.businessObject.isDecomposedProcessOperator) {
-    const systemLimit = getSystemLimit(process);
-
-    if (systemLimit) {
-      const borderPosition = checkIfOnSystemBorder(systemLimit, element);
-
-      // Only sync if state is on boundary
-      if (borderPosition === 'onUpperBorder' || borderPosition === 'onBottomBorder') {
-        const parentProcess = process.businessObject.parent;
-
-        if (parentProcess) {
-          const parentSystemLimit = getSystemLimit(parentProcess);
-
-          if (parentSystemLimit && parentSystemLimit.businessObject.elementsContainer) {
-            const stateInParent = getElementById(
-              parentSystemLimit.businessObject.elementsContainer,
-              stateId
-            );
-
-            if (stateInParent && stateInParent.businessObject) {
-              // Update name on parent layer
-              trackedWrite(ctx, stateInParent.businessObject, 'name', newLabel);
-              if (stateInParent.businessObject.identification) {
-                trackedWrite(ctx, stateInParent.businessObject.identification, 'shortName', newLabel);
-              }
-            }
-          }
-        }
-      }
+  stateCopies(this._fpbjs.getProjectDefinition(), element).forEach((copy) => {
+    trackedWrite(ctx, copy.businessObject, 'name', newLabel);
+    if (copy.businessObject.identification) {
+      trackedWrite(ctx, copy.businessObject.identification, 'shortName', newLabel);
     }
-  }
+  });
 };
