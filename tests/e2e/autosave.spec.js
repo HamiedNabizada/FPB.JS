@@ -205,6 +205,33 @@ test.describe('Sicherung im Browser', () => {
     expect(await namen(page)).toEqual([]);
   });
 
+  // B11
+  test('eine Sicherung, die sich nicht laden lässt, bleibt angeboten; der nächste Import ist ein gewöhnlicher', async ({ page }) => {
+    await oeffnen(page);
+    // Sicherung eines geschlossenen Tabs, deren Inhalt der Importer ablehnt
+    await page.evaluate(() => new Promise((resolve, reject) => {
+      const request = indexedDB.open('fpbjs.autosave', 1);
+      request.onupgradeneeded = () => request.result.createObjectStore('backups', { keyPath: 'id' });
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        const tx = db.transaction('backups', 'readwrite');
+        tx.objectStore('backups').put({ id: 'tab-weg', savedAt: '2026-10-01T10:00:00Z', title: 'Kaputt', model: [{ kein: 'Projekt' }] });
+        tx.oncomplete = () => { db.close(); resolve(); };
+      };
+    }));
+    await neuLaden(page);
+
+    await hinweis(page).getByRole('button', { name: 'Restore Kaputt' }).click();
+    await expect(hinweis(page).getByRole('button', { name: 'Restore Kaputt' })).toBeVisible();
+
+    const importer = new ImportPage(page);
+    await importer.import(clone());
+    await expect.poll(() => namen(page)).toContain('Erhitzen');
+    expect(await ungespeichert(page)).toBe(false);
+    expect((await sicherungen(page)).map((s) => s.id)).toContain('tab-weg');
+  });
+
   test('wer vor dem Speichern die Seite verlässt, verliert nichts', async ({ page }) => {
     await laden(page);
     // sofort weg, bevor die verzögerte Sicherung läuft

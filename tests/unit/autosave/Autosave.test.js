@@ -129,6 +129,26 @@ describe('Autosave', () => {
     expect(store.records.get('tab-neu').model).toEqual([{ alt: true }]);
   });
 
+  // B11: der nächste Import galt sonst als die Wiederherstellung, löschte die
+  // Sicherung und ließ die frisch importierte Datei als ungespeichert stehen
+  it('scheitert der Import einer Sicherung, bleibt sie angeboten und der nächste Import ist ein gewöhnlicher', async () => {
+    const store = createMemoryStore();
+    await store.put(sicherung('kaputt', [{ kaputt: true }]));
+    const { eventBus, autosave, processes } = await starten({ store, id: 'tab-neu' });
+    // der Importer lehnt den Inhalt ab, das alte Modell bleibt
+    eventBus.on('FPBJS.import', () => eventBus.fire('import.error', { message: 'Invalid import data structure' }));
+
+    expect(await autosave.restore('kaputt')).toBe(false);
+    expect(autosave.getPending().map((p) => p.id)).toEqual(['kaputt']);
+
+    processes.push({ datei: true });
+    eventBus.fire('import.done');
+    await autosave.flush();
+
+    expect(autosave.isDirty()).toBe(false);
+    expect(store.records.has('kaputt')).toBe(true);
+  });
+
   it('hat ein anderer Tab die Sicherung schon übernommen, lädt Wiederherstellen nichts doppelt', async () => {
     const store = createMemoryStore();
     await store.put(sicherung('alt', [{ alt: true }]));
