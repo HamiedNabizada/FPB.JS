@@ -168,7 +168,7 @@ export function updateInPlace(existing, json, targetIh = null, options = null) {
   // sub-process layer; in CAEX each copy has its own ID. Translating the
   // sub-process copies up front lets everything below treat them as distinct
   // elements.
-  remapSubProcessBoundaryStateIds(entries, elementIndex, options);
+  const boundaryOrigins = remapSubProcessBoundaryStateIds(entries, elementIndex, options);
 
   // Every incoming ID, for the orphan removal at the end
   const incomingIds = new IgnoreCaseSet();
@@ -348,7 +348,7 @@ export function updateInPlace(existing, json, targetIh = null, options = null) {
   // AddElement lack the parent-entry context, so every sub-process state's
   // refObj is re-derived from the snapshot here (as in Convert).
   MapperTrace.attempt(options, 'SyncBoundaryStateRefObjs', 'post-pass re-deriving refObj on every sub-process state from the snapshot');
-  const boundarySyncs = syncBoundaryStateRefObjs(entries, elementIndex, options);
+  const boundarySyncs = syncBoundaryStateRefObjs(entries, elementIndex, boundaryOrigins, options);
   MapperTrace.result(options, 'SyncBoundaryStateRefObjs', `synced refObj on ${boundarySyncs} state(s) across decomposition`);
 
   // PO name to child process name, after every other update so the loop
@@ -547,8 +547,12 @@ function wrapBraces(id) {
  * Rewriting the sub-process copies (element ids, and the flow endpoints and
  * visuals that reference them) up front lets UpdateInPlace match them in place
  * instead of colliding on the parent copy. Mutates `entries`.
+ * Returns, per remapped copy (bare per-layer id), the bare shared id of the
+ * state it shows: after the remap the copy no longer carries that id, so
+ * syncBoundaryStateRefObjs needs it to write refObj.
  */
 function remapSubProcessBoundaryStateIds(entries, elementIndex, options) {
+  const origins = new IgnoreCaseMap();
   // PO id (bare) -> the entry (parent layer) that contains that PO
   const entryByPoId = new IgnoreCaseMap();
   for (const e of entries) {
@@ -629,6 +633,9 @@ function remapSubProcessBoundaryStateIds(entries, elementIndex, options) {
       remap.set(bare, derived);
       d.id = derived;
     }
+    for (const shared of remap.keys()) {
+      origins.set(remap.get(shared), shared);
+    }
     if (remap.size === 0) {
       continue;
     }
@@ -651,6 +658,7 @@ function remapSubProcessBoundaryStateIds(entries, elementIndex, options) {
     MapperTrace.info(options,
       `RemapBoundaryStates: sub-process '${entry.process.id}' → ${remap.size} boundary state(s) remapped to deterministic per-layer ids.`);
   }
+  return origins;
 }
 
 /**
@@ -1241,7 +1249,7 @@ function syncDecompositionNamesPostPass(elementIndex, warnings = null, options =
  * an explicit refObj stays (the round trip gives each copy its own ID, so
  * clearing would lose every legitimate refObj).
  */
-function syncBoundaryStateRefObjs(entries, elementIndex, options = null) {
+function syncBoundaryStateRefObjs(entries, elementIndex, boundaryOrigins, options = null) {
   // Every entry can be the parent of a deeper sub-process
   const parentEntries = entries.slice();
 
@@ -1277,7 +1285,10 @@ function syncBoundaryStateRefObjs(entries, elementIndex, options = null) {
       }
 
       // brace-free: refObj carries the uniqueIdent form
-      const expected = parentStateIds.has(stateBare) ? stripBraces(normalizeId(data.id)) : '';
+      // A copy remapped to its per-layer id no longer shares the parent
+      // state's id; the remap remembers which state it shows.
+      const expected = parentStateIds.has(stateBare) ? stripBraces(normalizeId(data.id))
+        : boundaryOrigins.get(stateBare) ?? '';
       const current = stateIe.attribute.item('refObj')?.value ?? '';
 
       if (!expected) {
