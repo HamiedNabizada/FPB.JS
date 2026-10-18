@@ -86,7 +86,7 @@
     "bootstrap": "^5.3.7",
     "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^7.1.2",
-    "diagram-js": "^15.26.0",
+    "diagram-js": "^15.27.1",
     "diagram-js-direct-editing": "^3.2.0",
     "diagram-js-grid": "^2.1.0",
     "diagram-js-minimap": "^5.4.1",
