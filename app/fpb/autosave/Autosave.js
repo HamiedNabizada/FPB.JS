@@ -52,6 +52,7 @@ export default function Autosave(eventBus, fpbjs, config, injector) {
   this._latest = null;
   this._written = null;
   this._restoring = null;
+  this._restoringEntry = null;
   this._timer = null;
 
   if (!this._config.enabled || !localStorageAvailable()) {
@@ -75,11 +76,28 @@ export default function Autosave(eventBus, fpbjs, config, injector) {
     self._schedule();
   });
 
+  // The importer refuses invalid content right away and keeps the model it
+  // had. A backup that fails to load is offered again, and the next import
+  // is an ordinary one.
+  eventBus.on('import.error', function () {
+    if (self._restoring) {
+      const entry = self._restoringEntry;
+      self._restoring = null;
+      self._restoringEntry = null;
+      if (entry) {
+        self._pending = self._pending.concat(entry)
+          .sort((a, b) => String(b.savedAt).localeCompare(String(a.savedAt)));
+        self._changed();
+      }
+    }
+  });
+
   eventBus.on('import.done', function () {
     if (self._restoring) {
       // The restored model is now this tab's; it stays unsaved
       const restored = self._restoring;
       self._restoring = null;
+      self._restoringEntry = null;
       self._enqueue(() => self._store.remove(restored));
     } else {
       self._baseline = self._serialize();
@@ -157,7 +175,8 @@ Autosave.prototype.getPending = function () {
  * @return {Promise<boolean>} whether the backup was loaded
  */
 Autosave.prototype.restore = function (id) {
-  if (!this._take(id)) {
+  const entry = this._take(id);
+  if (!entry) {
     return Promise.resolve(false);
   }
 
@@ -166,8 +185,10 @@ Autosave.prototype.restore = function (id) {
       return false;
     }
     this._restoring = id;
+    this._restoringEntry = entry;
     this._eventBus.fire('FPBJS.import', { data: record.model, amlSource: record.aml || null });
-    return true;
+    // cleared by import.error if the importer refused it
+    return this._restoring === id;
   }).catch((error) => {
     this._failed(error);
     return false;
