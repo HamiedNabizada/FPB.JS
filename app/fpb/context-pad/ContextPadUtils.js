@@ -174,9 +174,12 @@ export class ElementValidationUtils {
       return true;
     }
 
-    // Check if there are unassigned technical resources
+    // A resource is free for this operator while neither side lists the
+    // other; isAssignedTo is a list on both (PO <-> TR)
+    const used = source.businessObject.isAssignedTo.map(tr => tr.id);
     const freeTechnicalResources = filter(technicalResources, tr => {
-      return !tr.isAssignedTo || !tr.isAssignedTo.id || tr.isAssignedTo.id !== source.id;
+      const users = [].concat(tr.isAssignedTo || []);
+      return used.indexOf(tr.id) === -1 && !some(users, po => po && po.id === source.id);
     });
 
     return freeTechnicalResources.length > 0;
