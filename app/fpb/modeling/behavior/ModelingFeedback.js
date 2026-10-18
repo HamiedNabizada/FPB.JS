@@ -10,6 +10,14 @@ const BOUNDARY_STATE_LOCKED = 'This state represents an input/output of the deco
 const SWITCHINGPROCESS = 'Switching between processes is purely for navigation purposes. The decomposition and composition functionalities are used to transfer changes to higher and lower process levels.'
 
 
+// Messages carry names from the model, which may come from files made by
+// others: always text, never HTML
+function textNode(message) {
+    const node = document.createElement('div');
+    node.textContent = message;
+    return node;
+}
+
 export default function ModelingFeedback(eventBus, tooltips, translate, canvas) {
 
     function showError(position, message, timeout) {
@@ -20,7 +28,7 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
             },
             type: 'error',
             timeout: timeout || 2000,
-            html: '<div>' + message + '</div>'
+            html: textNode(message)
         });
     }
     function showTipp(message, position) {
@@ -31,7 +39,7 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
             },
             type: 'tipp',
             timeout: 2000,
-            html: '<div>' + message + '</div>'
+            html: textNode(message)
         })
     }
     // 
