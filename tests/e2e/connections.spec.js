@@ -105,6 +105,25 @@ test.describe('Connection Lifecycle', () => {
     await modeler.takeCanvasScreenshot('conn-03-usage');
   });
 
+  test('no Usage entry once the PO uses every TechnicalResource', async ({ page }) => {
+    const modeler = new ModelerPage(page);
+    await modeler.goto();
+
+    await modeler.createSystemLimit(POSITIONS.systemLimit);
+    await page.waitForTimeout(500);
+    await modeler.createProcessOperator(POSITIONS.processOperator);
+    await page.waitForTimeout(300);
+    await modeler.createTechnicalResource(POSITIONS.technicalResource);
+    await page.waitForTimeout(300);
+
+    // offered while the resource is free: connectElements clicks the entry
+    await modeler.connectElements(POSITIONS.processOperator, 'connect_usage', POSITIONS.technicalResource);
+    expect(await modeler.countConnections()).toBe(1);
+
+    // the only resource is taken (B13: every resource counted as free)
+    expect(await modeler.getContextPadActionsByType('fpb:ProcessOperator')).not.toContain('connect_usage');
+  });
+
   test('creates Usage connection from TechnicalResource to PO', async ({ page }) => {
     const modeler = new ModelerPage(page);
     await modeler.goto();
