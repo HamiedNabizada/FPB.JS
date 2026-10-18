@@ -1,7 +1,7 @@
-// tests/unit/properties-panel/characteristicsNumbering.test.js
+// tests/unit/help/characteristicsNumbering.test.js
 import { describe, it, expect } from 'vitest';
 
-import { nextCharacteristicNumber } from '../../../app/fpb/properties-panel/characteristicsNumbering.js';
+import { nextCharacteristicNumber } from '../../../app/fpb/help/characteristicsNumbering.js';
 
 const characteristic = (shortName) => ({ category: { shortName, uniqueIdent: 'el_' + shortName } });
 

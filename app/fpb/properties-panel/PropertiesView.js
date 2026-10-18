@@ -1,6 +1,6 @@
 import { is, isAny } from '../help/utils';
 
-import { nextCharacteristicNumber } from './characteristicsNumbering';
+import { nextCharacteristicNumber } from '../help/characteristicsNumbering';
 import { cloneModdle } from '../help/moddleClone';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
