@@ -1295,3 +1295,144 @@ test.describe('Compose', () => {
     expect(await issues(page)).toEqual([]);
   });
 });
+
+/** Every copy of a state over all layers: name, identification, characteristics */
+const copies = (page, id) => page.evaluate((id) => window.__lr.processes().map((p) => {
+  const sl = window.__lr.sl(p);
+  const s = sl && (sl.businessObject.elementsContainer || []).find((e) => e.id === id);
+  if (!s) return null;
+  const bo = s.businessObject;
+  return {
+    process: p.id,
+    name: bo.name,
+    shortName: bo.identification && bo.identification.shortName,
+    longName: bo.identification && bo.identification.longName,
+    characteristics: (bo.characteristics || []).map((c) => c.category && c.category.shortName)
+  };
+}).filter(Boolean), id);
+
+/** Do all copies of the state hold the same identification and characteristics objects? */
+const sharing = (page, id) => page.evaluate((id) => {
+  const bos = window.__lr.processes().map((p) => {
+    const sl = window.__lr.sl(p);
+    const s = sl && (sl.businessObject.elementsContainer || []).find((e) => e.id === id);
+    return s && s.businessObject;
+  }).filter(Boolean);
+  return {
+    identification: bos.every((bo) => bo.identification === bos[0].identification),
+    characteristics: bos.every((bo) => bo.characteristics === bos[0].characteristics)
+  };
+}, id);
+
+const undo = (page) => page.evaluate(() => window.fpbjs.get('commandStack').undo());
+
+/** As both properties panels write: a new object through updateProperties */
+const writeIdentification = (page, id, changes) => page.evaluate(({ id, changes }) => {
+  const shape = window.__lr.byId(id);
+  const bo = shape.businessObject;
+  const identification = window.fpbjs.get('fpbFactory').create('fpb:Identification', Object.assign({
+    uniqueIdent: bo.identification.uniqueIdent,
+    longName: bo.identification.longName,
+    shortName: bo.identification.shortName,
+    versionNumber: bo.identification.versionNumber,
+    revisionNumber: bo.identification.revisionNumber
+  }, changes));
+  window.fpbjs.get('modeling').updateProperties(shape, { identification });
+}, { id, changes });
+
+const addCharacteristic = (page, id, shortName) => page.evaluate(({ id, shortName }) => {
+  const shape = window.__lr.byId(id);
+  const factory = window.fpbjs.get('fpbFactory');
+  const characteristic = factory.create('fpbch:Characteristics', {
+    category: factory.create('fpb:Identification', { uniqueIdent: id + '_' + shortName, shortName })
+  });
+  const list = (shape.businessObject.characteristics || []).concat(characteristic);
+  window.fpbjs.get('modeling').updateProperties(shape, { characteristics: list });
+}, { id, shortName });
+
+// B14: a boundary state is one object shown on several layers; every edit
+// reaches all its copies, and one undo takes it back everywhere
+test.describe('Boundary state copies stay one object (B14)', () => {
+
+  test('renaming on the third level renames the state on every level, undo on every level', async ({ page }) => {
+    await load(page);
+    await nest(page);
+    expect((await copies(page, IDS.rohstoff)).length).toBe(3);
+
+    await page.evaluate((id) => window.fpbjs.get('modeling').updateLabel(window.__lr.byId(id), 'Rohstoff neu'), IDS.rohstoff);
+    for (const copy of await copies(page, IDS.rohstoff)) {
+      expect(copy).toMatchObject({ name: 'Rohstoff neu', shortName: 'Rohstoff neu' });
+    }
+
+    await undo(page);
+    for (const copy of await copies(page, IDS.rohstoff)) {
+      expect(copy).toMatchObject({ name: 'Rohstoff', shortName: 'Rohstoff' });
+    }
+    expect(await issues(page)).toEqual([]);
+  });
+
+  test('renaming on the top level reaches the third level', async ({ page }) => {
+    await load(page);
+    await nest(page);
+    await switchTo(page, IDS.root);
+
+    await page.evaluate((id) => window.fpbjs.get('modeling').updateLabel(window.__lr.byId(id), 'Rohstoff oben'), IDS.rohstoff);
+    for (const copy of await copies(page, IDS.rohstoff)) {
+      expect(copy).toMatchObject({ name: 'Rohstoff oben', shortName: 'Rohstoff oben' });
+    }
+    expect(await issues(page)).toEqual([]);
+  });
+
+  // Strom: the file holds the same identification and characteristics on all layers
+  test('a new identification on one copy reaches all copies that agreed, which then share it; one undo', async ({ page }) => {
+    await load(page);
+    await nest(page);
+    await switchTo(page, IDS.child);
+    const before = await copies(page, IDS.strom);
+    expect(before.length).toBe(3);
+
+    await writeIdentification(page, IDS.strom, { longName: 'Netzstrom 400 V', versionNumber: '2' });
+    for (const copy of await copies(page, IDS.strom)) {
+      expect(copy.longName).toBe('Netzstrom 400 V');
+    }
+    expect(await sharing(page, IDS.strom)).toMatchObject({ identification: true });
+
+    await undo(page);
+    expect(await copies(page, IDS.strom)).toEqual(before);
+  });
+
+  test('a characteristic added on one copy shows on all copies that agreed; one undo', async ({ page }) => {
+    await load(page);
+    await nest(page);
+    const before = await copies(page, IDS.strom);
+
+    await addCharacteristic(page, IDS.strom, 'Spannung');
+    for (const copy of await copies(page, IDS.strom)) {
+      expect(copy.characteristics).toContain('Spannung');
+    }
+    expect(await sharing(page, IDS.strom)).toMatchObject({ characteristics: true });
+
+    await undo(page);
+    expect(await copies(page, IDS.strom)).toEqual(before);
+  });
+
+  // Rohstoff: the file disagrees, "Rohstoff (unbehandelt)" and the
+  // characteristic Temperatur on top, nothing below (020 §2). Aligning such
+  // copies is open (020a); until then an edit below must not wipe the top
+  test('a copy an older file left different keeps its own data', async ({ page }) => {
+    await load(page);
+    await nest(page);
+    const [top, ...below] = await copies(page, IDS.rohstoff);
+    expect(top).toMatchObject({ process: IDS.root, longName: 'Rohstoff (unbehandelt)', characteristics: ['Temperatur'] });
+    expect(below.length).toBe(2);
+
+    await writeIdentification(page, IDS.rohstoff, { longName: 'Rohstoff (gemahlen)' });
+    await addCharacteristic(page, IDS.rohstoff, 'Feuchte');
+
+    const after = await copies(page, IDS.rohstoff);
+    expect(after[0]).toEqual(top);
+    for (const copy of after.slice(1)) {
+      expect(copy).toMatchObject({ longName: 'Rohstoff (gemahlen)', characteristics: ['Feuchte'] });
+    }
+  });
+});
