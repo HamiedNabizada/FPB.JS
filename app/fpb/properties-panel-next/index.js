@@ -1,7 +1,7 @@
 /** @jsx h */
 
 import { h, render } from '@bpmn-io/properties-panel/preact';
-import { useEffect, useState } from '@bpmn-io/properties-panel/preact/hooks';
+import { useEffect, useRef, useState } from '@bpmn-io/properties-panel/preact/hooks';
 
 import '@bpmn-io/properties-panel/dist/assets/properties-panel.css';
 import './FpbPropertiesPanel.css';
@@ -26,10 +26,32 @@ function Shell(props) {
   const { modeler } = props;
   const [open, setOpen] = useState(initiallyOpen);
 
+  const pendingEntry = useRef(null);
+
   useEffect(() => {
     // Mounted: whoever waits for the interface (the import) can go on
     modeler.get('eventBus').fire('ui.componentReady', { component: 'propertiesPanel' });
   }, [modeler]);
+
+  useEffect(() => {
+    const eventBus = modeler.get('eventBus');
+    // The model check opens the panel at a finding (016b V7)
+    const onOpen = (event) => {
+      pendingEntry.current = (event && event.entry) || null;
+      setOpen(true);
+    };
+    eventBus.on('propertiesPanel.open', onOpen);
+    return () => eventBus.off('propertiesPanel.open', onOpen);
+  }, [modeler]);
+
+  useEffect(() => {
+    if (open && pendingEntry.current) {
+      const entry = pendingEntry.current;
+      pendingEntry.current = null;
+      // after the body has rendered its entries
+      setTimeout(() => modeler.get('eventBus').fire('propertiesPanel.showEntry', { id: entry }), 0);
+    }
+  });
 
   const toggle = () => {
     const next = !open;

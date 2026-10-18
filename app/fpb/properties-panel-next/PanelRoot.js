@@ -2,20 +2,18 @@
 import { h } from '@bpmn-io/properties-panel/preact';
 
 import { PropertiesPanel } from '@bpmn-io/properties-panel';
-import { useEffect, useMemo, useState } from '@bpmn-io/properties-panel/preact/hooks';
+import { useEffect, useErrorBoundary, useMemo, useState } from '@bpmn-io/properties-panel/preact/hooks';
 
 import { is } from '../help/utils';
 import { ServicesContext } from './context';
 import { headerProvider } from './header';
 import { getGroups } from './groups';
+import { loadLayout, saveLayout } from './layout';
 
 const placeholderProvider = {
   getEmpty: () => ({ text: 'Select an element to edit its properties.' }),
   getMultiple: () => ({ text: 'Multiple elements are selected. Select a single element to edit its properties.' })
 };
-
-// Open and closed groups are kept while the selection changes
-const LAYOUT = { groups: {} };
 
 /**
  * The element the panel shows: the selected one, the layer when nothing is
@@ -49,6 +47,10 @@ export default function PanelRoot(props) {
   const { modeler } = props;
   const eventBus = modeler.get('eventBus');
 
+  // An entry that throws must not leave a blank panel (the old panel had an
+  // ErrorBoundary as well)
+  const [failure, resetFailure] = useErrorBoundary((error) => console.error('[FPB.JS] properties panel', error));
+
   const [element, setElement] = useState(() => currentElement(modeler));
   const [, setRevision] = useState(0);
 
@@ -76,6 +78,16 @@ export default function PanelRoot(props) {
 
   const groups = element && !Array.isArray(element) ? getGroups(element) : [];
 
+  if (failure) {
+    const translate = modeler.get('translate');
+    return (
+      <div class="fpb-properties-failure" role="alert">
+        <p>{translate('The properties panel ran into an error.')}</p>
+        <button type="button" class="fpb-field-button" onClick={resetFailure}>{translate('Try again')}</button>
+      </div>
+    );
+  }
+
   return (
     <ServicesContext.Provider value={services}>
       <PropertiesPanel
@@ -83,7 +95,8 @@ export default function PanelRoot(props) {
         groups={groups}
         headerProvider={headerProvider}
         placeholderProvider={placeholderProvider}
-        layoutConfig={LAYOUT}
+        layoutConfig={loadLayout()}
+        layoutChanged={saveLayout}
         eventBus={eventBus}
       />
     </ServicesContext.Provider>

@@ -97,4 +97,44 @@ test.describe('Neues Eigenschaften-Panel', () => {
     await page.waitForFunction(() => window.fpbjs && window.fpbjs.get);
     await expect(page.locator('#propertiesPanelToggle')).toHaveAttribute('aria-expanded', 'true');
   });
+
+  test('a closed group stays closed after hiding the panel and after a reload', async ({ page }) => {
+    await vorbereiten(page);
+    await auswaehlen(page, 'Erhitzen');
+    const kopfZeile = page.locator('[data-group-id="group-identification"] .bio-properties-panel-group-header');
+    await kopfZeile.click();
+    await expect(page.locator('[data-group-id="group-identification"] .bio-properties-panel-group-entries')).not.toHaveClass(/open/);
+
+    await page.locator('#propertiesPanelToggle').click();
+    await page.locator('#propertiesPanelToggle').click();
+    await auswaehlen(page, 'Erhitzen');
+    await expect(page.locator('[data-group-id="group-identification"] .bio-properties-panel-group-entries')).not.toHaveClass(/open/);
+
+    await page.reload();
+    await page.waitForFunction(() => window.fpbjs && window.fpbjs.get);
+    await expect(page.locator('#propertiesPanelToggle')).toHaveAttribute('aria-expanded', 'true');
+    await openPanel(page);
+    await auswaehlen(page, 'Erhitzen');
+    await expect(page.locator('[data-group-id="group-identification"] .bio-properties-panel-group-entries')).not.toHaveClass(/open/);
+  });
+
+  test('propertiesPanel.open opens a hidden panel', async ({ page }) => {
+    await vorbereiten(page);
+    await page.locator('#propertiesPanelToggle').click();
+    await expect(page.locator('.fpb-properties-body')).toHaveCount(0);
+
+    await page.evaluate(() => window.fpbjs.get('eventBus').fire('propertiesPanel.open', {}));
+    await expect(page.locator('.fpb-properties-body')).toBeVisible();
+  });
+
+  test('an entry that throws shows a message instead of a blank panel', async ({ page }) => {
+    await vorbereiten(page);
+    page.on('pageerror', () => {});
+    await page.evaluate(() => {
+      const element = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Erhitzen' && e.type !== 'label')[0];
+      element.businessObject.get = () => { throw new Error('broken entry'); };
+      window.fpbjs.get('selection').select(element);
+    });
+    await expect(page.locator('.fpb-properties-failure')).toContainText('ran into an error');
+  });
 });
