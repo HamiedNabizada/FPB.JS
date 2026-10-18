@@ -36,3 +36,13 @@ export function maskRandomGuids(text, keep = new Set()) {
     return numbers.get(key);
   });
 }
+
+/**
+ * `text` without the time of LastWritingDateTime. Both sides write the same
+ * fixed instant (2026-01-01T00:00:00Z), but in the local time of the machine,
+ * as Aml.Engine does; the expected files were made in other zones than the
+ * test may run in.
+ */
+export function maskWritingTime(text) {
+  return text.replace(/LastWritingDateTime="[^"]*"/g, 'LastWritingDateTime="(time)"');
+}

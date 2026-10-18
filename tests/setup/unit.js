@@ -1,12 +1,6 @@
 // tests/setup/unit.js
 import { vi, beforeEach, afterEach } from 'vitest';
 
-// The AML mapper writes LastWritingDateTime in local time, as Aml.Engine does.
-// The C# oracle files (tests/unit/aml/oracle) were made in Europe/Berlin, so
-// the byte comparison needs that zone. Node on Windows ignores TZ from the
-// shell but follows it when set at run time.
-process.env.TZ = 'Europe/Berlin';
-
 // ============================================
 // Globale Mocks für diagram-js
 // ============================================

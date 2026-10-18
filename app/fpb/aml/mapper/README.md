@@ -13,9 +13,9 @@ AML byte for byte (random GUIDs of Aml.Engine numbered), JSON by content and
 warnings exactly.
 
 `LastWritingDateTime` is written in the local time of the machine, as
-Aml.Engine does. The expected files were made in Europe/Berlin, so the unit
-tests run in that zone (`tests/setup/unit.js`); regenerate them on a machine
-in that zone or the comparison fails on that one attribute.
+Aml.Engine does; the comparison masks it (`maskWritingTime` in
+`tests/unit/aml/oracleMask.js`), so expected files made in one zone hold in any
+other.
 
 ## Files
 

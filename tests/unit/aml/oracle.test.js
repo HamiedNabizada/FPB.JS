@@ -13,7 +13,7 @@ import { CAEXDocument } from 'amlengine-js';
 import { fixedEnvironment } from '../../../app/fpb/aml/mapper/environment.js';
 import { findFpdInstanceHierarchies, convertCaexToFpbJson } from '../../../app/fpb/aml/mapper/CaexToFpbJson.js';
 import { convertFpbJsonToCaex, updateInPlace } from '../../../app/fpb/aml/mapper/FpbJsonToCaex.js';
-import { guidsIn, maskRandomGuids } from './oracleMask.js';
+import { guidsIn, maskRandomGuids, maskWritingTime } from './oracleMask.js';
 
 const base = path.join(__dirname, 'oracle');
 const manifest = JSON.parse(fs.readFileSync(path.join(base, 'cases.json'), 'utf8'));
@@ -37,8 +37,8 @@ function hierarchy(doc, index) {
 
 function expectSameAml(actualBytes, c, inputs) {
   const keep = guidsIn(...inputs);
-  const actual = maskRandomGuids(decode(actualBytes), keep);
-  const expected = maskRandomGuids(decode(fs.readFileSync(path.join(base, c.expected))), keep);
+  const actual = maskWritingTime(maskRandomGuids(decode(actualBytes), keep));
+  const expected = maskWritingTime(maskRandomGuids(decode(fs.readFileSync(path.join(base, c.expected))), keep));
   expect(actual).toBe(expected);
 }
 
