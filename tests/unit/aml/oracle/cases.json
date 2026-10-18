@@ -418,6 +418,18 @@
     },
     {
       "kind": "update",
+      "id": "convert-fpbjs-temperieren__0__decompose",
+      "aml": "expected/convert/fpbjs-temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-fpbjs-temperieren__0__decompose.json",
+      "expected": "expected/update/convert-fpbjs-temperieren__0__decompose.aml",
+      "warnings": [
+        "Process \u00279833d9a9-1b88-4bfb-91b3-7ab5e2617045\u0027 has no ProcessOperator.",
+        "UpdateInPlace summary: updated=20, added=2, connection-waypoints-updated=19, connections-added=0, processes-added=1, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
       "id": "convert-fpbjs-temperieren__0__add",
       "aml": "expected/convert/fpbjs-temperieren.aml",
       "hierarchy": 0,
@@ -493,6 +505,18 @@
     },
     {
       "kind": "update",
+      "id": "convert-mapper-examples-Temperieren__0__decompose",
+      "aml": "expected/convert/mapper-examples-Temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-mapper-examples-Temperieren__0__decompose.json",
+      "expected": "expected/update/convert-mapper-examples-Temperieren__0__decompose.aml",
+      "warnings": [
+        "Process \u00279833d9a9-1b88-4bfb-91b3-7ab5e2617045\u0027 has no ProcessOperator.",
+        "UpdateInPlace summary: updated=20, added=2, connection-waypoints-updated=19, connections-added=0, processes-added=1, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
       "id": "convert-mapper-examples-Temperieren__0__add",
       "aml": "expected/convert/mapper-examples-Temperieren.aml",
       "hierarchy": 0,
@@ -564,6 +588,18 @@
       "expected": "expected/update/convert-mapper-testdata-Temperieren__0__delete-state.aml",
       "warnings": [
         "UpdateInPlace summary: updated=19, added=0, connection-waypoints-updated=18, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=1, removed-connection-orphans=1, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "convert-mapper-testdata-Temperieren__0__decompose",
+      "aml": "expected/convert/mapper-testdata-Temperieren.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-mapper-testdata-Temperieren__0__decompose.json",
+      "expected": "expected/update/convert-mapper-testdata-Temperieren__0__decompose.aml",
+      "warnings": [
+        "Process \u00279833d9a9-1b88-4bfb-91b3-7ab5e2617045\u0027 has no ProcessOperator.",
+        "UpdateInPlace summary: updated=20, added=2, connection-waypoints-updated=19, connections-added=0, processes-added=1, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
       ]
     },
     {
@@ -685,6 +721,18 @@
       "expected": "expected/update/mixed__1__delete-state.aml",
       "warnings": [
         "UpdateInPlace summary: updated=19, added=0, connection-waypoints-updated=18, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=1, removed-connection-orphans=1, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "mixed__1__decompose",
+      "aml": "inputs/generated/mixed.aml",
+      "hierarchy": 1,
+      "json": "inputs/generated/update/mixed__1__decompose.json",
+      "expected": "expected/update/mixed__1__decompose.aml",
+      "warnings": [
+        "Process \u00279833d9a9-1b88-4bfb-91b3-7ab5e2617045\u0027 has no ProcessOperator.",
+        "UpdateInPlace summary: updated=20, added=2, connection-waypoints-updated=19, connections-added=0, processes-added=1, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
       ]
     },
     {

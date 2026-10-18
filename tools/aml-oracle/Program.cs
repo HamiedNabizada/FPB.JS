@@ -224,6 +224,45 @@ static (string, Func<string, string?>)[] EditList() =>
         foreach (var e in AllEntries(root)) RemoveWithFlows(e, id);
         return true;
     })),
+    // a fresh decompose: an operator without decomposition gets a sub-process
+    // with its system limit and the copy of one input state under the shared
+    // id, as FPB.js sends it (B10: the copy needs refObj to its state)
+    ("decompose", json => EditTop(json, (root, entry, data, visual) =>
+    {
+        foreach (var po in data.Where(e => (string?)e!["$type"] == "fpb:ProcessOperator"
+                     && string.IsNullOrEmpty((string?)e["decomposedView"])).ToList())
+        {
+            var poId = (string)po!["id"]!;
+            var flow = data.FirstOrDefault(e => (string?)e!["$type"] == "fpb:Flow" && (string?)e["targetRef"] == poId
+                && data.Any(s => IsState(s) && (string?)s!["id"] == (string?)e["sourceRef"]));
+            if (flow == null) continue;
+            var state = data.First(s => IsState(s) && (string?)s!["id"] == (string?)flow["sourceRef"])!;
+            var stateId = (string)state["id"]!;
+            var stateType = (string)state["$type"]!;
+            const string slId = "0bdec000-0000-4000-8000-000000000001";
+            po["decomposedView"] = poId;
+            var copy = new JsonObject { ["$type"] = stateType, ["id"] = stateId, ["name"] = (string?)state["name"] };
+            if (state["identification"] is JsonObject ident) copy["identification"] = ident.DeepClone();
+            root.Add(new JsonObject
+            {
+                ["process"] = new JsonObject
+                {
+                    ["$type"] = "fpb:Process", ["id"] = poId, ["isDecomposedProcessOperator"] = poId,
+                    ["elementsContainer"] = new JsonArray(slId), ["consistsOfSystemLimit"] = slId,
+                    ["consistsOfStates"] = new JsonArray(stateId), ["consistsOfProcessOperator"] = new JsonArray(),
+                    ["consistsOfProcesses"] = new JsonArray()
+                },
+                ["elementDataInformation"] = new JsonArray(
+                    new JsonObject { ["$type"] = "fpb:SystemLimit", ["id"] = slId, ["name"] = "SL_sub", ["elementsContainer"] = new JsonArray(stateId) },
+                    copy),
+                ["elementVisualInformation"] = new JsonArray(
+                    new JsonObject { ["id"] = slId, ["type"] = "fpb:SystemLimit", ["x"] = 0, ["y"] = 0, ["width"] = 400, ["height"] = 400 },
+                    new JsonObject { ["id"] = stateId, ["type"] = stateType, ["x"] = 100, ["y"] = -25, ["width"] = 50, ["height"] = 50 })
+            });
+            return true;
+        }
+        return false;
+    })),
     ("add", json => EditTop(json, (root, entry, data, visual) =>
     {
         var po = data.FirstOrDefault(e => (string?)e!["$type"] == "fpb:ProcessOperator");
