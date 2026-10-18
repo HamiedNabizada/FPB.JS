@@ -632,6 +632,30 @@ test.describe('Rules: shape.resize and elements.delete', () => {
   });
 });
 
+test.describe('Messages on the canvas', () => {
+
+  // B12: names come from files made by others; the message must not run them as HTML
+  test('Szenario 14: the message after removing a decomposition shows the operator name as text', async ({ page }) => {
+    await load(page);
+    const name = '<img src=x onerror="window.__injected=true">';
+    await page.evaluate(({ id, name }) => {
+      window.fpbjs.get('modeling').updateLabel(window.fpbjs.get('elementRegistry').get(id), name);
+    }, { id: IDS.child, name });
+    await switchTo(page, IDS.child);
+    await page.evaluate(() => {
+      const sl = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:SystemLimit')[0];
+      window.fpbjs.get('rules').allowed('elements.delete', { elements: [sl] });
+    });
+    await page.locator('.modal.show button', { hasText: 'Yes, proceed' }).click();
+
+    const tip = page.locator('.djs-tooltip', { hasText: 'has been removed' });
+    await expect(tip).toBeVisible();
+    await expect(tip).toContainText(name);
+    expect(await tip.locator('img').count()).toBe(0);
+    expect(await page.evaluate(() => window.__injected)).toBeUndefined();
+  });
+});
+
 test.describe('Feedback when the editor refuses a move or create (UI drags)', () => {
 
   test('Szenario 5: dragging a boundary state inwards is refused with a message', async ({ page }) => {
