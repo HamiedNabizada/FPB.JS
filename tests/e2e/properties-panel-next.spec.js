@@ -1,35 +1,18 @@
 // tests/e2e/properties-panel-next.spec.js
 import { test, expect } from './support/test';
-import { ImportPage } from './pages/ImportPage';
-import basis from './fixtures/temperieren.json';
+import { openPanel, select as auswaehlen, header as kopf, field as feld, stackSize as stapel, undo as rueckgaengig } from './helpers/panelNext';
 
 /**
  * Das neue Eigenschaften-Panel (Preact, @bpmn-io/properties-panel).
  */
 
-const clone = () => JSON.parse(JSON.stringify(basis));
-
 async function vorbereiten(page) {
+  // starts closed, like the old panel; openPanel opens it
   await page.setViewportSize({ width: 1600, height: 1000 });
-  const importer = new ImportPage(page);
-  await importer.goto('/?panel=next');
-  await importer.import(clone());
-  // starts closed, like the old panel
+  await page.goto('/?panel=next');
   await expect(page.locator('#propertiesPanelToggle')).toHaveAttribute('aria-expanded', 'false');
-  await page.locator('#propertiesPanelToggle').click();
-  await expect(page.locator('.fpb-properties.open')).toBeVisible();
+  await openPanel(page);
 }
-
-const auswaehlen = (page, name) => page.evaluate((name) => {
-  const element = window.fpbjs.get('elementRegistry')
-    .filter((e) => e.businessObject && e.businessObject.name === name && e.type !== 'label')[0];
-  window.fpbjs.get('selection').select(element);
-}, name);
-
-const kopf = (page) => page.locator('.bio-properties-panel-header');
-const feld = (page, id) => page.locator(`#bio-properties-panel-${id}`);
-const stapel = (page) => page.evaluate(() => window.fpbjs.get('commandStack')._stackIdx + 1);
-const rueckgaengig = (page) => page.evaluate(() => window.fpbjs.get('commandStack').undo());
 
 test.describe('Neues Eigenschaften-Panel', () => {
 

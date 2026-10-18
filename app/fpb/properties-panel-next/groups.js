@@ -1,7 +1,9 @@
-import { TextFieldEntry, isTextFieldEntryEdited } from '@bpmn-io/properties-panel';
+/** @jsx h */
+import { h } from '@bpmn-io/properties-panel/preact';
 
 import { is } from '../help/utils';
 import { IdentificationEntries } from './entries/IdentificationEntries';
+import { FpbTextField, isFpbTextFieldEdited } from './entries/FpbTextField';
 import { useService } from './context';
 
 /**
@@ -25,7 +27,7 @@ export function getGroups(element) {
       label: 'System limit',
       shouldOpen: true,
       entries: [
-        { id: 'systemLimitName', component: SystemLimitName, isEdited: isTextFieldEntryEdited }
+        { id: 'systemLimitName', component: SystemLimitName, isEdited: isFpbTextFieldEdited }
       ]
     });
   }
@@ -37,13 +39,16 @@ function SystemLimitName(props) {
   const { element, id } = props;
   const modeling = useService('modeling');
   const debounce = useService('debounceInput');
+  const translate = useService('translate');
 
-  return TextFieldEntry({
-    element,
-    id,
-    label: 'Name',
-    debounce,
-    getValue: (el) => el.businessObject.name || '',
-    setValue: (value) => modeling.updateLabel(element, value || '')
-  });
+  return (
+    <FpbTextField
+      element={element}
+      id={id}
+      label={translate('Name')}
+      debounce={debounce}
+      getValue={(el) => el.businessObject.name || ''}
+      setValue={(value) => modeling.updateLabel(element, value || '')}
+    />
+  );
 }
