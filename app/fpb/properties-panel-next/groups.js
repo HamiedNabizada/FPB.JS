@@ -6,6 +6,7 @@ import { IdentificationEntries } from './entries/IdentificationEntries';
 import { FpbTextField, isFpbTextFieldEdited } from './entries/FpbTextField';
 import { useService } from './context';
 import { CharacteristicsGroup } from './characteristics/CharacteristicsGroup';
+import { ConnectionEntries } from './entries/ConnectionEntries';
 
 /**
  * Groups of the properties panel for an element, in display order.
@@ -35,6 +36,15 @@ export function getGroups(element) {
       entries: [
         { id: 'systemLimitName', component: SystemLimitName, isEdited: isFpbTextFieldEdited }
       ]
+    });
+  }
+
+  if (element.waypoints) {
+    groups.push({
+      id: 'connection',
+      label: 'Connection',
+      shouldOpen: true,
+      entries: ConnectionEntries(element)
     });
   }
 

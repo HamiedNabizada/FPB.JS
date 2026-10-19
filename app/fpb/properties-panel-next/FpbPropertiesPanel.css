@@ -166,3 +166,13 @@
   margin: 2px 0 6px;
   color: var(--bio-text-subtle, #555);
 }
+
+.fpb-properties .fpb-reference-entry .fpb-reference {
+  display: block;
+  margin: 2px 0;
+}
+
+.fpb-properties .fpb-fixed-value {
+  font-size: 13px;
+  color: var(--bio-text, #222);
+}
