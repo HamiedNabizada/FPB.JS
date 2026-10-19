@@ -61,22 +61,27 @@ export default function PanelRoot(props) {
   useEffect(() => {
     const refresh = () => setElement(currentElement(modeler));
     const changed = (event) => {
-      if (concerns(element, event.elements || [])) {
+      // the numbers of a layer change with any element on it (016b T10)
+      const isLayer = element && !Array.isArray(element) && is(element, 'fpb:Process');
+      if (isLayer || concerns(element, event.elements || [])) {
         setRevision((revision) => revision + 1);
       }
     };
+    const redraw = () => setRevision((revision) => revision + 1);
 
     const refreshEvents = ['selection.changed', 'root.set', 'import.done', 'model.new', 'layerPanel.processSwitched'];
     refreshEvents.forEach((name) => eventBus.on(name, refresh));
     eventBus.on('elements.changed', changed);
+    eventBus.on('fpb.projectChanged', redraw);
 
     return () => {
       refreshEvents.forEach((name) => eventBus.off(name, refresh));
       eventBus.off('elements.changed', changed);
+      eventBus.off('fpb.projectChanged', redraw);
     };
   }, [modeler, eventBus, element]);
 
-  const groups = element && !Array.isArray(element) ? getGroups(element) : [];
+  const groups = element && !Array.isArray(element) ? getGroups(element, modeler.get('translate')) : [];
 
   if (failure) {
     const translate = modeler.get('translate');
