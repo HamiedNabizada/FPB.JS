@@ -165,6 +165,41 @@ describe('ModelChecker', () => {
       expect(checkModel([alternativ.m.process, alternativ.child]).filter((i) => i.rule === 'F8')).toEqual([]);
     });
 
+    // F9: the copies of a boundary state are one object of the model
+    it('F9: copies that differ are reported once, at the copy on the upper layer, with what differs', () => {
+      const characteristic = { $type: 'fpbch:Characteristics', category: { shortName: 'C_1', longName: 'Temperatur' } };
+      const m = validModel();
+      m.input.businessObject.identification = { shortName: 'Input', longName: 'Raw material' };
+      m.input.businessObject.characteristics = [characteristic];
+      const below = shape('in', 'fpb:Product', at(275, 75), { name: 'Input', identification: { shortName: 'Input' } });
+      const child = process('c', [below, shape('out', 'fpb:Product', at(275, 475), { name: 'Output' })], [], {
+        isDecomposedProcessOperator: m.op.businessObject, parent: m.process
+      });
+      m.op.businessObject.decomposedView = child;
+
+      const f9 = checkModel([m.process, child]).filter((i) => i.rule === 'F9');
+      expect(f9).toHaveLength(1);
+      expect(f9[0].elementId).toBe('in');
+      expect(f9[0].process).toBe(m.process);
+      expect(f9[0].message).toContain('"Input"');
+      expect(f9[0].message).toContain('long name');
+      expect(f9[0].message).toContain('characteristics');
+      expect(f9[0].message).not.toContain('version');
+      expect(RULES.F9.severity).toBe('info');
+    });
+
+    it('F9 compares the content: copies with equal objects of their own agree', () => {
+      const m = validModel();
+      m.input.businessObject.identification = { shortName: 'Input', longName: 'Raw material' };
+      const below = shape('in', 'fpb:Product', at(275, 75), { name: 'Input', identification: { shortName: 'Input', longName: 'Raw material', versionNumber: '' } });
+      const child = process('c', [below, shape('out', 'fpb:Product', at(275, 475), { name: 'Output' })], [], {
+        isDecomposedProcessOperator: m.op.businessObject, parent: m.process
+      });
+      m.op.businessObject.decomposedView = child;
+
+      expect(checkModel([m.process, child]).filter((i) => i.rule === 'F9')).toEqual([]);
+    });
+
     it('B6: boundary state inside instead of on the border', () => {
       const inside = shape('out', 'fpb:Product', at(275, 300), { name: 'Output' });
       const { m, child } = decomposed([shape('in', 'fpb:Product', at(275, 75), { name: 'Input' }), inside]);

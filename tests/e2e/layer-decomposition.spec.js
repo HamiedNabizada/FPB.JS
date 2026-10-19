@@ -1513,6 +1513,35 @@ test.describe('Names of a state on every layer (B16)', () => {
     expect(await issues(page)).toEqual([]);
   });
 
+  // the test model: "Rohstoff (unbehandelt)" and Temperatur on top, nothing below (020 §2)
+  test('the model check reports copies that differ and aligns them to the chosen layer in one step (F9)', async ({ page }) => {
+    await load(page);
+    await page.evaluate(() => {
+      window.fpbjs.get('fpbValidation').run();
+      window.fpbjs.get('fpbValidation').openPanel();
+    });
+    const item = page.locator('.fpb-validation-item[data-rule="F9"]');
+    await expect(item).toHaveCount(1);
+    await expect(item).toContainText('"Rohstoff"');
+    await expect(item).toContainText('long name');
+    await item.getByRole('button', { name: 'Use the values of the top level' }).click();
+
+    for (const copy of await copies(page, IDS.rohstoff)) {
+      expect(copy).toMatchObject({ name: 'Rohstoff', longName: 'Rohstoff (unbehandelt)', characteristics: ['Temperatur'] });
+    }
+    // one object again, as the copies of a new boundary state (B14)
+    expect(await sharing(page, IDS.rohstoff)).toEqual({ identification: true, characteristics: true });
+    await expect(page.locator('.fpb-validation-item[data-rule="F9"]')).toHaveCount(0);
+
+    await undo(page);
+    expect(await canUndo(page)).toBe(false);
+    const [top, ...below] = await copies(page, IDS.rohstoff);
+    expect(top).toMatchObject({ longName: 'Rohstoff (unbehandelt)', characteristics: ['Temperatur'] });
+    for (const copy of below) {
+      expect(copy.characteristics).toEqual([]);
+    }
+  });
+
   test('a copy an older file left with another name keeps it when the state is renamed or cleared', async ({ page }) => {
     await load(page);
     await nameBelow(page, IDS.rohstoff, 'Rohstoff (alt)');

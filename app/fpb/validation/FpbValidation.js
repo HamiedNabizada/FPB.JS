@@ -201,6 +201,24 @@ FpbValidation.prototype._renderPanel = function () {
 
     item.appendChild(head);
     item.appendChild(text);
+    // F9: the copies of a boundary state differ; the user chooses which
+    // copy holds the right values
+    if (issue.variants && issue.variants.length > 1) {
+      const choices = document.createElement('div');
+      choices.className = 'fpb-validation-choices';
+      issue.variants.forEach(function (variant) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'fpb-validation-choice';
+        button.textContent = 'Use the values of the ' + self._layerName(variant.process);
+        button.addEventListener('click', function (event) {
+          event.stopPropagation();
+          self._modeling.alignStateCopies(variant.id, variant.process);
+        });
+        choices.appendChild(button);
+      });
+      item.appendChild(choices);
+    }
     list.appendChild(item);
   });
 };
