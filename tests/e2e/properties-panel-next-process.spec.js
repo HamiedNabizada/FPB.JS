@@ -28,6 +28,18 @@ test.describe('New properties panel, nothing selected', () => {
     await expect(field(page, 'projectName')).toHaveValue(before.name);
   });
 
+  test('an empty project name or namespace is refused, so the file stays importable', async ({ page }) => {
+    await openPanel(page);
+    const before = await project(page);
+
+    for (const [id, key] of [['projectName', 'name'], ['projectNamespace', 'targetNamespace']]) {
+      await field(page, id).fill('');
+      await expect(page.locator(`[data-entry-id="${id}"] .bio-properties-panel-error`)).toBeVisible();
+      await page.waitForTimeout(1000);
+      expect((await project(page))[key]).toBe(before[key]);
+    }
+  });
+
   test('the process group counts the elements of the layer and follows changes', async ({ page }) => {
     await openPanel(page);
     await expect(count(page, 'operators')).toHaveText('2');
