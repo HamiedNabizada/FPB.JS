@@ -301,6 +301,19 @@
 .fpb-validation-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; border-top: 1px solid #ddd; }
 .fpb-validation-item { padding: 6px 10px 6px 12px; border-bottom: 1px solid #eee; border-left: 4px solid transparent; cursor: pointer; }
 .fpb-validation-elsewhere { display: block; margin-top: 2px; border: 0; padding: 0; background: none; color: var(--bio-primary, #0066cc); font-size: 12px; cursor: pointer; }
+
+/* the other elements of a chosen finding, until the next selection (016b V8) */
+.djs-element.fpb-finding-involved .djs-outline {
+  visibility: visible;
+  stroke: #e8a200;
+  stroke-width: 2px;
+  stroke-dasharray: none;
+}
+/* the renderer sets the stroke of a connection inline */
+.djs-connection.fpb-finding-involved .djs-visual > path {
+  stroke: #e8a200 !important;
+  stroke-width: 3px !important;
+}
 .fpb-validation-item:hover { background: #f2f3f5; }
 .fpb-validation-item.fpb-validation-error { border-left-color: #d0021b; }
 .fpb-validation-item.fpb-validation-warning { border-left-color: #e8a200; }

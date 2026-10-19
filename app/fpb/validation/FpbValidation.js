@@ -3,6 +3,8 @@ import { collectProcessShapes } from '../help/processShapes';
 import { goToElement } from '../help/navigation';
 
 const OVERLAY_TYPE = 'fpb-validation';
+// the other elements a chosen finding is about (016b V8)
+const INVOLVED_MARKER = 'fpb-finding-involved';
 const DEBOUNCE = 250;
 const RANK = { error: 0, warning: 1, info: 2 };
 // Error and warning used to share the '!', so only their colour told them
@@ -35,6 +37,7 @@ export default function FpbValidation(eventBus, canvas, overlays, elementRegistr
   this._issues = [];
   this._showMarkers = true;
   this._timer = null;
+  this._involved = [];
 
   const self = this;
   this._buildPanel();
@@ -47,6 +50,12 @@ export default function FpbValidation(eventBus, canvas, overlays, elementRegistr
   });
   eventBus.on('diagram.destroy', function () {
     clearTimeout(self._timer);
+  });
+  // a chosen finding marks its other elements until the next selection
+  eventBus.on('selection.changed', function () {
+    if (!self._choosing) {
+      self._clearInvolved();
+    }
   });
 }
 
@@ -225,6 +234,18 @@ FpbValidation.prototype._renderPanel = function () {
   });
 };
 
+FpbValidation.prototype._clearInvolved = function () {
+  const registry = this._elementRegistry;
+  const canvas = this._canvas;
+  // elements of a layer left meanwhile are no longer on the canvas
+  this._involved.forEach(function (x) {
+    if (registry.get(x.id)) {
+      canvas.removeMarker(x, INVOLVED_MARKER);
+    }
+  });
+  this._involved = [];
+};
+
 FpbValidation.prototype._layerName = function (process) {
   const bo = process && process.businessObject;
   if (bo && bo.isDecomposedProcessOperator) {
@@ -245,17 +266,28 @@ FpbValidation.prototype._goTo = function (issue, process) {
     selection: this._selection
   }, target, target === issue.process ? issue.elementId : null);
 
-  // every element of the finding on this layer (016b V8)
+  // every element of the finding on this layer (016b V8): the element of the
+  // finding is selected, so the properties panel shows the finding (V7); the
+  // others are marked (decided by the user 2026-10-19)
   const registry = this._elementRegistry;
   const here = (issue.involved || [])
     .filter(function (x) { return x.process === target; })
     .map(function (x) { return registry.get(x.id); })
     .filter(Boolean);
+  const chosen = element || here[0] || null;
+
+  this._choosing = true;
+  try {
+    this._selection.select(chosen ? [chosen] : []);
+  } finally {
+    this._choosing = false;
+  }
+  this._clearInvolved();
+  this._involved = here.filter(function (x) { return x !== chosen; });
+  const canvas = this._canvas;
+  this._involved.forEach(function (x) { canvas.addMarker(x, INVOLVED_MARKER); });
   if (here.length) {
-    this._selection.select(here);
-    this._canvas.scrollToElement(here.length === 1 ? here[0] : here);
-  } else if (!element) {
-    this._selection.select([]);
+    canvas.scrollToElement(here.length === 1 ? here[0] : here);
   }
 
   // the new properties panel opens at the findings of the element (016b V7)

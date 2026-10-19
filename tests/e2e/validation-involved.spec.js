@@ -4,15 +4,22 @@ import { ImportPage } from './pages/ImportPage';
 import basis from './fixtures/temperieren.json';
 
 /**
- * One finding shows every element it is about (024 point 6, 016b V8).
- * modeling.connect does not ask the rules (diagram-js only calls
- * createConnection), so it makes the duplicate the canvas would refuse.
+ * One finding shows every element it is about (024 point 6, 016b V8): the
+ * element of the finding is selected, so the properties panel shows the
+ * finding (V7), the other elements it is about are marked until the next
+ * selection (decided by the user 2026-10-19). modeling.connect does not ask
+ * the rules (diagram-js only calls createConnection), so it makes the
+ * duplicate the canvas would refuse; such files come from imports.
  */
 
-test('choosing a duplicate connection selects both connections', async ({ page }) => {
+const MARK = 'fpb-finding-involved';
+const marked = (page) => page.evaluate((mark) => window.fpbjs.get('elementRegistry')
+  .filter((e) => window.fpbjs.get('canvas').hasMarker(e, mark)).map((e) => e.id).sort(), MARK);
+
+test('choosing a duplicate connection selects it and marks the other one', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 1000 });
   const importer = new ImportPage(page);
-  await importer.goto();
+  await importer.goto('/?panel=next');
   await importer.import(JSON.parse(JSON.stringify(basis)));
   const ids = await page.evaluate(() => {
     const registry = window.fpbjs.get('elementRegistry');
@@ -20,11 +27,19 @@ test('choosing a duplicate connection selects both connections', async ({ page }
     const twin = window.fpbjs.get('modeling').connect(flow.source, flow.target, { type: 'fpb:Flow' });
     window.fpbjs.get('fpbValidation').run();
     window.fpbjs.get('fpbValidation').openPanel();
-    return [flow.id, twin.id].sort();
+    return { flow: flow.id, twin: twin.id };
   });
   await page.locator('.fpb-validation-item[data-rule="C5"]').first().click();
-  const selected = await page.evaluate(() => window.fpbjs.get('selection').get().map((e) => e.id).sort());
-  expect(selected).toEqual(ids);
+
+  // the finding is reported at the later connection, the first one is the other
+  const selected = await page.evaluate(() => window.fpbjs.get('selection').get().map((e) => e.id));
+  expect(selected).toEqual([ids.twin]);
+  expect(await marked(page)).toEqual([ids.flow]);
+  await expect(page.locator('[data-group-id="group-findings"]')).toContainText('Duplicate connection');
+
+  // the mark goes with the next selection
+  await page.evaluate(() => window.fpbjs.get('selection').select([]));
+  expect(await marked(page)).toEqual([]);
 });
 
 test('a finding with elements on another layer links that layer and selects them there (F8)', async ({ page }) => {
@@ -49,6 +64,9 @@ test('a finding with elements on another layer links that layer and selects them
     selected: window.fpbjs.get('selection').get().map((e) => e.type)
   }));
   expect(state.layer).toBe('Erhitzen');
-  expect(state.selected.length).toBeGreaterThan(0);
-  expect(state.selected.every((type) => type === 'fpb:ParallelFlow')).toBe(true);
+  expect(state.selected).toEqual(['fpb:ParallelFlow']);
+  const others = await page.evaluate((mark) => window.fpbjs.get('elementRegistry')
+    .filter((e) => window.fpbjs.get('canvas').hasMarker(e, mark)).map((e) => e.type), MARK);
+  expect(others.length).toBeGreaterThan(0);
+  expect(others.every((type) => type === 'fpb:ParallelFlow')).toBe(true);
 });
