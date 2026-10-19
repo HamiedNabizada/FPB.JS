@@ -7,7 +7,8 @@ import { checkIfOnSystemBorder } from '../help/helpUtils';
  * severities are those of the catalog. Works on the process root shapes of all
  * layers; shapes of layers not on the canvas are read from elementsContainer.
  *
- * Result: [{ rule, severity: 'error'|'warning'|'info', message, elementId, process }]
+ * Result: [{ rule, severity: 'error'|'warning'|'info', message, elementId, process, involved }],
+ * `involved` = [{ id, process }] of every element the finding is about
  */
 
 export const SEVERITY = { ERROR: 'error', WARNING: 'warning', INFO: 'info' };
@@ -54,13 +55,21 @@ export function checkModel(processShapes) {
   return issues;
 }
 
-function report(issues, rule, element, process, message) {
+/**
+ * `involved`: every element the finding is about, as { id, process }, first
+ * its own element (024 point 6, 016b V8). Elements on other layers carry
+ * their layer, so the list can open it.
+ */
+function report(issues, rule, element, process, message, involved) {
+  const own = element ? [{ id: element.id, process: process }] : [];
+  const others = (involved || []).filter(function (x) { return x && x.id && !(element && x.id === element.id && x.process === process); });
   issues.push({
     rule: rule,
     severity: RULES[rule].severity,
     message: message,
     elementId: element ? element.id : null,
-    process: process
+    process: process,
+    involved: own.concat(others)
   });
 }
 
@@ -169,7 +178,8 @@ function checkProcess(process, issues) {
     }
     const key = source.id + '>' + target.id + '>' + connection.type;
     if (seen.has(key)) {
-      report(issues, 'C5', connection, process, 'Duplicate connection from ' + label(source) + ' to ' + label(target) + '.');
+      report(issues, 'C5', connection, process, 'Duplicate connection from ' + label(source) + ' to ' + label(target) + '.',
+        [{ id: seen.get(key).id, process: process }]);
     }
     seen.set(key, connection);
   });
@@ -180,7 +190,8 @@ function checkProcess(process, issues) {
     const branch = outgoing.some(function (c) { return isAny(c, BRANCH_TYPES); });
     const plain = outgoing.some(function (c) { return c.type === 'fpb:Flow'; });
     if (branch && plain) {
-      report(issues, 'C9', element, process, label(element) + ' mixes a normal flow with parallel or alternative flows.');
+      report(issues, 'C9', element, process, label(element) + ' mixes a normal flow with parallel or alternative flows.',
+        outgoing.map(function (c) { return { id: c.id, process: process }; }));
     }
   });
 
@@ -233,7 +244,9 @@ function checkProcess(process, issues) {
       const childKind = branchKind(childFlows);
       if (childKind && childKind !== parentKind) {
         report(issues, 'F8', operator, process, 'The ' + side.label + ' of ' + label(operator) + ' are '
-          + parentKind + ', but its decomposition ' + side.verb + ' them ' + childKind + '.');
+          + parentKind + ', but its decomposition ' + side.verb + ' them ' + childKind + '.',
+          flows.map(function (f) { return { id: f.id, process: process }; })
+            .concat(childFlows.map(function (f) { return { id: f.id, process: child }; })));
       }
     });
   });
@@ -248,7 +261,7 @@ function checkProcess(process, issues) {
       .filter(function (state) { return state && !childStates.has(state.id); });
     if (missing.length) {
       report(issues, 'F5', operator, process, 'The decomposition of ' + label(operator) + ' lacks ' +
-        missing.map(label).join(', ') + '.');
+        missing.map(label).join(', ') + '.', missing.map(function (s) { return { id: s.id, process: process }; }));
     }
   });
 }

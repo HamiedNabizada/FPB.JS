@@ -104,6 +104,23 @@ describe('ModelChecker', () => {
     expect(issues.every((i) => i.severity === 'info')).toBe(true);
   });
 
+  // 024 point 6, 016b V8: every element a finding is about
+  it('a duplicate connection names both connections as involved (C5)', () => {
+    const m = validModel();
+    const twin = connect('f1b', 'fpb:Flow', m.input, m.op);
+    m.process.businessObject.elementsContainer[0].businessObject.elementsContainer.push(twin);
+    const c5 = checkModel([m.process]).find((i) => i.rule === 'C5');
+    expect(c5.involved.map((x) => x.id).sort()).toEqual(['f1', 'f1b']);
+    expect(c5.involved.every((x) => x.process === m.process)).toBe(true);
+  });
+
+  it('a finding without others involved names its own element', () => {
+    const m = validModel();
+    m.input.businessObject.name = '';
+    const d4 = checkModel([m.process]).find((i) => i.rule === 'D4');
+    expect(d4.involved).toEqual([{ id: 'in', process: m.process }]);
+  });
+
   describe('decomposition', () => {
 
     function decomposed(childStates) {
@@ -155,6 +172,14 @@ describe('ModelChecker', () => {
       expect(f8[0].message).toContain('alternative');
       expect(f8[0].message).toContain('parallel');
       expect(f8[0].elementId).toBe('op');
+    });
+
+    it('F8 names the flows on both layers as involved, the child flows with their layer', () => {
+      const { m, child } = mitZweiAusgaengen('fpb:AlternativeFlow', 'fpb:ParallelFlow');
+      const f8 = checkModel([m.process, child]).find((i) => i.rule === 'F8');
+      expect(f8.involved[0]).toEqual({ id: 'op', process: m.process });
+      expect(f8.involved.filter((x) => x.process === m.process).map((x) => x.id).sort()).toEqual(['op', 'p1', 'p2']);
+      expect(f8.involved.filter((x) => x.process === child).map((x) => x.id).sort()).toEqual(['kf1', 'kf2']);
     });
 
     it('F8 meldet nichts, wenn beide Ebenen zusammenpassen', () => {

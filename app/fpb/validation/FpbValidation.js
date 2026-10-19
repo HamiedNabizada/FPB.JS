@@ -201,6 +201,26 @@ FpbValidation.prototype._renderPanel = function () {
 
     item.appendChild(head);
     item.appendChild(text);
+
+    // involved elements on other layers (F5, F8): one link per layer (016b V8)
+    const elsewhere = [];
+    (issue.involved || []).forEach(function (x) {
+      if (x.process !== issue.process && elsewhere.indexOf(x.process) === -1) {
+        elsewhere.push(x.process);
+      }
+    });
+    elsewhere.forEach(function (process) {
+      const link = document.createElement('button');
+      link.type = 'button';
+      link.className = 'fpb-validation-elsewhere';
+      link.textContent = 'Also in ' + self._layerName(process);
+      // the list's own click handler would go to the element of the finding
+      link.addEventListener('click', function (event) {
+        event.stopPropagation();
+        self._goTo(issue, process);
+      });
+      item.appendChild(link);
+    });
     list.appendChild(item);
   });
 };
@@ -213,16 +233,30 @@ FpbValidation.prototype._layerName = function (process) {
   return 'top level';
 };
 
-FpbValidation.prototype._goTo = function (issue) {
+FpbValidation.prototype._goTo = function (issue, process) {
   if (!issue) {
     return;
   }
-  goToElement({
+  const target = process || issue.process;
+  const element = goToElement({
     canvas: this._canvas,
     modeling: this._modeling,
     elementRegistry: this._elementRegistry,
     selection: this._selection
-  }, issue.process, issue.elementId);
+  }, target, target === issue.process ? issue.elementId : null);
+
+  // every element of the finding on this layer (016b V8)
+  const registry = this._elementRegistry;
+  const here = (issue.involved || [])
+    .filter(function (x) { return x.process === target; })
+    .map(function (x) { return registry.get(x.id); })
+    .filter(Boolean);
+  if (here.length) {
+    this._selection.select(here);
+    this._canvas.scrollToElement(here.length === 1 ? here[0] : here);
+  } else if (!element) {
+    this._selection.select([]);
+  }
 
   // the new properties panel opens at the findings of the element (016b V7)
   this._eventBus.fire('propertiesPanel.open', { entry: 'findings' });

@@ -300,6 +300,7 @@
 .fpb-validation-toggle { display: flex; gap: 6px; align-items: center; padding: 4px 10px 6px; font-size: 13px; color: #555; }
 .fpb-validation-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; border-top: 1px solid #ddd; }
 .fpb-validation-item { padding: 6px 10px 6px 12px; border-bottom: 1px solid #eee; border-left: 4px solid transparent; cursor: pointer; }
+.fpb-validation-elsewhere { display: block; margin-top: 2px; border: 0; padding: 0; background: none; color: var(--bio-primary, #0066cc); font-size: 12px; cursor: pointer; }
 .fpb-validation-item:hover { background: #f2f3f5; }
 .fpb-validation-item.fpb-validation-error { border-left-color: #d0021b; }
 .fpb-validation-item.fpb-validation-warning { border-left-color: #e8a200; }
