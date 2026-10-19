@@ -32,7 +32,9 @@ test.describe('Neues Eigenschaften-Panel', () => {
     await auswaehlen(page, 'Erhitzen');
     const vorher = await stapel(page);
 
-    await feld(page, 'shortName').fill('');
+    // select and type over, as a user does: clearing first would store an
+    // empty name of its own when the machine is slow (one more undo step)
+    await feld(page, 'shortName').selectText();
     await feld(page, 'shortName').pressSequentially('Erwärmen', { delay: 30 });
     await expect.poll(() => stapel(page)).toBe(vorher + 1);
     await expect(kopf(page)).toContainText('Erwärmen');
@@ -125,6 +127,29 @@ test.describe('Neues Eigenschaften-Panel', () => {
 
     await page.evaluate(() => window.fpbjs.get('eventBus').fire('propertiesPanel.open', {}));
     await expect(page.locator('.fpb-properties-body')).toBeVisible();
+  });
+
+  test('a selection made while the panel opens is shown', async ({ page }) => {
+    await vorbereiten(page);
+    await page.locator('#propertiesPanelToggle').click();
+    await expect(page.locator('.fpb-properties-body')).toHaveCount(0);
+
+    // select right after the panel body is drawn, before its effects have run
+    await page.evaluate(() => new Promise((resolve) => {
+      const shell = document.querySelector('.fpb-properties');
+      const observer = new MutationObserver(() => {
+        if (shell.querySelector('.bio-properties-panel-header')) {
+          observer.disconnect();
+          const element = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Erhitzen' && e.type !== 'label')[0];
+          window.fpbjs.get('selection').select(element);
+          resolve();
+        }
+      });
+      observer.observe(shell, { childList: true, subtree: true });
+      document.querySelector('#propertiesPanelToggle').click();
+    }));
+
+    await expect(kopf(page)).toContainText('Erhitzen');
   });
 
   test('an entry that throws shows a message instead of a blank panel', async ({ page }) => {

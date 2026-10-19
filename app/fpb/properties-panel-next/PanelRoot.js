@@ -63,8 +63,12 @@ export default function PanelRoot(props) {
   useEffect(() => {
     const update = (event) => setIssues(event.issues || []);
     eventBus.on('fpbValidation.changed', update);
+    // a run between the first render and this effect would be missed
+    if (validation) {
+      setIssues(validation.getIssues());
+    }
     return () => eventBus.off('fpbValidation.changed', update);
-  }, [eventBus]);
+  }, [eventBus, validation]);
 
   const services = useMemo(() => ({
     getService: (name, strict) => modeler.get(name, strict)
@@ -88,6 +92,10 @@ export default function PanelRoot(props) {
     // the AML section follows the kept file (028 E9)
     const amlEvents = ['aml.sourceChanged', 'aml.indexChanged'];
     amlEvents.forEach((name) => eventBus.on(name, redraw));
+
+    // the panel mounts when it opens and listens only from here on: a
+    // selection between its first render and this effect would be missed
+    refresh();
 
     return () => {
       refreshEvents.forEach((name) => eventBus.off(name, refresh));
