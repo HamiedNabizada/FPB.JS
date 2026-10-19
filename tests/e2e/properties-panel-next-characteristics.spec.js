@@ -1,6 +1,6 @@
 // tests/e2e/properties-panel-next-characteristics.spec.js
 import { test, expect } from './support/test';
-import { openPanel, select, field, stackSize, undo, businessObject } from './helpers/panelNext';
+import { openPanel, select, field, stackSize, undo, businessObject, clone } from './helpers/panelNext';
 
 /** New panel: characteristics as a table with a detail area (016 E7, 016b V1) */
 
@@ -103,5 +103,42 @@ test.describe('New properties panel, characteristics', () => {
     await rows(page).first().getByRole('button').click();
     await expect(page.getByRole('button', { name: 'Remove characteristic' })).toHaveCount(0);
     await expect(field(page, 'characteristic-0-setpoint')).toHaveAttribute('readonly', '');
+  });
+
+  const withValues = () => {
+    const data = clone();
+    const entry = data.find((e) => e.process && e.elementDataInformation.some((d) => d.name === 'Erhitzen'));
+    const op = entry.elementDataInformation.find((d) => d.name === 'Erhitzen');
+    op.characteristics = [{
+      $type: 'fpbch:Characteristics',
+      category: { $type: 'fpb:Identification', uniqueIdent: op.id + '_c1', shortName: 'C_1', longName: 'Temperatur' },
+      descriptiveElement: {
+        $type: 'fpbch:DescriptiveElement',
+        setpointValue: { $type: 'fpbch:ValueWithUnit', value: 353, unit: 'K' },
+        validityLimits: [
+          { $type: 'fpbch:ValidityLimits', limitType: '', from: 0, to: 0 },
+          { $type: 'fpbch:ValidityLimits', limitType: 'acceptance', from: 350, to: 356 }
+        ],
+        actualValues: [
+          { $type: 'fpbch:ValueWithUnit', value: 352, unit: 'K' },
+          { $type: 'fpbch:ValueWithUnit', value: 354, unit: 'K' }
+        ]
+      },
+      relationalElement: { $type: 'fpbch:RelationalElement' }
+    }];
+    return data;
+  };
+
+  test('validity limits and further actual values are shown, not edited (E6)', async ({ page }) => {
+    await openPanel(page, withValues());
+    await select(page, 'Erhitzen');
+    await expect(rows(page).first()).toContainText('352 (+1)');
+    await rows(page).first().getByRole('button').click();
+
+    const limits = page.locator('.fpb-characteristic-limits li');
+    // the empty default limit of older versions is not listed
+    await expect(limits).toHaveCount(1);
+    await expect(limits.first()).toHaveText('acceptance: 350 to 356');
+    await expect(page.locator('.fpb-characteristic-more-actuals li')).toHaveText(['354 K']);
   });
 });

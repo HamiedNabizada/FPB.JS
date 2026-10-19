@@ -5,6 +5,7 @@ import { useService } from '../context';
 import { usePanelReadOnly } from '../hooks';
 import { FpbTextField } from '../entries/FpbTextField';
 import { parseValue, formatValue } from '../values';
+import { asList } from './model';
 
 const read = (object, path) => path.reduce((value, key) => (value === undefined || value === null ? undefined : value[key]), object);
 
@@ -61,12 +62,51 @@ export function CharacteristicDetail(props) {
               setValue={(text) => setField(path, options.value ? parseValue(text) : (text || ''))}
             />
           ))}
+          {title === 'Descriptive element' && <MoreValues characteristic={characteristic} translate={translate} />}
         </div>
       ))}
       {!readOnly && (
         <button type="button" class="fpb-field-button fpb-remove-characteristic" onClick={onRemove}>
           {translate('Remove characteristic')}
         </button>
+      )}
+    </div>
+  );
+}
+
+/** The default limit older versions created for every characteristic */
+const isEmptyDefault = (limit) => !limit.limitType && Number(limit.from || 0) === 0 && Number(limit.to || 0) === 0;
+
+/**
+ * Validity limits and the actual values after the first, shown but not
+ * edited (016 E6, 016b V3; editing comes with the format after the GMA
+ * committee, 020a).
+ */
+function MoreValues(props) {
+  const { characteristic, translate } = props;
+  const descriptive = characteristic.descriptiveElement || {};
+  const limits = asList(descriptive.validityLimits).filter((limit) => !isEmptyDefault(limit));
+  const more = asList(descriptive.actualValues).slice(1);
+
+  return (
+    <div class="fpb-characteristic-more">
+      <div class="bio-properties-panel-label">{translate('Validity limits')}</div>
+      {limits.length ? (
+        <ul class="fpb-characteristic-limits">
+          {limits.map((limit) => (
+            <li>{(limit.limitType || translate('limit')) + ': ' + formatValue(limit.from) + ' ' + translate('to') + ' ' + formatValue(limit.to)}</li>
+          ))}
+        </ul>
+      ) : (
+        <p class="fpb-characteristic-none">{translate('None')}</p>
+      )}
+      {more.length > 0 && (
+        <div>
+          <div class="bio-properties-panel-label">{translate('Further actual values')}</div>
+          <ul class="fpb-characteristic-more-actuals">
+            {more.map((value) => <li>{formatValue(value.value) + (value.unit ? ' ' + value.unit : '')}</li>)}
+          </ul>
+        </div>
       )}
     </div>
   );

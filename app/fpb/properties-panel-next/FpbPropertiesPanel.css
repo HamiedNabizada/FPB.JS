@@ -150,3 +150,19 @@
 .fpb-properties .fpb-remove-characteristic {
   margin: 4px 12px;
 }
+
+.fpb-properties .fpb-characteristic-more {
+  margin: 4px 12px 8px;
+  font-size: 12px;
+  color: var(--bio-text, #222);
+}
+
+.fpb-properties .fpb-characteristic-more ul {
+  margin: 2px 0 6px;
+  padding-left: 16px;
+}
+
+.fpb-properties .fpb-characteristic-none {
+  margin: 2px 0 6px;
+  color: var(--bio-text-subtle, #555);
+}
