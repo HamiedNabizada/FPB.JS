@@ -223,4 +223,7 @@ FpbValidation.prototype._goTo = function (issue) {
     elementRegistry: this._elementRegistry,
     selection: this._selection
   }, issue.process, issue.elementId);
+
+  // the new properties panel opens at the findings of the element (016b V7)
+  this._eventBus.fire('propertiesPanel.open', { entry: 'findings' });
 };

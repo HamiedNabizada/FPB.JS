@@ -176,3 +176,35 @@
   font-size: 13px;
   color: var(--bio-text, #222);
 }
+
+/* Findings of the model check (016b V7) */
+.fpb-properties .fpb-findings {
+  margin: 4px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fpb-properties .fpb-finding {
+  margin: 0 0 4px;
+  padding: 4px 6px;
+  border-left: 3px solid var(--bio-border, #bbb);
+  font-size: 12px;
+  color: var(--bio-text, #222);
+}
+
+.fpb-properties .fpb-finding-error { border-left-color: #c62828; }
+.fpb-properties .fpb-finding-warning { border-left-color: #b26a00; }
+.fpb-properties .fpb-finding-info { border-left-color: var(--bio-neutral, #888); }
+
+.fpb-properties .fpb-finding-head {
+  font-weight: 600;
+}
+
+.fpb-properties .fpb-field-finding {
+  margin-top: 2px;
+  font-size: 12px;
+}
+
+.fpb-properties .fpb-field-finding-error { color: #c62828; }
+.fpb-properties .fpb-field-finding-warning { color: #b26a00; }
+.fpb-properties .fpb-field-finding-info { color: var(--bio-text-subtle, #555); }

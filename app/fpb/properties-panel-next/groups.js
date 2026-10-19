@@ -10,14 +10,19 @@ import { ConnectionEntries } from './entries/ConnectionEntries';
 import { ProjectEntries } from './entries/ProjectEntries';
 import { ProcessEntries } from './entries/ProcessEntries';
 import { DecompositionEntries } from './entries/DecompositionEntries';
+import { FindingsEntries } from './entries/FindingsEntries';
 
 /**
  * Groups of the properties panel for an element, in display order. Group
  * titles go through translate (016b T11); the characteristics group draws its
  * own head and translates its title there.
  */
-export function getGroups(element, translate = (text) => text) {
+export function getGroups(element, translate = (text) => text, findings = []) {
   const groups = [];
+
+  if (findings.length) {
+    groups.push({ id: 'findings', label: translate('Findings'), shouldOpen: true, entries: FindingsEntries(findings) });
+  }
 
   if (is(element, 'fpb:Process')) {
     groups.push({ id: 'project', label: translate('Project'), shouldOpen: true, entries: ProjectEntries() });

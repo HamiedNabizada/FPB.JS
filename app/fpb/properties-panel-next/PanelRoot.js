@@ -9,6 +9,8 @@ import { ServicesContext } from './context';
 import { headerProvider } from './header';
 import { getGroups } from './groups';
 import { loadLayout, saveLayout } from './layout';
+import { FindingsContext } from './findingsContext';
+import { findingsFor, fieldFindings } from './findings';
 
 const placeholderProvider = {
   getEmpty: () => ({ text: 'Select an element to edit its properties.' }),
@@ -54,6 +56,16 @@ export default function PanelRoot(props) {
   const [element, setElement] = useState(() => currentElement(modeler));
   const [, setRevision] = useState(0);
 
+  // findings of the model check, for the panel and its fields (016b V7)
+  const validation = modeler.get('fpbValidation', false);
+  const [issues, setIssues] = useState(() => (validation ? validation.getIssues() : []));
+
+  useEffect(() => {
+    const update = (event) => setIssues(event.issues || []);
+    eventBus.on('fpbValidation.changed', update);
+    return () => eventBus.off('fpbValidation.changed', update);
+  }, [eventBus]);
+
   const services = useMemo(() => ({
     getService: (name, strict) => modeler.get(name, strict)
   }), [modeler]);
@@ -81,7 +93,9 @@ export default function PanelRoot(props) {
     };
   }, [modeler, eventBus, element]);
 
-  const groups = element && !Array.isArray(element) ? getGroups(element, modeler.get('translate')) : [];
+  const root = modeler.get('canvas').getRootElement();
+  const findings = findingsFor(issues, element, root);
+  const groups = element && !Array.isArray(element) ? getGroups(element, modeler.get('translate'), findings) : [];
 
   if (failure) {
     const translate = modeler.get('translate');
@@ -95,15 +109,17 @@ export default function PanelRoot(props) {
 
   return (
     <ServicesContext.Provider value={services}>
-      <PropertiesPanel
-        element={element}
-        groups={groups}
-        headerProvider={headerProvider}
-        placeholderProvider={placeholderProvider}
-        layoutConfig={loadLayout()}
-        layoutChanged={saveLayout}
-        eventBus={eventBus}
-      />
+      <FindingsContext.Provider value={fieldFindings(findings)}>
+        <PropertiesPanel
+          element={element}
+          groups={groups}
+          headerProvider={headerProvider}
+          placeholderProvider={placeholderProvider}
+          layoutConfig={loadLayout()}
+          layoutChanged={saveLayout}
+          eventBus={eventBus}
+        />
+      </FindingsContext.Provider>
     </ServicesContext.Provider>
   );
 }
