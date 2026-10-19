@@ -208,3 +208,30 @@
 .fpb-properties .fpb-field-finding-error { color: #c62828; }
 .fpb-properties .fpb-field-finding-warning { color: #b26a00; }
 .fpb-properties .fpb-field-finding-info { color: var(--bio-text-subtle, #555); }
+
+/* AML section (028 E6, E9): long class paths must not widen the panel */
+.fpb-properties .fpb-aml-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  table-layout: fixed;
+}
+
+.fpb-properties .fpb-aml-table th {
+  width: 30%;
+  padding: 2px 4px 2px 0;
+  text-align: left;
+  vertical-align: top;
+  color: var(--bio-text-subtle, #555);
+  font-weight: 600;
+}
+
+.fpb-properties .fpb-aml-table td {
+  padding: 2px 0;
+  color: var(--bio-text, #222);
+  overflow-wrap: anywhere;
+}
+
+.fpb-properties .fpb-aml-subtle {
+  color: var(--bio-text-subtle, #555);
+}

@@ -11,13 +11,14 @@ import { ProjectEntries } from './entries/ProjectEntries';
 import { ProcessEntries } from './entries/ProcessEntries';
 import { DecompositionEntries } from './entries/DecompositionEntries';
 import { FindingsEntries } from './entries/FindingsEntries';
+import { AmlEntries } from './entries/AmlEntries';
 
 /**
  * Groups of the properties panel for an element, in display order. Group
  * titles go through translate (016b T11); the characteristics group draws its
  * own head and translates its title there.
  */
-export function getGroups(element, translate = (text) => text, findings = []) {
+export function getGroups(element, translate = (text) => text, findings = [], services = {}) {
   const groups = [];
 
   if (findings.length) {
@@ -64,6 +65,12 @@ export function getGroups(element, translate = (text) => text, findings = []) {
       shouldOpen: true,
       entries: ConnectionEntries(element)
     });
+  }
+
+  // 028 E9: every element while an AML file is kept; the module is optional
+  const amlSupport = services.amlSupport;
+  if (amlSupport && amlSupport.getSource() && !is(element, 'fpb:Process')) {
+    groups.push({ id: 'aml', label: translate('AML'), shouldOpen: false, entries: AmlEntries() });
   }
 
   return groups;

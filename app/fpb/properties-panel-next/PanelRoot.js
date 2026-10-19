@@ -85,17 +85,23 @@ export default function PanelRoot(props) {
     refreshEvents.forEach((name) => eventBus.on(name, refresh));
     eventBus.on('elements.changed', changed);
     eventBus.on('fpb.projectChanged', redraw);
+    // the AML section follows the kept file (028 E9)
+    const amlEvents = ['aml.sourceChanged', 'aml.indexChanged'];
+    amlEvents.forEach((name) => eventBus.on(name, redraw));
 
     return () => {
       refreshEvents.forEach((name) => eventBus.off(name, refresh));
       eventBus.off('elements.changed', changed);
       eventBus.off('fpb.projectChanged', redraw);
+      amlEvents.forEach((name) => eventBus.off(name, redraw));
     };
   }, [modeler, eventBus, element]);
 
   const root = modeler.get('canvas').getRootElement();
   const findings = findingsFor(issues, element, root);
-  const groups = element && !Array.isArray(element) ? getGroups(element, modeler.get('translate'), findings) : [];
+  const groups = element && !Array.isArray(element)
+    ? getGroups(element, modeler.get('translate'), findings, { amlSupport: modeler.get('amlSupport', false) })
+    : [];
 
   if (failure) {
     const translate = modeler.get('translate');
