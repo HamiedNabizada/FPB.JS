@@ -5,6 +5,7 @@ import UpdatePropertiesHandler from './cmd/UpdatePropertiesHandler';
 import DecomposeProcessOperator from './cmd/DecomposeProcessOperator';
 import ComposeProcess from './cmd/ComposeProcess';
 import SwitchProcess from './cmd/SwitchProcess';
+import UpdateProjectHandler from './cmd/UpdateProjectHandler';
 export default function Modeling(eventBus, elementFactory, commandStack, fpbRuleProvider) {
   BaseModeling.call(this, eventBus, elementFactory, commandStack);
   this._fpbRules = fpbRuleProvider;
@@ -25,6 +26,7 @@ Modeling.prototype.getHandlers = function () {
   handlers['processOperator.decompose'] = DecomposeProcessOperator;
   handlers['systemLimit.compose'] = ComposeProcess;
   handlers['process.switch'] = SwitchProcess;
+  handlers['fpb.updateProject'] = UpdateProjectHandler;
   return handlers;
 };
 
@@ -82,4 +84,9 @@ Modeling.prototype.updateProperties = function (element, properties) {
     element: element,
     properties: properties
   });
+};
+
+/** Name and namespace of the project, undoable (fpb.updateProject) */
+Modeling.prototype.updateProject = function (properties) {
+  this._commandStack.execute('fpb.updateProject', { properties: properties });
 };
