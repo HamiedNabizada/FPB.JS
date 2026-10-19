@@ -24,15 +24,20 @@ export function CharacteristicsGroup(props) {
   const fpbFactory = useService('fpbFactory');
   const readOnly = usePanelReadOnly();
   const [open, setOpen] = useLayoutState(['groups', id, 'open'], true);
+  // the chosen row belongs to its element: it neither carries over to another
+  // one nor shows there for the one render before the reset below
   const [selected, setSelected] = useState(null);
+  const choose = (position) => setSelected(position === null ? null : { element, index: position });
   const list = asList(element.businessObject.get('characteristics'));
 
-  // the chosen row does not carry over to another element
   useEffect(() => setSelected(null), [element]);
 
   // undo or an edit elsewhere may shrink the list under the open detail
-  const index = selected !== null && selected < list.length ? selected : null;
+  const index = selected && selected.element === element && selected.index < list.length ? selected.index : null;
 
+  // writes read the list when they run: a pending input of the detail may
+  // land just before or after "+" or remove (final review of B1)
+  const current = () => asList(element.businessObject.get('characteristics'));
   const tools = { clone: (value) => cloneModdle(fpbFactory, value), create: (type, attrs) => fpbFactory.create(type, attrs) };
   const write = (next) => modeling.updateProperties(element, { characteristics: next });
 
@@ -40,18 +45,24 @@ export function CharacteristicsGroup(props) {
     if (event) {
       event.stopPropagation();
     }
-    const number = nextCharacteristicNumber(list);
-    write(list.concat(newCharacteristic(tools.create, element.businessObject.id, number)));
-    setSelected(list.length);
+    const now = current();
+    write(now.concat(newCharacteristic(tools.create, element.businessObject.id, nextCharacteristicNumber(now))));
+    choose(now.length);
     setOpen(true);
   };
 
   const remove = () => {
-    write(withoutCharacteristic(list, index));
-    setSelected(null);
+    write(withoutCharacteristic(current(), index));
+    choose(null);
   };
 
-  const setField = (position) => (path, value) => write(withField(list, position, path, value, tools));
+  const setField = (position) => (path, value) => {
+    const now = current();
+    // the characteristic was removed while the input waited
+    if (position < now.length) {
+      write(withField(now, position, path, value, tools));
+    }
+  };
   const addLabel = translate('Add characteristic');
 
   return (
@@ -75,7 +86,7 @@ export function CharacteristicsGroup(props) {
       </div>
       <div class={'bio-properties-panel-group-entries' + (open ? ' open' : '')}>
         {list.length ? (
-          <CharacteristicsTable list={list} selected={index} onSelect={setSelected} translate={translate} />
+          <CharacteristicsTable list={list} selected={index} onSelect={choose} translate={translate} />
         ) : (
           <p class="fpb-characteristics-empty">
             {translate('No characteristics yet.')}
@@ -85,7 +96,7 @@ export function CharacteristicsGroup(props) {
         )}
         {index !== null && (
           <CharacteristicDetail
-            key={'characteristic-' + index}
+            key={element.id + '-' + index}
             element={element}
             characteristic={list[index]}
             index={index}

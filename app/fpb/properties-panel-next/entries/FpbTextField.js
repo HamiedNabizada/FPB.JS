@@ -1,12 +1,14 @@
 /** @jsx h */
 import { h } from '@bpmn-io/properties-panel/preact';
-import { useContext, useEffect, useState } from '@bpmn-io/properties-panel/preact/hooks';
-import { useDebounce, useError, useShowEntryEvent, useStaticCallback } from '@bpmn-io/properties-panel';
+import { useCallback, useContext, useEffect, useRef, useState } from '@bpmn-io/properties-panel/preact/hooks';
+import { useDebounce, useError, useShowEntryEvent } from '@bpmn-io/properties-panel';
 
 import { usePanelReadOnly } from '../hooks';
 import { FindingsContext } from '../findingsContext';
 
 const text = (value) => (value === undefined || value === null ? '' : String(value));
+const sameText = (a, b) => a === b;
+const run = (job) => job();
 
 /**
  * Text field in the markup of @bpmn-io/properties-panel, with what its
@@ -14,9 +16,14 @@ const text = (value) => (value === undefined || value === null ? '' : String(val
  * (027: the text stays selectable), no write when the check fails (the
  * library calls setValue even then), a finding of the model check at the
  * field, and room for buttons next to the input (`children`).
+ *
+ * A pending input belongs to the element it was typed for: the write is bound
+ * when typing, not when the debounce fires, and leaving the field writes at
+ * once (the library's field does that on blur as well). `equals` tells which
+ * texts mean the same value, so the field keeps "1," while 1 is stored.
  */
 export function FpbTextField(props) {
-  const { element, id, label, debounce, getValue, setValue, validate, readOnly: always, children } = props;
+  const { element, id, label, debounce, getValue, setValue, validate, equals = sameText, readOnly: always, children } = props;
   const panelReadOnly = usePanelReadOnly();
   const readOnly = !!always || panelReadOnly;
   const value = text(getValue(element));
@@ -27,16 +34,33 @@ export function FpbTextField(props) {
   const finding = useContext(FindingsContext)[id];
   const ref = useShowEntryEvent(id);
 
-  useEffect(() => setLocalValue(value), [value]);
-
-  const commit = useStaticCallback((next) => {
-    const error = validate ? validate(next) || null : null;
-    setLocalError(error);
-    if (!error && next !== value) {
-      setValue(next);
+  // another element always shows its own value; the same one keeps the
+  // typed text while it means the stored value
+  const shown = useRef(element);
+  useEffect(() => {
+    const switched = shown.current !== element;
+    shown.current = element;
+    setLocalValue((local) => (switched || !equals(local, value) ? value : local));
+    if (switched) {
+      setLocalError(null);
     }
-  });
-  const debounced = useDebounce(commit, debounce);
+  }, [element, value]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // stable, so a re-render neither flushes nor drops a pending write
+  const debounced = useDebounce(useCallback(run, []), debounce);
+
+  const writeLater = (next) => {
+    const target = element;
+    debounced(() => {
+      const error = validate ? validate(next) || null : null;
+      if (shown.current === target) {
+        setLocalError(error);
+      }
+      if (!error && next !== value) {
+        setValue(next);
+      }
+    });
+  };
 
   const error = globalError || localError;
   const inputId = 'bio-properties-panel-' + id;
@@ -59,9 +83,10 @@ export function FpbTextField(props) {
             onInput={(event) => {
               setLocalValue(event.target.value);
               if (!readOnly) {
-                debounced(event.target.value);
+                writeLater(event.target.value);
               }
             }}
+            onBlur={() => debounced.flush && debounced.flush()}
           />
           {children}
         </div>

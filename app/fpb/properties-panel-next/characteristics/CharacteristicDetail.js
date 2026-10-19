@@ -7,6 +7,9 @@ import { FpbTextField } from '../entries/FpbTextField';
 import { parseValue, formatValue } from '../values';
 import { asList } from './model';
 
+/** "1," and 1 are the same value: the field keeps what the user types */
+const sameValue = (a, b) => parseValue(a) === parseValue(b);
+
 const read = (object, path) => path.reduce((value, key) => (value === undefined || value === null ? undefined : value[key]), object);
 
 /** Fields of the detail area, grouped as in VDI 3682 Blatt 2 Bild 5 to 7 */
@@ -34,9 +37,10 @@ const SECTIONS = [
 ];
 
 /**
- * Detail area of one characteristic. Keyed by its index in the group, so a
- * pending (debounced) input still writes into the characteristic it was typed
- * in when another one is chosen (Review Focus 2).
+ * Detail area of one characteristic. Keyed by its element and its index in
+ * the group, so a pending (debounced) input still writes into the
+ * characteristic it was typed in when another one or another element is
+ * chosen (Review Focus 2).
  */
 export function CharacteristicDetail(props) {
   const { element, characteristic, index, setField, onRemove } = props;
@@ -58,6 +62,7 @@ export function CharacteristicDetail(props) {
               label={translate(label)}
               debounce={debounce}
               readOnly={options.readOnly}
+              equals={options.value ? sameValue : undefined}
               getValue={() => (options.value ? formatValue(read(characteristic, path)) : read(characteristic, path) || '')}
               setValue={(text) => setField(path, options.value ? parseValue(text) : (text || ''))}
             />
