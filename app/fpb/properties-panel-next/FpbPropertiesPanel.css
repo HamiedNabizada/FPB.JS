@@ -90,3 +90,63 @@
   font-size: 12px;
   cursor: pointer;
 }
+
+/* Characteristics: table and detail area (016b V1) */
+.fpb-properties .fpb-characteristics-table {
+  width: calc(100% - 24px);
+  margin: 4px 12px 8px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.fpb-properties .fpb-characteristics-table th,
+.fpb-properties .fpb-characteristics-table td {
+  padding: 3px 4px;
+  border-bottom: 1px solid var(--bio-border-subtle, #ddd);
+  text-align: left;
+  color: var(--bio-text, #222);
+  overflow-wrap: anywhere;
+}
+
+.fpb-properties .fpb-characteristics-table thead th {
+  color: var(--bio-text-subtle, #555);
+  font-weight: 600;
+}
+
+.fpb-properties .fpb-characteristics-table tr.selected {
+  background: var(--bio-primary-surface, #e6f0ff);
+}
+
+.fpb-properties .fpb-characteristic-select,
+.fpb-properties .fpb-link-button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--bio-primary, #0066cc);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fpb-properties .fpb-characteristics-empty {
+  margin: 4px 12px 8px;
+  font-size: 12px;
+  color: var(--bio-text-subtle, #555);
+}
+
+.fpb-properties .fpb-characteristic-detail {
+  margin: 0 0 8px;
+  border-top: 1px solid var(--bio-border, #bbb);
+}
+
+.fpb-properties .fpb-characteristic-title,
+.fpb-properties .fpb-characteristic-section-title {
+  margin: 8px 12px 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--bio-text, #222);
+}
+
+.fpb-properties .fpb-remove-characteristic {
+  margin: 4px 12px;
+}

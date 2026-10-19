@@ -1,0 +1,73 @@
+/** @jsx h */
+import { h } from '@bpmn-io/properties-panel/preact';
+
+import { useService } from '../context';
+import { usePanelReadOnly } from '../hooks';
+import { FpbTextField } from '../entries/FpbTextField';
+import { parseValue, formatValue } from '../values';
+
+const read = (object, path) => path.reduce((value, key) => (value === undefined || value === null ? undefined : value[key]), object);
+
+/** Fields of the detail area, grouped as in VDI 3682 Blatt 2 Bild 5 to 7 */
+const SECTIONS = [
+  ['Category', [
+    ['categoryShortName', 'Short name', ['category', 'shortName']],
+    ['categoryLongName', 'Long name', ['category', 'longName']],
+    ['categoryVersion', 'Version', ['category', 'versionNumber']],
+    ['categoryRevision', 'Revision', ['category', 'revisionNumber']],
+    ['categoryIdent', 'Unique ID', ['category', 'uniqueIdent'], { readOnly: true }]
+  ]],
+  ['Descriptive element', [
+    ['valueDetermination', 'Value determination process', ['descriptiveElement', 'valueDeterminationProcess']],
+    ['representivity', 'Representivity', ['descriptiveElement', 'representivity']],
+    ['setpoint', 'Setpoint', ['descriptiveElement', 'setpointValue', 'value'], { value: true }],
+    ['setpointUnit', 'Setpoint unit', ['descriptiveElement', 'setpointValue', 'unit']],
+    ['actual', 'Actual value', ['descriptiveElement', 'actualValues', 0, 'value'], { value: true }],
+    ['actualUnit', 'Actual value unit', ['descriptiveElement', 'actualValues', 0, 'unit']]
+  ]],
+  ['Relational element', [
+    ['view', 'View', ['relationalElement', 'view']],
+    ['model', 'Model', ['relationalElement', 'model']],
+    ['regulations', 'Regulations for relational generation', ['relationalElement', 'regulationsForRelationalGeneration']]
+  ]]
+];
+
+/**
+ * Detail area of one characteristic. Keyed by its index in the group, so a
+ * pending (debounced) input still writes into the characteristic it was typed
+ * in when another one is chosen (Review Focus 2).
+ */
+export function CharacteristicDetail(props) {
+  const { element, characteristic, index, setField, onRemove } = props;
+  const translate = useService('translate');
+  const debounce = useService('debounceInput');
+  const readOnly = usePanelReadOnly();
+  const name = (characteristic.category && characteristic.category.shortName) || ('C_' + (index + 1));
+
+  return (
+    <div class="fpb-characteristic-detail" data-index={index}>
+      <div class="fpb-characteristic-title">{name}</div>
+      {SECTIONS.map(([title, fields]) => (
+        <div class="fpb-characteristic-section">
+          <div class="fpb-characteristic-section-title">{translate(title)}</div>
+          {fields.map(([key, label, path, options = {}]) => (
+            <FpbTextField
+              element={element}
+              id={'characteristic-' + index + '-' + key}
+              label={translate(label)}
+              debounce={debounce}
+              readOnly={options.readOnly}
+              getValue={() => (options.value ? formatValue(read(characteristic, path)) : read(characteristic, path) || '')}
+              setValue={(text) => setField(path, options.value ? parseValue(text) : (text || ''))}
+            />
+          ))}
+        </div>
+      ))}
+      {!readOnly && (
+        <button type="button" class="fpb-field-button fpb-remove-characteristic" onClick={onRemove}>
+          {translate('Remove characteristic')}
+        </button>
+      )}
+    </div>
+  );
+}

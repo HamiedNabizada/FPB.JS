@@ -5,6 +5,7 @@ import { is } from '../help/utils';
 import { IdentificationEntries } from './entries/IdentificationEntries';
 import { FpbTextField, isFpbTextFieldEdited } from './entries/FpbTextField';
 import { useService } from './context';
+import { CharacteristicsGroup } from './characteristics/CharacteristicsGroup';
 
 /**
  * Groups of the properties panel for an element, in display order.
@@ -18,6 +19,11 @@ export function getGroups(element) {
       label: 'Identification',
       shouldOpen: true,
       entries: IdentificationEntries(element)
+    });
+    groups.push({
+      id: 'characteristics',
+      label: 'Characteristics',
+      component: CharacteristicsGroup
     });
   }
 
