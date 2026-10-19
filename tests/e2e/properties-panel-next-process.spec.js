@@ -52,4 +52,24 @@ test.describe('New properties panel, nothing selected', () => {
     await page.getByRole('button', { name: 'Open parent layer' }).click();
     await expect(page.locator('.bio-properties-panel-header')).toContainText('Top level');
   });
+
+  test('a decomposed operator opens its layer, also in read-only mode', async ({ page }) => {
+    await openPanel(page);
+    await page.evaluate(() => window.fpbjs.get('readOnly').set(true));
+    await page.evaluate(() => {
+      const op = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Erhitzen' && e.type !== 'label')[0];
+      window.fpbjs.get('selection').select(op);
+    });
+    await page.getByRole('button', { name: 'Open layer' }).click();
+    await expect(page.locator('.bio-properties-panel-header')).toContainText('Decomposition of Erhitzen');
+  });
+
+  test('an operator without decomposition has no decomposition group', async ({ page }) => {
+    await openPanel(page);
+    await page.evaluate(() => {
+      const op = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Prüfen' && e.type !== 'label')[0];
+      window.fpbjs.get('selection').select(op);
+    });
+    await expect(page.locator('[data-group-id="group-decomposition"]')).toHaveCount(0);
+  });
 });

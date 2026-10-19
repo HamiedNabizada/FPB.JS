@@ -9,6 +9,7 @@ import { CharacteristicsGroup } from './characteristics/CharacteristicsGroup';
 import { ConnectionEntries } from './entries/ConnectionEntries';
 import { ProjectEntries } from './entries/ProjectEntries';
 import { ProcessEntries } from './entries/ProcessEntries';
+import { DecompositionEntries } from './entries/DecompositionEntries';
 
 /**
  * Groups of the properties panel for an element, in display order. Group
@@ -30,6 +31,9 @@ export function getGroups(element, translate = (text) => text) {
       shouldOpen: true,
       entries: IdentificationEntries(element)
     });
+    if (is(element, 'fpb:ProcessOperator') && element.businessObject.decomposedView) {
+      groups.push({ id: 'decomposition', label: translate('Decomposition'), shouldOpen: true, entries: DecompositionEntries() });
+    }
     groups.push({
       id: 'characteristics',
       label: 'Characteristics',
