@@ -22,6 +22,7 @@ test.describe('New properties panel, characteristics', () => {
     await select(page, 'Erhitzen');
     const before = await stackSize(page);
 
+    await expect(group(page).locator('.fpb-characteristics-empty')).toHaveText('No characteristics yet. Add characteristic');
     await add(page).click();
     await expect(rows(page)).toHaveCount(1);
     await expect(rows(page).first()).toContainText('C_1');

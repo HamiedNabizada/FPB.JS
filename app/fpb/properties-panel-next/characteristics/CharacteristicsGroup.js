@@ -79,6 +79,7 @@ export function CharacteristicsGroup(props) {
         ) : (
           <p class="fpb-characteristics-empty">
             {translate('No characteristics yet.')}
+            {!readOnly && ' '}
             {!readOnly && <button type="button" class="fpb-link-button" onClick={add}>{addLabel}</button>}
           </p>
         )}
