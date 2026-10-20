@@ -106,11 +106,21 @@ UpdateLabelHandler.prototype.revert = function(ctx) {
 UpdateLabelHandler.prototype.postExecute = function(ctx) {
   const { element, newLabel, newBounds, hints = {} } = ctx;
   const label = element.label || element;
+  // The state, also when its label was edited on the canvas; removing an
+  // empty label below unsets the label's labelTarget
+  ctx.labelTarget = element.labelTarget || element;
 
   // Remove empty labels
   if (isLabel(label) && isEmptyText(newLabel)) {
     if (hints.removeShape !== false) {
       this._modeling.removeShape(label, { unsetLabel: false });
+    }
+    // A cleared name is a name like any other: the short name goes with it,
+    // as it does for an operator, whose name is no shape of its own, and so
+    // do the copies on other layers (B16)
+    this._updateBusinessObjectIdentification(element, newLabel, ctx);
+    if (isAny(ctx.labelTarget, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
+      this._handleStateNameSync(ctx.labelTarget, newLabel, ctx);
     }
     return;
   }
@@ -127,8 +137,8 @@ UpdateLabelHandler.prototype.postExecute = function(ctx) {
   }
 
   // Scenario 7 & 8: Bidirectional state name synchronization
-  if (isAny(element, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
-    this._handleStateNameSync(element, newLabel, ctx);
+  if (isAny(ctx.labelTarget, ['fpb:Product', 'fpb:Energy', 'fpb:Information'])) {
+    this._handleStateNameSync(ctx.labelTarget, newLabel, ctx);
   }
 };
 
@@ -249,10 +259,19 @@ UpdateLabelHandler.prototype._handleStateElementResize = function(element, label
  * shows on. It used to reach only the layer right below (through the
  * operators the state flows to) or right above (from a boundary state), so a
  * name changed two layers down stayed there (B14). All copies share the id
- * of the state (help/processShapes.stateCopies).
+ * of the state (help/processShapes.stateCopies), so `element` must be the
+ * state, not its label.
+ *
+ * A copy an older file left with another name keeps it, as copies with other
+ * data do in StateCopySyncBehavior: overwriting it would lose it, aligning
+ * such copies is the user's choice (B16, decided 2026-10-19).
  */
 UpdateLabelHandler.prototype._handleStateNameSync = function(element, newLabel, ctx) {
+  const before = ctx.oldLabel || '';
   stateCopies(this._fpbjs.getProjectDefinition(), element).forEach((copy) => {
+    if ((copy.businessObject.name || '') !== before) {
+      return;
+    }
     trackedWrite(ctx, copy.businessObject, 'name', newLabel);
     if (copy.businessObject.identification) {
       trackedWrite(ctx, copy.businessObject.identification, 'shortName', newLabel);

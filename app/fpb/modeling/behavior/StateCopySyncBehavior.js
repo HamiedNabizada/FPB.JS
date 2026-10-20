@@ -3,34 +3,10 @@ import CommandInterceptor from 'diagram-js/lib/command/CommandInterceptor';
 
 import { is } from '../../help/utils';
 import { stateCopies } from '../../help/processShapes';
+import { sameContent } from '../../help/modelContent';
 
 /** Properties that belong to the state, not to one of its pictures */
 const SHARED = ['identification', 'characteristics'];
-
-const isEmpty = (value) => value === undefined || value === null || value === '' ||
-  (Array.isArray(value) && value.length === 0);
-
-/** The content of a model value, without moddle internals and empty fields */
-function content(value, depth = 0) {
-  if (isEmpty(value)) {
-    return null;
-  }
-  if (typeof value !== 'object' || depth > 8) {
-    return value;
-  }
-  if (Array.isArray(value)) {
-    return value.map((entry) => content(entry, depth + 1));
-  }
-  const out = value.$type ? { $type: value.$type } : {};
-  Object.keys(value).sort().forEach((key) => {
-    if (key.charAt(0) !== '$' && !isEmpty(value[key])) {
-      out[key] = content(value[key], depth + 1);
-    }
-  });
-  return out;
-}
-
-const sameContent = (a, b) => a === b || JSON.stringify(content(a)) === JSON.stringify(content(b));
 
 /**
  * A boundary state is one object of the model, shown on several layers. Its

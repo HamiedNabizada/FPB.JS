@@ -1,5 +1,6 @@
 import { is, isAny } from '../help/utils';
 import { checkIfOnSystemBorder } from '../help/helpUtils';
+import { content } from '../help/modelContent';
 
 /**
  * Checks of the VDI 3682 rule catalog (FPB.JS_Docs/Standards/Drafts/
@@ -26,6 +27,9 @@ export const RULES = {
   D5: { severity: SEVERITY.INFO, title: 'Technical resource has a name' },
   F5: { severity: SEVERITY.WARNING, title: 'Decomposition contains every input and output' },
   F8: { severity: SEVERITY.WARNING, title: 'Branching type matches the decomposition' },
+  // a note, as E6 of the catalog: the model stays valid, and every older file
+  // whose layers were saved one by one would report it after the import
+  F9: { severity: SEVERITY.INFO, title: 'Copies of a boundary state agree' },
   G1: { severity: SEVERITY.WARNING, title: 'Process operator has an input and an output' },
   G3: { severity: SEVERITY.ERROR, title: 'Flow has different source and target' },
   G4: { severity: SEVERITY.WARNING, title: 'Element is connected' }
@@ -52,7 +56,66 @@ export function checkModel(processShapes) {
   byId.forEach(function (process) {
     checkProcess(process, issues);
   });
+  checkCopies(byId, issues);
   return issues;
+}
+
+const text = (value) => (value === undefined || value === null ? '' : String(value).trim());
+const identificationOf = (state) => state.businessObject.identification || {};
+
+/** What the copies of a boundary state must agree in (F9) */
+const ASPECTS = [
+  { label: 'name', read: (state) => text(state.businessObject.name) },
+  { label: 'short name', read: (state) => text(identificationOf(state).shortName) },
+  { label: 'long name', read: (state) => text(identificationOf(state).longName) },
+  { label: 'version', read: (state) => text(identificationOf(state).versionNumber) },
+  { label: 'revision', read: (state) => text(identificationOf(state).revisionNumber) },
+  { label: 'characteristics', read: (state) => JSON.stringify(content(state.businessObject.characteristics)) }
+];
+
+/**
+ * F9: the copies of a boundary state are one object of the model (VDI 3682
+ * Blatt 1: a decomposition structures the operators, not the products and
+ * energies; Blatt 2: one identification per object). Copies an older file
+ * left different are reported once, at the copy on the uppermost layer.
+ * `variants` holds one copy per different content, so the user can choose
+ * which one all copies take (fpb.alignStateCopies).
+ */
+function checkCopies(processes, issues) {
+  const copiesById = new Map();
+  processes.forEach(function (process) {
+    layerContents(process).states.forEach(function (state) {
+      const list = copiesById.get(state.id) || [];
+      list.push({ state: state, process: process });
+      copiesById.set(state.id, list);
+    });
+  });
+
+  copiesById.forEach(function (copies) {
+    if (copies.length < 2) {
+      return;
+    }
+    const first = copies[0];
+    const differs = ASPECTS.filter(function (aspect) {
+      return copies.some(function (copy) { return aspect.read(copy.state) !== aspect.read(first.state); });
+    });
+    if (!differs.length) {
+      return;
+    }
+    const variants = [];
+    const seen = new Set();
+    copies.forEach(function (copy) {
+      const key = JSON.stringify(ASPECTS.map(function (aspect) { return aspect.read(copy.state); }));
+      if (!seen.has(key)) {
+        seen.add(key);
+        variants.push({ id: copy.state.id, process: copy.process });
+      }
+    });
+    report(issues, 'F9', first.state, first.process, 'The copies of ' + label(first.state) +
+      ' on the layers differ in ' + differs.map(function (aspect) { return aspect.label; }).join(', ') + '.',
+      copies.map(function (copy) { return { id: copy.state.id, process: copy.process }; }));
+    issues[issues.length - 1].variants = variants;
+  });
 }
 
 /**

@@ -1436,3 +1436,128 @@ test.describe('Boundary state copies stay one object (B14)', () => {
     }
   });
 });
+
+// B16 and the names of a boundary state: one state, one name (VDI 3682
+// Blatt 1, decomposition structures the operators, not the products; Blatt 2,
+// one identification per object). Renaming and clearing reach every copy that
+// had the same name; a copy an older file left with another name keeps it
+// (decided by the user 2026-10-19).
+test.describe('Names of a state on every layer (B16)', () => {
+
+  /** As on the canvas: double click the name, type (or delete), click away */
+  async function nameOnCanvas(page, id, text) {
+    await page.locator(`.djs-element[data-element-id="${id}_label"]`).dblclick({ force: true });
+    await page.waitForSelector('.djs-direct-editing-parent', { state: 'visible' });
+    await page.keyboard.press('Control+A');
+    if (text) {
+      await page.keyboard.type(text);
+    } else {
+      await page.keyboard.press('Delete');
+    }
+    await page.mouse.click(1100, 960);
+    await page.waitForTimeout(300);
+  }
+
+  const unnamed = (page) => page.evaluate(() => window.fpbjs.get('fpbValidation').run()
+    .filter((i) => i.rule === 'D4').map((i) => i.elementId));
+
+  /** What an older file may hold: the copy in the decomposition named differently */
+  const nameBelow = (page, id, name) => page.evaluate(({ id, name, child }) => {
+    const sl = window.__lr.sl(window.__lr.process(child));
+    const copy = sl.businessObject.elementsContainer.find((e) => e.id === id);
+    copy.businessObject.name = name;
+    copy.businessObject.identification.shortName = name;
+  }, { id, name, child: IDS.child });
+
+  test('a state without copies loses its short name with its name, and the model check notices', async ({ page }) => {
+    await load(page);
+    await nameOnCanvas(page, IDS.gutprodukt, '');
+
+    const [copy] = await copies(page, IDS.gutprodukt);
+    expect(copy.name || '').toBe('');
+    expect(copy.shortName || '').toBe('');
+    expect(await unnamed(page)).toContain(IDS.gutprodukt);
+  });
+
+  test('renaming on the canvas renames the copies on every layer, one undo takes it back', async ({ page }) => {
+    await load(page);
+    await nameOnCanvas(page, IDS.rohstoff, 'Rohstoff neu');
+
+    const all = await copies(page, IDS.rohstoff);
+    expect(all.length).toBeGreaterThan(1);
+    for (const copy of all) {
+      expect(copy).toMatchObject({ name: 'Rohstoff neu', shortName: 'Rohstoff neu' });
+    }
+    await undo(page);
+    expect(await canUndo(page)).toBe(false);
+    for (const copy of await copies(page, IDS.rohstoff)) {
+      expect(copy).toMatchObject({ name: 'Rohstoff', shortName: 'Rohstoff' });
+    }
+    expect(await issues(page)).toEqual([]);
+  });
+
+  test('clearing on the canvas clears the name on every layer without a question, one undo brings it back', async ({ page }) => {
+    await load(page);
+    await nameOnCanvas(page, IDS.rohstoff, '');
+    await expect(page.locator('.modal.show')).toHaveCount(0);
+
+    for (const copy of await copies(page, IDS.rohstoff)) {
+      expect(copy.name || '').toBe('');
+      expect(copy.shortName || '').toBe('');
+    }
+    await undo(page);
+    expect(await canUndo(page)).toBe(false);
+    for (const copy of await copies(page, IDS.rohstoff)) {
+      expect(copy).toMatchObject({ name: 'Rohstoff', shortName: 'Rohstoff' });
+    }
+    expect(await issues(page)).toEqual([]);
+  });
+
+  // the test model: "Rohstoff (unbehandelt)" and Temperatur on top, nothing below (020 §2)
+  test('the model check reports copies that differ and aligns them to the chosen layer in one step (F9)', async ({ page }) => {
+    await load(page);
+    await page.evaluate(() => {
+      window.fpbjs.get('fpbValidation').run();
+      window.fpbjs.get('fpbValidation').openPanel();
+    });
+    const item = page.locator('.fpb-validation-item[data-rule="F9"]');
+    await expect(item).toHaveCount(1);
+    await expect(item).toContainText('"Rohstoff"');
+    await expect(item).toContainText('long name');
+    await item.getByRole('button', { name: 'Use the values of the top level' }).click();
+
+    for (const copy of await copies(page, IDS.rohstoff)) {
+      expect(copy).toMatchObject({ name: 'Rohstoff', longName: 'Rohstoff (unbehandelt)', characteristics: ['Temperatur'] });
+    }
+    // one object again, as the copies of a new boundary state (B14)
+    expect(await sharing(page, IDS.rohstoff)).toEqual({ identification: true, characteristics: true });
+    await expect(page.locator('.fpb-validation-item[data-rule="F9"]')).toHaveCount(0);
+
+    await undo(page);
+    expect(await canUndo(page)).toBe(false);
+    const [top, ...below] = await copies(page, IDS.rohstoff);
+    expect(top).toMatchObject({ longName: 'Rohstoff (unbehandelt)', characteristics: ['Temperatur'] });
+    for (const copy of below) {
+      expect(copy.characteristics).toEqual([]);
+    }
+  });
+
+  test('a copy an older file left with another name keeps it when the state is renamed or cleared', async ({ page }) => {
+    await load(page);
+    await nameBelow(page, IDS.rohstoff, 'Rohstoff (alt)');
+
+    await nameOnCanvas(page, IDS.rohstoff, 'Rohstoff neu');
+    let [top, ...below] = await copies(page, IDS.rohstoff);
+    expect(top).toMatchObject({ name: 'Rohstoff neu', shortName: 'Rohstoff neu' });
+    for (const copy of below) {
+      expect(copy).toMatchObject({ name: 'Rohstoff (alt)', shortName: 'Rohstoff (alt)' });
+    }
+
+    await nameOnCanvas(page, IDS.rohstoff, '');
+    [top, ...below] = await copies(page, IDS.rohstoff);
+    expect(top.name || '').toBe('');
+    for (const copy of below) {
+      expect(copy).toMatchObject({ name: 'Rohstoff (alt)', shortName: 'Rohstoff (alt)' });
+    }
+  });
+});

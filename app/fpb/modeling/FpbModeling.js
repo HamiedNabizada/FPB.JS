@@ -6,6 +6,7 @@ import DecomposeProcessOperator from './cmd/DecomposeProcessOperator';
 import ComposeProcess from './cmd/ComposeProcess';
 import SwitchProcess from './cmd/SwitchProcess';
 import UpdateProjectHandler from './cmd/UpdateProjectHandler';
+import AlignStateCopiesHandler from './cmd/AlignStateCopiesHandler';
 export default function Modeling(eventBus, elementFactory, commandStack, fpbRuleProvider) {
   BaseModeling.call(this, eventBus, elementFactory, commandStack);
   this._fpbRules = fpbRuleProvider;
@@ -27,6 +28,7 @@ Modeling.prototype.getHandlers = function () {
   handlers['systemLimit.compose'] = ComposeProcess;
   handlers['process.switch'] = SwitchProcess;
   handlers['fpb.updateProject'] = UpdateProjectHandler;
+  handlers['fpb.alignStateCopies'] = AlignStateCopiesHandler;
   return handlers;
 };
 
@@ -39,6 +41,15 @@ Modeling.prototype.updateLabel = function (element, newLabel, newBounds, hints) 
     newBounds: newBounds,
     hints: hints || {}
   });
+};
+
+
+/**
+ * Every copy of the boundary state `stateId` takes the values of its copy on
+ * `process` (model check F9).
+ */
+Modeling.prototype.alignStateCopies = function (stateId, process) {
+  this._commandStack.execute('fpb.alignStateCopies', { stateId: stateId, process: process });
 };
 
 

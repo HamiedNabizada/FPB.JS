@@ -320,6 +320,8 @@
 .fpb-validation-item.fpb-validation-info { border-left-color: #6e9ad1; }
 .fpb-validation-item-head { font-weight: 600; font-size: 12px; color: #444; }
 .fpb-validation-item-text { font-size: 13px; }
+.fpb-validation-choices { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.fpb-validation-choice { border: 1px solid #c9d0d7; border-radius: 4px; padding: 2px 8px; background: transparent; color: inherit; font-size: 12px; cursor: pointer; }
 
 .fpb-validation-count {
   position: absolute;
