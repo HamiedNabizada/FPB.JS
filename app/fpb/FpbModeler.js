@@ -62,6 +62,10 @@ import ClipboardModule from './clipboard';
 import AccessibilityModule from './a11y';
 import PreviewModule from './preview';
 import AutosaveModule from './autosave';
+
+// one set of design values and the interface font for every host (016c T1, T6)
+import './theme/tokens.css';
+import './theme/fonts.css';
 import ReadOnlyModule from './read-only';
 import { DebounceInputModule } from '@bpmn-io/properties-panel';
 import SnappingModule from 'diagram-js/lib/features/snapping';

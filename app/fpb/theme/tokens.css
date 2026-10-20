@@ -1,0 +1,130 @@
+/*
+ * Design values of FPB.js (016c T1): one set for light and one for dark,
+ * taken from design variant B. Every part of the interface reads these;
+ * the properties panel library (--bio-*) and Bootstrap 5.3 (--bs-*) are fed
+ * from them below. Dark applies wherever data-theme="dark" is set: on the
+ * document for the web app, on the containers of a host (fpbTheme).
+ * Each text colour reaches 4.5:1 on the surface it is used on
+ * (tests/e2e/theme-tokens.spec.js).
+ */
+
+:root {
+  --fpb-ground: #e9ecef;
+  --fpb-surface: #ffffff;
+  --fpb-surface-muted: #f3f5f7;
+  --fpb-surface-sunken: #f6f8fa;
+  --fpb-line: #e1e5e9;
+  --fpb-line-strong: #c9d0d7;
+  /* borders of fields and buttons: 3:1 on the surface (WCAG 1.4.11) */
+  --fpb-control-border: #8a949e;
+
+  --fpb-text: #1c232b;
+  --fpb-text-muted: #4a545e;
+  --fpb-text-subtle: #5d6873;
+
+  --fpb-accent: #1f4f9c;
+  --fpb-accent-rgb: 31, 79, 156;
+  --fpb-accent-hover: #163a73;
+  --fpb-accent-surface: #e8f0fb;
+  --fpb-accent-text: #163a73;
+  --fpb-on-accent: #ffffff;
+
+  --fpb-danger: #b3141a;
+  --fpb-on-danger: #ffffff;
+  --fpb-error: #c4161c;
+  --fpb-error-surface: #fdecec;
+  --fpb-error-text: #8a1015;
+  --fpb-warning: #b86e00;
+  --fpb-warning-surface: #fff4e0;
+  --fpb-warning-text: #5c3900;
+  --fpb-info: #2f5fa8;
+  --fpb-info-surface: #eaf1fb;
+  --fpb-info-text: #1d4687;
+
+  --fpb-radius-card: 10px;
+  --fpb-radius-control: 6px;
+  --fpb-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px var(--fpb-line);
+  --fpb-shadow-float: 0 10px 30px rgba(16, 24, 40, 0.16);
+
+  --fpb-font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fpb-font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+}
+
+[data-theme="dark"] {
+  --fpb-ground: #0f1318;
+  --fpb-surface: #1a2027;
+  --fpb-surface-muted: #222a33;
+  --fpb-surface-sunken: #161b21;
+  --fpb-line: #2e3742;
+  --fpb-line-strong: #3d4855;
+  --fpb-control-border: #6b7785;
+
+  --fpb-text: #e6eaef;
+  --fpb-text-muted: #b6bfc9;
+  --fpb-text-subtle: #9aa5b1;
+
+  --fpb-accent: #7fb0f5;
+  --fpb-accent-rgb: 127, 176, 245;
+  --fpb-accent-hover: #a3c7f8;
+  --fpb-accent-surface: #1f3352;
+  --fpb-accent-text: #cfe1fb;
+  --fpb-on-accent: #0f1318;
+
+  --fpb-danger: #c4262c;
+  --fpb-on-danger: #ffffff;
+  --fpb-error: #ff8a8a;
+  --fpb-error-surface: #3a1c1e;
+  --fpb-error-text: #ffc9c9;
+  --fpb-warning: #f0a83a;
+  --fpb-warning-surface: #3a2c12;
+  --fpb-warning-text: #ffd89a;
+  --fpb-info: #7fb0f5;
+  --fpb-info-surface: #1c2d47;
+  --fpb-info-text: #cfe1fb;
+
+  --fpb-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--fpb-line);
+  --fpb-shadow-float: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Properties panel library: it sets --bio-* on .bio-theme-parent */
+:root .bio-theme-parent,
+:root .fpb-properties {
+  --bio-surface: var(--fpb-surface);
+  --bio-surface-overlay: var(--fpb-surface);
+  --bio-surface-subtle: var(--fpb-surface-sunken);
+  --bio-surface-medium: var(--fpb-surface-muted);
+  --bio-surface-strong: var(--fpb-line);
+  --bio-text: var(--fpb-text);
+  --bio-text-subtle: var(--fpb-text-muted);
+  --bio-text-subtlest: var(--fpb-text-subtle);
+  --bio-border: var(--fpb-line);
+  --bio-border-subtle: var(--fpb-line);
+  --bio-border-disabled: var(--fpb-line);
+  --bio-border-input: var(--fpb-control-border);
+  --bio-primary: var(--fpb-accent);
+  --bio-primary-hover: var(--fpb-accent-hover);
+  --bio-primary-surface: var(--fpb-accent-surface);
+  --bio-neutral: var(--fpb-text-subtle);
+  font-family: var(--fpb-font);
+}
+
+/* Bootstrap 5.3: it sets --bs-* on :root and [data-bs-theme] */
+:root:root,
+:root [data-theme] {
+  --bs-body-bg: var(--fpb-surface);
+  --bs-body-color: var(--fpb-text);
+  --bs-emphasis-color: var(--fpb-text);
+  --bs-secondary-color: var(--fpb-text-muted);
+  --bs-tertiary-color: var(--fpb-text-subtle);
+  --bs-secondary-bg: var(--fpb-surface-muted);
+  --bs-tertiary-bg: var(--fpb-surface-sunken);
+  --bs-border-color: var(--fpb-line);
+  --bs-border-radius: var(--fpb-radius-control);
+  --bs-primary: var(--fpb-accent);
+  --bs-primary-rgb: var(--fpb-accent-rgb);
+  --bs-link-color: var(--fpb-accent);
+  --bs-link-color-rgb: var(--fpb-accent-rgb);
+  --bs-font-sans-serif: var(--fpb-font);
+  --bs-font-monospace: var(--fpb-font-mono);
+  --bs-body-font-family: var(--fpb-font);
+}

@@ -1,6 +1,8 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-//import 'bootstrap/dist/css/bootstrap.min.css';
+// Bootstrap 5 for the layer panel and the dialogs, with either properties
+// panel; the web app no longer loads Bootstrap 4 from a CDN (016c)
+import 'bootstrap/dist/css/bootstrap.min.css';
 import LayerPanel from './LayerPanel';
 import ErrorBoundary from '../ErrorBoundary';
 import { ErrorProvider } from '../context/ErrorContext';
