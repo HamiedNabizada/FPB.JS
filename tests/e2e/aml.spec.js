@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { ImportPage } from './pages/ImportPage';
+import basis from './fixtures/temperieren.json';
 import {
   openImportDialog, pickFile, pressImport, importButton, exportViaDialog, dismissNotifications
 } from './helpers/importDialog';
@@ -53,6 +54,47 @@ const names = (page) => page.evaluate(() => window.fpbjs.get('elementRegistry')
   .filter((e) => e.businessObject && e.businessObject.name && e.type !== 'label').map((e) => e.businessObject.name));
 
 test.describe('AutomationML import and export', () => {
+
+  // 016c T9a: the AML half of the round trip; AML writes the values as text (xs:string)
+  test('setpoint, limits and actual values keep 0, a one-sided and an empty limit through AML', async ({ page }) => {
+    const { importer, fehler } = await start(page);
+    const model = JSON.parse(JSON.stringify(basis));
+    const desc = model[1].elementDataInformation[11].characteristics[0].descriptiveElement;
+    desc.setpointValue.value = 0;
+    desc.validityLimits = [
+      { $type: 'fpbch:ValidityLimits', limitType: 'acceptance region', from: 0, to: 5 },
+      { $type: 'fpbch:ValidityLimits', limitType: 'permitted rejection region', from: 345 }
+    ];
+    desc.actualValues = [
+      { $type: 'fpbch:ValueWithUnit', value: 0, unit: '°C' },
+      { $type: 'fpbch:ValueWithUnit', value: 'warm' }
+    ];
+    await importer.import(model);
+
+    const aml = await page.evaluate(() => window.fpbjs.get('amlSupport').exportAml().then((r) => r.text));
+    await importAml(page, aml, 'Rundreise.aml');
+
+    const back = await page.evaluate(() => {
+      const state = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Rohstoff' &&
+        e.type !== 'label' && (e.businessObject.characteristics || []).length)[0];
+      const d = state.businessObject.characteristics[0].descriptiveElement;
+      const list = (x) => (Array.isArray(x) ? x : [x]).filter(Boolean);
+      return {
+        setpoint: d.setpointValue && d.setpointValue.value,
+        limits: list(d.validityLimits).map((l) => [l.limitType, l.from, l.to]),
+        actuals: list(d.actualValues).map((v) => [v.value, v.unit || ''])
+      };
+    });
+    // a number may come back as text, but 0 stays 0 and an empty limit stays empty
+    const value = (v) => (v === '' || v === undefined || v === null ? null : (isNaN(Number(v)) ? v : Number(v)));
+    expect(value(back.setpoint)).toBe(0);
+    expect(back.limits.map(([type, from, to]) => [type, value(from), value(to)])).toEqual([
+      ['acceptance region', 0, 5],
+      ['permitted rejection region', 345, null]
+    ]);
+    expect(back.actuals.map(([v, unit]) => [value(v), unit])).toEqual([[0, '°C'], ['warm', '']]);
+    expect(fehler).toEqual([]);
+  });
 
   test('asks which process view to open when the file has several', async ({ page }) => {
     const { fehler } = await start(page);
