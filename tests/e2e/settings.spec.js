@@ -9,7 +9,8 @@ import basis from './fixtures/temperieren.json';
  * menu (ColorSchemeToggle, ColorSchemeService) and the grid (GridService).
  *
  * Theme and colour scheme are remembered per browser in localStorage
- * ('fpb-theme', 'fpb-color-scheme'). The grid has no user setting: GridService
+ * ('fpbjs.theme', 'fpb-color-scheme'); the theme follows the system until the
+ * user chooses (016c T5a). The grid has no user setting: GridService
  * switches grid and snapping on at start, so there is no grid size or on/off
  * switch to test from the UI.
  *
@@ -40,7 +41,7 @@ const themeKnopf = (page) => page.locator('.layerPanel button[aria-label^="Switc
 
 const zustand = (page) => page.evaluate(() => ({
   theme: document.documentElement.getAttribute('data-theme'),
-  gespeichert: localStorage.getItem('fpb-theme'),
+  gespeichert: localStorage.getItem('fpbjs.theme'),
 }));
 
 async function neuLaden(page) {
@@ -56,9 +57,9 @@ const textFarbe = (page) => page.evaluate(() => {
 
 test.describe('Theme', () => {
 
-  test('first start is light and stores the choice', async ({ page }) => {
+  test('first start follows a light system and stores nothing', async ({ page }) => {
     await laden(page);
-    expect(await zustand(page)).toEqual({ theme: 'light', gespeichert: 'light' });
+    expect(await zustand(page)).toEqual({ theme: 'light', gespeichert: null });
     await optionenOeffnen(page);
     await expect(themeKnopf(page)).toHaveAttribute('aria-label', 'Switch to Dark Mode');
   });
@@ -104,7 +105,7 @@ test.describe('Theme', () => {
   test('without a saved choice the toggle follows the system setting', async ({ page }) => {
     await laden(page);
     await optionenOeffnen(page);
-    await page.evaluate(() => localStorage.removeItem('fpb-theme'));
+    await page.evaluate(() => localStorage.removeItem('fpbjs.theme'));
     await page.emulateMedia({ colorScheme: 'dark' });
     await page.waitForTimeout(200);
     expect((await zustand(page)).theme).toBe('dark');
@@ -114,6 +115,9 @@ test.describe('Theme', () => {
   test('with a saved choice a change of the system setting is ignored', async ({ page }) => {
     await laden(page);
     await optionenOeffnen(page);
+    // choose light: dark and back
+    await themeKnopf(page).click();
+    await themeKnopf(page).click();
     expect((await zustand(page)).gespeichert).toBe('light');
     await page.emulateMedia({ colorScheme: 'dark' });
     await page.waitForTimeout(200);
