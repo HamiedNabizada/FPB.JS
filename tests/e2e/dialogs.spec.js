@@ -61,6 +61,29 @@ test.describe('Dialogs', () => {
     }
   });
 
+  for (const scheme of ['light', 'dark']) {
+    test(`the drop area shows keyboard focus and a dragged file (${scheme})`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await open(page);
+      await page.locator('#importOptionsButton').click();
+      const label = dialog(page).locator('.fileLabel');
+      const look = () => label.evaluate((l) => {
+        const s = getComputedStyle(l);
+        return [s.borderTopColor, s.backgroundColor, s.outlineStyle].join(' ');
+      });
+      const plain = await look();
+
+      // colours fade in (dark-mode.css), so the look is polled
+      await dialog(page).locator('#file').focus();
+      await expect.poll(look).not.toBe(plain);
+      await dialog(page).locator('#file').blur();
+      await expect.poll(look).toBe(plain);
+
+      await label.evaluate((l) => l.classList.add('fileLabel--dragover'));
+      await expect.poll(look).not.toBe(plain);
+    });
+  }
+
   test('deleting a decomposed operator names it and answers with a red "Delete"', async ({ page }) => {
     await open(page);
     await page.evaluate(() => {

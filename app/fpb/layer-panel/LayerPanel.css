@@ -502,6 +502,23 @@ padding-top: 3px;
   text-align: center;
 }
 
+/* the file field itself is hidden: its keyboard focus, the pointer and a
+   file dragged over show on the drop area */
+:root .fpb-dialog .fileLabel:hover {
+  border-color: var(--fpb-accent);
+}
+
+:root .fpb-dialog .inputfile:focus + .fileLabel {
+  border-color: var(--fpb-accent);
+  outline: 2px solid var(--fpb-accent);
+  outline-offset: 2px;
+}
+
+:root .fpb-dialog .fileLabel.fileLabel--dragover {
+  border-color: var(--fpb-accent);
+  background: var(--fpb-accent-surface);
+}
+
 :root .fpb-dialog .fpb-choose-file {
   align-self: center;
   width: auto;
@@ -531,8 +548,10 @@ padding-top: 3px;
 }
 
 /* Bootstrap draws the close cross black; in the dark it is inverted, as
-   Bootstrap's own dark theme does */
+   Bootstrap's own dark theme does. A host theme sits on .modal-dialog, inside
+   .fpb-dialog (react-bootstrap) */
 :root [data-theme="dark"] .fpb-dialog .btn-close,
-[data-theme="dark"] .fpb-dialog .btn-close {
+[data-theme="dark"] .fpb-dialog .btn-close,
+.fpb-dialog [data-theme="dark"] .btn-close {
   filter: invert(1) grayscale(100%) brightness(200%);
 }
