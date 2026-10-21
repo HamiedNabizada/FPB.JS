@@ -89,7 +89,7 @@ const LayerPanel = ({ modeler, config }) => {
                     Import und Download bringen ihr eigenes div mit, die
                     Umschalter sind nackte Buttons und damit inline */}
                 <div className="layerPanel-option">
-                    <ThemeToggle />
+                    <ThemeToggle modeler={modeler} />
                 </div>
                 <div className="layerPanel-option">
                     <ColorSchemeToggle modeler={modeler} />
@@ -178,9 +178,11 @@ const LayerPanel = ({ modeler, config }) => {
             <InfoModal
                 show={showInfoModal}
                 onHide={() => setShowInfoModal(false)}
+                modeler={modeler}
             />
 
             <ConfirmationModal
+                modeler={modeler}
                 show={showConfirmation}
                 onConfirm={handleConfirm}
                 onCancel={handleCancel}

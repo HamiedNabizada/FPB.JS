@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
+import { useThemeAttributes } from '../layer-panel/hooks/useThemeAttributes';
 import Form from 'react-bootstrap/Form';
 import Table from 'react-bootstrap/Table';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -21,6 +22,7 @@ import { goToElement } from '../help/navigation';
  * Shown only when the AML module is there and a file is kept.
  */
 export default function AmlOverview({ modeler }) {
+  const themeAttributes = useThemeAttributes(modeler);
   const amlSupport = modeler.get('amlSupport', false);
   const amlMarkers = modeler.get('amlMarkers', false);
   const [overview, setOverview] = useState(() => (amlSupport ? amlSupport.getOverview() : null));
@@ -75,7 +77,7 @@ export default function AmlOverview({ modeler }) {
         </Button>
       </OverlayTrigger>
 
-      <Modal show={show} onHide={() => setShow(false)} centered size="lg" className="aml-overview-modal">
+      <Modal show={show} onHide={() => setShow(false)} centered size="lg" className="aml-overview-modal" {...themeAttributes}>
         <Modal.Header closeButton closeLabel="Close AML file overview">
           <Modal.Title>AML file: {source.fileName}</Modal.Title>
         </Modal.Header>

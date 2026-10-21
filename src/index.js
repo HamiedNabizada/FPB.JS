@@ -123,6 +123,11 @@ export async function createFpbModeler(options = {}) {
     });
   }
 
+  // a theme the host sets reaches the panels as well (016c T5)
+  const theme = modeler.get('fpbTheme');
+  theme.addContainer(propertiesContainer);
+  theme.addContainer(layerContainer);
+
   // Get DI services for facade methods
   const eventBus = modeler.get('eventBus');
   const canvas = modeler.get('canvas');
@@ -333,6 +338,15 @@ export async function createFpbModeler(options = {}) {
 
     isReadOnly() {
       return readOnlyMode.isEnabled();
+    },
+
+    /**
+     * Light or dark for the containers of this modeler ('light' | 'dark'),
+     * or 'system' to follow the system setting; from then on the host decides
+     * and the toggle is hidden. Fires 'theme.changed' with { theme, mode }.
+     */
+    setTheme(themeName) {
+      theme.set(themeName);
     },
 
     // --- DI Access ---

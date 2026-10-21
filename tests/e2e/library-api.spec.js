@@ -1287,3 +1287,59 @@ test.describe('destroy', () => {
     expect(errors).toEqual([]);
   });
 });
+
+// 016c T5 (030 R14): a host sets light or dark for its own containers
+test.describe('theme set by the host', () => {
+
+  const attr = (page, id) => page.evaluate((id) => document.getElementById(id).getAttribute('data-theme'), id);
+  const darkModeButtons = (page) => page.getByRole('button', { name: /Switch to (Dark|Light) Mode/ }).count();
+
+  test('a host theme applies to its containers only and hides the toggle', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await createModeler(page, { panels: true, options: { theme: 'dark' } });
+    for (const id of ['modeler', 'properties', 'layers']) {
+      expect(await attr(page, id)).toBe('dark');
+    }
+    expect(await page.evaluate(() => document.documentElement.getAttribute('data-theme'))).toBeNull();
+    expect(await darkModeButtons(page)).toBe(0);
+
+    const changes = await page.evaluate(() => {
+      const seen = [];
+      window.fpb.on('theme.changed', (event) => seen.push(event.theme));
+      window.fpb.setTheme('light');
+      return seen;
+    });
+    expect(changes).toEqual(['light']);
+    for (const id of ['modeler', 'properties', 'layers']) {
+      expect(await attr(page, id)).toBe('light');
+    }
+    expect(errors).toEqual([]);
+  });
+
+  test('dialogs of a modeler with a host theme carry the theme, outside the containers too', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await createModeler(page, { panels: true, options: { theme: 'dark' } });
+    const options = page.getByRole('button', { name: 'Show Options' });
+    if (await options.count()) {
+      await options.click();
+    }
+    await page.locator('#importOptionsButton').click();
+    // react-bootstrap puts the attribute on .modal-dialog; what counts is the colour
+    await expect(page.locator('.modal.show .modal-content')).toHaveCSS('background-color', 'rgb(26, 32, 39)');
+    expect(errors).toEqual([]);
+  });
+
+  test('a data-theme the host sets on the page is followed and hides the toggle', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    await createModeler(page, { panels: true });
+    expect(await darkModeButtons(page)).toBe(0);
+
+    const surface = () => page.evaluate(() => getComputedStyle(document.getElementById('layers')).getPropertyValue('--fpb-surface').trim());
+    expect(await surface()).toBe('#1a2027');
+    // the AML editor switches its theme while the plugin runs
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+    await expect.poll(surface).toBe('#ffffff');
+    expect(errors).toEqual([]);
+  });
+});

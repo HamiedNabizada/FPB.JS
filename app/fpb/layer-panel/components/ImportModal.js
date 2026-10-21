@@ -15,8 +15,10 @@ import { useError } from '../../context/ErrorContext';
 import XMLMapper from '../../xml/XMLMapper.js';
 import useReadOnly from '../../read-only/useReadOnly';
 import { isAmlText as isAml } from '../../aml/detect';
+import { useThemeAttributes } from '../hooks/useThemeAttributes';
 
 const ImportModal = memo(({ modeler }) => {
+    const themeAttributes = useThemeAttributes(modeler);
     const [show, setShow] = useState(false);
     // read-only: an import would replace the model the user only looks at
     const readOnly = useReadOnly(modeler);
@@ -249,7 +251,7 @@ const ImportModal = memo(({ modeler }) => {
                 </Button>
             </OverlayTrigger>
 
-            <Modal bg="light" show={show} onHide={handleClose} centered >
+            <Modal bg="light" show={show} onHide={handleClose} centered  {...themeAttributes}>
                 <Modal.Header>
                     <Container fluid>
                         <Row as={Modal.Title}>

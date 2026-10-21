@@ -435,6 +435,13 @@ export interface CreateFpbModelerOptions {
   autosave?: boolean | AutosaveOptions;
   /** Start in read-only mode, see setReadOnly(). Default false */
   readOnly?: boolean;
+  /**
+   * Light or dark. 'light' or 'dark': set by the host for its containers, the
+   * toggle is hidden. 'system': the user's choice, else the system setting.
+   * Without it: the user's choice, else light. A `data-theme` the host page
+   * sets on <html> before the start is followed as well. See setTheme().
+   */
+  theme?: 'light' | 'dark' | 'system';
   /** Additional options passed to FpbModeler constructor */
   [key: string]: any;
 }
@@ -594,6 +601,13 @@ export interface FpbInstance {
 
   /** Is the read-only mode on? */
   isReadOnly(): boolean;
+
+  /**
+   * Light or dark for the containers of this modeler, or 'system'. From then
+   * on the host decides and the toggle is hidden. Fires 'theme.changed' with
+   * { theme: 'light' | 'dark', mode: 'host' | 'system' | 'default' }.
+   */
+  setTheme(theme: 'light' | 'dark' | 'system'): void;
 
   // --- DI Service Access ---
 

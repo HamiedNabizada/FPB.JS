@@ -4,67 +4,30 @@ import Button from 'react-bootstrap/Button';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 
-const ThemeToggle = () => {
-    // Initialize theme state based on current theme (already set by app.js)
-    const [isDarkMode, setIsDarkMode] = useState(() => {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        return currentTheme === 'dark';
-    });
+/**
+ * Light or dark, chosen by the user; the choice is kept by fpbTheme. When the
+ * host decides the theme (option, setTheme or data-theme on its page), the
+ * toggle is not shown (016c T5).
+ */
+const ThemeToggle = ({ modeler }) => {
+    const theme = modeler.get('fpbTheme');
+    const [current, setCurrent] = useState(() => theme.get());
+    const [hostControlled, setHostControlled] = useState(() => theme.isHostControlled());
 
     useEffect(() => {
-        // Update theme when user toggles
-        const targetTheme = isDarkMode ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', targetTheme);
-        localStorage.setItem('fpb-theme', targetTheme);
-        
-        // Fix white flash during drag/drop in dark mode
-        if (isDarkMode) {
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                        const element = mutation.target;
-                        const style = element.getAttribute('style');
-                        if (style && (style.includes('fill: white') || style.includes('fill:#ffffff') || style.includes('background: white') || style.includes('background:#ffffff'))) {
-                            // Override white backgrounds/fills in dark mode
-                            element.style.setProperty('fill', '#2d2d2d', 'important');
-                            element.style.setProperty('background', '#2d2d2d', 'important');
-                        }
-                    }
-                });
-            });
-            
-            // Watch for style changes on SVG elements
-            const svgContainer = document.querySelector('.djs-container');
-            if (svgContainer) {
-                observer.observe(svgContainer, {
-                    attributes: true,
-                    attributeFilter: ['style'],
-                    subtree: true
-                });
-            }
-            
-            return () => observer.disconnect();
-        }
-    }, [isDarkMode]);
-
-    // Listen for system theme changes
-    useEffect(() => {
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const handleChange = (e) => {
-            // Only update if no manual preference is saved
-            if (!localStorage.getItem('fpb-theme')) {
-                setIsDarkMode(e.matches);
-            }
+        const update = () => {
+            setCurrent(theme.get());
+            setHostControlled(theme.isHostControlled());
         };
+        modeler.on('theme.changed', update);
+        return () => modeler.off('theme.changed', update);
+    }, [modeler, theme]);
 
-        mediaQuery.addListener(handleChange);
-        return () => mediaQuery.removeListener(handleChange);
-    }, []);
+    if (hostControlled) {
+        return null;
+    }
 
-    const toggleTheme = () => {
-        setIsDarkMode(prev => !prev);
-    };
-
+    const isDarkMode = current === 'dark';
     const tooltipText = isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode';
     const icon = isDarkMode ? 'sun' : 'moon';
 
@@ -75,7 +38,7 @@ const ThemeToggle = () => {
             overlay={<Tooltip id="tooltip-theme">{tooltipText}</Tooltip>}
         >
             <Button 
-                onClick={toggleTheme}
+                onClick={() => theme.choose(isDarkMode ? 'light' : 'dark')}
                 variant="secondary-outline"
                 aria-label={tooltipText}
             >

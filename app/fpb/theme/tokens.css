@@ -127,4 +127,11 @@
   --bs-font-sans-serif: var(--fpb-font);
   --bs-font-monospace: var(--fpb-font-mono);
   --bs-body-font-family: var(--fpb-font);
+  /* dialogs: Bootstrap sets these on .modal, react-bootstrap puts a host's
+     data-theme on .modal-dialog below it (theme/ThemeService) */
+  --bs-modal-bg: var(--fpb-surface);
+  --bs-modal-color: var(--fpb-text);
+  --bs-modal-border-color: var(--fpb-line);
+  --bs-modal-header-border-color: var(--fpb-line);
+  --bs-modal-footer-border-color: var(--fpb-line);
 }

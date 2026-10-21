@@ -66,6 +66,7 @@ import AutosaveModule from './autosave';
 // one set of design values and the interface font for every host (016c T1, T6)
 import './theme/tokens.css';
 import './theme/fonts.css';
+import ThemeModule from './theme';
 import ReadOnlyModule from './read-only';
 import { DebounceInputModule } from '@bpmn-io/properties-panel';
 import SnappingModule from 'diagram-js/lib/features/snapping';
@@ -142,6 +143,7 @@ FpbModeler.prototype._modules = [
     MinimapModule,
     KeepSelectionVisibleModule,
     FpbCoreModule,
+    ThemeModule,
     LabelEditingModule,
     ContextPadModule,
     PaletteModule,

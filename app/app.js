@@ -10,22 +10,6 @@ import AmlModule from './fpb/aml';
 
 import './icons';
 
-// Initialize theme on app startup
-(() => {
-  // Check if theme is already set (to prevent override)
-  const currentTheme = document.documentElement.getAttribute('data-theme');
-  if (!currentTheme) {
-    // Check localStorage for saved theme preference
-    const savedTheme = localStorage.getItem('fpb-theme');
-    if (savedTheme) {
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    } else {
-      // Default to light mode
-      document.documentElement.setAttribute('data-theme', 'light');
-      localStorage.setItem('fpb-theme', 'light');
-    }
-  }
-})();
 
 
 // Div Id (#container) von index.html abholen
@@ -43,7 +27,9 @@ var modeler = new FpbModeler({
   autosave: true,
   // AutomationML import and export, likewise only here; library hosts add
   // the module themselves (fpbjs/aml). The engine loads on first use.
-  additionalModules: [AmlModule]
+  additionalModules: [AmlModule],
+  // light or dark: the user's choice, else the system (016b V9, fpbTheme)
+  theme: 'system'
 });
 
 

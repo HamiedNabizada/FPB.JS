@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Modal from 'react-bootstrap/Modal';
+import { useThemeAttributes } from '../hooks/useThemeAttributes';
 import Button from 'react-bootstrap/Button';
 import Table from 'react-bootstrap/Table';
 import Badge from 'react-bootstrap/Badge';
@@ -11,7 +12,8 @@ import Tab from 'react-bootstrap/Tab';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { keyboardShortcuts, getCtrlKey } from '../constants/keyboardShortcuts';
 
-const InfoModal = ({ show, onHide }) => {
+const InfoModal = ({ show, onHide, modeler }) => {
+  const themeAttributes = useThemeAttributes(modeler);
   const [activeKey, setActiveKey] = useState('about');
 
   const renderKeyBadge = (key) => (
@@ -21,7 +23,7 @@ const InfoModal = ({ show, onHide }) => {
   );
 
   return (
-    <Modal bg="light" show={show} onHide={onHide} size="lg" centered>
+    <Modal bg="light" show={show} onHide={onHide} size="lg" centered {...themeAttributes}>
       <Modal.Header>
         <Container fluid>
           <Row as={Modal.Title}>

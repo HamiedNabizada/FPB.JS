@@ -1,14 +1,16 @@
 import React from 'react';
 import Modal from 'react-bootstrap/Modal';
+import { useThemeAttributes } from '../hooks/useThemeAttributes';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 /**
  * A confirmation modal for actions with layer-wide consequences
  */
-const ConfirmationModal = ({ show, onConfirm, onCancel, title, message, details, isBlocked }) => {
+const ConfirmationModal = ({ show, onConfirm, onCancel, title, message, details, isBlocked, modeler }) => {
+  const themeAttributes = useThemeAttributes(modeler);
   return (
-    <Modal show={show} onHide={onCancel} centered>
+    <Modal show={show} onHide={onCancel} centered {...themeAttributes}>
       <Modal.Header closeButton>
         <Modal.Title>
           <FontAwesomeIcon icon="exclamation-triangle" className={`me-2 ${isBlocked ? 'text-danger' : 'text-warning'}`} />

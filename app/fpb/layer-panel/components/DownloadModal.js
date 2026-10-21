@@ -19,6 +19,7 @@ import { exportPDF, exportMultiLayerPDF } from '../../export/PdfExporter.js';
 import { renderLayers } from '../../export/renderLayers.js';
 import { modelReplacer } from '../../export/serializeModel.js';
 import { useError } from '../../context/ErrorContext';
+import { useThemeAttributes } from '../hooks/useThemeAttributes';
 
 // Regex pattern for invalid filename characters (Windows/Unix compatible)
 const INVALID_FILENAME_CHARS = /[<>:"/\\|?*\x00-\x1f]/g;
@@ -52,6 +53,7 @@ function validateFilename(filename) {
 }
 
 const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedElements }) => {
+    const themeAttributes = useThemeAttributes(modeler);
     const [show, setShow] = useState(false);
     const [informationLevel, setInformationLevel] = useState('1');
     const [exportAsEvent, setExportAsEvent] = useState(false);
@@ -367,7 +369,7 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                     <FontAwesomeIcon icon="download" size="lg" />
                 </Button>
             </OverlayTrigger>
-            <Modal bg="light" show={show} onHide={handleClose} centered size="xl">
+            <Modal bg="light" show={show} onHide={handleClose} centered size="xl" {...themeAttributes}>
                 <Modal.Header>
                     <Container fluid>
                         <Row as={Modal.Title}>

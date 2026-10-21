@@ -56,6 +56,7 @@ const NewModel = memo(({ modeler }) => {
                 </Button>
             </OverlayTrigger>
             <ConfirmationModal
+                modeler={modeler}
                 show={asking}
                 onConfirm={start}
                 onCancel={() => setAsking(false)}
