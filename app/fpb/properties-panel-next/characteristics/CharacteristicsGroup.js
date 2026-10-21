@@ -8,7 +8,7 @@ import { nextCharacteristicNumber } from '../../help/characteristicsNumbering';
 import { useService } from '../context';
 import { usePanelReadOnly } from '../hooks';
 import { formatValue } from '../values';
-import { newCharacteristic, withField, withoutCharacteristic, asList } from './model';
+import { newCharacteristic, withField, withoutCharacteristic, asList, withNewActualValue, withoutActualValue } from './model';
 import { CharacteristicDetail } from './CharacteristicDetail';
 
 /**
@@ -65,6 +65,19 @@ export function CharacteristicsGroup(props) {
     }
   };
 
+  const addActual = (position) => () => {
+    const now = current();
+    if (position < now.length) {
+      write(withNewActualValue(now, position, tools));
+    }
+  };
+  const removeActual = (position) => (n) => {
+    const now = current();
+    if (position < now.length) {
+      write(withoutActualValue(now, position, n, tools));
+    }
+  };
+
   const setField = (position) => (path, value) => {
     const now = current();
     // the characteristic was removed while the input waited
@@ -111,6 +124,8 @@ export function CharacteristicsGroup(props) {
             index={index}
             setField={setField(index)}
             updateLimits={updateLimits(index)}
+            addActual={addActual(index)}
+            removeActual={removeActual(index)}
             onRemove={remove}
           />
         )}

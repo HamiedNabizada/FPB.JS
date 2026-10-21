@@ -6,8 +6,8 @@ import { useService } from '../context';
 import { usePanelReadOnly } from '../hooks';
 import { FpbTextField } from '../entries/FpbTextField';
 import { parseValue, formatValue } from '../values';
-import { asList } from './model';
 import { LimitsEditor } from './LimitsEditor';
+import { ActualValuesEditor } from './ActualValuesEditor';
 
 /** The three parts of Blatt 2 as tabs (016c decision 7) */
 const TABS = [
@@ -34,9 +34,7 @@ const SECTIONS = [
     ['valueDetermination', 'Value determination process', ['descriptiveElement', 'valueDeterminationProcess']],
     ['representivity', 'Representivity', ['descriptiveElement', 'representivity']],
     ['setpoint', 'Setpoint', ['descriptiveElement', 'setpointValue', 'value'], { value: true }],
-    ['setpointUnit', 'Setpoint unit', ['descriptiveElement', 'setpointValue', 'unit']],
-    ['actual', 'Actual value', ['descriptiveElement', 'actualValues', 0, 'value'], { value: true }],
-    ['actualUnit', 'Actual value unit', ['descriptiveElement', 'actualValues', 0, 'unit']]
+    ['setpointUnit', 'Setpoint unit', ['descriptiveElement', 'setpointValue', 'unit']]
   ]],
   ['Relational element', [
     ['view', 'View', ['relationalElement', 'view']],
@@ -52,7 +50,7 @@ const SECTIONS = [
  * chosen (Review Focus 2).
  */
 export function CharacteristicDetail(props) {
-  const { element, characteristic, index, setField, updateLimits, onRemove } = props;
+  const { element, characteristic, index, setField, updateLimits, addActual, removeActual, onRemove } = props;
   const translate = useService('translate');
   const debounce = useService('debounceInput');
   const readOnly = usePanelReadOnly();
@@ -103,39 +101,18 @@ export function CharacteristicDetail(props) {
             // Blatt 2: the setpoint "with its validity limits"
             key === 'setpointUnit' && updateLimits && (
               <LimitsEditor element={element} characteristic={characteristic} index={index} update={updateLimits} />
+            ),
+            key === 'setpointUnit' && addActual && (
+              <ActualValuesEditor element={element} characteristic={characteristic} index={index}
+                setField={setField} onAdd={addActual} onRemove={removeActual} />
             )
           ])}
-          {title === 'Descriptive element' && <MoreValues characteristic={characteristic} translate={translate} />}
         </div>
       ))}
       {!readOnly && (
         <button type="button" class="fpb-field-button fpb-remove-characteristic" onClick={onRemove}>
           {translate('Remove characteristic')}
         </button>
-      )}
-    </div>
-  );
-}
-
-/**
- * The actual values after the first, shown but not edited (016b V3; editing
- * the list follows in 016c task 8). The validity limits are edited in
- * LimitsEditor.
- */
-function MoreValues(props) {
-  const { characteristic, translate } = props;
-  const descriptive = characteristic.descriptiveElement || {};
-  const more = asList(descriptive.actualValues).slice(1);
-
-  return (
-    <div class="fpb-characteristic-more">
-      {more.length > 0 && (
-        <div>
-          <div class="bio-properties-panel-label">{translate('Further actual values')}</div>
-          <ul class="fpb-characteristic-more-actuals">
-            {more.map((value) => <li>{formatValue(value.value) + (value.unit ? ' ' + value.unit : '')}</li>)}
-          </ul>
-        </div>
       )}
     </div>
   );

@@ -1,7 +1,7 @@
 // tests/unit/properties-panel-next/characteristicsModel.test.js
 import { describe, it, expect } from 'vitest';
 
-import { newCharacteristic, withField, withoutCharacteristic, asList } from '../../../app/fpb/properties-panel-next/characteristics/model.js';
+import { newCharacteristic, withField, withoutCharacteristic, asList, withNewActualValue, withoutActualValue } from '../../../app/fpb/properties-panel-next/characteristics/model.js';
 import { cloneModdle } from '../../../app/fpb/help/moddleClone.js';
 
 const create = (type, attrs) => ({ $type: type, ...attrs });
@@ -40,5 +40,23 @@ describe('characteristics model', () => {
     expect(asList(undefined)).toEqual([]);
     expect(asList({ value: 1 })).toEqual([{ value: 1 }]);
     expect(asList([1, 2])).toEqual([1, 2]);
+  });
+
+  it('adds an actual value on a copy, also where older files left a single object (016c)', () => {
+    const list = [{ $type: 'fpbch:Characteristics', descriptiveElement: { $type: 'fpbch:DescriptiveElement', actualValues: { $type: 'fpbch:ValueWithUnit', value: 1 } } }];
+    const next = withNewActualValue(list, 0, tools);
+    expect(next[0].descriptiveElement.actualValues).toHaveLength(2);
+    expect(next[0].descriptiveElement.actualValues[1].$type).toBe('fpbch:ValueWithUnit');
+    expect(list[0].descriptiveElement.actualValues.value).toBe(1);
+
+    const empty = withNewActualValue([{ $type: 'fpbch:Characteristics' }], 0, tools);
+    expect(empty[0].descriptiveElement.actualValues).toHaveLength(1);
+  });
+
+  it('removes one actual value by its position on a copy (016c)', () => {
+    const list = [{ $type: 'fpbch:Characteristics', descriptiveElement: { actualValues: [{ value: 1 }, { value: 2 }] } }];
+    const next = withoutActualValue(list, 0, 0, tools);
+    expect(next[0].descriptiveElement.actualValues.map((v) => v.value)).toEqual([2]);
+    expect(list[0].descriptiveElement.actualValues).toHaveLength(2);
   });
 });

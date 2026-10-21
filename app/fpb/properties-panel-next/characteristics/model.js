@@ -79,3 +79,27 @@ export function withField(list, index, path, value, tools) {
 export function withoutCharacteristic(list, index) {
   return asList(list).filter((characteristic, position) => position !== index);
 }
+
+/** The descriptive element of a characteristic in a copied list, created when missing */
+function descriptiveOf(characteristic, create) {
+  if (!characteristic.descriptiveElement) {
+    characteristic.descriptiveElement = create('fpbch:DescriptiveElement', {});
+  }
+  return characteristic.descriptiveElement;
+}
+
+/** A copy of the list with an empty actual value appended (016c decision 9) */
+export function withNewActualValue(list, index, tools) {
+  const next = tools.clone(asList(list));
+  const descriptive = descriptiveOf(next[index], tools.create);
+  descriptive.actualValues = asList(descriptive.actualValues).concat(tools.create('fpbch:ValueWithUnit', {}));
+  return next;
+}
+
+/** A copy of the list without the actual value at `position` */
+export function withoutActualValue(list, index, position, tools) {
+  const next = tools.clone(asList(list));
+  const descriptive = descriptiveOf(next[index], tools.create);
+  descriptive.actualValues = asList(descriptive.actualValues).filter((value, at) => at !== position);
+  return next;
+}
