@@ -64,6 +64,11 @@ export function CharacteristicDetail(props) {
     if (step) {
       const next = TABS[(TABS.indexOf(active) + step + TABS.length) % TABS.length];
       setTab(next.id);
+      // the focus goes with the chosen tab (the old one leaves the tab order)
+      const button = event.currentTarget.querySelector('#characteristic-tab-' + next.id);
+      if (button) {
+        button.focus();
+      }
       event.preventDefault();
     }
   };
@@ -73,6 +78,7 @@ export function CharacteristicDetail(props) {
       <div class="fpb-characteristic-tabs" role="tablist" aria-label={translate('Parts of the characteristic')} onKeyDown={onKeyDown}>
         {TABS.map((t) => (
           <button
+            key={t.id}
             type="button"
             role="tab"
             id={'characteristic-tab-' + t.id}

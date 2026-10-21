@@ -25,6 +25,21 @@ test.describe('New properties panel, characteristics', () => {
     await expect(row.locator('.fpb-characteristic-row-summary')).toHaveText('20 °C · 0');
   });
 
+  test('a long text setpoint does not push the name out of the row', async ({ page }) => {
+    await openPanel(page);
+    await select(page, 'Rohstoff');
+    await rows(page).first().getByRole('button').click();
+    await field(page, 'characteristic-0-setpoint').fill('about room temperature as long as the air stays dry');
+    const row = rows(page).first().locator('.fpb-characteristic-row');
+    await expect(row.locator('.fpb-characteristic-row-summary')).toContainText('about room');
+    const box = await row.evaluate((r) => {
+      const of = (selector) => r.querySelector(selector).getBoundingClientRect();
+      return { row: r.getBoundingClientRect().right, name: of('.fpb-characteristic-row-name').width, summary: of('.fpb-characteristic-row-summary').right };
+    });
+    expect(box.name).toBeGreaterThanOrEqual(80);
+    expect(box.summary).toBeLessThanOrEqual(box.row);
+  });
+
   test('the three tabs show the parts of Blatt 2 and the chosen one stays', async ({ page }) => {
     await openPanel(page);
     await select(page, 'Rohstoff');
@@ -45,6 +60,22 @@ test.describe('New properties panel, characteristics', () => {
     await rows(page).first().getByRole('button').click();
     await expect(page.getByRole('tab', { name: 'Relational' })).toHaveAttribute('aria-selected', 'true');
     await expect(field(page, 'characteristic-0-view')).toBeVisible();
+  });
+
+  test('the arrow keys choose the next tab and move the focus with it', async ({ page }) => {
+    await openPanel(page);
+    await select(page, 'Rohstoff');
+    await rows(page).first().getByRole('button').click();
+    await page.getByRole('tab', { name: 'Descriptive' }).focus();
+
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByRole('tab', { name: 'Relational' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: 'Relational' })).toBeFocused();
+
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByRole('tab', { name: 'Category' })).toBeFocused();
+    await page.keyboard.press('ArrowLeft');
+    await expect(page.getByRole('tab', { name: 'Relational' })).toBeFocused();
   });
 
   test('"+" adds C_n as one undo step and opens its detail', async ({ page }) => {

@@ -57,6 +57,12 @@
 .fpb-properties .fpb-panel-header-icon {
   flex: none;
   display: flex;
+  color: var(--fpb-text);
+}
+
+/* the front sheet of the process symbol */
+.fpb-properties .fpb-panel-header-icon .fpb-icon-sheet {
+  fill: var(--fpb-surface);
 }
 
 .fpb-properties .fpb-panel-header-text {
@@ -205,6 +211,11 @@
 }
 
 .fpb-properties .fpb-characteristic-row-summary {
+  /* a long text value is cut, the name keeps its room; the full value is in
+     the detail below */
+  max-width: 10em;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-family: var(--fpb-font-mono);
   font-size: 12px;
   white-space: nowrap;

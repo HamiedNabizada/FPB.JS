@@ -56,7 +56,10 @@ function Svg(props) {
   );
 }
 
+// outline of the filled symbols, dark as on the canvas
 const STROKE = '#222';
+// symbols drawn as lines take the text colour of the head, light or dark
+const LINE = 'currentColor';
 
 function shapeFor(element) {
   const c = colors();
@@ -77,21 +80,21 @@ function shapeFor(element) {
     return <rect x="4" y="8" width="24" height="16" rx="6" fill={c.FPB_TECHNICAL_RESOURCE} stroke={STROKE} stroke-width="1.5" />;
   }
   if (is(element, 'fpb:SystemLimit')) {
-    return <rect x="4" y="5" width="24" height="22" fill="none" stroke={STROKE} stroke-width="1.5" stroke-dasharray="3 2" />;
+    return <rect x="4" y="5" width="24" height="22" fill="none" stroke={LINE} stroke-width="1.5" stroke-dasharray="3 2" />;
   }
   if (is(element, 'fpb:Usage')) {
-    return <line x1="4" y1="16" x2="28" y2="16" stroke={STROKE} stroke-width="1.5" stroke-dasharray="3 2" />;
+    return <line x1="4" y1="16" x2="28" y2="16" stroke={LINE} stroke-width="1.5" stroke-dasharray="3 2" />;
   }
   if (element && element.waypoints) {
     return [
-      <line x1="4" y1="16" x2="25" y2="16" stroke={STROKE} stroke-width="1.5" />,
-      <polygon points="28,16 22,12 22,20" fill={STROKE} />
+      <line x1="4" y1="16" x2="25" y2="16" stroke={LINE} stroke-width="1.5" />,
+      <polygon points="28,16 22,12 22,20" fill={LINE} />
     ];
   }
   // process: two stacked layers
   return [
-    <rect x="8" y="5" width="18" height="14" fill="none" stroke={STROKE} stroke-width="1.5" />,
-    <rect x="5" y="12" width="18" height="14" fill="#fff" stroke={STROKE} stroke-width="1.5" />
+    <rect x="8" y="5" width="18" height="14" fill="none" stroke={LINE} stroke-width="1.5" />,
+    <rect x="5" y="12" width="18" height="14" class="fpb-icon-sheet" stroke={LINE} stroke-width="1.5" />
   ];
 }
 

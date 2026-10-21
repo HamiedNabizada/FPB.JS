@@ -167,6 +167,31 @@ test.describe('Neues Eigenschaften-Panel', () => {
     await expect(page.locator('.fpb-chip-layer')).toHaveText('Decomposition of Erhitzen');
   });
 
+  test('in the dark the line symbols in the head stand out from the card', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await vorbereiten(page);
+    for (const type of ['fpb:SystemLimit', 'fpb:Usage', 'fpb:Flow', null]) {
+      await page.evaluate((type) => {
+        const element = type && window.fpbjs.get('elementRegistry').filter((e) => e.type === type)[0];
+        window.fpbjs.get('selection').select(element ? [element] : []);
+      }, type);
+      await page.waitForTimeout(200);
+      const ratio = await page.evaluate(() => {
+        const rgb = (c) => c.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number);
+        const luminance = ([r, g, b]) => {
+          const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+          return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+        };
+        const line = document.querySelector('.fpb-panel-header-icon svg [stroke]');
+        const card = getComputedStyle(document.querySelector('.fpb-panel-header')).backgroundColor;
+        const a = luminance(rgb(getComputedStyle(line).stroke));
+        const b = luminance(rgb(card));
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      });
+      expect(ratio, String(type)).toBeGreaterThanOrEqual(3);
+    }
+  });
+
   test('a long name breaks and the panel stays 320 px wide', async ({ page }) => {
     await vorbereiten(page);
     await page.evaluate(() => {
