@@ -178,6 +178,8 @@ const LayerPanel = ({ modeler, config }) => {
                 message={confirmationData?.message}
                 details={confirmationData?.details}
                 isBlocked={confirmationData?.isBlocked}
+                confirmLabel={confirmationData?.confirmLabel}
+                confirmVariant={confirmationData?.confirmVariant}
             />
         </div>
     );

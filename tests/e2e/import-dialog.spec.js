@@ -44,7 +44,7 @@ test.describe('Import-Dialog - Drag and Drop', () => {
 
     expect(abgefangen).toBe(true);
     await expect(page.locator('.modal-body .fileLabel')).toHaveText(DATEINAME);
-    const knopf = page.locator('.modal-footer button');
+    const knopf = page.locator('.modal-footer [data-answer="import"]');
     await expect(knopf).toBeEnabled();
     await knopf.click();
     await page.waitForTimeout(importer.importDelay);
@@ -58,7 +58,7 @@ test.describe('Import-Dialog - Drag and Drop', () => {
     await dateiAblegen(page, '.modal-body', 'kein Modell', 'notizen.txt');
 
     await expect(page.locator('.modal-body .fileLabel')).not.toHaveText('notizen.txt');
-    await expect(page.locator('.modal-footer button')).toBeDisabled();
+    await expect(page.locator('.modal-footer [data-answer="import"]')).toBeDisabled();
   });
 
   test('eine neben dem Dialog abgelegte Datei öffnet der Browser nicht', async ({ page }) => {

@@ -622,13 +622,13 @@ test.describe('Rules: shape.resize and elements.delete', () => {
     }, { IDS });
     expect(r.systemLimit).toBe(false);
     expect(r.firedAfterSl).toEqual([{
-      title: 'Remove Decomposition?',
+      title: 'Remove the decomposition of "Erhitzen"?',
       type: 'remove_decomposition',
       message: 'Deleting the system limit will remove the entire decomposition of ProcessOperator "Erhitzen".',
     }]);
     expect(r.otherElements).toBe(true);
     expect(r.firedTotal).toBe(1);
-    await expect(page.locator('.modal.show .modal-title')).toHaveText('Remove Decomposition?');
+    await expect(page.locator('.modal.show .modal-title')).toHaveText('Remove the decomposition of "Erhitzen"?');
   });
 });
 
@@ -646,7 +646,7 @@ test.describe('Messages on the canvas', () => {
       const sl = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:SystemLimit')[0];
       window.fpbjs.get('rules').allowed('elements.delete', { elements: [sl] });
     });
-    await page.locator('.modal.show button', { hasText: 'Yes, proceed' }).click();
+    await page.locator('.modal.show [data-answer="confirm"]').click();
 
     const tip = page.locator('.djs-tooltip', { hasText: 'has been removed' });
     await expect(tip).toBeVisible();

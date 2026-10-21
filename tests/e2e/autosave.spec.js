@@ -252,7 +252,7 @@ test.describe('Sicherung im Browser', () => {
     await page.locator('#newModelButton').click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toContainText('Start a new model?');
-    await dialog.getByRole('button', { name: 'Yes, proceed' }).click();
+    await dialog.locator('[data-answer="confirm"]').click();
 
     await expect(dialog).toHaveCount(0);
     expect(await namen(page)).toEqual([]);

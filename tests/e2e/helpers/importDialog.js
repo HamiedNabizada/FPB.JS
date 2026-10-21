@@ -40,7 +40,7 @@ export async function pickFile(page, content, name, mimeType = 'application/json
   await page.locator('.modal.show input#file').setInputFiles({ name, mimeType, buffer: Buffer.from(content) });
 }
 
-export const importButton = (page) => page.locator('.modal.show .modal-footer button');
+export const importButton = (page) => page.locator('.modal.show [data-answer="import"]');
 
 /**
  * Presses the import button and waits for the importer's answer.

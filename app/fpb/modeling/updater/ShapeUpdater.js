@@ -423,6 +423,8 @@ ShapeUpdater.prototype._askForBoundary = function () {
 
   this._eventBus.fire('confirmation.required', {
     title: 'Confirm boundary placement',
+    confirmLabel: 'Place on boundary',
+    confirmVariant: 'primary',
     message: several
       ? 'These ' + pending.items.length + ' states will become inputs/outputs of the parent process operator.'
       : 'This state will become an input/output of the parent process operator.',

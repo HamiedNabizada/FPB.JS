@@ -307,11 +307,19 @@ export async function switchTo(page, id) {
   await page.waitForTimeout(200);
 }
 
-/** Wait for the confirmation modal and click one of its buttons */
+/**
+ * Wait for the confirmation modal and click one of its buttons. 'confirm' is
+ * the answer that goes ahead, whatever it is called ("Remove", "Delete",
+ * "Place on boundary", 016c decision 13).
+ */
 export async function answer(page, button) {
   const modal = page.locator('.modal.show');
   await modal.waitFor({ state: 'visible', timeout: 5000 });
-  await modal.getByRole('button', { name: button }).click();
+  if (button === 'confirm') {
+    await modal.locator('[data-answer="confirm"]').click();
+  } else {
+    await modal.getByRole('button', { name: button }).click();
+  }
   await modal.waitFor({ state: 'hidden', timeout: 5000 });
   await page.waitForTimeout(200);
 }

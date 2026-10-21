@@ -77,7 +77,7 @@ async function xmlImportieren(page, xml) {
   await expect(page.locator('.fileLabel')).toHaveText('modell.xml');
   await page.evaluate(() => {
     const dialog = document.querySelector('.fileLabel').closest('.modal-content');
-    dialog.querySelector('.modal-footer button').click();
+    dialog.querySelector('.modal-footer [data-answer="import"]').click();
   });
   await page.waitForTimeout(3500);
 }

@@ -63,6 +63,8 @@ const NewModel = memo(({ modeler }) => {
                 title="Start a new model?"
                 message="The current model will be removed from the editor."
                 details="Changes that you have not downloaded are lost."
+                confirmLabel="Start new model"
+                confirmVariant="danger"
             />
         </div>
     );

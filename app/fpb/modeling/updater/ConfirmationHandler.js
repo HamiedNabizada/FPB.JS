@@ -190,7 +190,9 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory, 
 
     // Request confirmation dialog
     eventBus.fire('confirmation.required', {
-      title: 'Remove Decomposition?',
+      title: 'Remove the decomposition of "' + processOperatorName + '"?',
+      confirmLabel: 'Remove',
+      confirmVariant: 'danger',
       message: 'Deleting the system limit will remove the entire decomposition of ProcessOperator "' + processOperatorName + '".',
       details: 'You will be redirected to the parent process. All elements in this process will be deleted.',
       isBlocked: false,

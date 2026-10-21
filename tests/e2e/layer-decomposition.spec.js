@@ -679,7 +679,7 @@ test.describe('Confirmation: deleting a decomposed operator', () => {
     await load(page);
     const before = await containerIds(page, IDS.root);
     await fpbDelete(page, [IDS.child]);
-    await expect(modalTitle(page)).toHaveText('Confirm deletion');
+    await expect(modalTitle(page)).toHaveText(/^Delete ".+"\?$/);
     await expect(page.locator('.modal.show')).toContainText('This process operator contains a decomposed layer.');
     await answer(page, 'Cancel');
     expect(await containerIds(page, IDS.root)).toEqual(before);
@@ -690,7 +690,7 @@ test.describe('Confirmation: deleting a decomposed operator', () => {
   test('Yes removes operator and child layer, with a message, and ends the undo history', async ({ page }) => {
     await load(page);
     await fpbDelete(page, [IDS.child]);
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     const r = await page.evaluate((IDS) => ({
       po: !!window.__lr.byId(IDS.child, IDS.root),
       listed: window.__lr.process(IDS.root).businessObject.consistsOfProcesses.length,
@@ -707,7 +707,7 @@ test.describe('Confirmation: deleting a decomposed operator', () => {
     const grandchild = await nest(page);
     await compose(page);
     await fpbDelete(page, [IDS.vorwaermen]);
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     const r = await page.evaluate(({ IDS, grandchild }) => ({
       po: !!window.__lr.byId(IDS.vorwaermen, IDS.child),
       listed: window.__lr.process(IDS.child).businessObject.consistsOfProcesses.length,
@@ -724,7 +724,7 @@ test.describe('Confirmation: deleting a decomposed operator', () => {
     await page.evaluate(() => window.__lr.record(['confirmation.required']));
     await clickOn(page, IDS.child);
     await page.keyboard.press('Delete');
-    await expect(modalTitle(page)).toHaveText('Confirm deletion');
+    await expect(modalTitle(page)).toHaveText(/^Delete ".+"\?$/);
     await answer(page, 'Cancel');
     expect(await page.evaluate(() => window.__lr.events.length)).toBe(1);
     expect(await containerIds(page, IDS.root)).toEqual(before);
@@ -739,8 +739,8 @@ test.describe('Confirmation: deleting a decomposed operator', () => {
       window.fpbjs.get('eventBus').fire('element.click', { element: el });
     }, IDS.child);
     await page.locator('.djs-context-pad .entry[data-action="delete"]').click();
-    await expect(modalTitle(page)).toHaveText('Confirm deletion');
-    await answer(page, 'Yes, proceed');
+    await expect(modalTitle(page)).toHaveText(/^Delete ".+"\?$/);
+    await answer(page, 'confirm');
     expect(await page.evaluate((IDS) => !!window.__lr.byId(IDS.child, IDS.root), IDS)).toBe(false);
     expect(await issues(page)).toEqual([]);
   });
@@ -754,7 +754,7 @@ test.describe('Confirmation: Szenario 2, deleting a boundary state on the child 
     const child = await containerIds(page, IDS.child);
     const root = await containerIds(page, IDS.root);
     await fpbDelete(page, [IDS.rohstoff]);
-    await expect(modalTitle(page)).toHaveText('Confirm deletion');
+    await expect(modalTitle(page)).toHaveText(/^Delete ".+"\?$/);
     await expect(page.locator('.modal.show')).toContainText('This state is connected to the parent layer.');
     await answer(page, 'Cancel');
     expect(await containerIds(page, IDS.child)).toEqual(child);
@@ -766,7 +766,7 @@ test.describe('Confirmation: Szenario 2, deleting a boundary state on the child 
     await load(page);
     await switchTo(page, IDS.child);
     await fpbDelete(page, [IDS.rohstoff]);
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     const r = await page.evaluate((IDS) => ({
       child: !!window.__lr.byId(IDS.rohstoff, IDS.child),
       parentState: !!window.__lr.byId(IDS.rohstoff, IDS.root),
@@ -781,7 +781,7 @@ test.describe('Confirmation: Szenario 2, deleting a boundary state on the child 
     await load(page);
     await switchTo(page, IDS.child);
     await fpbDelete(page, [IDS.warmprodukt]);
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     const r = await page.evaluate((IDS) => ({
       child: !!window.__lr.byId(IDS.warmprodukt, IDS.child),
       parentState: !!window.__lr.byId(IDS.warmprodukt, IDS.root),
@@ -797,7 +797,7 @@ test.describe('Confirmation: Szenario 2, deleting a boundary state on the child 
     const root = await containerIds(page, IDS.root);
     await fpbDelete(page, [IDS.rohstoff]);
     await expect(page.locator('.modal.show')).toContainText('This state is connected to the parent layer.');
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     const r = await page.evaluate(({ IDS, grandchild }) => ({
       grandchild: !!window.__lr.byId(IDS.rohstoff, grandchild),
       child: !!window.__lr.byId(IDS.rohstoff, IDS.child),
@@ -815,7 +815,7 @@ test.describe('Confirmation: Szenario 2, deleting a boundary state on the child 
     await switchTo(page, IDS.child);
     await fpbDelete(page, [IDS.rohstoff, IDS.vorgewaermt]);
     await expect(page.locator('.modal.show')).toContainText('The selection contains 2 elements.');
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     const r = await page.evaluate((IDS) => [IDS.rohstoff, IDS.vorgewaermt].map((i) => !!window.__lr.byId(i, IDS.child)), IDS);
     expect(r).toEqual([false, false]);
     expect(await issues(page)).toEqual([]);
@@ -830,7 +830,7 @@ test.describe('Confirmation: Szenario 4, creating a state on the child boundary'
     await createOnEdge(page, 'b_in', 'upper');
     await expect(modalTitle(page)).toHaveText('Confirm boundary placement');
     await expect(page.locator('.modal.show')).toContainText('This state will become an input/output of the parent process operator.');
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     const r = await page.evaluate((IDS) => {
       const s = window.__lr.byId('b_in', IDS.root);
       const po = window.__lr.byId(IDS.child, IDS.root);
@@ -862,7 +862,7 @@ test.describe('Confirmation: Szenario 4, creating a state on the child boundary'
     await load(page);
     await switchTo(page, IDS.child);
     await createOnEdge(page, 'b_out', 'bottom');
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     const r = await page.evaluate((IDS) => {
       const s = window.__lr.byId('b_out', IDS.root);
       const po = window.__lr.byId(IDS.child, IDS.root);
@@ -886,7 +886,7 @@ test.describe('Confirmation: Szenario 4, creating a state on the child boundary'
     }, IDS);
     await switchTo(page, IDS.child);
     await createOnEdge(page, 'b_top', 'upper');
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     const r = await page.evaluate((IDS) => {
       const s = window.__lr.byId('b_top', IDS.root);
       const sl = window.__lr.sl(window.__lr.process(IDS.root));
@@ -901,7 +901,7 @@ test.describe('Confirmation: Szenario 4, creating a state on the child boundary'
     const grandchild = await nest(page);
     const root = await containerIds(page, IDS.root);
     await createOnEdge(page, 'g_in', 'upper');
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     const r = await page.evaluate(({ IDS, grandchild }) => ({
       grandchild: window.__lr.boundary(grandchild).upper.includes('g_in'),
       child: !!window.__lr.byId('g_in', IDS.child),
@@ -925,7 +925,7 @@ test.describe('Confirmation: Szenario 4, creating a state on the child boundary'
     }, IDS);
     await decompose(page, IDS.vorwaermen);
     await createOnEdge(page, 'g_top', 'upper');
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     expect(await page.evaluate((IDS) => window.__lr.io(IDS.vorwaermen, IDS.child).ins.includes('g_top'), IDS)).toBe(true);
     expect(await issues(page)).toEqual([]);
   });
@@ -934,7 +934,7 @@ test.describe('Confirmation: Szenario 4, creating a state on the child boundary'
     await load(page);
     await switchTo(page, IDS.child);
     await createOnEdge(page, 'b_rt', 'upper');
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     const data = await exportiere(page);
     const importer = new ImportPage(page);
     await importer.import(data);
@@ -979,7 +979,7 @@ test.describe('Confirmation: Szenario 6, moving an internal state onto the child
     await switchTo(page, IDS.child);
     await moveToEdge(page, IDS.vorgewaermt, 'bottom');
     await expect(modalTitle(page)).toHaveText('Confirm boundary placement');
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     const r = await page.evaluate((IDS) => ({
       parentState: !!window.__lr.byId(IDS.vorgewaermt, IDS.root),
       outputs: window.__lr.io(IDS.child, IDS.root).outs.includes(IDS.vorgewaermt),
@@ -992,7 +992,7 @@ test.describe('Confirmation: Szenario 6, moving an internal state onto the child
     await load(page);
     await switchTo(page, IDS.child);
     await moveToEdge(page, IDS.vorgewaermt, 'upper');
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     expect(await page.evaluate((IDS) => window.__lr.io(IDS.child, IDS.root).ins.includes(IDS.vorgewaermt), IDS)).toBe(true);
     expect(await issues(page)).toEqual([]);
   });
@@ -1043,7 +1043,7 @@ test.describe('Confirmation: Szenario 6, moving an internal state onto the child
     await switchTo(page, IDS.child);
     await addSecondState(page);
     await moveBothToUpperEdge(page);
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     await expect(page.locator('.modal.show')).toHaveCount(0);
     const ins = await page.evaluate((IDS) => window.__lr.io(IDS.child, IDS.root).ins, IDS);
     expect(ins).toEqual(expect.arrayContaining([IDS.vorgewaermt, 'second']));
@@ -1080,7 +1080,7 @@ test.describe('Confirmation: Szenario 6, moving an internal state onto the child
     await page.mouse.move(to.x, to.y, { steps: 12 });
     await page.mouse.up();
     await expect(modalTitle(page)).toHaveText('Confirm boundary placement');
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     expect(await page.evaluate((IDS) => window.__lr.io(IDS.child, IDS.root).outs.includes(IDS.vorgewaermt), IDS)).toBe(true);
     expect(await issues(page)).toEqual([]);
   });
@@ -1102,7 +1102,7 @@ test.describe('Confirmation: Szenario 14, removing a decomposition', () => {
     await switchTo(page, IDS.child);
     const child = await containerIds(page, IDS.child);
     await deleteSystemLimitViaPad(page);
-    await expect(modalTitle(page)).toHaveText('Remove Decomposition?');
+    await expect(modalTitle(page)).toContainText('Remove the decomposition of');
     await expect(page.locator('.modal.show')).toContainText('ProcessOperator "Erhitzen"');
     await answer(page, 'Cancel');
     expect(await rootId(page)).toBe(IDS.child);
@@ -1115,7 +1115,7 @@ test.describe('Confirmation: Szenario 14, removing a decomposition', () => {
     await load(page);
     await switchTo(page, IDS.child);
     await deleteSystemLimitViaPad(page);
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     const r = await page.evaluate((IDS) => ({
       root: window.fpbjs.get('canvas').getRootElement().id,
       dv: window.__lr.byId(IDS.child, IDS.root).businessObject.decomposedView || null,
@@ -1157,7 +1157,7 @@ test.describe('Confirmation: Szenario 14, removing a decomposition', () => {
     await expect(page.locator('.djs-context-pad .entry[data-action="compose"]')).toBeVisible();
     expect(await page.evaluate(() => window.__lr.events.length)).toBe(0);
     await page.keyboard.press('Delete');
-    await expect(modalTitle(page)).toHaveText('Remove Decomposition?');
+    await expect(modalTitle(page)).toContainText('Remove the decomposition of');
     await answer(page, 'Cancel');
     expect(await page.evaluate(() => window.__lr.events.map((e) => e.type))).toEqual(['remove_decomposition']);
     expect(await rootId(page)).toBe(IDS.child);
@@ -1171,7 +1171,7 @@ test.describe('Confirmation: Szenario 14, removing a decomposition', () => {
       const sl = window.__lr.sl(window.fpbjs.get('canvas').getRootElement());
       window.fpbjs.get('rules').allowed('elements.delete', { elements: [sl] });
     });
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     expect(await rootId(page)).toBe(IDS.root);
     expect(await page.evaluate((IDS) => window.__lr.byId(IDS.child, IDS.root).businessObject.decomposedView || null, IDS)).toBeNull();
     expect(await issues(page)).toEqual([]);
@@ -1181,7 +1181,7 @@ test.describe('Confirmation: Szenario 14, removing a decomposition', () => {
     await load(page);
     const grandchild = await nest(page);
     await deleteSystemLimitViaPad(page);
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     const r = await page.evaluate(({ IDS, grandchild }) => ({
       root: window.fpbjs.get('canvas').getRootElement().id,
       dv: window.__lr.byId(IDS.vorwaermen, IDS.child).businessObject.decomposedView || null,

@@ -17,6 +17,8 @@ export const useConfirmation = (modeler) => {
         message: event.message,
         details: event.details,
         isBlocked: event.isBlocked || false,
+        confirmLabel: event.confirmLabel,
+        confirmVariant: event.confirmVariant,
         action: event.action
       });
     };

@@ -256,7 +256,7 @@ test.describe('Szenario 6 with a state the parent layer already has', () => {
     await decompose(page, ids.op);
     await moveXToEdge(page, ids.x, 'upper');
     await expect(modalTitle(page)).toHaveText('Confirm boundary placement');
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     expect(await parentSide(page, ids)).toEqual({ copies: 1, xToOp: 1, opToX: 0, xToP2: 1, assigned: [ids.op, ids.p2].sort() });
     expect(await issues(page)).toEqual([]);
   });
@@ -266,7 +266,7 @@ test.describe('Szenario 6 with a state the parent layer already has', () => {
     await open(page, m.build());
     await decompose(page, ids.op);
     await moveXToEdge(page, ids.x, 'upper');
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     expect(await parentSide(page, ids)).toEqual({ copies: 1, xToOp: 1, opToX: 0, xToP2: 1, assigned: [ids.op, ids.p2].sort() });
     expect(await issues(page)).toEqual([]);
   });
@@ -276,7 +276,7 @@ test.describe('Szenario 6 with a state the parent layer already has', () => {
     await open(page, m.build());
     await decompose(page, ids.op);
     await moveXToEdge(page, ids.x, 'bottom');
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     expect(await parentSide(page, ids)).toEqual({ copies: 1, xToOp: 0, opToX: 1, xToP2: 1, assigned: [ids.op, ids.p2].sort() });
     expect(await issues(page)).toEqual([]);
   });
@@ -291,7 +291,7 @@ test.describe('Szenario 6 with a state the parent layer already has', () => {
       window.fpbjs.get('rules').allowed('elements.delete', { elements: [sl] });
     });
     await expect(page.locator('.modal.show')).toContainText('ProcessOperator "ProcessOperator"');
-    await answer(page, 'Yes, proceed');
+    await answer(page, 'confirm');
     expect(await rootId(page)).toBe('m-root');
     await expect(page.locator('.djs-tooltip', { hasText: 'The decomposition of "ProcessOperator" has been removed.' })).toBeVisible();
     expect(await issues(page)).toEqual([]);

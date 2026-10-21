@@ -158,7 +158,9 @@ FpbDelete.prototype.remove = function (elements) {
       const consequences = this.getLayerConsequences(decomposition);
       const amlLinks = this.getAmlLinks([decomposition]);
       this._eventBus.fire('confirmation.required', {
-        title: 'Remove Decomposition?',
+        title: 'Remove the decomposition of "' + (decomposition.businessObject.name || 'unnamed operator') + '"?',
+        confirmLabel: 'Remove',
+        confirmVariant: 'danger',
         message: consequences.message + (amlLinks.length ? ' Other parts of the AutomationML file link to elements of this layer.' : ''),
         details: consequences.details + (amlLinks.length ? ' ' + amlLinksText(amlLinks) : ''),
         isBlocked: false,
@@ -200,7 +202,12 @@ FpbDelete.prototype.remove = function (elements) {
   }
 
   this._eventBus.fire('confirmation.required', {
-    title: 'Confirm deletion',
+    // name the element (016c decision 13)
+    title: elements.length === 1
+      ? 'Delete "' + ((elements[0].businessObject && elements[0].businessObject.name) || 'this element') + '"?'
+      : 'Delete ' + elements.length + ' elements?',
+    confirmLabel: 'Delete',
+    confirmVariant: 'danger',
     message,
     details: [layer && layer.details, aml && aml.details].filter(Boolean).join(' '),
     isBlocked: false,

@@ -5,15 +5,21 @@ import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 /**
- * A confirmation modal for actions with layer-wide consequences
+ * A question before an action with consequences (016c decision 13): the
+ * answer is named after the action ("Remove", "Delete", "Place on
+ * boundary"), red when it destroys something. `data-answer` marks the
+ * buttons for tests and helpers, whatever their names.
  */
-const ConfirmationModal = ({ show, onConfirm, onCancel, title, message, details, isBlocked, modeler }) => {
+const ConfirmationModal = ({
+  show, onConfirm, onCancel, title, message, details, isBlocked, modeler,
+  confirmLabel = 'Confirm', confirmVariant = 'primary'
+}) => {
   const themeAttributes = useThemeAttributes(modeler);
   return (
-    <Modal show={show} onHide={onCancel} centered {...themeAttributes}>
-      <Modal.Header closeButton>
+    <Modal show={show} onHide={onCancel} centered className="fpb-dialog" {...themeAttributes}>
+      <Modal.Header closeButton closeLabel="Close">
         <Modal.Title>
-          <FontAwesomeIcon icon="exclamation-triangle" className={`me-2 ${isBlocked ? 'text-danger' : 'text-warning'}`} />
+          <FontAwesomeIcon icon="exclamation-triangle" className={`me-2 ${isBlocked ? 'fpb-dialog-icon-danger' : 'fpb-dialog-icon-warning'}`} />
           {title || 'Confirmation required'}
         </Modal.Title>
       </Modal.Header>
@@ -21,26 +27,22 @@ const ConfirmationModal = ({ show, onConfirm, onCancel, title, message, details,
       <Modal.Body>
         <p>{message}</p>
         {details && (
-          <div className={`alert ${isBlocked ? 'alert-warning' : 'alert-secondary'}`} role="alert">
-            <small>{details}</small>
-          </div>
+          <p className="fpb-dialog-details">{details}</p>
         )}
       </Modal.Body>
 
       <Modal.Footer>
         {isBlocked ? (
-          <Button variant="primary" onClick={onCancel} autoFocus>
+          <Button variant="primary" onClick={onCancel} autoFocus data-answer="cancel">
             OK
           </Button>
         ) : (
           <>
-            <Button variant="secondary" onClick={onCancel} autoFocus>
-              <FontAwesomeIcon icon="times" className="me-1" />
+            <Button variant="link" className="fpb-dialog-cancel" onClick={onCancel} autoFocus data-answer="cancel">
               Cancel
             </Button>
-            <Button variant="danger" onClick={onConfirm}>
-              <FontAwesomeIcon icon="check" className="me-1" />
-              Yes, proceed
+            <Button variant={confirmVariant} onClick={onConfirm} data-answer="confirm">
+              {confirmLabel}
             </Button>
           </>
         )}

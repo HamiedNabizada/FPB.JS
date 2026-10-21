@@ -270,7 +270,7 @@ export class ModelerPage {
    */
   async confirmModal() {
     await this.page.waitForSelector('.modal.show', { timeout: 5000 });
-    await this.page.locator('.modal.show .btn-danger').click();
+    await this.page.locator('.modal.show [data-answer="confirm"]').click();
     await this.page.waitForTimeout(500);
   }
 
@@ -279,7 +279,7 @@ export class ModelerPage {
    */
   async cancelModal() {
     await this.page.waitForSelector('.modal.show', { timeout: 5000 });
-    await this.page.locator('.modal.show .btn-secondary').click();
+    await this.page.locator('.modal.show [data-answer="cancel"]').click();
     await this.page.waitForTimeout(500);
   }
 

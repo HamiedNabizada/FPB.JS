@@ -107,7 +107,7 @@ test.describe('AutomationML import and export', () => {
     const dialog = page.locator('.modal.show');
     await expect(dialog).toContainText('Other parts of the AutomationML file link to an element you are deleting.');
     await expect(dialog).toContainText('B1_Prozess (Behaelter_B1)');
-    await dialog.getByRole('button', { name: 'Yes, proceed' }).click();
+    await dialog.locator('[data-answer="confirm"]').click();
     await expect.poll(() => page.evaluate((id) => !!window.fpbjs.get('elementRegistry').get(id), LINKED_STATE)).toBe(false);
 
     const aml = await exportViaDialog(page, { format: 'aml' });

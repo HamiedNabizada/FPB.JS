@@ -251,7 +251,7 @@ const ImportModal = memo(({ modeler }) => {
                 </Button>
             </OverlayTrigger>
 
-            <Modal bg="light" show={show} onHide={handleClose} centered  {...themeAttributes}>
+            <Modal bg="light" show={show} onHide={handleClose} centered className="fpb-dialog" {...themeAttributes}>
                 <Modal.Header>
                     <Container fluid>
                         <Row as={Modal.Title}>
@@ -276,6 +276,7 @@ const ImportModal = memo(({ modeler }) => {
                             <label htmlFor="file" ref={fileLabelRef} className={isDragging ? 'fileLabel fileLabel--dragover' : 'fileLabel'}> 
                                 {fileName || defaultText} 
                             </label>
+                            <label htmlFor="file" className="fpb-choose-file">Choose file</label>
                         </Row>
                         {aml && aml.hierarchies.length > 1 && (
                             <Row className="aml-hierarchies">
@@ -309,24 +310,23 @@ const ImportModal = memo(({ modeler }) => {
                     </Container>
                 </Modal.Body>
                 <Modal.Footer>
-                    <OverlayTrigger trigger={['hover', 'focus']} placement="top" overlay={<Tooltip id={`tooltip-uniqueId`}>
-                        Import
-                    </Tooltip>}>
-                        <Button 
-                            variant="secondary" 
-                            onClick={() => { go() }}
-                            disabled={!selectedFile || isImporting || (fileType === 'aml' && !aml)}
-                        >
-                            {isImporting ? (
-                                <>
-                                    <FontAwesomeIcon icon="spinner" spin size="lg" className="me-2" />
-                                    Importing...
-                                </>
-                            ) : (
-                                <FontAwesomeIcon icon="paper-plane" size="lg" />
-                            )}
-                        </Button>
-                    </OverlayTrigger>
+                    {/* answers in words (016c decision 13) */}
+                    <Button variant="link" className="fpb-dialog-cancel" onClick={handleClose} data-answer="cancel">
+                        Cancel
+                    </Button>
+                    <Button 
+                        variant="primary" 
+                        onClick={() => { go() }}
+                        disabled={!selectedFile || isImporting || (fileType === 'aml' && !aml)}
+                        data-answer="import"
+                    >
+                        {isImporting ? (
+                            <>
+                                <FontAwesomeIcon icon="spinner" spin className="me-2" />
+                                Importing...
+                            </>
+                        ) : 'Import'}
+                    </Button>
                 </Modal.Footer>
             </Modal>
         </div>
