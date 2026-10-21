@@ -26,7 +26,7 @@ export const select = (page, name) => page.evaluate((name) => {
 }, name);
 
 export const field = (page, id) => page.locator(`#bio-properties-panel-${id}`);
-export const header = (page) => page.locator('.bio-properties-panel-header');
+export const header = (page) => page.locator('.fpb-panel-header');
 export const stackSize = (page) => page.evaluate(() => window.fpbjs.get('commandStack')._stackIdx + 1);
 export const undo = (page) => page.evaluate(() => window.fpbjs.get('commandStack').undo());
 

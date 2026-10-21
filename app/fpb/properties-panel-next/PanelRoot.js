@@ -6,7 +6,7 @@ import { useEffect, useErrorBoundary, useMemo, useState } from '@bpmn-io/propert
 
 import { is } from '../help/utils';
 import { ServicesContext } from './context';
-import { headerProvider } from './header';
+import { headerProvider, PanelHeader } from './header';
 import { getGroups } from './groups';
 import { loadLayout, saveLayout } from './layout';
 import { FindingsContext } from './findingsContext';
@@ -124,6 +124,7 @@ export default function PanelRoot(props) {
   return (
     <ServicesContext.Provider value={services}>
       <FindingsContext.Provider value={fieldFindings(findings)}>
+        <PanelHeader element={element} root={root} translate={modeler.get('translate')} />
         <PropertiesPanel
           element={element}
           groups={groups}

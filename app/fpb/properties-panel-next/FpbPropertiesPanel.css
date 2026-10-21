@@ -4,7 +4,7 @@
 .fpb-properties {
   display: flex;
   height: 100%;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--fpb-font);
 }
 
 .fpb-properties-toggle {
@@ -12,48 +12,110 @@
   width: 32px;
   height: 44px;
   margin: 4px 0;
-  border: 1px solid var(--bio-border, #bbb);
-  border-radius: 4px 0 0 4px;
-  background: var(--bio-surface-medium, #f2f2f2);
-  color: var(--bio-text, #222);
+  border: 1px solid var(--fpb-line);
+  border-radius: var(--fpb-radius-control) 0 0 var(--fpb-radius-control);
+  background: var(--fpb-surface);
+  color: var(--fpb-text);
   cursor: pointer;
 }
 
 .fpb-properties-toggle:focus-visible {
-  outline: 2px solid var(--bio-focus, #0066cc);
+  outline: 2px solid var(--fpb-accent);
 }
 
 .fpb-properties-body {
   width: 320px;
   height: 100%;
   overflow-y: auto;
-  border-left: 1px solid var(--bio-border, #bbb);
+  overflow-x: hidden;
+  border-left: 1px solid var(--fpb-line);
+  background: var(--fpb-surface-muted);
 }
 
+/* variant B (016c): the head and every group are cards on a muted ground */
 .fpb-properties-body .bio-properties-panel {
-  height: 100%;
+  height: auto;
+  background: transparent;
 }
 
-/* Dark mode: the library's colors come from --bio-* variables */
-[data-theme="dark"] .fpb-properties .bio-theme-parent,
-[data-theme="dark"] .fpb-properties {
-  --bio-surface: hsl(220, 13%, 16%);
-  --bio-surface-overlay: hsl(220, 13%, 18%);
-  --bio-surface-subtle: hsl(220, 13%, 20%);
-  --bio-surface-medium: hsl(220, 13%, 22%);
-  --bio-surface-strong: hsl(220, 13%, 28%);
-  --bio-text: hsl(220, 14%, 90%);
-  --bio-text-subtle: hsl(220, 10%, 72%);
-  --bio-text-subtlest: hsl(220, 8%, 58%);
-  --bio-border: hsl(220, 10%, 34%);
-  --bio-border-subtle: hsl(220, 10%, 28%);
-  --bio-border-disabled: hsl(220, 10%, 24%);
-  --bio-border-input: hsl(220, 10%, 38%);
-  --bio-primary: hsl(205, 90%, 60%);
-  --bio-primary-hover: hsl(205, 90%, 66%);
-  --bio-primary-surface: hsl(205, 50%, 22%);
-  --bio-neutral: hsl(220, 10%, 65%);
+/* the library's own head gives way to PanelHeader */
+.fpb-properties .bio-properties-panel-header {
+  display: none;
 }
+
+.fpb-properties .fpb-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 10px 0;
+  padding: 12px 14px;
+  border-radius: var(--fpb-radius-card);
+  background: var(--fpb-surface);
+  box-shadow: var(--fpb-shadow-card);
+}
+
+.fpb-properties .fpb-panel-header-icon {
+  flex: none;
+  display: flex;
+}
+
+.fpb-properties .fpb-panel-header-text {
+  min-width: 0;
+}
+
+.fpb-properties .fpb-panel-header-name {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--fpb-text);
+  overflow-wrap: anywhere;
+}
+
+/* type and layer are text, not pills (016c decision 2) */
+.fpb-properties .fpb-panel-header-meta {
+  font-size: 12px;
+  color: var(--fpb-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.fpb-properties .fpb-chip + .fpb-chip::before {
+  content: ' · ';
+}
+
+.fpb-properties .bio-properties-panel-group {
+  margin: 10px;
+  border: 0;
+  border-radius: var(--fpb-radius-card);
+  background: var(--fpb-surface);
+  box-shadow: var(--fpb-shadow-card);
+  overflow: hidden;
+}
+
+.fpb-properties .bio-properties-panel-group-header {
+  border: 0;
+  background: transparent;
+}
+
+.fpb-properties .bio-properties-panel-group-header-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fpb-text);
+}
+
+.fpb-properties .bio-properties-panel-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fpb-text-muted);
+}
+
+.fpb-properties .bio-properties-panel-input {
+  min-height: 36px;
+  border: 1px solid var(--fpb-control-border);
+  border-radius: var(--fpb-radius-control);
+  background: var(--fpb-surface);
+}
+
+/* dark: --bio-* come from the design values (theme/tokens.css) */
 
 /* dark-mode.css colors inputs globally; the panel takes its own */
 .fpb-properties .bio-properties-panel-input {
@@ -77,18 +139,27 @@
 }
 
 .fpb-properties .bio-properties-panel-input[readonly] {
-  color: var(--bio-text-subtlest);
-  background: var(--bio-surface-subtle, #f5f5f5);
+  color: var(--fpb-text-muted);
+  border-color: var(--fpb-line);
+  background: var(--fpb-surface-sunken);
 }
 
 .fpb-properties .fpb-field-button {
   flex: 0 0 auto;
-  border: 1px solid var(--bio-border-input, #bbb);
-  border-radius: 2px;
-  background: var(--bio-surface-medium, #f2f2f2);
-  color: var(--bio-text, #222);
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--fpb-control-border);
+  border-radius: var(--fpb-radius-control);
+  background: var(--fpb-surface);
+  color: var(--fpb-text);
+  font: inherit;
   font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
+}
+
+.fpb-properties .fpb-field-button:hover {
+  background: var(--fpb-surface-muted);
 }
 
 /* Characteristics: table and detail area (016b V1) */
@@ -185,16 +256,15 @@
 }
 
 .fpb-properties .fpb-finding {
-  margin: 0 0 4px;
-  padding: 4px 6px;
-  border-left: 3px solid var(--bio-border, #bbb);
+  margin: 0 0 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
   font-size: 12px;
-  color: var(--bio-text, #222);
 }
 
-.fpb-properties .fpb-finding-error { border-left-color: #c62828; }
-.fpb-properties .fpb-finding-warning { border-left-color: #b26a00; }
-.fpb-properties .fpb-finding-info { border-left-color: var(--bio-neutral, #888); }
+.fpb-properties .fpb-finding-error { background: var(--fpb-error-surface); color: var(--fpb-error-text); }
+.fpb-properties .fpb-finding-warning { background: var(--fpb-warning-surface); color: var(--fpb-warning-text); }
+.fpb-properties .fpb-finding-info { background: var(--fpb-info-surface); color: var(--fpb-info-text); }
 
 .fpb-properties .fpb-finding-head {
   font-weight: 600;
@@ -205,9 +275,9 @@
   font-size: 12px;
 }
 
-.fpb-properties .fpb-field-finding-error { color: #c62828; }
-.fpb-properties .fpb-field-finding-warning { color: #b26a00; }
-.fpb-properties .fpb-field-finding-info { color: var(--bio-text-subtle, #555); }
+.fpb-properties .fpb-field-finding-error { color: var(--fpb-error-text); }
+.fpb-properties .fpb-field-finding-warning { color: var(--fpb-warning-text); }
+.fpb-properties .fpb-field-finding-info { color: var(--fpb-info-text); }
 
 /* AML section (028 E6, E9): long class paths must not widen the panel */
 .fpb-properties .fpb-aml-table {

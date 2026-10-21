@@ -26,6 +26,15 @@ test.describe('New properties panel, findings', () => {
     await expect(page.locator('[data-entry-id="shortName"] .fpb-field-finding-info')).toBeVisible();
   });
 
+  test('a finding is a tinted card without a coloured stripe at the side (016c)', async ({ page }) => {
+    await openPanel(page);
+    await unnamedState(page);
+    const finding = page.locator('[data-group-id="group-findings"] .fpb-finding').first();
+    await expect(finding).toBeVisible();
+    expect(await finding.evaluate((e) => parseFloat(getComputedStyle(e).borderLeftWidth))).toBeLessThanOrEqual(1);
+    expect(await finding.evaluate((e) => getComputedStyle(e).backgroundColor)).not.toBe('rgba(0, 0, 0, 0)');
+  });
+
   test('an element without findings has no findings group', async ({ page }) => {
     await openPanel(page);
     await select(page, 'Erhitzen');

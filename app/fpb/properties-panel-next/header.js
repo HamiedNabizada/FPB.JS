@@ -101,6 +101,33 @@ export function getElementIcon(element) {
   };
 }
 
+/**
+ * Head of the panel as a card (016c, variant B): symbol, name, type and the
+ * layer the element is on. Type and layer are text, not pills: what is only
+ * shown must not look like a button (016c decision 2).
+ */
+export function PanelHeader(props) {
+  const { element, root, translate = (text) => text } = props;
+  if (!element || Array.isArray(element)) {
+    return null;
+  }
+  const Icon = getElementIcon(element);
+  const isProcess = is(element, 'fpb:Process');
+
+  return (
+    <div class="fpb-panel-header">
+      <span class="fpb-panel-header-icon"><Icon width={40} height={40} /></span>
+      <div class="fpb-panel-header-text">
+        <div class="fpb-panel-header-name">{getElementLabel(element) || translate('Unnamed')}</div>
+        <div class="fpb-panel-header-meta">
+          <span class="fpb-chip fpb-chip-type">{translate(getTypeLabel(element))}</span>
+          {!isProcess && root && <span class="fpb-chip fpb-chip-layer">{getElementLabel(root)}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export const headerProvider = {
   getElementLabel,
   getTypeLabel,

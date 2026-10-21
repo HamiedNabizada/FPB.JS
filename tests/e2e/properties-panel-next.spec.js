@@ -152,6 +152,42 @@ test.describe('Neues Eigenschaften-Panel', () => {
     await expect(kopf(page)).toContainText('Erhitzen');
   });
 
+  test('the head shows the name and chips for type and layer', async ({ page }) => {
+    await vorbereiten(page);
+    await auswaehlen(page, 'Erhitzen');
+    await expect(page.locator('.fpb-panel-header-name')).toHaveText('Erhitzen');
+    await expect(page.locator('.fpb-chip-type')).toHaveText('Process operator');
+    await expect(page.locator('.fpb-chip-layer')).toHaveText('Top level');
+
+    await page.evaluate(() => {
+      const operator = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Erhitzen' && e.type !== 'label')[0];
+      window.fpbjs.get('modeling').switchProcess(operator.businessObject.decomposedView);
+    });
+    await auswaehlen(page, 'Vorwärmen');
+    await expect(page.locator('.fpb-chip-layer')).toHaveText('Decomposition of Erhitzen');
+  });
+
+  test('a long name breaks and the panel stays 320 px wide', async ({ page }) => {
+    await vorbereiten(page);
+    await page.evaluate(() => {
+      const operator = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Erhitzen' && e.type !== 'label')[0];
+      window.fpbjs.get('modeling').updateLabel(operator, 'E'.repeat(60));
+      window.fpbjs.get('selection').select(operator);
+    });
+    await expect(page.locator('.fpb-panel-header-name')).toHaveText('E'.repeat(60));
+    const body = page.locator('.fpb-properties-body');
+    expect((await body.boundingBox()).width).toBe(320);
+    expect(await body.evaluate((e) => e.scrollWidth <= e.clientWidth)).toBe(true);
+  });
+
+  test('shown values have no field look', async ({ page }) => {
+    await vorbereiten(page);
+    const value = page.locator('[data-entry-id="process-states"] .fpb-fixed-value');
+    await expect(value).toBeVisible();
+    expect(await value.evaluate((e) => getComputedStyle(e).borderTopStyle)).toBe('none');
+    expect(await value.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
+  });
+
   test('an entry that throws shows a message instead of a blank panel', async ({ page }) => {
     await vorbereiten(page);
     page.on('pageerror', () => {});
