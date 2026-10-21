@@ -124,6 +124,8 @@ const hasChildren = node.children && node.children.length > 0;
                 }, {})}
                 indent={20}
                 rowHeight={36}
+                // as wide as the Layers card; react-arborist takes 300px otherwise
+                width="100%"
                 searchTerm={searchTerm}
                 searchMatch={(node, term) => 
                     node.data.name.toLowerCase().includes(term.toLowerCase())

@@ -46,6 +46,16 @@ test.describe('Toolbar', () => {
     await expect(layers.locator('.fpb-layers-project')).toContainText('FPBJS_Project');
   });
 
+  test('the operator count in Layers is not cut off', async ({ page }) => {
+    await open(page);
+    await page.locator('#openLayerButton').click();
+    const count = page.locator('.fpb-layers .arborist-node-count').first();
+    await expect(count).toBeVisible();
+    const right = (await count.boundingBox()).x + (await count.boundingBox()).width;
+    const tree = await page.locator('.fpb-layers .arborist-tree-container').boundingBox();
+    expect(right).toBeLessThanOrEqual(tree.x + tree.width);
+  });
+
   test('the toolbar column with Layers open stays within 320 px', async ({ page }) => {
     await open(page);
     await page.locator('#openLayerButton').click();
