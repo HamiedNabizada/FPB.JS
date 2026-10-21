@@ -1513,6 +1513,21 @@ test.describe('Names of a state on every layer (B16)', () => {
     expect(await issues(page)).toEqual([]);
   });
 
+  test('in read-only mode the finding offers no alignment, and offers it again afterwards (F9)', async ({ page }) => {
+    await load(page);
+    await page.evaluate(() => {
+      window.fpbjs.get('readOnly').set(true);
+      window.fpbjs.get('fpbValidation').run();
+      window.fpbjs.get('fpbValidation').openPanel();
+    });
+    const item = page.locator('.fpb-validation-item[data-rule="F9"]');
+    await expect(item).toHaveCount(1);
+    await expect(item.getByRole('button', { name: /Use the values of/ })).toHaveCount(0);
+
+    await page.evaluate(() => window.fpbjs.get('readOnly').set(false));
+    await expect(item.getByRole('button', { name: 'Use the values of the top level' })).toBeVisible();
+  });
+
   // the test model: "Rohstoff (unbehandelt)" and Temperatur on top, nothing below (020 §2)
   test('the model check reports copies that differ and aligns them to the chosen layer in one step (F9)', async ({ page }) => {
     await load(page);

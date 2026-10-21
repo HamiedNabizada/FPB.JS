@@ -1,6 +1,7 @@
 import { checkModel, RULES, SEVERITY } from './ModelChecker';
 import { collectProcessShapes } from '../help/processShapes';
 import { goToElement } from '../help/navigation';
+import { isReadOnly } from '../read-only/ReadOnly';
 
 const OVERLAY_TYPE = 'fpb-validation';
 // the other elements a chosen finding is about (016b V8)
@@ -32,8 +33,9 @@ export function describeCounts(counts) {
  * offers a list of all findings of all layers. Choosing a finding goes to the
  * element. Fires 'fpbValidation.changed' with { issues, counts }.
  */
-export default function FpbValidation(eventBus, canvas, overlays, elementRegistry, modeling, selection, fpbjs) {
+export default function FpbValidation(eventBus, canvas, overlays, elementRegistry, modeling, selection, fpbjs, injector) {
   this._eventBus = eventBus;
+  this._injector = injector;
   this._canvas = canvas;
   this._overlays = overlays;
   this._elementRegistry = elementRegistry;
@@ -57,6 +59,12 @@ export default function FpbValidation(eventBus, canvas, overlays, elementRegistr
   eventBus.on('diagram.destroy', function () {
     clearTimeout(self._timer);
   });
+  // the alignment of F9 changes the model; read-only offers none
+  eventBus.on('readOnly.changed', function () {
+    if (self.isPanelOpen()) {
+      self._renderPanel();
+    }
+  });
   // a chosen finding marks its other elements until the next selection
   eventBus.on('selection.changed', function () {
     if (!self._choosing) {
@@ -65,7 +73,7 @@ export default function FpbValidation(eventBus, canvas, overlays, elementRegistr
   });
 }
 
-FpbValidation.$inject = ['eventBus', 'canvas', 'overlays', 'elementRegistry', 'modeling', 'selection', 'fpbjs'];
+FpbValidation.$inject = ['eventBus', 'canvas', 'overlays', 'elementRegistry', 'modeling', 'selection', 'fpbjs', 'injector'];
 
 FpbValidation.prototype._schedule = function () {
   const self = this;
@@ -261,7 +269,7 @@ FpbValidation.prototype._renderPanel = function () {
     });
     // F9: the copies of a boundary state differ; the user chooses which
     // copy holds the right values
-    if (issue.variants && issue.variants.length > 1) {
+    if (issue.variants && issue.variants.length > 1 && !isReadOnly(self._injector)) {
       const choices = document.createElement('div');
       choices.className = 'fpb-validation-choices';
       issue.variants.forEach(function (variant) {
