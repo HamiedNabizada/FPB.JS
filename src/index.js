@@ -341,9 +341,10 @@ export async function createFpbModeler(options = {}) {
     },
 
     /**
-     * Light or dark for the containers of this modeler ('light' | 'dark'),
-     * or 'system' to follow the system setting; from then on the host decides
-     * and the toggle is hidden. Fires 'theme.changed' with { theme, mode }.
+     * Light or dark for the containers of this modeler ('light' | 'dark'):
+     * from then on the host decides and the toggle is hidden. 'system' hands
+     * it back to the user's choice, else the system setting, followed from
+     * then on. Fires 'theme.changed' with { theme, mode }.
      */
     setTheme(themeName) {
       theme.set(themeName);

@@ -1321,6 +1321,71 @@ test.describe('theme set by the host', () => {
     await page.locator('#importOptionsButton').click();
     // react-bootstrap puts the attribute on .modal-dialog; what counts is the colour
     await expect(page.locator('.modal.show .modal-content')).toHaveCSS('background-color', 'rgb(26, 32, 39)');
+    // the close button is drawn dark by Bootstrap; on the dark card it is turned light
+    expect(await page.locator('.modal.show .btn-close').evaluate((b) => getComputedStyle(b).filter)).toContain('invert');
+    expect(errors).toEqual([]);
+  });
+
+  test('the host page keeps its own Bootstrap colours, font and bpmn-io look', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await page.evaluate(() => {
+      document.documentElement.setAttribute('data-bs-theme', 'dark');
+      const other = document.createElement('div');
+      other.id = 'other-bpmn-io';
+      other.className = 'bio-theme-parent';
+      document.body.appendChild(other);
+    });
+    await createModeler(page, { panels: true });
+    const host = await page.evaluate(() => ({
+      background: getComputedStyle(document.body).backgroundColor,
+      font: getComputedStyle(document.body).fontFamily,
+      bio: getComputedStyle(document.getElementById('other-bpmn-io')).getPropertyValue('--bio-text').trim()
+    }));
+    // Bootstrap 5.3 dark body, its own font stack, the bpmn-io default
+    expect(host.background).toBe('rgb(33, 37, 41)');
+    expect(host.font).not.toContain('IBM Plex');
+    expect(host.bio).toBe('hsl(225, 10%, 15%)');
+    expect(errors).toEqual([]);
+  });
+
+  test('without a theme option the page attribute stays untouched and a second modeler keeps its toggle', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await createModeler(page, { panels: true });
+    expect(await page.evaluate(() => document.documentElement.getAttribute('data-theme'))).toBeNull();
+    expect(await darkModeButtons(page)).toBe(1);
+
+    await page.evaluate(() => window.fpb.destroy());
+    await createModeler(page, { panels: true });
+    expect(await page.evaluate(() => window.fpb.get('fpbTheme').mode())).toBe('default');
+    expect(await darkModeButtons(page)).toBe(1);
+    expect(errors).toEqual([]);
+  });
+
+  test('setTheme("system") follows the system from then on, also under a host page attribute', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' });
+    const { errors } = await openLibraryPage(page);
+    await createModeler(page, { panels: true, options: { theme: 'dark' } });
+    await page.evaluate(() => window.fpb.setTheme('system'));
+    expect(await attr(page, 'layers')).toBe('light');
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await expect.poll(() => attr(page, 'layers')).toBe('dark');
+    await page.evaluate(() => window.fpb.destroy());
+
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    await createModeler(page, { panels: true });
+    await page.evaluate(() => window.fpb.setTheme('system'));
+    const surface = () => page.evaluate(() => getComputedStyle(document.getElementById('layers')).getPropertyValue('--fpb-surface').trim());
+    await expect.poll(surface).toBe('#ffffff');
+    expect(errors).toEqual([]);
+  });
+
+  test('a light host theme under a dark page is light', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    await createModeler(page, { panels: true, options: { theme: 'light' } });
+    const surface = await page.evaluate(() => getComputedStyle(document.getElementById('layers')).getPropertyValue('--fpb-surface').trim());
+    expect(surface).toBe('#ffffff');
     expect(errors).toEqual([]);
   });
 

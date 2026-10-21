@@ -2,6 +2,9 @@ const STORAGE_KEY = 'fpbjs.theme';
 const THEMES = ['light', 'dark'];
 
 const isTheme = (value) => THEMES.indexOf(value) !== -1;
+// marks the parts of FPB.js; the Bootstrap and bpmn-io mappings of
+// theme/tokens.css apply only there, so a host page keeps its own look
+const UI_CLASS = 'fpb-ui';
 
 function stored() {
   try {
@@ -37,12 +40,15 @@ const systemTheme = () => {
  * - the host page, by setting `data-theme` on <html> before FPB.js starts (the
  *   AML editor plugin): FPB.js follows the attribute, also when it changes;
  * - otherwise the user: a choice with the toggle (`choose()`) is stored under
- *   fpbjs.theme; without one, `theme: 'system'` (the web app) follows the
- *   system setting, and no option means light, as the library always started.
+ *   fpbjs.theme; without one, `theme: 'system'` follows the system setting,
+ *   and no option means light, as the library always started. The attribute
+ *   goes on the containers; only a page that is FPB.js's own (the web app,
+ *   `themeScope: 'page'`) gets it on the document.
  *
  * In the first two cases the toggle is hidden (isHostControlled). The old key
  * fpb-theme is never read: app.js filled it with "light" on every first
- * start, so it does not tell a choice from a default.
+ * start, so it does not tell a choice from a default. On destroy the service
+ * takes back what it set, so a modeler created later starts afresh.
  */
 export default function ThemeService(config, eventBus, canvas) {
   const option = config && config.theme;
@@ -58,6 +64,7 @@ export default function ThemeService(config, eventBus, canvas) {
     (canvas.getContainer() && canvas.getContainer().parentNode);
   if (hostElement && hostElement.setAttribute) {
     this._containers.push(hostElement);
+    hostElement.classList.add(UI_CLASS);
   }
 
   if (isTheme(option)) {
@@ -78,21 +85,16 @@ export default function ThemeService(config, eventBus, canvas) {
     this._observer.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
   } else {
     this._mode = option === 'system' ? 'system' : 'default';
-    this._scope = 'page';
+    this._scope = config && config.themeScope === 'page' ? 'page' : 'containers';
     this._theme = stored() || (this._mode === 'system' ? systemTheme() : 'light');
-
-    const query = this._mode === 'system' ? systemQuery() : null;
-    if (query) {
-      this._onSystem = function () {
-        if (!stored() && self._mode === 'system') {
-          self._setTheme(systemTheme());
-        }
-      };
-      query.addEventListener('change', this._onSystem);
-      this._query = query;
+    if (this._mode === 'system') {
+      this._followSystem();
     }
   }
 
+  if (this._scope === 'page') {
+    root.classList.add(UI_CLASS);
+  }
   this._apply();
 
   eventBus.on('diagram.destroy', function () {
@@ -103,6 +105,17 @@ export default function ThemeService(config, eventBus, canvas) {
       self._query.removeEventListener('change', self._onSystem);
     }
     self._watchFills(false);
+    // take back what this modeler set; a host page keeps its own attribute
+    if (self._scope === 'page') {
+      root.removeAttribute('data-theme');
+      root.classList.remove(UI_CLASS);
+    }
+    self._containers.forEach(function (element) {
+      if (self._scope === 'containers') {
+        element.removeAttribute('data-theme');
+      }
+      element.classList.remove(UI_CLASS);
+    });
   });
 }
 
@@ -134,6 +147,7 @@ ThemeService.prototype.attributes = function () {
 ThemeService.prototype.addContainer = function (element) {
   if (element && this._containers.indexOf(element) === -1) {
     this._containers.push(element);
+    element.classList.add(UI_CLASS);
     this._apply();
   }
 };
@@ -145,6 +159,12 @@ ThemeService.prototype.addContainer = function (element) {
 ThemeService.prototype.set = function (theme) {
   if (theme === 'system') {
     this._mode = 'system';
+    // the page of a host keeps its attribute; FPB.js follows the system on
+    // its containers from now on
+    if (this._scope === 'page-host') {
+      this._toContainers();
+    }
+    this._followSystem();
     this._setTheme(stored() || systemTheme());
     return;
   }
@@ -152,19 +172,42 @@ ThemeService.prototype.set = function (theme) {
     return;
   }
   this._mode = 'host';
-  if (this._scope !== 'containers') {
-    // the page attribute was FPB.js's own; a host page keeps its attribute
-    if (this._scope === 'page') {
-      document.documentElement.removeAttribute('data-theme');
-    }
-    if (this._observer) {
-      this._observer.disconnect();
-      this._observer = null;
-    }
-    this._scope = 'containers';
-    this._theme = null;
-  }
+  this._toContainers();
   this._setTheme(theme);
+};
+
+/** From the page to the containers of the modeler */
+ThemeService.prototype._toContainers = function () {
+  if (this._scope === 'containers') {
+    return;
+  }
+  // the page attribute was FPB.js's own; a host page keeps its attribute
+  if (this._scope === 'page') {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  if (this._observer) {
+    this._observer.disconnect();
+    this._observer = null;
+  }
+  this._scope = 'containers';
+  // applied anew, even if the theme stays the same
+  this._theme = null;
+};
+
+/** Follow changes of the system setting while nothing is chosen */
+ThemeService.prototype._followSystem = function () {
+  const query = systemQuery();
+  if (this._query || !query) {
+    return;
+  }
+  const self = this;
+  this._onSystem = function () {
+    if (!stored() && self._mode === 'system') {
+      self._setTheme(systemTheme());
+    }
+  };
+  query.addEventListener('change', this._onSystem);
+  this._query = query;
 };
 
 /** The user chose with the toggle: kept for the next start */

@@ -7,10 +7,15 @@ import { is } from '../../help/utils';
  * elements onto containers. This blocks that feedback specifically for SystemLimit
  * to prevent the white flash in dark mode.
  */
-export default function SystemLimitDropFeedbackBlocker(eventBus) {
+export default function SystemLimitDropFeedbackBlocker(eventBus, injector) {
+
+  // the theme of this modeler, which a host may set on its containers only
+  const theme = injector.get('fpbTheme', false);
 
   function isDarkMode() {
-    return document.documentElement.getAttribute('data-theme') === 'dark';
+    return theme
+      ? theme.get() === 'dark'
+      : document.documentElement.getAttribute('data-theme') === 'dark';
   }
 
   // Block drop feedback events for SystemLimit
@@ -91,5 +96,6 @@ export default function SystemLimitDropFeedbackBlocker(eventBus) {
 }
 
 SystemLimitDropFeedbackBlocker.$inject = [
-  'eventBus'
+  'eventBus',
+  'injector'
 ];
