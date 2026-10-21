@@ -3,7 +3,6 @@ import React, { useState, memo, useEffect, useRef } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import Container from 'react-bootstrap/Container';
@@ -252,17 +251,8 @@ const ImportModal = memo(({ modeler }) => {
             </OverlayTrigger>
 
             <Modal bg="light" show={show} onHide={handleClose} centered className="fpb-dialog" {...themeAttributes}>
-                <Modal.Header>
-                    <Container fluid>
-                        <Row as={Modal.Title}>
-                            <Col>Import Options</Col>
-                            <Col md="auto">
-                                <Button variant="secondary" size="sm" aria-label="Close import options" onClick={handleClose}>
-                                    <FontAwesomeIcon icon="rectangle-xmark" size="lg" />
-                                </Button>
-                            </Col>
-                        </Row>
-                    </Container>
+                <Modal.Header closeButton closeLabel="Close import options">
+                    <Modal.Title>Import Options</Modal.Title>
                 </Modal.Header>
                 <Modal.Body onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
                     <Container>

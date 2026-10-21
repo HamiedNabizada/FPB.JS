@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import { useThemeAttributes } from '../hooks/useThemeAttributes';
-import Button from 'react-bootstrap/Button';
 import Table from 'react-bootstrap/Table';
 import Badge from 'react-bootstrap/Badge';
 import Container from 'react-bootstrap/Container';
@@ -23,18 +22,9 @@ const InfoModal = ({ show, onHide, modeler }) => {
   );
 
   return (
-    <Modal bg="light" show={show} onHide={onHide} size="lg" centered {...themeAttributes}>
-      <Modal.Header>
-        <Container fluid>
-          <Row as={Modal.Title}>
-            <Col>FPB.js Information</Col>
-            <Col md="auto">
-              <Button variant="secondary" size="sm" onClick={onHide}>
-                <FontAwesomeIcon icon="rectangle-xmark" size="lg" />
-              </Button>
-            </Col>
-          </Row>
-        </Container>
+    <Modal bg="light" show={show} onHide={onHide} size="lg" centered className="fpb-dialog" {...themeAttributes}>
+      <Modal.Header closeButton closeLabel="Close information">
+        <Modal.Title>FPB.js Information</Modal.Title>
       </Modal.Header>
       
       <Modal.Body>

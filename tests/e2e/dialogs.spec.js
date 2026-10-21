@@ -40,6 +40,27 @@ test.describe('Dialogs', () => {
     await expect(dialog(page)).toHaveCount(0);
   });
 
+  test('import, export and information are cards with the plain close and close with Escape', async ({ page }) => {
+    await open(page);
+    const openers = [
+      () => page.locator('#importOptionsButton').click(),
+      () => page.getByRole('button', { name: 'Export Options', exact: true }).click(),
+      () => page.getByRole('button', { name: 'Show information and help', exact: true }).click()
+    ];
+    for (const openDialog of openers) {
+      await openDialog();
+      await expect(dialog(page)).toHaveClass(/fpb-dialog/);
+      await expect(dialog(page).locator('.modal-header [data-icon="rectangle-xmark"]')).toHaveCount(0);
+      await dialog(page).locator('.modal-header .btn-close').click();
+      await expect(dialog(page)).toHaveCount(0);
+
+      await openDialog();
+      await expect(dialog(page)).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(dialog(page)).toHaveCount(0);
+    }
+  });
+
   test('deleting a decomposed operator names it and answers with a red "Delete"', async ({ page }) => {
     await open(page);
     await page.evaluate(() => {

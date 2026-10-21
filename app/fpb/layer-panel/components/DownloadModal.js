@@ -8,7 +8,6 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
-import Container from 'react-bootstrap/Container';
 import Spinner from 'react-bootstrap/Spinner';
 import Alert from 'react-bootstrap/Alert';
 
@@ -369,18 +368,9 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
                     <FontAwesomeIcon icon="download" size="lg" />
                 </Button>
             </OverlayTrigger>
-            <Modal bg="light" show={show} onHide={handleClose} centered size="xl" {...themeAttributes}>
-                <Modal.Header>
-                    <Container fluid>
-                        <Row as={Modal.Title}>
-                            <Col>Export Options</Col>
-                            <Col md="auto">
-                                <Button variant="secondary" size="sm" aria-label="Close export options" onClick={handleClose}>
-                                <FontAwesomeIcon icon="rectangle-xmark" size="lg" />
-                                </Button>
-                                </Col>
-                        </Row>
-                    </Container>
+            <Modal bg="light" show={show} onHide={handleClose} centered size="xl" className="fpb-dialog" {...themeAttributes}>
+                <Modal.Header closeButton closeLabel="Close export options">
+                    <Modal.Title>Export Options</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {checkCounts && (checkCounts.error > 0 || checkCounts.warning > 0) && (

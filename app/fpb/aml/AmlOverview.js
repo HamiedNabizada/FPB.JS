@@ -77,7 +77,7 @@ export default function AmlOverview({ modeler }) {
         </Button>
       </OverlayTrigger>
 
-      <Modal show={show} onHide={() => setShow(false)} centered size="lg" className="aml-overview-modal" {...themeAttributes}>
+      <Modal show={show} onHide={() => setShow(false)} centered size="lg" className="aml-overview-modal fpb-dialog" {...themeAttributes}>
         <Modal.Header closeButton closeLabel="Close AML file overview">
           <Modal.Title>AML file: {source.fileName}</Modal.Title>
         </Modal.Header>

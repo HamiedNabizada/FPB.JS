@@ -119,7 +119,7 @@ test.describe('Export dialog', () => {
     test('closes with the X button', async ({ page }) => {
       await load(page);
       await openDialog(page);
-      await dialog(page).locator('.modal-header [data-icon="rectangle-xmark"]').click();
+      await dialog(page).getByRole('button', { name: 'Close export options' }).click();
       await expect(dialog(page)).toHaveCount(0);
     });
 
