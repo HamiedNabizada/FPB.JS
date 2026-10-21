@@ -19,6 +19,16 @@ describe('XMLMapper: validity limits', () => {
       .toEqual({ $type: 'fpbch:ValidityLimits', limitType: 'permitted rejection region', from: undefined, to: 360.5 });
   });
 
+  it('keeps a limit that is not wholly a number as text instead of cutting it', () => {
+    const limit = limitFromXml(element('<validityLimits limitType="acceptance region" from="1,5" to="12abc"/>'));
+    expect(limit.from).toBe('1,5');
+    expect(limit.to).toBe('12abc');
+    expect(limitFromXml(element('<validityLimits limitType="acceptance region" from=" 2.5 " to="-3e2"/>')))
+      .toMatchObject({ from: 2.5, to: -300 });
+    // only blanks is no limit, not 0
+    expect(limitFromXml(element('<validityLimits limitType="acceptance region" from="  " to="5"/>')).from).toBeUndefined();
+  });
+
   it('keeps 0 as a limit', () => {
     expect(limitFromXml(element('<validityLimits limitType="acceptance region" from="0" to="5"/>')).from).toBe(0);
   });

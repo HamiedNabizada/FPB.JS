@@ -16,10 +16,11 @@ const isSet = (value) => value !== undefined && value !== null && value !== '';
 export function limitFromXml(element) {
     const bound = (name) => {
         const text = element.getAttribute(name);
-        if (!isSet(text)) {
+        if (!isSet(text) || !text.trim()) {
             return undefined;
         }
-        const number = parseFloat(text);
+        // the whole text must be a number; parseFloat would read "1,5" as 1
+        const number = Number(text);
         return isNaN(number) ? text : number;
     };
     return {
