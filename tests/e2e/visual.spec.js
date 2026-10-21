@@ -35,6 +35,18 @@ async function openTypeMenu(page) {
 
 const shot = { maxDiffPixelRatio: 0.01, animations: 'disabled', caret: 'hide' };
 
+/** Background colour and corner radius of a part, and the surface value of the design */
+const look = (page, selector) => page.evaluate((selector) => {
+  const part = document.querySelector(selector);
+  const probe = document.createElement('div');
+  probe.style.background = 'var(--fpb-surface)';
+  part.parentNode.appendChild(probe);
+  const surface = getComputedStyle(probe).backgroundColor;
+  probe.remove();
+  const style = getComputedStyle(part);
+  return { background: style.backgroundColor, surface, radius: parseFloat(style.borderTopLeftRadius) };
+}, selector);
+
 for (const scheme of ['light', 'dark']) {
   test.describe(`Canvas look (${scheme})`, () => {
 
@@ -52,6 +64,29 @@ for (const scheme of ['light', 'dark']) {
         window.fpbjs.get('contextPad').open(element);
       });
       await expect(page.locator('.djs-context-pad.open')).toHaveScreenshot(`context-pad-${scheme}.png`, shot);
+    });
+
+    test('palette, context pad and type menu use the card look', async ({ page }) => {
+      await open(page, scheme);
+      const palette = await look(page, '.djs-palette');
+      expect(palette.background).toBe(palette.surface);
+      expect(palette.radius).toBeGreaterThanOrEqual(8);
+
+      await openTypeMenu(page);
+      const menu = await look(page, '.djs-popup');
+      expect(menu.background).toBe(menu.surface);
+      expect(menu.radius).toBeGreaterThanOrEqual(8);
+
+      await page.keyboard.press('Escape');
+      await page.evaluate(() => {
+        const element = window.fpbjs.get('elementRegistry')
+          .filter((e) => e.businessObject && e.businessObject.name === 'Erhitzen' && e.type !== 'label')[0];
+        window.fpbjs.get('selection').select(element);
+        window.fpbjs.get('contextPad').open(element);
+      });
+      const pad = await look(page, '.djs-context-pad.open');
+      expect(pad.background).toBe(pad.surface);
+      expect(pad.radius).toBeGreaterThanOrEqual(8);
     });
 
     test('type menu of a state', async ({ page }) => {

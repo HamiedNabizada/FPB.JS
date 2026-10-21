@@ -57,6 +57,33 @@ test.describe('Farbschema', () => {
     expect(symbol.toUpperCase()).toContain('4DFF97');
   });
 
+  test('dark and the colour vision scheme together keep the symbols distinct', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await laden(page);
+    await umschalten(page, 'accessible');
+    await page.waitForTimeout(400);
+
+    const farben = await page.evaluate(() => {
+      const registry = window.fpbjs.get('elementRegistry');
+      const rgb = (hex) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.substr(i, 2), 16)).join(', ')})`;
+      const ergebnis = {};
+      for (const typ of ['Product', 'Energy', 'Information']) {
+        const eintrag = document.querySelector(`.djs-palette .entry[data-action="fpb-${typ.toLowerCase()}"]`);
+        const bild = decodeURIComponent(getComputedStyle(eintrag).backgroundImage);
+        const fuellung = /fill="(#[0-9a-fA-F]{6})"/.exec(bild);
+        const element = registry.filter((e) => e.type === `fpb:${typ}`)[0];
+        const visual = document.querySelector(`[data-element-id="${element.id}"] .djs-visual > *`);
+        ergebnis[typ] = { palette: fuellung && rgb(fuellung[1]), zeichenflaeche: getComputedStyle(visual).fill };
+      }
+      return ergebnis;
+    });
+
+    for (const typ of Object.keys(farben)) {
+      expect(farben[typ].palette, typ).toBe(farben[typ].zeichenflaeche);
+    }
+    expect(new Set(Object.values(farben).map((f) => f.palette)).size).toBe(3);
+  });
+
   test('der Knopf steht unter dem für den Dunkelmodus, nicht daneben', async ({ page }) => {
     await laden(page);
 

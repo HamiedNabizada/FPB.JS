@@ -1,59 +1,34 @@
 /**
  * Popup menu of diagram-js 15.26 (assets/diagram-js.css, MIT), used for the type
- * change menu. app/css/diagram-js.css is an older copy without these rules;
- * replacing it as a whole would change the look of the whole editor, so only
- * the popup part is taken over. The variables are scoped to the popup.
+ * change menu. Taken over before FPB.js switched to the package style sheet
+ * (016c T4); the variables are scoped to the popup and come from the design
+ * values (theme/tokens.css, 016c decision 14), light and dark alike.
  */
 .djs-popup {
-  --color-grey-225-10-15: hsl(225, 10%, 15%);
-  --color-grey-225-10-35: hsl(225, 10%, 35%);
-  --color-grey-225-10-55: hsl(225, 10%, 55%);
-  --color-grey-225-10-75: hsl(225, 10%, 75%);
-  --color-grey-225-10-80: hsl(225, 10%, 80%);
-  --color-grey-225-10-85: hsl(225, 10%, 85%);
-  --color-grey-225-10-90: hsl(225, 10%, 90%);
-  --color-grey-225-10-95: hsl(225, 10%, 95%);
-  --color-grey-225-10-97: hsl(225, 10%, 97%);
-  --color-blue-205-100-40: hsl(205, 100%, 40%);
-  --color-blue-205-100-45: hsl(205, 100%, 45%);
-  --color-blue-205-100-45-opacity-30: hsla(205, 100%, 45%, 30%);
-  --color-blue-205-100-50: hsl(205, 100%, 50%);
-  --color-blue-205-100-50-opacity-15: hsla(205, 100%, 50%, 15%);
-  --color-blue-205-100-70: hsl(205, 100%, 75%);
-  --color-blue-205-100-95: hsl(205, 100%, 95%);
-  --color-green-150-86-44: hsl(150, 86%, 44%);
-  --color-red-360-100-40: hsl(360, 100%, 40%);
-  --color-red-360-100-45: hsl(360, 100%, 45%);
-  --color-red-360-100-92: hsl(360, 100%, 92%);
-  --color-red-360-100-97: hsl(360, 100%, 97%);
-  --color-white: hsl(0, 0%, 100%);
-  --color-black: hsl(0, 0%, 0%);
-  --color-black-opacity-10: hsla(0, 0%, 0%, 10%);
-  --color-black-opacity-30: hsla(0, 0%, 0%, 30%);
-  --accent-color: var(--color-blue-205-100-40);
-  --popup-font-family: inherit;
+  --popup-font-family: var(--fpb-font);
   --popup-font-size: 14px;
   --popup-secondary-font-size: .9em;
-  --popup-header-entry-selected-color: var(--accent-color);
-  --popup-header-font-weight: bolder;
-  --popup-header-group-divider-color: var(--color-grey-225-10-75);
-  --popup-background-color: var(--color-white);
-  --popup-border-color: transparent;
-  --popup-shadow-color: var(--color-black-opacity-30);
-  --popup-disabled-color: var(--color-grey-225-10-35);
-  --popup-description-color: var(--color-grey-225-10-35);
-  --popup-no-results-color: var(--color-grey-225-10-55);
-  --popup-entry-title-color: var(--color-grey-225-10-55);
-  --popup-entry-hover-color:  var(--color-grey-225-10-95);
-  --popup-search-border-color: var(--color-grey-225-10-75);
-  --popup-search-focus-border-color: var(--accent-color);
-  --popup-search-focus-background-color: var(--color-blue-205-100-95);
-  --popup-tab-color: var(--color-grey-225-10-55);
-  --popup-tab-hover-color: var(--color-grey-225-10-15);
-  --popup-tab-active-color: var(--color-grey-225-10-15);
-  --popup-tab-active-border-color: var(--accent-color);
-  --popup-tab-strip-border-color: var(--color-grey-225-10-90);
-  --popup-tab-focus-border-color: var(--accent-color);
+  --popup-header-entry-selected-color: var(--fpb-accent);
+  --popup-header-font-weight: 600;
+  --popup-header-group-divider-color: var(--fpb-line);
+  --popup-background-color: var(--fpb-surface);
+  --popup-border-color: var(--fpb-line);
+  --popup-shadow-color: rgba(16, 24, 40, 0.16);
+  --popup-disabled-color: var(--fpb-text-subtle);
+  --popup-description-color: var(--fpb-text-muted);
+  --popup-no-results-color: var(--fpb-text-subtle);
+  --popup-entry-title-color: var(--fpb-text-subtle);
+  --popup-entry-hover-color: var(--fpb-surface-muted);
+  --popup-search-border-color: var(--fpb-control-border);
+  --popup-search-focus-border-color: var(--fpb-accent);
+  --popup-search-focus-background-color: var(--fpb-accent-surface);
+  --popup-tab-color: var(--fpb-text-subtle);
+  --popup-tab-hover-color: var(--fpb-text);
+  --popup-tab-active-color: var(--fpb-text);
+  --popup-tab-active-border-color: var(--fpb-accent);
+  --popup-tab-strip-border-color: var(--fpb-line);
+  --popup-tab-focus-border-color: var(--fpb-accent);
+  color: var(--fpb-text);
 }
 
 /**
@@ -294,7 +269,7 @@
 }
 
 .djs-popup-breadcrumbs-item--back:hover {
-  background: #f2f3f5;
+  background: var(--popup-entry-hover-color);
 }
 
 .djs-popup-breadcrumbs-item--current {
@@ -482,7 +457,7 @@
   visibility: hidden;
   padding: 2px 3px;
   color: var(--popup-description-color);
-  background: #fff;
+  background: var(--popup-background-color);
   border: 1px solid var(--popup-search-border-color);
   border-radius: 4px;
   cursor: pointer;
@@ -494,7 +469,7 @@
 }
 
 .djs-popup-body .entry .djs-popup-entry-docs:hover {
-  background: #f2f3f5;
+  background: var(--popup-entry-hover-color);
 }
 
 .djs-popup-entry-docs svg {
@@ -542,4 +517,14 @@
 .djs-popup,
 .djs-popup .djs-popup-header .entry.active {
   background-color: var(--popup-background-color);
+}
+
+/* Variant B (016c decision 14): the menu as a card */
+.djs-container .djs-popup {
+  border-radius: 10px;
+  box-shadow: var(--fpb-shadow-float);
+}
+
+.djs-container .djs-popup-body .entry {
+  border-radius: 6px;
 }

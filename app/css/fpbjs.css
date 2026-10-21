@@ -98,48 +98,44 @@
       background: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2246%22%20height%3D%2246%22%20version%3D%221.1%22%3E%0D%0A%20%20%3Cpath%20d%3D%22m%2036.34832%2C13.218928%20c%20-1.605184%2C-0.02974%20-2.919103%2C1.272682%20-2.919103%2C2.828077%20v%206.047541%20H%2032.856576%20V%209.875342%20c%200%2C-1.555395%20-1.313927%2C-2.8578247%20-2.919103%2C-2.8280767%20-1.555507%2C0.02883%20-2.807297%2C1.2594357%20-2.807297%2C2.7732947%20V%2022.094546%20H%2026.557534%20V%207.1709053%20c%200%2C-1.5553988%20-1.313921%2C-2.8578246%20-2.919103%2C-2.8280766%20-1.555502%2C0.02883%20-2.807295%2C1.2594362%20-2.807295%2C2.7732953%20V%2022.094546%20H%2020.258497%20V%209.944689%20c%200%2C-1.555398%20-1.313922%2C-2.8578309%20-2.919103%2C-2.8280794%20-1.555506%2C0.02883%20-2.807296%2C1.2594354%20-2.807296%2C2.7732944%20V%2026.254663%20L%2012.266735%2C23.236858%20C%2011.336694%2C21.997948%209.546048%2C21.723967%208.2670602%2C22.625029%206.9882825%2C23.526092%206.7055415%2C25.260816%207.6355785%2C26.499795%20l%208.9905185%2C11.976149%20a%203.4358396%2C3.3285378%200%200%200%202.778667%2C1.370802%20h%2014.14349%20c%201.59437%2C0%202.979301%2C-1.062634%203.344503%2C-2.566165%20l%201.89744%2C-7.812355%20a%2013.744146%2C13.314914%200%200%200%200.365346%2C-3.049423%20V%2015.992224%20c%205.9e-5%2C-1.51386%20-1.251722%2C-2.744448%20-2.807223%2C-2.773296%20z%22%20stroke%3D%22black%22%0D%0A%20%20stroke-width%3D%221%22%20fill%3D%22none%22%20%2F%3E%0D%0A%3C%2Fsvg%3E');
     }
 
-    .context-pad-icon-remove {
-      background: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0D%0A%3Csvg%20id%3D%22SVGRoot%22%20version%3D%221.1%22%20viewBox%3D%220%200%2025%2025%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0D%0A%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-miterlimit%3D%222.2%22%3E%0D%0A%20%20%3Cpath%20d%3D%22m1.8993%2023.429%2020.434-21.361%22%20stroke-width%3D%221.3439%22%2F%3E%0D%0A%20%20%3Cpath%20d%3D%22m23.142%2023.647-21.183-21.152%22%20stroke-width%3D%221.3616%22%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E') !important;
+    .djs-container .djs-context-pad .entry.context-pad-icon-remove {
+      background-image: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0D%0A%3Csvg%20id%3D%22SVGRoot%22%20version%3D%221.1%22%20viewBox%3D%220%200%2025%2025%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0D%0A%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-miterlimit%3D%222.2%22%3E%0D%0A%20%20%3Cpath%20d%3D%22m1.8993%2023.429%2020.434-21.361%22%20stroke-width%3D%221.3439%22%2F%3E%0D%0A%20%20%3Cpath%20d%3D%22m23.142%2023.647-21.183-21.152%22%20stroke-width%3D%221.3616%22%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E');
     }
  /* FPB specific icons  */
-    .context-pad-icon-fpbusage {
-      background: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0D%0A%3Csvg%20id%3D%22SVGRoot%22%20version%3D%221.1%22%20viewBox%3D%220%200%2025%2025%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0D%0A%20%3Cdefs%3E%0D%0A%20%20%3Cmarker%20id%3D%22TriangleInM%22%20overflow%3D%22visible%22%20orient%3D%22auto%22%3E%0D%0A%20%20%20%3Cpath%20transform%3D%22scale%28-.4%29%22%20d%3D%22m5.77%200-8.65%205v-10l8.65%205z%22%20fill-rule%3D%22evenodd%22%20stroke%3D%22%23000%22%20stroke-width%3D%221pt%22%2F%3E%0D%0A%20%20%3C%2Fmarker%3E%0D%0A%20%20%3Cmarker%20id%3D%22marker16001%22%20overflow%3D%22visible%22%20orient%3D%22auto%22%3E%0D%0A%20%20%20%3Cpath%20transform%3D%22scale%28.4%29%22%20d%3D%22m5.77%200-8.65%205v-10l8.65%205z%22%20fill-rule%3D%22evenodd%22%20stroke%3D%22%23000%22%20stroke-width%3D%221pt%22%2F%3E%0D%0A%20%20%3C%2Fmarker%3E%0D%0A%20%3C%2Fdefs%3E%0D%0A%20%3Cg%3E%0D%0A%20%20%3Cpath%20d%3D%22m21.503%2012.63-17.758%200.094391%22%20fill%3D%22none%22%20marker-end%3D%22url%28%23marker16001%29%22%20marker-start%3D%22url%28%23TriangleInM%29%22%20stroke%3D%22%23000%22%20stroke-dasharray%3D%224.58380392%2C%204.58380392%22%20stroke-linejoin%3D%22round%22%20stroke-miterlimit%3D%222.5%22%20stroke-width%3D%221.146%22%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E');
+    .djs-container .djs-context-pad .entry.context-pad-icon-fpbusage {
+      background-image: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0D%0A%3Csvg%20id%3D%22SVGRoot%22%20version%3D%221.1%22%20viewBox%3D%220%200%2025%2025%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0D%0A%20%3Cdefs%3E%0D%0A%20%20%3Cmarker%20id%3D%22TriangleInM%22%20overflow%3D%22visible%22%20orient%3D%22auto%22%3E%0D%0A%20%20%20%3Cpath%20transform%3D%22scale%28-.4%29%22%20d%3D%22m5.77%200-8.65%205v-10l8.65%205z%22%20fill-rule%3D%22evenodd%22%20stroke%3D%22%23000%22%20stroke-width%3D%221pt%22%2F%3E%0D%0A%20%20%3C%2Fmarker%3E%0D%0A%20%20%3Cmarker%20id%3D%22marker16001%22%20overflow%3D%22visible%22%20orient%3D%22auto%22%3E%0D%0A%20%20%20%3Cpath%20transform%3D%22scale%28.4%29%22%20d%3D%22m5.77%200-8.65%205v-10l8.65%205z%22%20fill-rule%3D%22evenodd%22%20stroke%3D%22%23000%22%20stroke-width%3D%221pt%22%2F%3E%0D%0A%20%20%3C%2Fmarker%3E%0D%0A%20%3C%2Fdefs%3E%0D%0A%20%3Cg%3E%0D%0A%20%20%3Cpath%20d%3D%22m21.503%2012.63-17.758%200.094391%22%20fill%3D%22none%22%20marker-end%3D%22url%28%23marker16001%29%22%20marker-start%3D%22url%28%23TriangleInM%29%22%20stroke%3D%22%23000%22%20stroke-dasharray%3D%224.58380392%2C%204.58380392%22%20stroke-linejoin%3D%22round%22%20stroke-miterlimit%3D%222.5%22%20stroke-width%3D%221.146%22%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E');
     }
     
-    .context-pad-icon-fpbconnection {
-      background: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0D%0A%3Csvg%20id%3D%22SVGRoot%22%20version%3D%221.1%22%20viewBox%3D%220%200%2025%2025%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0D%0A%20%3Cdefs%3E%0D%0A%20%20%3Cmarker%20id%3D%22marker11785%22%20overflow%3D%22visible%22%20orient%3D%22auto%22%3E%0D%0A%20%20%20%3Cpath%20transform%3D%22scale%28.8%29%22%20d%3D%22m5.77%200-8.65%205v-10l8.65%205z%22%20fill-rule%3D%22evenodd%22%20stroke%3D%22%23000%22%20stroke-width%3D%221pt%22%2F%3E%0D%0A%20%20%3C%2Fmarker%3E%0D%0A%20%3C%2Fdefs%3E%0D%0A%20%3Cg%3E%0D%0A%20%20%3Cpath%20d%3D%22m12.478%201.0214%200.0694%2017.817%22%20fill%3D%22none%22%20marker-end%3D%22url%28%23marker11785%29%22%20stroke%3D%22%23000%22%20stroke-width%3D%22.99929px%22%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E');
+    .djs-container .djs-context-pad .entry.context-pad-icon-fpbconnection {
+      background-image: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0D%0A%3Csvg%20id%3D%22SVGRoot%22%20version%3D%221.1%22%20viewBox%3D%220%200%2025%2025%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0D%0A%20%3Cdefs%3E%0D%0A%20%20%3Cmarker%20id%3D%22marker11785%22%20overflow%3D%22visible%22%20orient%3D%22auto%22%3E%0D%0A%20%20%20%3Cpath%20transform%3D%22scale%28.8%29%22%20d%3D%22m5.77%200-8.65%205v-10l8.65%205z%22%20fill-rule%3D%22evenodd%22%20stroke%3D%22%23000%22%20stroke-width%3D%221pt%22%2F%3E%0D%0A%20%20%3C%2Fmarker%3E%0D%0A%20%3C%2Fdefs%3E%0D%0A%20%3Cg%3E%0D%0A%20%20%3Cpath%20d%3D%22m12.478%201.0214%200.0694%2017.817%22%20fill%3D%22none%22%20marker-end%3D%22url%28%23marker11785%29%22%20stroke%3D%22%23000%22%20stroke-width%3D%22.99929px%22%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E');
     }
-    .context-pad-icon-fpbdecompose {
-      background: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0D%0A%3Csvg%20id%3D%22SVGRoot%22%20version%3D%221.1%22%20viewBox%3D%220%200%2025%2025%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0D%0A%20%20%3Cstyle%3E%0D%0A%20%20%20%20.textstyle%20%7B%20font%3A%20italic%2030px%20sans-serif%3B%20%7D%0D%0A%20%20%3C%2Fstyle%3E%0D%0A%3Ctext%20x%3D%223%22%20y%3D%2223%22%20class%3D%22textstyle%20%22%3ED%3C%2Ftext%3E%0D%0A%3C%2Fsvg%3E');
+    .djs-container .djs-context-pad .entry.context-pad-icon-fpbdecompose {
+      background-image: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0D%0A%3Csvg%20id%3D%22SVGRoot%22%20version%3D%221.1%22%20viewBox%3D%220%200%2025%2025%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0D%0A%20%20%3Cstyle%3E%0D%0A%20%20%20%20.textstyle%20%7B%20font%3A%20italic%2030px%20sans-serif%3B%20%7D%0D%0A%20%20%3C%2Fstyle%3E%0D%0A%3Ctext%20x%3D%223%22%20y%3D%2223%22%20class%3D%22textstyle%20%22%3ED%3C%2Ftext%3E%0D%0A%3C%2Fsvg%3E');
     }
 
     /* Append below */
-    .context-pad-icon-fpbappend {
-      background: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2025%2025%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12.5%202.5v11%22%2F%3E%3Cpath%20d%3D%22M8.5%2010l4%204%204-4%22%2F%3E%3Crect%20x%3D%225.5%22%20y%3D%2217%22%20width%3D%2214%22%20height%3D%225.5%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+    .djs-container .djs-context-pad .entry.context-pad-icon-fpbappend {
+      background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2025%2025%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12.5%202.5v11%22%2F%3E%3Cpath%20d%3D%22M8.5%2010l4%204%204-4%22%2F%3E%3Crect%20x%3D%225.5%22%20y%3D%2217%22%20width%3D%2214%22%20height%3D%225.5%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
     }
 
     /* Change type (swap arrows) */
-    .context-pad-icon-fpbchangetype {
-      background: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2025%2025%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%208.5h15%22%2F%3E%3Cpath%20d%3D%22M15.5%205l3.5%203.5-3.5%203.5%22%2F%3E%3Cpath%20d%3D%22M21%2016.5H6%22%2F%3E%3Cpath%20d%3D%22M9.5%2013L6%2016.5%209.5%2020%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+    .djs-container .djs-context-pad .entry.context-pad-icon-fpbchangetype {
+      background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2025%2025%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%208.5h15%22%2F%3E%3Cpath%20d%3D%22M15.5%205l3.5%203.5-3.5%203.5%22%2F%3E%3Cpath%20d%3D%22M21%2016.5H6%22%2F%3E%3Cpath%20d%3D%22M9.5%2013L6%2016.5%209.5%2020%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
     }
 
-    .context-pad-icon-fpbswitchup {
-      background: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2025%2025%22%3E%0D%0A%20%20%3Cpath%20d%3D%22M%2024.175441%2C6.2373809%2016.38036%2C1.2443368%20c%20-0.711162%2C-0.45533544%20-1.925118%2C-0.45599826%20-2.637254%2C0%20L%205.9473468%2C6.2373809%20C%204.882219%2C6.9194526%205.6942227%2C8.0353212%207.2659734%2C8.0353212%20H%2012.06264%20V%2020.160967%20H%205.7663516%20a%200.89942709%2C0.53477644%200%200%200%20-0.6361823%2C0.156692%20l%20-4.1987241%2C2.496453%20c%20-0.56683098%2C0.33699%20-0.16541057%2C0.913212%200.6361814%2C0.913212%20H%2016.261368%20c%200.993824%2C0%201.799455%2C-0.479007%201.799455%2C-1.069907%20V%208.0353176%20h%204.795991%20c%201.565379%2C0%202.388103%2C-1.1131079%201.318627%2C-1.7979404%20z%22%20stroke%3D%22black%22%20fill%3D%22transparent%22%2F%3E%0D%0A%3C%2Fsvg%3E');
+    .djs-container .djs-context-pad .entry.context-pad-icon-fpbswitchup {
+      background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2025%2025%22%3E%0D%0A%20%20%3Cpath%20d%3D%22M%2024.175441%2C6.2373809%2016.38036%2C1.2443368%20c%20-0.711162%2C-0.45533544%20-1.925118%2C-0.45599826%20-2.637254%2C0%20L%205.9473468%2C6.2373809%20C%204.882219%2C6.9194526%205.6942227%2C8.0353212%207.2659734%2C8.0353212%20H%2012.06264%20V%2020.160967%20H%205.7663516%20a%200.89942709%2C0.53477644%200%200%200%20-0.6361823%2C0.156692%20l%20-4.1987241%2C2.496453%20c%20-0.56683098%2C0.33699%20-0.16541057%2C0.913212%200.6361814%2C0.913212%20H%2016.261368%20c%200.993824%2C0%201.799455%2C-0.479007%201.799455%2C-1.069907%20V%208.0353176%20h%204.795991%20c%201.565379%2C0%202.388103%2C-1.1131079%201.318627%2C-1.7979404%20z%22%20stroke%3D%22black%22%20fill%3D%22transparent%22%2F%3E%0D%0A%3C%2Fsvg%3E');
     }
     
-    .context-pad-icon-fpbcompose {
-      background: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0D%0A%3Csvg%20id%3D%22SVGRoot%22%20version%3D%221.1%22%20viewBox%3D%220%200%2025%2025%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0D%0A%20%20%3Cstyle%3E%0D%0A%20%20%20%20.textstyle%20%7B%20font%3A%20italic%2030px%20sans-serif%3B%20%7D%0D%0A%20%20%3C%2Fstyle%3E%0D%0A%3Ctext%20x%3D%223%22%20y%3D%2223%22%20class%3D%22textstyle%20%22%3EC%3C%2Ftext%3E%0D%0A%3C%2Fsvg%3E');
+    .djs-container .djs-context-pad .entry.context-pad-icon-fpbcompose {
+      background-image: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0D%0A%3Csvg%20id%3D%22SVGRoot%22%20version%3D%221.1%22%20viewBox%3D%220%200%2025%2025%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0D%0A%20%20%3Cstyle%3E%0D%0A%20%20%20%20.textstyle%20%7B%20font%3A%20italic%2030px%20sans-serif%3B%20%7D%0D%0A%20%20%3C%2Fstyle%3E%0D%0A%3Ctext%20x%3D%223%22%20y%3D%2223%22%20class%3D%22textstyle%20%22%3EC%3C%2Ftext%3E%0D%0A%3C%2Fsvg%3E');
     }
-    .context-pad-icon-connect {
-      background: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.5%22%20width%3D%2246%22%20height%3D%2246%22%3E%3Cline%20x1%3D%2215%22%20y1%3D%225%22%20x2%3D%225%22%20y2%3D%2215%22%2F%3E%3C%2Fsvg%3E') !important;
-    }
-
-    .context-pad-icon-fpbparallelconnection {
-      background: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0D%0A%3Csvg%20id%3D%22SVGRoot%22%20version%3D%221.1%22%20viewBox%3D%220%200%2025%2025%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0D%0A%20%3Cdefs%3E%0D%0A%20%20%3Cmarker%20id%3D%22TriangleInL%22%20overflow%3D%22visible%22%20orient%3D%22auto%22%3E%0D%0A%20%20%20%3Cpath%20transform%3D%22scale%28-.8%29%22%20d%3D%22m5.77%200-8.65%205v-10l8.65%205z%22%20fill-rule%3D%22evenodd%22%20stroke%3D%22%23000%22%20stroke-width%3D%221pt%22%2F%3E%0D%0A%20%20%3C%2Fmarker%3E%0D%0A%20%20%3Cmarker%20id%3D%22TriangleInL-8%22%20overflow%3D%22visible%22%20orient%3D%22auto%22%3E%0D%0A%20%20%20%3Cpath%20transform%3D%22scale%28-.8%29%22%20d%3D%22m5.77%200-8.65%205v-10z%22%20fill-rule%3D%22evenodd%22%20stroke%3D%22%23000%22%20stroke-width%3D%221pt%22%2F%3E%0D%0A%20%20%3C%2Fmarker%3E%0D%0A%20%3C%2Fdefs%3E%0D%0A%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-miterlimit%3D%222.2%22%3E%0D%0A%20%20%3Cpath%20d%3D%22m12.799%2011.533-0.0098-8.9845%22%20stroke-width%3D%22.99019%22%2F%3E%0D%0A%20%20%3Cpath%20d%3D%22m6.0455%2011.223%2013.245%200.01629%22%20stroke-width%3D%22.9653%22%2F%3E%0D%0A%20%20%3Cpath%20d%3D%22m6.5158%2018.541-0.010079-7.7641%22%20marker-start%3D%22url%28%23TriangleInL%29%22%20stroke-width%3D%22.93352%22%2F%3E%0D%0A%20%20%3Cpath%20d%3D%22m18.848%2018.539-0.01008-7.7641%22%20marker-start%3D%22url%28%23TriangleInL-8%29%22%20stroke-width%3D%22.93352%22%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E');
+    .djs-container .djs-context-pad .entry.context-pad-icon-fpbparallelconnection {
+      background-image: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0D%0A%3Csvg%20id%3D%22SVGRoot%22%20version%3D%221.1%22%20viewBox%3D%220%200%2025%2025%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0D%0A%20%3Cdefs%3E%0D%0A%20%20%3Cmarker%20id%3D%22TriangleInL%22%20overflow%3D%22visible%22%20orient%3D%22auto%22%3E%0D%0A%20%20%20%3Cpath%20transform%3D%22scale%28-.8%29%22%20d%3D%22m5.77%200-8.65%205v-10l8.65%205z%22%20fill-rule%3D%22evenodd%22%20stroke%3D%22%23000%22%20stroke-width%3D%221pt%22%2F%3E%0D%0A%20%20%3C%2Fmarker%3E%0D%0A%20%20%3Cmarker%20id%3D%22TriangleInL-8%22%20overflow%3D%22visible%22%20orient%3D%22auto%22%3E%0D%0A%20%20%20%3Cpath%20transform%3D%22scale%28-.8%29%22%20d%3D%22m5.77%200-8.65%205v-10z%22%20fill-rule%3D%22evenodd%22%20stroke%3D%22%23000%22%20stroke-width%3D%221pt%22%2F%3E%0D%0A%20%20%3C%2Fmarker%3E%0D%0A%20%3C%2Fdefs%3E%0D%0A%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-miterlimit%3D%222.2%22%3E%0D%0A%20%20%3Cpath%20d%3D%22m12.799%2011.533-0.0098-8.9845%22%20stroke-width%3D%22.99019%22%2F%3E%0D%0A%20%20%3Cpath%20d%3D%22m6.0455%2011.223%2013.245%200.01629%22%20stroke-width%3D%22.9653%22%2F%3E%0D%0A%20%20%3Cpath%20d%3D%22m6.5158%2018.541-0.010079-7.7641%22%20marker-start%3D%22url%28%23TriangleInL%29%22%20stroke-width%3D%22.93352%22%2F%3E%0D%0A%20%20%3Cpath%20d%3D%22m18.848%2018.539-0.01008-7.7641%22%20marker-start%3D%22url%28%23TriangleInL-8%29%22%20stroke-width%3D%22.93352%22%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E');
     }
 
-    .context-pad-icon-fpbalternativeconnection {
-      background: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0D%0A%3Csvg%20id%3D%22SVGRoot%22%20version%3D%221.1%22%20viewBox%3D%220%200%2025%2025%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0D%0A%20%3Cdefs%3E%0D%0A%20%20%3Cmarker%20id%3D%22TriangleInM%22%20overflow%3D%22visible%22%20orient%3D%22auto%22%3E%0D%0A%20%20%20%3Cpath%20transform%3D%22scale%28-.4%29%22%20d%3D%22m5.77%200-8.65%205v-10l8.65%205z%22%20fill-rule%3D%22evenodd%22%20stroke%3D%22%23000%22%20stroke-width%3D%221pt%22%2F%3E%0D%0A%20%20%3C%2Fmarker%3E%0D%0A%20%20%3Cmarker%20id%3D%22TriangleInM-8%22%20overflow%3D%22visible%22%20orient%3D%22auto%22%3E%0D%0A%20%20%20%3Cpath%20transform%3D%22scale%28-.4%29%22%20d%3D%22m5.77%200-8.65%205v-10z%22%20fill-rule%3D%22evenodd%22%20stroke%3D%22%23000%22%20stroke-width%3D%221pt%22%2F%3E%0D%0A%20%20%3C%2Fmarker%3E%0D%0A%20%3C%2Fdefs%3E%0D%0A%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-linejoin%3D%22round%22%20stroke-miterlimit%3D%222.5%22%3E%0D%0A%20%20%3Cpath%20d%3D%22m9.8561%2018.205-8.3236-17.094%22%20marker-start%3D%22url%28%23TriangleInM%29%22%20stroke-width%3D%221.3328%22%2F%3E%0D%0A%20%20%3Cpath%20d%3D%22m14.802%2018.431%208.8712-17.262%22%20marker-start%3D%22url%28%23TriangleInM-8%29%22%20stroke-width%3D%221.2274%22%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E');
+    .djs-container .djs-context-pad .entry.context-pad-icon-fpbalternativeconnection {
+      background-image: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0D%0A%3Csvg%20id%3D%22SVGRoot%22%20version%3D%221.1%22%20viewBox%3D%220%200%2025%2025%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0D%0A%20%3Cdefs%3E%0D%0A%20%20%3Cmarker%20id%3D%22TriangleInM%22%20overflow%3D%22visible%22%20orient%3D%22auto%22%3E%0D%0A%20%20%20%3Cpath%20transform%3D%22scale%28-.4%29%22%20d%3D%22m5.77%200-8.65%205v-10l8.65%205z%22%20fill-rule%3D%22evenodd%22%20stroke%3D%22%23000%22%20stroke-width%3D%221pt%22%2F%3E%0D%0A%20%20%3C%2Fmarker%3E%0D%0A%20%20%3Cmarker%20id%3D%22TriangleInM-8%22%20overflow%3D%22visible%22%20orient%3D%22auto%22%3E%0D%0A%20%20%20%3Cpath%20transform%3D%22scale%28-.4%29%22%20d%3D%22m5.77%200-8.65%205v-10z%22%20fill-rule%3D%22evenodd%22%20stroke%3D%22%23000%22%20stroke-width%3D%221pt%22%2F%3E%0D%0A%20%20%3C%2Fmarker%3E%0D%0A%20%3C%2Fdefs%3E%0D%0A%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-linejoin%3D%22round%22%20stroke-miterlimit%3D%222.5%22%3E%0D%0A%20%20%3Cpath%20d%3D%22m9.8561%2018.205-8.3236-17.094%22%20marker-start%3D%22url%28%23TriangleInM%29%22%20stroke-width%3D%221.3328%22%2F%3E%0D%0A%20%20%3Cpath%20d%3D%22m14.802%2018.431%208.8712-17.262%22%20marker-start%3D%22url%28%23TriangleInM-8%29%22%20stroke-width%3D%221.2274%22%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E');
     }
 
    
@@ -409,9 +405,52 @@
   width: max-content;
 }
 
-/* light boxes behind the entries, light and dark, as with the old copy;
-   the package takes a variable that is dark in the dark */
+/* Variant B (016c decision 14): palette and context pad as cards, light and
+   dark from the design values (theme/tokens.css) */
+.djs-container .djs-palette {
+  width: 54px;
+  padding: 4px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--fpb-surface);
+  box-shadow: var(--fpb-shadow-card);
+}
+
+.djs-container .djs-palette.two-column.open {
+  width: 100px;
+}
+
+.djs-container .djs-palette .entry {
+  border-radius: 8px;
+}
+
+.djs-container .djs-palette .entry:hover {
+  background-color: var(--fpb-surface-muted);
+}
+
+.djs-container .djs-palette .highlighted-entry {
+  background-color: var(--fpb-accent-surface);
+}
+
+.djs-container .djs-palette .separator {
+  margin: 4px 6px;
+  padding-top: 4px;
+}
+
+.djs-container .djs-context-pad.open {
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--fpb-surface);
+  box-shadow: var(--fpb-shadow-float);
+}
+
 .djs-container .djs-context-pad .entry {
-  background-color: #fefefe;
-  box-shadow: 0 0 2px 1px #fefefe;
+  margin: 1px;
+  border-radius: 6px;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.djs-container .djs-context-pad .entry:hover {
+  background-color: var(--fpb-surface-muted);
 }
