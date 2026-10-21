@@ -76,7 +76,6 @@ test.describe('Prüfung an den Übergabestellen', () => {
     await bericht(page).getByRole('button', { name: 'Dismiss' }).dispatchEvent('click');
     await expect(bericht(page)).toHaveCount(0);
 
-    await page.locator('.layerPanel > button').first().click();
     await page.evaluate(() => {
       const knopf = [...document.querySelectorAll('button')].find((b) => b.querySelector('[data-icon="download"]'));
       knopf.click();
@@ -101,7 +100,6 @@ test.describe('Prüfung an den Übergabestellen', () => {
   test('ohne Befunde steht kein Hinweis im Export-Dialog', async ({ page }) => {
     await laden(page, clone());
 
-    await page.locator('.layerPanel > button').first().click();
     await page.evaluate(() => {
       const knopf = [...document.querySelectorAll('button')].find((b) => b.querySelector('[data-icon="download"]'));
       knopf.click();

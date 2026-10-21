@@ -249,7 +249,6 @@ test.describe('Sicherung im Browser', () => {
     await umbenennen(page, 'Erhitzen', 'Erwärmen');
     await sichern(page);
 
-    await page.getByRole('button', { name: 'Show Options' }).click();
     await page.locator('#newModelButton').click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toContainText('Start a new model?');
@@ -281,7 +280,6 @@ test.describe('Sicherung im Browser', () => {
   test('ohne Änderungen startet New model ohne Rückfrage', async ({ page }) => {
     await laden(page);
 
-    await page.getByRole('button', { name: 'Show Options' }).click();
     await page.locator('#newModelButton').click();
 
     await expect(page.getByRole('dialog')).toHaveCount(0);

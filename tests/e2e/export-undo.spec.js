@@ -40,7 +40,6 @@ const positionVon = (page, id) => page.evaluate(
 const kannRueckgaengig = (page) => page.evaluate(() => window.fpbjs.get('commandStack').canUndo());
 
 async function downloadDialogOeffnen(page) {
-  await page.locator('.layerPanel > button').first().click();
   await page.evaluate(() => {
     const knopf = [...document.querySelectorAll('button')].find((b) => b.querySelector('[data-icon="download"]'));
     knopf.click();

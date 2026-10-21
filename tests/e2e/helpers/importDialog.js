@@ -13,13 +13,9 @@ export async function dismissNotifications(page) {
   await expect(page.locator('.import-report')).toHaveCount(0);
 }
 
-/** Opens the layer panel (if needed) and the import dialog. */
+/** Opens the import dialog from the toolbar. */
 export async function openImportDialog(page) {
   await dismissNotifications(page);
-  const open = await page.locator('.upload-properties button').count();
-  if (!open) {
-    await page.locator('.layerPanel > button').first().click();
-  }
   await page.locator('.upload-properties button').first().click();
   await expect(page.locator('.modal.show .fileLabel')).toBeVisible();
 }
@@ -80,10 +76,6 @@ export async function pressImport(page) {
 /** Exports the whole model through the download dialog as an event and returns its data. */
 export async function exportViaDialog(page, { format = 'json', withLayout = true } = {}) {
   await dismissNotifications(page);
-  const open = await page.locator('.upload-properties button').count();
-  if (!open) {
-    await page.locator('.layerPanel > button').first().click();
-  }
   await page.evaluate(() => {
     const button = [...document.querySelectorAll('button')].find((b) => b.querySelector('[data-icon="download"]'));
     button.click();

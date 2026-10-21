@@ -30,11 +30,6 @@ const footerButton = (page, text) => dialog(page).locator('.modal-footer button'
 const sendButton = (page) => dialog(page).locator('.modal-footer button:has([data-icon="paper-plane"])');
 
 async function openDialog(page) {
-  const options = page.locator('.layerPanel > button').first();
-  // the options collapse may already be open from an earlier opening
-  if (!(await page.locator('.downloadButton button:has([data-icon="download"])').isVisible())) {
-    await options.click();
-  }
   await page.locator('.downloadButton button:has([data-icon="download"])').click();
   await expect(dialog(page)).toBeVisible();
   await expect(dialog(page).locator('.modal-title')).toContainText('Export Options');

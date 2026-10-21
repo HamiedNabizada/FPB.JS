@@ -46,7 +46,6 @@ test.describe('Farbschema', () => {
     await laden(page);
     expect(await fuellungen(page)).toEqual(STANDARD);
 
-    await page.locator('.layerPanel > button').first().click();
     await page.locator('#colorSchemeButton').click();
     await page.waitForTimeout(400);
 
@@ -60,7 +59,6 @@ test.describe('Farbschema', () => {
 
   test('der Knopf steht unter dem für den Dunkelmodus, nicht daneben', async ({ page }) => {
     await laden(page);
-    await page.locator('.layerPanel > button').first().click();
 
     const lage = await page.evaluate(() => {
       const kasten = (wahl) => {

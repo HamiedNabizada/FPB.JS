@@ -49,9 +49,9 @@ test.describe('Process tree', () => {
 
   test('opens with the root expanded and the current layer marked', async ({ page }) => {
     const { fehler } = await laden(page);
-    await expect(page.locator('#openLayerButton')).toHaveAttribute('aria-label', 'Open Process Overview');
+    await expect(page.locator('#openLayerButton')).toHaveAttribute('aria-label', 'Show layers');
     await baumOeffnen(page);
-    await expect(page.locator('#openLayerButton')).toHaveAttribute('aria-label', 'Close Process Overview');
+    await expect(page.locator('#openLayerButton')).toHaveAttribute('aria-label', 'Hide layers');
 
     expect(await sichtbareKnoten(page)).toEqual(['FPBJS_Project', 'Erhitzen']);
     await expect(knoten(page, 'FPBJS_Project')).toHaveAttribute('aria-current', 'true');
@@ -342,7 +342,6 @@ test.describe('Information dialog', () => {
 
   test('the dialog is readable in dark mode', async ({ page }) => {
     await laden(page);
-    await page.getByRole('button', { name: 'Show Options' }).click();
     await page.locator('.layerPanel button[aria-label="Switch to Dark Mode"]').click();
     const dialog = await oeffnen(page);
     const farben = await dialog.locator('.modal-content').evaluate((el) => ({

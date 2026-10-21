@@ -15,12 +15,8 @@ async function open(page) {
 
 const theme = (page) => page.evaluate(() => document.documentElement.getAttribute('data-theme'));
 
-/** The dark mode button, wherever the toolbar keeps it */
+/** The dark mode button in the toolbar */
 async function toggle(page) {
-  const options = page.getByRole('button', { name: 'Show Options' });
-  if (await options.count()) {
-    await options.click();
-  }
   await page.getByRole('button', { name: /Switch to (Dark|Light) Mode/ }).click();
 }
 

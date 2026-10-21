@@ -31,10 +31,9 @@ async function laden(page) {
   return { importer, fehler };
 }
 
+/** The toolbar has no options menu any more (016c); kept as a no-op for the tests */
 async function optionenOeffnen(page) {
-  const knopf = page.getByRole('button', { name: 'Show Options' });
-  await knopf.click();
-  await expect(page.getByRole('button', { name: 'Hide Options' })).toBeVisible();
+  await expect(page.locator('.layerPanel .fpb-toolbar-group').first()).toBeVisible();
 }
 
 const themeKnopf = (page) => page.locator('.layerPanel button[aria-label^="Switch to"]');

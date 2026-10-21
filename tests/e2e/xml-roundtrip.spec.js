@@ -40,7 +40,6 @@ const stuetzpunkte = (page) => page.evaluate(() => window.fpbjs.get('elementRegi
 
 /** Über den Download-Dialog als XML exportieren, Ergebnis per Event abholen */
 async function alsXmlExportieren(page) {
-  await page.locator('.layerPanel > button').first().click();
   await page.evaluate(() => {
     const knopf = [...document.querySelectorAll('button')].find((b) => b.querySelector('[data-icon="download"]'));
     knopf.click();

@@ -27,7 +27,6 @@ import './LayerPanel.css'
 
 const LayerPanel = ({ modeler, config }) => {
     const [isOpenedLayerPanel, setIsOpenedLayerPanel] = useState(false);
-    const [isOpenedOptions, setIsOpenedOptions] = useState(false);
     const [showInfoModal, setShowInfoModal] = useState(false);
 
     const { selectedProcess, processes, namesRevision, switchProcess } = useProcessManagement(modeler);
@@ -55,27 +54,17 @@ const LayerPanel = ({ modeler, config }) => {
         (config && config.layerPanel && config.layerPanel.showNewModel));
 
 
-    const tooltipsOptions = isOpenedOptions ? 'Hide Options' : 'Show Options';
     const isOpenedLayerButton = isOpenedLayerPanel ? 
         <FontAwesomeIcon icon="folder-open" size="lg" /> : 
         <FontAwesomeIcon icon="folder" size="lg" />;
-    const tooltipsTextLayer = isOpenedLayerPanel ? 'Close Process Overview' : 'Open Process Overview';
+    const tooltipsTextLayer = isOpenedLayerPanel ? 'Hide layers' : 'Show layers';
+    const projectName = (modeler.getProjectDefinition && (modeler.getProjectDefinition() || {}).name) || '';
 
+    // Three groups in the look of variant B (016c decision 11): file, work,
+    // view; no options menu any more
     return (
         <div className="layerPanel">
-            <OverlayTrigger trigger={['hover', 'focus']} placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId1`}>
-                {tooltipsOptions}
-            </Tooltip>}>
-                <Button 
-                    onClick={() => setIsOpenedOptions(!isOpenedOptions)} 
-                    variant="secondary-outline"
-                    aria-label={tooltipsOptions}
-                    aria-expanded={isOpenedOptions}
-                >
-                    <FontAwesomeIcon icon="ellipsis-vertical" size="lg" />
-                </Button>
-            </OverlayTrigger>
-            <Collapse isOpened={isOpenedOptions}>
+            <div className="fpb-toolbar-group" data-group="file">
                 {showNewModel && <NewModel modeler={modeler} />}
                 <Import modeler={modeler} />
                 <DownloadOptions 
@@ -85,47 +74,46 @@ const LayerPanel = ({ modeler, config }) => {
                     selectedElements={selectedElements} 
                 />
                 <AmlOverview modeler={modeler} />
-                {/* je ein eigener Block, sonst stehen die Knöpfe nebeneinander:
-                    Import und Download bringen ihr eigenes div mit, die
-                    Umschalter sind nackte Buttons und damit inline */}
-                <div className="layerPanel-option">
-                    <ThemeToggle modeler={modeler} />
-                </div>
-                <div className="layerPanel-option">
-                    <ColorSchemeToggle modeler={modeler} />
-                </div>
-            </Collapse>
-            {processes.length > 1 && (
-                <div>
-                    <div className="layerPanel-ProcessOverview-Config">
-                        <OverlayTrigger trigger={['hover', 'focus']} placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId`}>
-                            {tooltipsTextLayer}
-                        </Tooltip>}>
-                            <Button 
-                                id="openLayerButton" 
-                                variant="secondary-outline" 
-                                onClick={() => setIsOpenedLayerPanel(!isOpenedLayerPanel)}
-                                aria-label={tooltipsTextLayer}
-                                aria-expanded={isOpenedLayerPanel}
-                            >
-                                {isOpenedLayerButton}
-                            </Button>
-                        </OverlayTrigger>
-                    </div>
-                    <Collapse isOpened={isOpenedLayerPanel}>
-                        <div className="layerPanel-ProcessOverview-Content">
-                            <ProcessTreeView 
-                                processes={processes}
-                                namesRevision={namesRevision}
-                                selectedProcess={selectedProcess}
-                                onProcessSwitch={switchProcess}
-                            />
+            </div>
+
+            <div className="fpb-toolbar-group" data-group="work">
+                {processes.length > 1 && (
+                    <div>
+                        <div className="layerPanel-ProcessOverview-Config">
+                            <OverlayTrigger trigger={['hover', 'focus']} placement="auto" flip={true} overlay={<Tooltip id={`tooltip-uniqueId`}>
+                                {tooltipsTextLayer}
+                            </Tooltip>}>
+                                <Button 
+                                    id="openLayerButton" 
+                                    variant="secondary-outline" 
+                                    onClick={() => setIsOpenedLayerPanel(!isOpenedLayerPanel)}
+                                    aria-label={tooltipsTextLayer}
+                                    aria-expanded={isOpenedLayerPanel}
+                                    aria-pressed={isOpenedLayerPanel}
+                                    className={isOpenedLayerPanel ? 'is-active' : ''}
+                                >
+                                    {isOpenedLayerButton}
+                                </Button>
+                            </OverlayTrigger>
                         </div>
-                    </Collapse>
-                </div>
-            )}
-            
-            <div className="mt-3">
+                        <Collapse isOpened={isOpenedLayerPanel}>
+                            <div className="layerPanel-ProcessOverview-Content fpb-layers">
+                                <div className="fpb-layers-title">Layers</div>
+                                <ProcessTreeView 
+                                    processes={processes}
+                                    namesRevision={namesRevision}
+                                    selectedProcess={selectedProcess}
+                                    onProcessSwitch={switchProcess}
+                                />
+                                <div className="fpb-layers-project">
+                                    <span className="fpb-layers-project-label">Project</span>
+                                    <span className="fpb-layers-project-name">{projectName}</span>
+                                </div>
+                            </div>
+                        </Collapse>
+                    </div>
+                )}
+
                 <OverlayTrigger trigger={['hover', 'focus']} placement="auto" flip={true} overlay={<Tooltip id="tooltip-check">
                     {`Model check (VDI 3682): ${describeCounts(checkCounts)}`}
                 </Tooltip>}>
@@ -144,9 +132,7 @@ const LayerPanel = ({ modeler, config }) => {
                         )}
                     </Button>
                 </OverlayTrigger>
-            </div>
 
-            <div className="mt-3">
                 <OverlayTrigger trigger={['hover', 'focus']} placement="auto" flip={true} overlay={<Tooltip id="tooltip-search">
                     Search all layers (Ctrl+F)
                 </Tooltip>}>
@@ -161,7 +147,9 @@ const LayerPanel = ({ modeler, config }) => {
                 </OverlayTrigger>
             </div>
 
-            <div className="mt-3">
+            <div className="fpb-toolbar-group" data-group="view">
+                <ThemeToggle modeler={modeler} />
+                <ColorSchemeToggle modeler={modeler} />
                 <OverlayTrigger trigger={['hover', 'focus']} placement="auto" flip={true} overlay={<Tooltip id="tooltip-info">
                     Show information and help
                 </Tooltip>}>

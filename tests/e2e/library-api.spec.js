@@ -1149,8 +1149,7 @@ test.describe('AutomationML (importAML, toAML)', () => {
     messages.forEach((m) => expect(m).toContain('AutomationML is not enabled'));
     expect(await page.evaluate(() => !!window.fpb.get('amlSupport', false))).toBe(false);
 
-    await page.locator('#layers .layerPanel > button').first().click();
-    await page.locator('.upload-properties button').first().click();
+    await page.locator('#layers .upload-properties button').first().click();
     await expect(page.locator('.modal.show input#file')).toHaveAttribute('accept', '.json,.xml');
     await expect(page.locator('.modal.show .fileLabel')).toHaveText('Import a local stored FPB.js JSON file or XML file, or drop it here');
     await page.getByRole('button', { name: 'Close import options' }).click();
@@ -1319,10 +1318,6 @@ test.describe('theme set by the host', () => {
   test('dialogs of a modeler with a host theme carry the theme, outside the containers too', async ({ page }) => {
     const { errors } = await openLibraryPage(page);
     await createModeler(page, { panels: true, options: { theme: 'dark' } });
-    const options = page.getByRole('button', { name: 'Show Options' });
-    if (await options.count()) {
-      await options.click();
-    }
     await page.locator('#importOptionsButton').click();
     // react-bootstrap puts the attribute on .modal-dialog; what counts is the colour
     await expect(page.locator('.modal.show .modal-content')).toHaveCSS('background-color', 'rgb(26, 32, 39)');

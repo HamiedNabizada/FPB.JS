@@ -2,6 +2,19 @@ import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Tree } from 'react-arborist';
 import Form from 'react-bootstrap/Form';
 import { createArboristTreeData, getPathToProcess } from '../utils/treeUtils';
+import { getSystemLimit } from '../../help/helpUtils';
+import { is } from '../../help/utils';
+
+/** Process operators of a decomposition, for its row in Layers (016c decision 12) */
+function operatorCount(process) {
+    const bo = process && process.businessObject;
+    if (!bo || !bo.isDecomposedProcessOperator) {
+        return null;
+    }
+    const systemLimit = getSystemLimit(process);
+    const inner = (systemLimit && systemLimit.businessObject.elementsContainer) || [];
+    return inner.filter((element) => element && is(element, 'fpb:ProcessOperator')).length;
+}
 
 const ProcessTreeView = memo(({ processes, namesRevision, selectedProcess, onProcessSwitch }) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -30,7 +43,8 @@ const ProcessTreeView = memo(({ processes, namesRevision, selectedProcess, onPro
 
     const Node = ({ node, style, dragHandle }) => {
         const isSelected = selectedProcess && node.data.process?.id === selectedProcess.id;
-        const hasChildren = node.children && node.children.length > 0;
+const hasChildren = node.children && node.children.length > 0;
+        const count = operatorCount(node.data.process);
         
         return (
             <div 
@@ -63,6 +77,7 @@ const ProcessTreeView = memo(({ processes, namesRevision, selectedProcess, onPro
                     className="arborist-node-content"
                     role="button"
                     tabIndex={0}
+                    title={node.data.name}
                     aria-current={isSelected ? 'true' : undefined}
                     onClick={() => {
                         if (node.data.process) {
@@ -79,6 +94,9 @@ const ProcessTreeView = memo(({ processes, namesRevision, selectedProcess, onPro
                 >
                     {node.data.name}
                 </span>
+                {count !== null && (
+                    <span className="arborist-node-count">{count === 1 ? '1 operator' : count + ' operators'}</span>
+                )}
             </div>
         );
     };

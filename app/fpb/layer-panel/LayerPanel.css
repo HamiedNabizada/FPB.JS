@@ -275,3 +275,134 @@ padding-top: 3px;
   outline: 2px solid #4A90E2;
   outline-offset: 2px;
 }
+
+/* Variant B (016c decisions 11, 12): the toolbar in three cards, the layers
+   as a card in the same column. ":root" in front so these win over the dark
+   rules above; light and dark come from the design values. */
+:root .layerPanel {
+  gap: 10px;
+  padding: 6px;
+  font-family: var(--fpb-font);
+  background: transparent;
+}
+
+:root .fpb-toolbar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--fpb-surface);
+  box-shadow: var(--fpb-shadow-card);
+}
+
+:root .fpb-toolbar-group button + button {
+  margin-left: 0;
+}
+
+:root .fpb-toolbar-group .btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  color: var(--fpb-text-muted);
+  background: transparent;
+}
+
+:root .fpb-toolbar-group .btn:hover {
+  background: var(--fpb-surface-muted);
+  color: var(--fpb-text);
+}
+
+:root .fpb-toolbar-group .btn.is-active,
+:root .fpb-toolbar-group .btn[aria-pressed="true"] {
+  background: var(--fpb-accent-surface);
+  color: var(--fpb-accent);
+}
+
+:root .fpb-layers {
+  width: 280px;
+  max-width: 100%;
+  margin-top: 6px;
+  padding: 8px;
+  box-sizing: border-box;
+  border-top: 0;
+  border-radius: 10px;
+  background: var(--fpb-surface-muted);
+  overflow: hidden;
+}
+
+:root .fpb-layers-title {
+  padding: 0 4px 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fpb-text);
+}
+
+:root .fpb-layers .arborist-tree-container {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: var(--fpb-surface);
+  box-shadow: var(--fpb-shadow-card);
+}
+
+:root .fpb-layers .arborist-search {
+  margin: 6px;
+  width: calc(100% - 12px);
+  border: 1px solid var(--fpb-control-border);
+  border-radius: var(--fpb-radius-control);
+  background: var(--fpb-surface);
+  color: var(--fpb-text);
+}
+
+:root .fpb-layers .arborist-node {
+  color: var(--fpb-text);
+  border-radius: 6px;
+}
+
+:root .fpb-layers .arborist-node:hover {
+  background: var(--fpb-surface-muted);
+}
+
+:root .fpb-layers .arborist-node--selected {
+  background: var(--fpb-accent-surface);
+  color: var(--fpb-accent-text);
+  font-weight: 600;
+}
+
+:root .fpb-layers .arborist-toggle {
+  color: var(--fpb-text-muted);
+}
+
+:root .fpb-layers .arborist-node-count {
+  flex: none;
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--fpb-text-subtle);
+}
+
+:root .fpb-layers-project {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--fpb-surface);
+  box-shadow: var(--fpb-shadow-card);
+}
+
+:root .fpb-layers-project-label {
+  font-size: 12px;
+  color: var(--fpb-text-muted);
+}
+
+:root .fpb-layers-project-name {
+  font-weight: 600;
+  color: var(--fpb-text);
+  overflow-wrap: anywhere;
+}

@@ -71,7 +71,6 @@ test.describe('Barrierefreiheit', () => {
     expect(await knoepfeOhneNamen(page)).toEqual([]);
 
     // auch mit geöffneten Bereichen: Optionen, Prozessbaum, Eigenschaften
-    await page.locator('.layerPanel > button').first().click();
     await page.locator('#openLayerButton').click();
     await page.locator('#openPropertiesPanelButton').click();
     await page.waitForTimeout(300);

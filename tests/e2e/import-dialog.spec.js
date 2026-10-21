@@ -15,7 +15,6 @@ const DATEINAME = 'temperieren.json';
 async function dialogOeffnen(page) {
   const importer = new ImportPage(page);
   await importer.goto();
-  await page.locator('.layerPanel > button').first().click();
   await page.locator('.upload-properties button').click();
   await expect(page.locator('.modal-body .fileLabel')).toBeVisible();
   return importer;
