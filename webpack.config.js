@@ -100,7 +100,6 @@ module.exports = (env, argv) => {
       }),
       new CopyWebpackPlugin({
         patterns: [
-          { from: 'css/diagram-js.css', context: 'app', to: '../css/diagram-js.css' },
           { from: 'css/fpbjs.css', context: 'app', to: '../css/fpbjs.css' },
           { from: 'css/dark-mode.css', context: 'app', to: '../css/dark-mode.css' },
           { from: 'fpb/**/*.css', context: 'app', to: '../css/' },

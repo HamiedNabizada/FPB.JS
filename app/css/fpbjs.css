@@ -388,3 +388,18 @@
 [data-colors="accessible"] .icon-fpb-technicalresource {
       background: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2246%22%20height%3D%2246%22%20fill%3D%22%238C8C8C%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.5%22%3E%0D%0A%20%20%3Crect%20x%3D%222%22%20y%3D%2210%22%20rx%3D%229%22%20ry%3D%2211%22%20width%3D%2242%22%20height%3D%2220%22%2F%3E%0D%0A%3C%2Fsvg%3E');
     }
+
+/* The diagram-js package sets the context pad to 72px, three entries a row;
+   FPB.js shows its entries in one row, as with the old copied style sheet.
+   The package style sheet is injected after this file, hence the container
+   in the selector. */
+.djs-container .djs-context-pad {
+  width: max-content;
+}
+
+/* light boxes behind the entries, light and dark, as with the old copy;
+   the package takes a variable that is dark in the dark */
+.djs-container .djs-context-pad .entry {
+  background-color: #fefefe;
+  box-shadow: 0 0 2px 1px #fefefe;
+}

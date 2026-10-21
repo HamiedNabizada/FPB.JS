@@ -63,6 +63,8 @@ import AccessibilityModule from './a11y';
 import PreviewModule from './preview';
 import AutosaveModule from './autosave';
 
+// the style sheet of the diagram-js package, not an old copy (016b T7, 016c T4)
+import 'diagram-js/assets/diagram-js.css';
 // one set of design values and the interface font for every host (016c T1, T6)
 import './theme/tokens.css';
 import './theme/fonts.css';
