@@ -6,6 +6,41 @@
 
 import { modelReplacer } from '../export/serializeModel.js';
 
+const isSet = (value) => value !== undefined && value !== null && value !== '';
+
+/**
+ * A validity limit read from XML. An empty limit stays empty (it came back as
+ * 0 before), a number becomes a number; since the limits can be edited, one
+ * side is often left open (016c T9a).
+ */
+export function limitFromXml(element) {
+    const bound = (name) => {
+        const text = element.getAttribute(name);
+        if (!isSet(text)) {
+            return undefined;
+        }
+        const number = parseFloat(text);
+        return isNaN(number) ? text : number;
+    };
+    return {
+        $type: 'fpbch:ValidityLimits',
+        limitType: element.getAttribute('limitType') || '',
+        from: bound('from'),
+        to: bound('to')
+    };
+}
+
+/** The XML attributes of a validity limit: only the limits that are set */
+export function limitAttributes(limit) {
+    const attributes = { limitType: limit.limitType || '' };
+    ['from', 'to'].forEach((name) => {
+        if (isSet(limit[name])) {
+            attributes[name] = String(limit[name]);
+        }
+    });
+    return attributes;
+}
+
 class XMLMapper {
     /** At least two points with numeric coordinates */
     static _usableWaypoints(waypoints) {
@@ -1014,13 +1049,7 @@ class XMLMapper {
                 // Extract validityLimits if present
                 const validityLimitsElements = descriptiveElement.getElementsByTagName('validityLimits');
                 for (let j = 0; j < validityLimitsElements.length; j++) {
-                    const validityLimit = validityLimitsElements[j];
-                    characteristic.descriptiveElement.validityLimits.push({
-                        "$type": "fpbch:ValidityLimits",
-                        "limitType": validityLimit.getAttribute('limitType') || '',
-                        "from": parseFloat(validityLimit.getAttribute('from')) || 0,
-                        "to": parseFloat(validityLimit.getAttribute('to')) || 0
-                    });
+                    characteristic.descriptiveElement.validityLimits.push(limitFromXml(validityLimitsElements[j]));
                 }
 
                 // Actual values, written as child elements as well
@@ -1633,9 +1662,8 @@ class XMLMapper {
                         return;
                     }
                     const limitXml = xmlDoc.createElement('validityLimits');
-                    limitXml.setAttribute('limitType', limit.limitType || '');
-                    limitXml.setAttribute('from', limit.from !== undefined ? limit.from : '');
-                    limitXml.setAttribute('to', limit.to !== undefined ? limit.to : '');
+                    const attributes = limitAttributes(limit);
+                    Object.keys(attributes).forEach((name) => limitXml.setAttribute(name, attributes[name]));
                     descriptiveElementXml.appendChild(limitXml);
                 });
 

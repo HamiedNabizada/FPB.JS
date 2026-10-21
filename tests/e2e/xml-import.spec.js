@@ -351,7 +351,7 @@ test.describe('XML import - broken files', () => {
     expect(usage.waypoints[0][0]).toBe(475);
     expect(usage.waypoints[usage.waypoints.length - 1][0]).toBe(800);
 
-    // characteristics: missing parts are created empty, an unreadable limit is 0
+    // characteristics: missing parts are created empty, an unreadable limit keeps its text (016c T9a: no invented 0)
     const parts = await page.evaluate(() => window.fpbjs.get('elementRegistry').get('S1').businessObject.characteristics
       .map((c) => ({
         category: [c.category.$type, c.category.shortName || ''],
@@ -361,7 +361,7 @@ test.describe('XML import - broken files', () => {
         relational: c.relationalElement.$type,
       })));
     expect(parts).toEqual([
-      { category: ['fpb:Identification', ''], setpoint: ['5', 'kg'], limits: [['max', 0, 7]], actual: 0, relational: 'fpbch:RelationalElement' },
+      { category: ['fpb:Identification', ''], setpoint: ['5', 'kg'], limits: [['max', 'abc', 7]], actual: 0, relational: 'fpbch:RelationalElement' },
       { category: ['fpb:Identification', 'Nur Name'], setpoint: ['', ''], limits: [], actual: 0, relational: 'fpbch:RelationalElement' },
     ]);
     expect(await characteristics(page, 'TR1')).toEqual([expect.objectContaining({ category: 'Leistung', setpoint: '3 kW' })]);
