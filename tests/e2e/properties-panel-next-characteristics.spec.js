@@ -160,16 +160,16 @@ test.describe('New properties panel, characteristics', () => {
     return data;
   };
 
-  test('validity limits and further actual values are shown, not edited (E6)', async ({ page }) => {
+  test('older limits go to their region, further actual values are shown (016c)', async ({ page }) => {
     await openPanel(page, withValues());
     await select(page, 'Erhitzen');
     await expect(rows(page).first()).toContainText('352 (+1)');
     await rows(page).first().getByRole('button').click();
 
-    const limits = page.locator('.fpb-characteristic-limits li');
-    // the empty default limit of older versions is not listed
-    await expect(limits).toHaveCount(1);
-    await expect(limits.first()).toHaveText('acceptance: 350 to 356');
+    // "acceptance" is the acceptance region; the empty default limit of older versions is left out
+    await expect(field(page, 'characteristic-0-acceptance-from')).toHaveValue('350');
+    await expect(field(page, 'characteristic-0-acceptance-to')).toHaveValue('356');
+    await expect(page.locator('.fpb-other-limit')).toHaveCount(0);
     await expect(page.locator('.fpb-characteristic-more-actuals li')).toHaveText(['354 K']);
   });
 });

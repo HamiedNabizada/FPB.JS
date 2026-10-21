@@ -7,6 +7,7 @@ import { usePanelReadOnly } from '../hooks';
 import { FpbTextField } from '../entries/FpbTextField';
 import { parseValue, formatValue } from '../values';
 import { asList } from './model';
+import { LimitsEditor } from './LimitsEditor';
 
 /** The three parts of Blatt 2 as tabs (016c decision 7) */
 const TABS = [
@@ -51,7 +52,7 @@ const SECTIONS = [
  * chosen (Review Focus 2).
  */
 export function CharacteristicDetail(props) {
-  const { element, characteristic, index, setField, onRemove } = props;
+  const { element, characteristic, index, setField, updateLimits, onRemove } = props;
   const translate = useService('translate');
   const debounce = useService('debounceInput');
   const readOnly = usePanelReadOnly();
@@ -88,7 +89,7 @@ export function CharacteristicDetail(props) {
       </div>
       {[section].map(([title, fields]) => (
         <div class="fpb-characteristic-section" role="tabpanel" aria-labelledby={'characteristic-tab-' + active.id}>
-          {fields.map(([key, label, path, options = {}]) => (
+          {fields.map(([key, label, path, options = {}]) => [
             <FpbTextField
               element={element}
               id={'characteristic-' + index + '-' + key}
@@ -98,8 +99,12 @@ export function CharacteristicDetail(props) {
               equals={options.value ? sameValue : undefined}
               getValue={() => (options.value ? formatValue(read(characteristic, path)) : read(characteristic, path) || '')}
               setValue={(text) => setField(path, options.value ? parseValue(text) : (text || ''))}
-            />
-          ))}
+            />,
+            // Blatt 2: the setpoint "with its validity limits"
+            key === 'setpointUnit' && updateLimits && (
+              <LimitsEditor element={element} characteristic={characteristic} index={index} update={updateLimits} />
+            )
+          ])}
           {title === 'Descriptive element' && <MoreValues characteristic={characteristic} translate={translate} />}
         </div>
       ))}
@@ -112,32 +117,18 @@ export function CharacteristicDetail(props) {
   );
 }
 
-/** The default limit older versions created for every characteristic */
-const isEmptyDefault = (limit) => !limit.limitType && Number(limit.from || 0) === 0 && Number(limit.to || 0) === 0;
-
 /**
- * Validity limits and the actual values after the first, shown but not
- * edited (016 E6, 016b V3; editing comes with the format after the GMA
- * committee, 020a).
+ * The actual values after the first, shown but not edited (016b V3; editing
+ * the list follows in 016c task 8). The validity limits are edited in
+ * LimitsEditor.
  */
 function MoreValues(props) {
   const { characteristic, translate } = props;
   const descriptive = characteristic.descriptiveElement || {};
-  const limits = asList(descriptive.validityLimits).filter((limit) => !isEmptyDefault(limit));
   const more = asList(descriptive.actualValues).slice(1);
 
   return (
     <div class="fpb-characteristic-more">
-      <div class="bio-properties-panel-label">{translate('Validity limits')}</div>
-      {limits.length ? (
-        <ul class="fpb-characteristic-limits">
-          {limits.map((limit) => (
-            <li>{(limit.limitType || translate('limit')) + ': ' + formatValue(limit.from) + ' ' + translate('to') + ' ' + formatValue(limit.to)}</li>
-          ))}
-        </ul>
-      ) : (
-        <p class="fpb-characteristic-none">{translate('None')}</p>
-      )}
       {more.length > 0 && (
         <div>
           <div class="bio-properties-panel-label">{translate('Further actual values')}</div>

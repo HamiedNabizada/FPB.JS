@@ -359,3 +359,49 @@
 .fpb-properties .fpb-aml-subtle {
   color: var(--bio-text-subtle, #555);
 }
+
+/* Validity limits by the regions of Blatt 2 (016c decision 8) */
+.fpb-properties .fpb-limits {
+  margin: 4px 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fpb-properties .fpb-limits-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fpb-text);
+}
+
+.fpb-properties .fpb-limit-region-title {
+  font-size: 12px;
+  color: var(--fpb-text-muted);
+}
+
+.fpb-properties .fpb-limit-bounds {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.fpb-properties .fpb-limit-bounds .bio-properties-panel-entry {
+  margin: 0;
+  padding: 0;
+}
+
+.fpb-properties .fpb-limits-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fpb-text-subtle);
+}
+
+/* shown, not edited: text without a field look (016c decision 2) */
+.fpb-properties .fpb-other-limit {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--fpb-font-mono);
+  font-size: 12px;
+  color: var(--fpb-text);
+}

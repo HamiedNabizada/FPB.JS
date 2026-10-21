@@ -56,6 +56,15 @@ export function CharacteristicsGroup(props) {
     choose(null);
   };
 
+  // validity limits: `fn` makes the new list from the current one (016c T9)
+  const updateLimits = (position) => (fn) => {
+    const now = current();
+    if (position < now.length) {
+      const descriptive = now[position].descriptiveElement || {};
+      write(withField(now, position, ['descriptiveElement', 'validityLimits'], fn(descriptive.validityLimits), tools));
+    }
+  };
+
   const setField = (position) => (path, value) => {
     const now = current();
     // the characteristic was removed while the input waited
@@ -101,6 +110,7 @@ export function CharacteristicsGroup(props) {
             characteristic={list[index]}
             index={index}
             setField={setField(index)}
+            updateLimits={updateLimits(index)}
             onRemove={remove}
           />
         )}
