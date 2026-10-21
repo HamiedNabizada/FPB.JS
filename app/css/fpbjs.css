@@ -279,6 +279,9 @@
 .fpb-validation-marker.fpb-validation-error { background: #d0021b; }
 .fpb-validation-marker.fpb-validation-warning { background: #e8a200; }
 
+/* Model check in the look of variant B (016c decision 10): a card with a
+   filter by severity, every finding a card of its own; light and dark come
+   from the design values */
 .fpb-validation-panel {
   display: none;
   position: absolute;
@@ -288,21 +291,37 @@
   width: 340px;
   max-height: calc(100% - 60px);
   flex-direction: column;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  font-size: 14px;
+  gap: 8px;
+  padding: 10px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  background: var(--fpb-surface-muted);
+  color: var(--fpb-text);
+  box-shadow: var(--fpb-shadow-float);
+  font-family: var(--fpb-font);
+  font-size: 13px;
 }
 .fpb-validation-panel.open { display: flex; }
-.fpb-validation-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid #ddd; }
-.fpb-validation-title { font-weight: 600; }
-.fpb-validation-close { border: none; background: none; font-size: 20px; line-height: 1; cursor: pointer; color: inherit; }
-.fpb-validation-summary { padding: 6px 10px 0; color: #555; }
-.fpb-validation-toggle { display: flex; gap: 6px; align-items: center; padding: 4px 10px 6px; font-size: 13px; color: #555; }
-.fpb-validation-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; border-top: 1px solid #ddd; }
-.fpb-validation-item { padding: 6px 10px 6px 12px; border-bottom: 1px solid #eee; border-left: 4px solid transparent; cursor: pointer; }
-.fpb-validation-elsewhere { display: block; margin-top: 2px; border: 0; padding: 0; background: none; color: var(--bio-primary, #0066cc); font-size: 12px; cursor: pointer; }
+.fpb-validation-header { display: flex; align-items: center; justify-content: space-between; padding: 2px 2px 0 6px; }
+.fpb-validation-title { font-size: 14px; font-weight: 600; }
+.fpb-validation-close { width: 32px; height: 32px; border: none; border-radius: 8px; background: none; font-size: 20px; line-height: 1; cursor: pointer; color: var(--fpb-text-muted); }
+.fpb-validation-close:hover { background: var(--fpb-surface); }
+.fpb-validation-summary { padding: 0 6px; color: var(--fpb-text-muted); }
+.fpb-validation-filter { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; padding: 2px; border-radius: 8px; background: var(--fpb-line); }
+.fpb-validation-filter button { min-height: 30px; border: 0; border-radius: 6px; background: transparent; color: var(--fpb-text-muted); font: inherit; font-size: 12px; cursor: pointer; }
+.fpb-validation-filter button[aria-pressed="true"] { background: var(--fpb-surface); color: var(--fpb-text); font-weight: 600; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); }
+.fpb-validation-toggle { display: flex; gap: 8px; align-items: center; padding: 2px 6px 0; font-size: 12px; color: var(--fpb-text-muted); }
+.fpb-validation-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.fpb-validation-item { padding: 10px 12px; border-radius: 8px; background: var(--fpb-surface); box-shadow: var(--fpb-shadow-card); cursor: pointer; }
+.fpb-validation-item:hover { box-shadow: 0 0 0 1px var(--fpb-control-border); }
+.fpb-validation-item-head { margin-bottom: 2px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.fpb-validation-item.fpb-validation-error .fpb-validation-item-head { color: var(--fpb-error-text); }
+.fpb-validation-item.fpb-validation-warning .fpb-validation-item-head { color: var(--fpb-warning-text); }
+.fpb-validation-item.fpb-validation-info .fpb-validation-item-head { color: var(--fpb-info-text); }
+.fpb-validation-item-text { font-size: 13px; color: var(--fpb-text); }
+.fpb-validation-elsewhere { display: block; margin-top: 4px; border: 0; padding: 0; background: none; color: var(--fpb-accent); font: inherit; font-size: 12px; font-weight: 500; cursor: pointer; }
+.fpb-validation-choices { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.fpb-validation-choice { border: 1px solid var(--fpb-control-border); border-radius: 6px; padding: 4px 10px; background: var(--fpb-surface); color: var(--fpb-text); font: inherit; font-size: 12px; cursor: pointer; }
 
 /* the other elements of a chosen finding, until the next selection (016b V8) */
 .djs-element.fpb-finding-involved .djs-outline {
@@ -316,15 +335,6 @@
   stroke: #e8a200 !important;
   stroke-width: 3px !important;
 }
-.fpb-validation-item:hover { background: #f2f3f5; }
-.fpb-validation-item.fpb-validation-error { border-left-color: #d0021b; }
-.fpb-validation-item.fpb-validation-warning { border-left-color: #e8a200; }
-.fpb-validation-item.fpb-validation-info { border-left-color: #6e9ad1; }
-.fpb-validation-item-head { font-weight: 600; font-size: 12px; color: #444; }
-.fpb-validation-item-text { font-size: 13px; }
-.fpb-validation-choices { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-.fpb-validation-choice { border: 1px solid #c9d0d7; border-radius: 4px; padding: 2px 8px; background: transparent; color: inherit; font-size: 12px; cursor: pointer; }
-
 .fpb-validation-count {
   position: absolute;
   top: -4px;

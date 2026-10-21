@@ -11,6 +11,12 @@ const RANK = { error: 0, warning: 1, info: 2 };
 // apart. Colour alone is no distinction for everyone (see core/colorScheme).
 const SYMBOL = { error: '✕', warning: '!', info: 'i' };
 const SEVERITY_LABEL = { error: 'Error', warning: 'Warning', info: 'Note' };
+const FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: 'error', label: 'Errors' },
+  { id: 'warning', label: 'Warnings' },
+  { id: 'info', label: 'Notes' }
+];
 
 /** "1 error, 2 warnings, 0 notes" */
 export function describeCounts(counts) {
@@ -143,8 +149,14 @@ FpbValidation.prototype._buildPanel = function () {
       '<button type="button" class="fpb-validation-close" title="Close" aria-label="Close">&times;</button>' +
     '</div>' +
     '<div class="fpb-validation-summary"></div>' +
-    '<label class="fpb-validation-toggle"><input type="checkbox" checked /> Show markers on the elements</label>' +
-    '<ul class="fpb-validation-list" role="list"></ul>';
+    // filter by severity, only for the list; the markers have their switch (016c T11)
+    '<div class="fpb-validation-filter" role="group" aria-label="Show findings">' +
+      FILTERS.map(function (f) {
+        return '<button type="button" data-filter="' + f.id + '" aria-pressed="' + (f.id === 'all') + '"></button>';
+      }).join('') +
+    '</div>' +
+    '<ul class="fpb-validation-list" role="list"></ul>' +
+    '<label class="fpb-validation-toggle"><input type="checkbox" checked /> Show markers on the elements</label>';
   this._canvas.getContainer().appendChild(panel);
 
   const self = this;
@@ -153,6 +165,13 @@ FpbValidation.prototype._buildPanel = function () {
   });
   panel.querySelector('.fpb-validation-toggle input').addEventListener('change', function (event) {
     self.setShowMarkers(event.target.checked);
+  });
+  panel.querySelector('.fpb-validation-filter').addEventListener('click', function (event) {
+    const button = event.target.closest('button[data-filter]');
+    if (button) {
+      self._filter = button.getAttribute('data-filter');
+      self._renderPanel();
+    }
   });
   panel.querySelector('.fpb-validation-list').addEventListener('click', function (event) {
     const item = event.target.closest('li[data-index]');
@@ -190,11 +209,21 @@ FpbValidation.prototype._renderPanel = function () {
     ? describeCounts(counts)
     : 'No findings.';
 
+  const filter = this._filter || 'all';
+  this._panel.querySelectorAll('.fpb-validation-filter button').forEach(function (button) {
+    const f = FILTERS.find(function (x) { return x.id === button.getAttribute('data-filter'); });
+    button.textContent = f.label + ' ' + (f.id === 'all' ? counts.error + counts.warning + counts.info : counts[f.id]);
+    button.setAttribute('aria-pressed', String(f.id === filter));
+  });
+
   const list = this._panel.querySelector('.fpb-validation-list');
   list.innerHTML = '';
   const self = this;
   const root = this._canvas.getRootElement();
   this._issues.forEach(function (issue, index) {
+    if (filter !== 'all' && issue.severity !== filter) {
+      return;
+    }
     const item = document.createElement('li');
     item.className = 'fpb-validation-item fpb-validation-' + issue.severity;
     item.setAttribute('data-index', String(index));

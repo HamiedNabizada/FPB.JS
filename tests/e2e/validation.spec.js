@@ -92,4 +92,62 @@ test.describe('Modellprüfung', () => {
     await expect(page.locator('.fpb-validation-item[data-rule="B2"]')).toHaveCount(1);
   });
 
+
+  // 016c decision 10: filter by severity, findings as cards
+  test.describe('filter', () => {
+
+    /** An unconnected, unnamed state: one warning (G4) and one note (D4) more */
+    const looseState = (page) => page.evaluate(() => {
+      const registry = window.fpbjs.get('elementRegistry');
+      const systemLimit = registry.filter((e) => e.type === 'fpb:SystemLimit')[0];
+      const shape = window.fpbjs.get('elementFactory').createShape({ type: 'fpb:Product' });
+      return window.fpbjs.get('modeling').createShape(shape, { x: systemLimit.x + 60, y: systemLimit.y + systemLimit.height / 2 }, systemLimit).id;
+    });
+    const openList = (page) => page.evaluate(() => {
+      window.fpbjs.get('fpbValidation').run();
+      window.fpbjs.get('fpbValidation').openPanel();
+    });
+    const filterButton = (page, kind) => page.locator('.fpb-validation-filter [data-filter="' + kind + '"]');
+    const cards = (page) => page.locator('.fpb-validation-panel .fpb-validation-item');
+
+    test('the filter shows only findings of that severity and leaves the markers alone', async ({ page }) => {
+      await vorbereiten(page);
+      await looseState(page);
+      await openList(page);
+      const markers = await markierungen(page).count();
+      const all = await cards(page).count();
+      expect(all).toBeGreaterThan(1);
+
+      await filterButton(page, 'warning').click();
+      await expect(filterButton(page, 'warning')).toHaveAttribute('aria-pressed', 'true');
+      await expect(cards(page)).not.toHaveCount(all);
+      for (const card of await cards(page).all()) {
+        await expect(card).toHaveClass(/fpb-validation-warning/);
+      }
+      expect(await markierungen(page).count()).toBe(markers);
+
+      await filterButton(page, 'all').click();
+      await expect(cards(page)).toHaveCount(all);
+    });
+
+    test('the counts in the filter follow the findings', async ({ page }) => {
+      await vorbereiten(page);
+      await openList(page);
+      await expect(filterButton(page, 'warning')).toHaveText('Warnings 0');
+      await looseState(page);
+      await page.evaluate(() => window.fpbjs.get('fpbValidation').run());
+      await expect(filterButton(page, 'warning')).toHaveText('Warnings 1');
+    });
+
+    test('the filter works in read-only mode', async ({ page }) => {
+      await vorbereiten(page);
+      await looseState(page);
+      await page.evaluate(() => window.fpbjs.get('readOnly').set(true));
+      await openList(page);
+      await filterButton(page, 'info').click();
+      for (const card of await cards(page).all()) {
+        await expect(card).toHaveClass(/fpb-validation-info/);
+      }
+    });
+  });
 });
