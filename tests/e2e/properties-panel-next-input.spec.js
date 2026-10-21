@@ -8,7 +8,7 @@ import { openPanel, select, field, businessObject, clone } from './helpers/panel
  */
 
 const group = (page) => page.locator('[data-group-id="group-characteristics"]');
-const rows = (page) => group(page).locator('.fpb-characteristics-table tbody tr');
+const rows = (page) => group(page).locator('.fpb-characteristics-list li');
 const add = (page) => group(page).getByRole('button', { name: 'Add characteristic' }).first();
 const longName = async (page, name) => (await businessObject(page, name)).identification.longName || '';
 const characteristics = async (page, name) => (await businessObject(page, name)).characteristics || [];

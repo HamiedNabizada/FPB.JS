@@ -1,11 +1,19 @@
 /** @jsx h */
 import { h } from '@bpmn-io/properties-panel/preact';
+import { useLayoutState } from '@bpmn-io/properties-panel';
 
 import { useService } from '../context';
 import { usePanelReadOnly } from '../hooks';
 import { FpbTextField } from '../entries/FpbTextField';
 import { parseValue, formatValue } from '../values';
 import { asList } from './model';
+
+/** The three parts of Blatt 2 as tabs (016c decision 7) */
+const TABS = [
+  { id: 'category', label: 'Category', section: 'Category' },
+  { id: 'descriptive', label: 'Descriptive', section: 'Descriptive element' },
+  { id: 'relational', label: 'Relational', section: 'Relational element' }
+];
 
 /** "1," and 1 are the same value: the field keeps what the user types */
 const sameValue = (a, b) => parseValue(a) === parseValue(b);
@@ -47,14 +55,39 @@ export function CharacteristicDetail(props) {
   const translate = useService('translate');
   const debounce = useService('debounceInput');
   const readOnly = usePanelReadOnly();
-  const name = (characteristic.category && characteristic.category.shortName) || ('C_' + (index + 1));
+  // the chosen part stays for the next characteristic (016c T10)
+  const [tab, setTab] = useLayoutState(['characteristics', 'tab'], 'descriptive');
+  const active = TABS.find((t) => t.id === tab) || TABS[1];
+  const section = SECTIONS.find(([title]) => title === active.section);
+
+  const onKeyDown = (event) => {
+    const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+    if (step) {
+      const next = TABS[(TABS.indexOf(active) + step + TABS.length) % TABS.length];
+      setTab(next.id);
+      event.preventDefault();
+    }
+  };
 
   return (
     <div class="fpb-characteristic-detail" data-index={index}>
-      <div class="fpb-characteristic-title">{name}</div>
-      {SECTIONS.map(([title, fields]) => (
-        <div class="fpb-characteristic-section">
-          <div class="fpb-characteristic-section-title">{translate(title)}</div>
+      <div class="fpb-characteristic-tabs" role="tablist" aria-label={translate('Parts of the characteristic')} onKeyDown={onKeyDown}>
+        {TABS.map((t) => (
+          <button
+            type="button"
+            role="tab"
+            id={'characteristic-tab-' + t.id}
+            class="fpb-characteristic-tab"
+            aria-selected={t === active ? 'true' : 'false'}
+            tabIndex={t === active ? 0 : -1}
+            onClick={() => setTab(t.id)}
+          >
+            {translate(t.label)}
+          </button>
+        ))}
+      </div>
+      {[section].map(([title, fields]) => (
+        <div class="fpb-characteristic-section" role="tabpanel" aria-labelledby={'characteristic-tab-' + active.id}>
           {fields.map(([key, label, path, options = {}]) => (
             <FpbTextField
               element={element}

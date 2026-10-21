@@ -162,30 +162,84 @@
   background: var(--fpb-surface-muted);
 }
 
-/* Characteristics: table and detail area (016b V1) */
-.fpb-properties .fpb-characteristics-table {
-  width: calc(100% - 24px);
-  margin: 4px 12px 8px;
-  border-collapse: collapse;
-  font-size: 12px;
+/* Characteristics: rows and a detail area with tabs (016c decision 7) */
+.fpb-properties .fpb-characteristics-list {
+  margin: 0 12px 8px;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.fpb-properties .fpb-characteristics-table th,
-.fpb-properties .fpb-characteristics-table td {
-  padding: 3px 4px;
-  border-bottom: 1px solid var(--bio-border-subtle, #ddd);
+.fpb-properties .fpb-characteristic-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--fpb-radius-control);
+  background: var(--fpb-surface-sunken);
+  color: var(--fpb-text);
+  font: inherit;
+  font-size: 13px;
   text-align: left;
-  color: var(--bio-text, #222);
+  cursor: pointer;
+}
+
+.fpb-properties .fpb-characteristic-row:hover {
+  background: var(--fpb-surface-muted);
+}
+
+.fpb-properties .fpb-characteristic-row.selected {
+  background: var(--fpb-accent-surface);
+  color: var(--fpb-accent-text);
+  box-shadow: inset 0 0 0 1px var(--fpb-accent);
+}
+
+.fpb-properties .fpb-characteristic-row-name {
+  min-width: 0;
   overflow-wrap: anywhere;
 }
 
-.fpb-properties .fpb-characteristics-table thead th {
-  color: var(--bio-text-subtle, #555);
-  font-weight: 600;
+.fpb-properties .fpb-characteristic-row-summary {
+  font-family: var(--fpb-font-mono);
+  font-size: 12px;
+  white-space: nowrap;
 }
 
-.fpb-properties .fpb-characteristics-table tr.selected {
-  background: var(--bio-primary-surface, #e6f0ff);
+.fpb-properties .fpb-characteristic-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  margin: 8px 12px 4px;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--fpb-surface-muted);
+}
+
+.fpb-properties .fpb-characteristic-tab {
+  min-height: 30px;
+  border: 0;
+  border-radius: var(--fpb-radius-control);
+  background: transparent;
+  color: var(--fpb-text-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.fpb-properties .fpb-characteristic-tab[aria-selected="true"] {
+  background: var(--fpb-surface);
+  color: var(--fpb-text);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.fpb-properties .fpb-characteristic-tab:focus-visible {
+  outline: 2px solid var(--fpb-accent);
 }
 
 .fpb-properties .fpb-characteristic-select,

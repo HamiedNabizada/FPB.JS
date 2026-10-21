@@ -86,7 +86,7 @@ export function CharacteristicsGroup(props) {
       </div>
       <div class={'bio-properties-panel-group-entries' + (open ? ' open' : '')}>
         {list.length ? (
-          <CharacteristicsTable list={list} selected={index} onSelect={choose} translate={translate} />
+          <CharacteristicsList list={list} selected={index} onSelect={choose} />
         ) : (
           <p class="fpb-characteristics-empty">
             {translate('No characteristics yet.')}
@@ -109,41 +109,44 @@ export function CharacteristicsGroup(props) {
   );
 }
 
-function CharacteristicsTable(props) {
-  const { list, selected, onSelect, translate } = props;
+/**
+ * One row per characteristic (016c decision 7): name on the left, setpoint
+ * with unit and the first actual value on the right, "(+n)" for further ones.
+ */
+function CharacteristicsList(props) {
+  const { list, selected, onSelect } = props;
 
   return (
-    <table class="fpb-characteristics-table">
-      <thead>
-        <tr>
-          <th scope="col">{translate('Name')}</th>
-          <th scope="col">{translate('Setpoint')}</th>
-          <th scope="col">{translate('Unit')}</th>
-          <th scope="col">{translate('Actual')}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {list.map((characteristic, position) => {
-          const category = characteristic.category || {};
-          const descriptive = characteristic.descriptiveElement || {};
-          const setpoint = descriptive.setpointValue || {};
-          const actuals = asList(descriptive.actualValues);
-          const name = category.shortName || ('C_' + (position + 1));
-          const chosen = position === selected;
-          return (
-            <tr class={chosen ? 'selected' : ''} data-index={position}>
-              <th scope="row">
-                <button type="button" class="fpb-characteristic-select" aria-pressed={chosen} title={category.longName || name} onClick={() => onSelect(chosen ? null : position)}>
-                  {name}{category.longName ? ' ' + category.longName : ''}
-                </button>
-              </th>
-              <td>{formatValue(setpoint.value)}</td>
-              <td>{setpoint.unit || ''}</td>
-              <td>{actuals.length ? formatValue(actuals[0].value) + (actuals.length > 1 ? ' (+' + (actuals.length - 1) + ')' : '') : ''}</td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+    <ul class="fpb-characteristics-list">
+      {list.map((characteristic, position) => {
+        const category = characteristic.category || {};
+        const descriptive = characteristic.descriptiveElement || {};
+        const setpoint = descriptive.setpointValue || {};
+        const actuals = asList(descriptive.actualValues);
+        const name = category.shortName || ('C_' + (position + 1));
+        const chosen = position === selected;
+        const setpointText = [formatValue(setpoint.value), setpoint.unit || ''].filter(Boolean).join(' ');
+        const actualText = actuals.length
+          ? formatValue(actuals[0].value) + (actuals.length > 1 ? ' (+' + (actuals.length - 1) + ')' : '')
+          : '';
+        return (
+          <li key={position}>
+            <button
+              type="button"
+              class={'fpb-characteristic-row' + (chosen ? ' selected' : '')}
+              data-index={position}
+              aria-pressed={chosen ? 'true' : 'false'}
+              title={category.longName || name}
+              onClick={() => onSelect(chosen ? null : position)}
+            >
+              <span class="fpb-characteristic-row-name">
+                <strong>{name}</strong>{category.longName ? ' ' + category.longName : ''}
+              </span>
+              <span class="fpb-characteristic-row-summary">{[setpointText, actualText].filter(Boolean).join(' · ')}</span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

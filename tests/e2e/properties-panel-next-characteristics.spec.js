@@ -5,7 +5,7 @@ import { openPanel, select, field, stackSize, undo, businessObject, clone } from
 /** New panel: characteristics as a table with a detail area (016 E7, 016b V1) */
 
 const group = (page) => page.locator('[data-group-id="group-characteristics"]');
-const rows = (page) => group(page).locator('.fpb-characteristics-table tbody tr');
+const rows = (page) => group(page).locator('.fpb-characteristics-list li');
 const add = (page) => group(page).getByRole('button', { name: 'Add characteristic' }).first();
 
 test.describe('New properties panel, characteristics', () => {
@@ -15,6 +15,36 @@ test.describe('New properties panel, characteristics', () => {
     await select(page, 'Rohstoff');
     await expect(rows(page)).toHaveCount(1);
     await expect(rows(page).first()).toContainText('Temperatur');
+  });
+
+  test('a row shows name, setpoint with unit and the first actual value', async ({ page }) => {
+    await openPanel(page);
+    await select(page, 'Rohstoff');
+    const row = rows(page).first().locator('.fpb-characteristic-row');
+    await expect(row.locator('.fpb-characteristic-row-name')).toContainText('Temperatur');
+    await expect(row.locator('.fpb-characteristic-row-summary')).toHaveText('20 °C · 0');
+  });
+
+  test('the three tabs show the parts of Blatt 2 and the chosen one stays', async ({ page }) => {
+    await openPanel(page);
+    await select(page, 'Rohstoff');
+    await rows(page).first().getByRole('button').click();
+    // Descriptive is open first
+    await expect(page.getByRole('tab', { name: 'Descriptive' })).toHaveAttribute('aria-selected', 'true');
+    await expect(field(page, 'characteristic-0-setpoint')).toBeVisible();
+
+    await page.getByRole('tab', { name: 'Category' }).click();
+    await expect(field(page, 'characteristic-0-categoryLongName')).toBeVisible();
+    await expect(field(page, 'characteristic-0-setpoint')).toHaveCount(0);
+
+    await page.getByRole('tab', { name: 'Relational' }).click();
+    await expect(field(page, 'characteristic-0-view')).toBeVisible();
+
+    await select(page, 'Erhitzen');
+    await select(page, 'Rohstoff');
+    await rows(page).first().getByRole('button').click();
+    await expect(page.getByRole('tab', { name: 'Relational' })).toHaveAttribute('aria-selected', 'true');
+    await expect(field(page, 'characteristic-0-view')).toBeVisible();
   });
 
   test('"+" adds C_n as one undo step and opens its detail', async ({ page }) => {
