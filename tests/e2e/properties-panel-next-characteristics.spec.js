@@ -128,6 +128,42 @@ test.describe('New properties panel, characteristics', () => {
     await expect(rows(page)).toHaveCount(1);
   });
 
+  // moved from the old panel (016b, B3)
+  const setpoints = async (page, name) => ((await businessObject(page, name)).characteristics || [])
+    .map((c) => c.category.shortName + '=' + c.descriptiveElement.setpointValue.value);
+
+  test('a setpoint change is one undo step', async ({ page }) => {
+    await openPanel(page);
+    await select(page, 'Erhitzen');
+    await add(page).click();
+    const before = await setpoints(page, 'Erhitzen');
+    await field(page, 'characteristic-0-setpoint').fill('42');
+    await expect.poll(() => setpoints(page, 'Erhitzen')).toEqual(['C_1=42']);
+
+    await undo(page);
+    await expect.poll(() => setpoints(page, 'Erhitzen')).toEqual(before);
+  });
+
+  test('removing the middle characteristic keeps the values of the others, undo brings it back', async ({ page }) => {
+    await openPanel(page);
+    await select(page, 'Erhitzen');
+    for (const [i, value] of ['100', '200', '300'].entries()) {
+      await add(page).click();
+      await field(page, 'characteristic-' + i + '-setpoint').fill(value);
+    }
+    await expect.poll(() => setpoints(page, 'Erhitzen')).toEqual(['C_1=100', 'C_2=200', 'C_3=300']);
+
+    await rows(page).nth(1).getByRole('button').click();
+    await page.getByRole('button', { name: 'Remove characteristic' }).click();
+    await expect.poll(() => setpoints(page, 'Erhitzen')).toEqual(['C_1=100', 'C_3=300']);
+    await expect(rows(page)).toHaveCount(2);
+    await expect(rows(page).nth(0)).toContainText('100');
+    await expect(rows(page).nth(1)).toContainText('300');
+
+    await undo(page);
+    await expect.poll(() => setpoints(page, 'Erhitzen')).toEqual(['C_1=100', 'C_2=200', 'C_3=300']);
+  });
+
   // Review Focus 1
   test('the detail closes when undo takes away the open characteristic', async ({ page }) => {
     await openPanel(page);

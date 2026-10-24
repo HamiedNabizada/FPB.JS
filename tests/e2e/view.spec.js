@@ -158,7 +158,7 @@ test.describe('Ansicht', () => {
 
     expect(await lage()).toMatchObject({ sichtbar: true });
 
-    await page.click('#openPropertiesPanelButton');
+    await page.click('#propertiesPanelToggle');
     await page.waitForTimeout(800);
 
     const nachher = await lage();

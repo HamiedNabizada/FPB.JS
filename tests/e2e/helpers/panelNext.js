@@ -2,14 +2,14 @@
 import { ImportPage } from '../pages/ImportPage';
 import basis from '../fixtures/temperieren.json';
 
-/** Helpers for the new properties panel (?panel=next) */
+/** Helpers for the properties panel (Preact, 016b) */
 
 export const clone = () => JSON.parse(JSON.stringify(basis));
 
 export async function openPanel(page, data = clone()) {
   await page.setViewportSize({ width: 1600, height: 1000 });
   const importer = new ImportPage(page);
-  await importer.goto('/?panel=next');
+  await importer.goto();
   await importer.import(data);
   const toggle = page.locator('#propertiesPanelToggle');
   if ((await toggle.getAttribute('aria-expanded')) !== 'true') {

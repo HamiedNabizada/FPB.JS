@@ -1,6 +1,7 @@
 // tests/e2e/properties-panel-next.spec.js
 import { test, expect } from './support/test';
-import { openPanel, select as auswaehlen, header as kopf, field as feld, stackSize as stapel, undo as rueckgaengig } from './helpers/panelNext';
+import { openPanel, select as auswaehlen, header as kopf, field as feld, stackSize as stapel, undo as rueckgaengig, clone } from './helpers/panelNext';
+import { ImportPage } from './pages/ImportPage';
 
 /**
  * Das neue Eigenschaften-Panel (Preact, @bpmn-io/properties-panel).
@@ -9,12 +10,24 @@ import { openPanel, select as auswaehlen, header as kopf, field as feld, stackSi
 async function vorbereiten(page) {
   // starts closed, like the old panel; openPanel opens it
   await page.setViewportSize({ width: 1600, height: 1000 });
-  await page.goto('/?panel=next');
+  await page.goto('/');
   await expect(page.locator('#propertiesPanelToggle')).toHaveAttribute('aria-expanded', 'false');
   await openPanel(page);
 }
 
 test.describe('Neues Eigenschaften-Panel', () => {
+
+  // 016b T8: one panel; links kept from phase B with ?panel=next open it too
+  for (const path of ['/', '/?panel=next']) {
+    test(`the web app shows the new panel (${path})`, async ({ page }) => {
+      await page.setViewportSize({ width: 1600, height: 1000 });
+      const importer = new ImportPage(page);
+      await importer.goto(path);
+      await importer.import(clone());
+      await expect(page.locator('#propertiesPanelToggle')).toBeVisible();
+      await expect(page.locator('#openPropertiesPanelButton')).toHaveCount(0);
+    });
+  }
 
   test('zeigt ohne Auswahl die Ebene und mit Auswahl Typ und Name im Kopf', async ({ page }) => {
     await vorbereiten(page);

@@ -11,7 +11,7 @@ const showcase = path.join(__dirname, '..', 'unit', 'aml', 'oracle', 'inputs', '
 async function openWithAml(page) {
   await page.setViewportSize({ width: 1600, height: 1000 });
   const importer = new ImportPage(page);
-  await importer.goto('/?panel=next');
+  await importer.goto();
   await openImportDialog(page);
   await pickFile(page, fs.readFileSync(showcase, 'utf8'), 'Showcase-A.aml', 'application/xml');
   await expect(importButton(page)).toBeEnabled({ timeout: 15000 });
@@ -43,7 +43,7 @@ test.describe('New properties panel, AML', () => {
   test('without a kept AML file there is no AML section', async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
     const importer = new ImportPage(page);
-    await importer.goto('/?panel=next');
+    await importer.goto();
     await importer.import(JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'temperieren.json'), 'utf8')));
     await page.locator('#propertiesPanelToggle').click();
     await page.evaluate(() => {

@@ -34,6 +34,38 @@ function withCharacteristic(data, name) {
 
 test.describe('New properties panel, pending input', () => {
 
+  // moved from the old panel (016b, B3): changes from outside reach the field
+  const operatorName = (page) => page.evaluate(() =>
+    window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0].businessObject.name);
+
+  test('typing after a rename on the canvas does not write the old name back', async ({ page }) => {
+    await openPanel(page);
+    await select(page, 'Erhitzen');
+    const name = field(page, 'shortName');
+    await expect(name).toHaveValue('Erhitzen');
+    await page.evaluate(() => {
+      const operator = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+      window.fpbjs.get('modeling').updateLabel(operator, 'Neu');
+    });
+    await expect(name).toHaveValue('Neu');
+    await name.click();
+    await page.keyboard.press('End');
+    await page.keyboard.type('X');
+    await expect.poll(() => operatorName(page)).toBe('NeuX');
+  });
+
+  test('typing in the panel keeps the focus and every character', async ({ page }) => {
+    await openPanel(page);
+    await select(page, 'Erhitzen');
+    const name = field(page, 'shortName');
+    await name.click();
+    await page.keyboard.press('End');
+    await page.keyboard.type('abc', { delay: 30 });
+    await expect(name).toBeFocused();
+    await expect(name).toHaveValue('Erhitzenabc');
+    await expect.poll(() => operatorName(page)).toBe('Erhitzenabc');
+  });
+
   test('text typed for one element stays there when another one is clicked on the canvas', async ({ page }) => {
     await openPanel(page);
     await select(page, 'Erhitzen');

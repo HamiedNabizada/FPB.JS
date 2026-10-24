@@ -19,7 +19,7 @@ const marked = (page) => page.evaluate((mark) => window.fpbjs.get('elementRegist
 test('choosing a duplicate connection selects it and marks the other one', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 1000 });
   const importer = new ImportPage(page);
-  await importer.goto('/?panel=next');
+  await importer.goto();
   await importer.import(JSON.parse(JSON.stringify(basis)));
   const ids = await page.evaluate(() => {
     const registry = window.fpbjs.get('elementRegistry');

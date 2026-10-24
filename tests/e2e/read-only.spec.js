@@ -22,9 +22,6 @@ async function laden(page) {
   return { importer, fehler };
 }
 
-// in the Actions card, folded away: getByRole skips hidden elements
-const hinzufuegen = (page) => page.locator('.element-properties button', { hasText: 'Add characteristics' });
-
 const lesemodus = (page, an) => page.evaluate((an) => window.fpbjs.get('readOnly').set(an), an);
 
 /** Everything the user could change: bounds, names, count, undo position */
@@ -160,32 +157,6 @@ test.describe('Read-only mode', () => {
     await page.waitForTimeout(200);
 
     expect(await stand(page)).toEqual(vorher);
-  });
-
-  test('the panel fields show their values but take no input; the id can still be copied', async ({ page }) => {
-    await laden(page);
-    await lesemodus(page, true);
-
-    await page.locator('#openPropertiesPanelButton').click();
-    const p = await mitte(page, 'Erhitzen');
-    await page.mouse.click(p.x, p.y);
-
-    const langname = page.locator('#pp_identification_longName');
-    await expect(langname).toBeVisible();
-    await expect(langname).toHaveAttribute('readonly', '');
-    const wert = await langname.inputValue();
-    await langname.click();
-    await page.keyboard.type('xyz');
-    await expect(langname).toHaveValue(wert);
-
-    await expect(page.locator('#pp_identification_shortName')).toHaveAttribute('readonly', '');
-    await expect(hinzufuegen(page)).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Copy UniqueId to Clipboard' })).toBeEnabled();
-
-    // back to editing: the fields take input again
-    await lesemodus(page, false);
-    await expect(langname).not.toHaveAttribute('readonly', '');
-    await expect(hinzufuegen(page)).toBeEnabled();
   });
 
   test('New model and Import are off, the export stays', async ({ page }) => {

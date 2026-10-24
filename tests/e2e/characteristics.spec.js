@@ -60,56 +60,28 @@ test.describe('Characteristics', () => {
 
   test('actual value typed into the properties panel survives the export', async ({ page }) => {
     await importFixture(page);
-
-    const typed = await page.evaluate(async () => {
-      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-      const type = (input, value) => {
-        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-        setter.call(input, value);
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-      };
-      const field = (id, placeholder) => [...document.querySelectorAll('[id="' + id + '"]')]
-        .find((n) => n.tagName === 'INPUT' && n.placeholder === placeholder) || null;
-
+    await page.evaluate(() => {
       const element = window.fpbjs.get('elementRegistry')
         .filter((e) => e.businessObject && e.businessObject.name === 'Gutprodukt')[0];
       window.fpbjs.get('selection').select(element);
-      await sleep(400);
-
-      const findAddButton = () => [...document.querySelectorAll('button')]
-        .find((b) => b.textContent.trim() === 'Add characteristics');
-      const toggle = document.querySelector('#openPropertiesPanelButton');
-      if (!findAddButton() && toggle) {
-        toggle.click();
-        await sleep(700);
-      }
-      const addButton = findAddButton();
-      if (!addButton) {
-        return { error: 'Add characteristics button not found' };
-      }
-      addButton.click();
-      await sleep(700);
-
-      const actual = field('pp_characteristics_descriptiveElement_actualValues', 'value');
-      const unit = field('pp_characteristics_descriptiveElement_actualValues', 'unit');
-      if (!actual || !unit) {
-        return { error: 'actual value inputs not found' };
-      }
-      type(actual, '222');
-      await sleep(200);
-      type(unit, 'degC');
-      await sleep(400);
-      return { shown: actual.value };
     });
+    const toggle = page.locator('#propertiesPanelToggle');
+    if ((await toggle.getAttribute('aria-expanded')) !== 'true') {
+      await toggle.click();
+    }
+    await page.locator('[data-group-id="group-characteristics"]').getByRole('button', { name: 'Add characteristic' }).first().click();
+    await page.getByRole('button', { name: 'Add actual value' }).click();
+    const actual = page.locator('#bio-properties-panel-characteristic-0-actual-0-value');
+    await actual.fill('222');
+    await page.locator('#bio-properties-panel-characteristic-0-actual-0-unit').fill('degC');
+    await expect(actual).toHaveValue('222');
 
-    expect(typed.error).toBeUndefined();
-    expect(typed.shown).toBe('222');
-
-    const characteristic = await exportedCharacteristic(page, 'Gutprodukt');
-    expect(characteristic).not.toBeNull();
-    expect(characteristic.descriptiveElement.actualValues).toEqual([
-      expect.objectContaining({ value: '222', unit: 'degC' })
-    ]);
+    // the panel writes after a pause in typing
+    await expect.poll(async () => {
+      const characteristic = await exportedCharacteristic(page, 'Gutprodukt');
+      return characteristic && characteristic.descriptiveElement.actualValues
+        .map((v) => ({ value: String(v.value), unit: v.unit }));
+    }).toEqual([{ value: '222', unit: 'degC' }]);
   });
 
   test('imported actual value lists keep every entry', async ({ page }) => {

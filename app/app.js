@@ -1,10 +1,8 @@
 import FpbModeler from './fpb/FpbModeler';
 
-import PropertiesPanel from './fpb/properties-panel';
 import FpbPropertiesPanel from './fpb/properties-panel-next';
 import LayerOverview from './fpb/layer-panel';
 
-import configPP from './configPP';
 import configFile from './config';
 import AmlModule from './fpb/aml';
 
@@ -36,19 +34,11 @@ var modeler = new FpbModeler({
 
 
 modeler.get('canvas').zoom('fit-viewport');
-if (configPP.propertiesPanel.showPanel) {
-  try {
-    // Old React panel until the new one covers everything; ?panel=next shows
-    // the new Preact panel (FPB.JS_Docs Geplante-Features/016, 029 phase B)
-    const nextPanel = new URLSearchParams(window.location.search).get('panel') === 'next';
-    const propertiesPanel = nextPanel
-      ? new FpbPropertiesPanel({ container: propertiesContainer, modeler })
-      : new PropertiesPanel({ container: propertiesContainer, modeler, configPP });
-  } catch (e) {
-    console.error('[FPB.JS] PropertiesPanel init failed:', e);
-  }
-} else {
-  document.getElementsByClassName('modeler-parent')[0].removeChild(propertiesContainer);
+try {
+  // the properties panel (Preact, 016b); the React panel and ?panel=next are gone (B3)
+  new FpbPropertiesPanel({ container: propertiesContainer, modeler });
+} catch (e) {
+  console.error('[FPB.JS] PropertiesPanel init failed:', e);
 }
 
 window.fpbjs = modeler;
@@ -56,8 +46,7 @@ window.fpbjs = modeler;
 try {
   new LayerOverview({
     container: layerContainer,
-    modeler,
-    configPP
+    modeler
   });
 } catch (e) {
   console.error('[FPB.JS] LayerOverview init failed:', e);
