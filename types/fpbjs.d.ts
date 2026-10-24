@@ -425,8 +425,13 @@ export interface CreateFpbModelerOptions {
   layerContainer?: HTMLElement;
   /** Custom config object (defaults to built-in config.json) */
   config?: Record<string, any>;
-  /** Custom properties panel config (defaults to built-in configPP.json) */
-  propertiesConfig?: Record<string, any>;
+  /**
+   * Show the "New model" button in the toolbar also without the browser
+   * backup (autosave). Default false. Replaces `propertiesConfig.layerPanel.
+   * showNewModel` of 1.x; `propertiesConfig` itself is gone in 2.0 and only
+   * answered with a console warning.
+   */
+  showNewModel?: boolean;
   /**
    * Backup of the model in the browser (localStorage) and a warning before
    * leaving the page with changes that are in no file. Off by default; the
@@ -665,12 +670,15 @@ export function getClasses(): Promise<{
   PropertiesPanel: any;
   LayerOverview: any;
   defaultConfig: Record<string, any>;
-  defaultPropertiesConfig: Record<string, any>;
 }>;
 
 /** Server-side stub class (throws on instantiation) */
 export const FpbModeler: any;
-/** Server-side stub class (throws on instantiation) */
+/**
+ * Server-side stub class (throws on instantiation). In the browser,
+ * getClasses().PropertiesPanel is the properties panel (Preact); its
+ * constructor takes { container, modeler }.
+ */
 export const PropertiesPanel: any;
 /** Server-side stub class (throws on instantiation) */
 export const LayerOverview: any;
@@ -708,7 +716,5 @@ export function layoutImportData(data: any[], options?: LayoutOptions): LayoutRe
 export function needsLayout(data: any[]): boolean;
 
 export const defaultConfig: Record<string, any>;
-/** Default properties panel config (empty object on server) */
-export const defaultPropertiesConfig: Record<string, any>;
 
 export default createFpbModeler;

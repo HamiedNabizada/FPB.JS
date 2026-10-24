@@ -67,6 +67,7 @@ test.describe('Library bundle', () => {
         layoutImportData: typeof lib.layoutImportData,
         needsLayout: typeof lib.needsLayout,
         defaultConfig: typeof lib.defaultConfig,
+        // 2.0 (016b T8): the properties panel has no config any more
         defaultPropertiesConfig: typeof lib.defaultPropertiesConfig,
         stubErrors: [throws(lib.FpbModeler), throws(lib.PropertiesPanel), throws(lib.LayerOverview)]
       };
@@ -79,14 +80,14 @@ test.describe('Library bundle', () => {
       layoutImportData: 'function',
       needsLayout: 'function',
       defaultConfig: 'object',
-      defaultPropertiesConfig: 'object'
+      defaultPropertiesConfig: 'undefined'
     });
     // The top level classes are the server stubs; the real ones come from getClasses()
     exports.stubErrors.forEach((message) => expect(message).toMatch(/browser environment/));
     expect(errors).toEqual([]);
   });
 
-  test('getClasses() returns the real classes and the built-in configs in the browser', async ({ page }) => {
+  test('getClasses() returns the real classes and the built-in config in the browser', async ({ page }) => {
     await openLibraryPage(page);
 
     const classes = await page.evaluate(async () => {
@@ -98,13 +99,14 @@ test.describe('Library bundle', () => {
         PropertiesPanel: typeof c.PropertiesPanel,
         LayerOverview: typeof c.LayerOverview,
         configKeys: Object.keys(c.defaultConfig || {}).length,
-        showPanel: c.defaultPropertiesConfig.propertiesPanel && c.defaultPropertiesConfig.propertiesPanel.showPanel
+        keys: Object.keys(c).sort()
       };
     });
 
     expect(classes).toMatchObject({
       FpbModeler: 'function', stub: false, hasNewModel: 'function',
-      PropertiesPanel: 'function', LayerOverview: 'function', showPanel: true
+      PropertiesPanel: 'function', LayerOverview: 'function',
+      keys: ['FpbModeler', 'LayerOverview', 'PropertiesPanel', 'defaultConfig']
     });
     expect(classes.configKeys).toBeGreaterThan(0);
   });
@@ -177,7 +179,7 @@ test.describe('Library bundle', () => {
 
     expect(result.exports).toEqual([
       'FpbModeler', 'LayerOverview', 'PropertiesPanel', 'createFpbModeler', 'default',
-      'defaultConfig', 'defaultPropertiesConfig', 'getClasses', 'layoutImportData', 'needsLayout'
+      'defaultConfig', 'getClasses', 'layoutImportData', 'needsLayout'
     ]);
     expect(result.defaultIsFactory).toBe(true);
     expect(result.processes).toBe(3);
@@ -250,19 +252,74 @@ test.describe('createFpbModeler', () => {
     expect(errors).toEqual([]);
   });
 
-  test('a properties config with showPanel false skips the properties panel', async ({ page }) => {
-    await openLibraryPage(page);
-
-    const state = await page.evaluate(async () => {
-      const fpb = await window.FpbJS.createFpbModeler({
-        container: document.getElementById('modeler'),
-        propertiesContainer: document.getElementById('properties'),
-        propertiesConfig: { propertiesPanel: { showPanel: false } }
-      });
-      return { propertiesPanel: fpb.propertiesPanel, children: document.getElementById('properties').children.length };
+  // Review Focus 1 (B3): propertiesConfig of 1.x is answered, not broken on
+  test('an old propertiesConfig is ignored with a warning', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    const warnings = [];
+    page.on('console', (message) => {
+      if (message.type() === 'warning' && message.text().includes('propertiesConfig')) {
+        warnings.push(message.text());
+      }
     });
+    await createModeler(page, { panels: true, options: { propertiesConfig: { propertiesPanel: { showPanel: false } } } });
+    await expect(page.locator('#propertiesPanelToggle')).toBeVisible();
+    expect(warnings).toHaveLength(1);
+    expect(errors).toEqual([]);
+  });
 
-    expect(state).toEqual({ propertiesPanel: null, children: 0 });
+  test('with panels the library shows the new properties panel', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await createModeler(page, { panels: true });
+    await expect(page.locator('#propertiesPanelToggle')).toBeVisible();
+    await expect(page.locator('#openPropertiesPanelButton')).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
+  // Review Focus 2 (B3): the plugin gives the panel at most 320 px with 5 px padding
+  test('the open panel fits a narrow host column', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page, { panels: true });
+    await page.locator('#propertiesPanelToggle').click();
+    await expect(page.locator('.fpb-properties.open')).toBeVisible();
+    const fits = () => page.evaluate(() => {
+      const column = document.getElementById('properties');
+      return column.scrollWidth <= column.clientWidth;
+    });
+    expect(await fits()).toBe(true);
+
+    await page.addStyleTag({ content: '#properties { width: auto !important; max-width: 320px; padding: 5px; box-sizing: border-box; }' });
+    expect(await fits()).toBe(true);
+  });
+
+  // Review Focus 4 (B3)
+  test('a panel built through getClasses() with the arguments of 1.x appears', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    const shown = await page.evaluate(async () => {
+      const c = await window.FpbJS.getClasses();
+      const place = (left, width) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'position:absolute;top:0;height:400px;left:' + left + 'px;width:' + width + 'px';
+        document.body.appendChild(div);
+        return div;
+      };
+      const canvas = place(0, 600);
+      const panel = place(600, 320);
+      const modeler = new c.FpbModeler({ container: canvas, configFile: c.defaultConfig });
+      new c.PropertiesPanel({ container: panel, modeler, configPP: {} });
+      return !!panel.querySelector('.fpb-properties');
+    });
+    expect(shown).toBe(true);
+    expect(errors).toEqual([]);
+  });
+
+  test('showNewModel shows the New model button without the browser backup', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page, { panels: true });
+    await expect(page.locator('#newModelButton')).toHaveCount(0);
+    await page.evaluate(() => window.fpb.destroy());
+
+    await createModeler(page, { panels: true, options: { showNewModel: true } });
+    await expect(page.locator('#newModelButton')).toBeVisible();
   });
 
   test('passes further options on to the modeler (additionalModules)', async ({ page }) => {
@@ -1161,6 +1218,13 @@ test.describe('AutomationML (importAML, toAML)', () => {
     await expect(page.locator('#formatAML')).toHaveCount(0);
   });
 
+  test('the bundle does not contain the old properties panel', () => {
+    const lib = path.join(__dirname, '..', '..', 'dist');
+    for (const file of ['fpbjs.js', 'fpbjs.esm.js']) {
+      expect(fs.readFileSync(path.join(lib, file), 'utf8'), file).not.toContain('Copy UniqueId to Clipboard');
+    }
+  });
+
   test('the core bundle does not contain the AutomationML engine', () => {
     const lib = path.join(__dirname, '..', '..', 'dist');
     expect(fs.readFileSync(path.join(lib, 'fpbjs.js'), 'utf8')).not.toContain('CAEXFileType');
@@ -1217,11 +1281,15 @@ test.describe('Read-only mode', () => {
       const operator = window.fpb.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
       window.fpb.get('selection').select(operator);
     });
-    await page.locator('#openPropertiesPanelButton').click();
-    await expect(page.locator('#pp_identification_longName')).toHaveAttribute('readonly', '');
+    await page.locator('#propertiesPanelToggle').click();
+    const longName = page.locator('#bio-properties-panel-longName');
+    const add = page.getByRole('button', { name: 'Add characteristic' });
+    await expect(longName).toHaveAttribute('readonly', '');
+    await expect(add).toHaveCount(0);
 
     await page.evaluate(() => window.fpb.setReadOnly(false));
-    await expect(page.locator('#pp_identification_longName')).not.toHaveAttribute('readonly', '');
+    await expect(longName).not.toHaveAttribute('readonly', '');
+    await expect(add.first()).toBeVisible();
   });
 });
 

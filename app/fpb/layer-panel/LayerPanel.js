@@ -25,7 +25,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import './LayerPanel.css'
 
-const LayerPanel = ({ modeler, config }) => {
+const LayerPanel = ({ modeler, showNewModel: newModelOption = false }) => {
     const [isOpenedLayerPanel, setIsOpenedLayerPanel] = useState(false);
     const [showInfoModal, setShowInfoModal] = useState(false);
 
@@ -48,10 +48,9 @@ const LayerPanel = ({ modeler, config }) => {
     const shownFindings = checkCounts.error + checkCounts.warning;
 
     // Starting over clears the browser backup, so it comes with the backup;
-    // hosts without it can ask for the button in the panel config.
+    // hosts without it can ask for the button with the option showNewModel.
     const autosave = modeler.get('autosave', false);
-    const showNewModel = Boolean((autosave && autosave.isEnabled()) ||
-        (config && config.layerPanel && config.layerPanel.showNewModel));
+    const showNewModel = Boolean((autosave && autosave.isEnabled()) || newModelOption);
 
 
     const isOpenedLayerButton = isOpenedLayerPanel ? 

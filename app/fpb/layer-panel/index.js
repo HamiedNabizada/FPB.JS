@@ -14,7 +14,7 @@ export default class LayerOverview {
     const {
       modeler,
       container,
-      configPP
+      showNewModel = false
     } = options;
     // The import waits for this panel instead of waiting a fixed time
     modeler.get('eventBus').fire('ui.componentRegistered', { component: 'layerPanel' });
@@ -24,7 +24,7 @@ export default class LayerOverview {
         <ImportNotificationBridge modeler={modeler} />
         <AutosaveNotice modeler={modeler} />
         <ErrorBoundary>
-          <LayerPanel modeler={modeler} config={configPP} />
+          <LayerPanel modeler={modeler} showNewModel={showNewModel} />
         </ErrorBoundary>
       </ErrorProvider>
     );

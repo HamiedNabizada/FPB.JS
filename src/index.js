@@ -4,7 +4,7 @@
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 
-// Register FontAwesome icons used by PropertiesPanel / LayerOverview into the
+// Register FontAwesome icons used by LayerOverview and the dialogs into the
 // shared `library`. Without this the lib build renders icon="folder" etc. as blank.
 if (isBrowser) {
   // Inline side-effect import; webpack tree-shakes nothing since icons.js calls library.add().
@@ -51,9 +51,17 @@ import { serializeModel } from '../app/fpb/export/serializeModel';
 // Automatic layout works on plain JSON, so it is available without a browser.
 export { layoutImportData, needsLayout } from '../app/fpb/layout/AutoLayout';
 
-// Export empty configs for server-side compatibility
+// Export an empty config for server-side compatibility
 export const defaultConfig = {};
-export const defaultPropertiesConfig = {};
+
+// 2.0 (016b T8): the properties panel has no config; an old one is answered once
+let propertiesConfigWarned = false;
+function warnPropertiesConfig() {
+  if (!propertiesConfigWarned) {
+    propertiesConfigWarned = true;
+    console.warn('FPB.js 2.0: the option propertiesConfig is no longer used. A properties panel appears when propertiesContainer is passed; for the New model button use showNewModel.');
+  }
+}
 
 // Main factory function that dynamically loads modules only in browser
 export async function createFpbModeler(options = {}) {
@@ -67,26 +75,29 @@ export async function createFpbModeler(options = {}) {
     { default: PropertiesPanel },
     { default: LayerOverview },
     { default: XMLMapper },
-    configModule,
-    propertiesConfigModule
+    configModule
   ] = await Promise.all([
     import('../app/fpb/FpbModeler'),
-    import('../app/fpb/properties-panel'),
+    import('../app/fpb/properties-panel-next'),
     import('../app/fpb/layer-panel'),
     import('../app/fpb/xml/XMLMapper'),
-    import('../app/config.json'),
-    import('../app/configPP.json')
+    import('../app/config.json')
   ]);
-  
+
   const {
     container,
     propertiesContainer,
     layerContainer,
     config = configModule.default || configModule,
-    propertiesConfig = propertiesConfigModule.default || propertiesConfigModule,
+    propertiesConfig,
+    showNewModel = false,
     readOnly = false,
     ...modelingOptions
   } = options;
+
+  if (propertiesConfig !== undefined) {
+    warnPropertiesConfig();
+  }
 
   if (!container) {
     throw new Error('Container element is required');
@@ -105,11 +116,10 @@ export async function createFpbModeler(options = {}) {
 
   // Set up properties panel if container provided
   let propertiesPanel = null;
-  if (propertiesContainer && propertiesConfig.propertiesPanel?.showPanel) {
+  if (propertiesContainer) {
     propertiesPanel = new PropertiesPanel({
       container: propertiesContainer,
-      modeler,
-      configPP: propertiesConfig
+      modeler
     });
   }
 
@@ -119,7 +129,7 @@ export async function createFpbModeler(options = {}) {
     layerOverview = new LayerOverview({
       container: layerContainer,
       modeler,
-      configPP: propertiesConfig
+      showNewModel
     });
   }
 
@@ -419,29 +429,26 @@ function createListenerRegistry() {
 // Convenience function for getting real classes in browser environment
 export async function getClasses() {
   if (!isBrowser) {
-    return { FpbModeler, PropertiesPanel, LayerOverview, defaultConfig, defaultPropertiesConfig };
+    return { FpbModeler, PropertiesPanel, LayerOverview, defaultConfig };
   }
-  
+
   const [
     { default: FpbModeler },
     { default: PropertiesPanel },
     { default: LayerOverview },
-    configModule,
-    propertiesConfigModule
+    configModule
   ] = await Promise.all([
     import('../app/fpb/FpbModeler'),
-    import('../app/fpb/properties-panel'),
+    import('../app/fpb/properties-panel-next'),
     import('../app/fpb/layer-panel'),
-    import('../app/config.json'),
-    import('../app/configPP.json')
+    import('../app/config.json')
   ]);
-  
+
   return {
     FpbModeler,
     PropertiesPanel,
     LayerOverview,
-    defaultConfig: configModule.default || configModule,
-    defaultPropertiesConfig: propertiesConfigModule.default || propertiesConfigModule
+    defaultConfig: configModule.default || configModule
   };
 }
 
