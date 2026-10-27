@@ -34,6 +34,14 @@ const decompose = (page, name) => page.evaluate((name) => {
   window.fpbjs.get('modeling').decomposeProcessOperator(operator);
 }, name);
 
+const rename = (page, name, next) => page.evaluate(({ name, next }) => {
+  const element = window.fpbjs.get('elementRegistry')
+    .filter((e) => e.businessObject && e.businessObject.name === name && e.type !== 'label')[0];
+  window.fpbjs.get('modeling').updateLabel(element, next);
+}, { name, next });
+
+const long = (letter) => letter.repeat(60);
+
 test.describe('Breadcrumbs', () => {
 
   test('the path shows where the canvas is and a crumb opens its layer', async ({ page }) => {
@@ -140,16 +148,9 @@ test.describe('Breadcrumbs', () => {
   // Review Focus 4
   test('a deep path with long names stays on one line, right of the palette and at most half the canvas wide', async ({ page }) => {
     const { importer } = await laden(page);
-    const long = (letter) => letter.repeat(60);
-    const rename = (name, next) => page.evaluate(({ name, next }) => {
-      const element = window.fpbjs.get('elementRegistry')
-        .filter((e) => e.businessObject && e.businessObject.name === name && e.type !== 'label')[0];
-      window.fpbjs.get('modeling').updateLabel(element, next);
-    }, { name, next });
-
-    await rename('Erhitzen', long('E'));
+    await rename(page, 'Erhitzen', long('E'));
     await importer.switchToChildLayer();
-    await rename('Vorwärmen', long('V'));
+    await rename(page, 'Vorwärmen', long('V'));
     await decompose(page, long('V'));
     // a new operator in the third layer, decomposed in turn: four layers
     await page.evaluate((name) => {
@@ -170,5 +171,23 @@ test.describe('Breadcrumbs', () => {
     expect(box.nav.height).toBeLessThanOrEqual(40);
     expect(box.nav.left).toBeGreaterThanOrEqual(box.palette.right);
     expect(box.nav.width).toBeLessThanOrEqual(box.canvas.width / 2);
+  });
+
+  // V1: only long names are cut; the middle of the path gives way first
+  test('in a deep path the middle parts give way first, the project name stays whole', async ({ page }) => {
+    const { importer } = await laden(page);
+    await rename(page, 'Erhitzen', long('E'));
+    await importer.switchToChildLayer();
+    await rename(page, 'Vorwärmen', long('V'));
+    await decompose(page, long('V'));
+    await expect(current(page)).toHaveAttribute('title', long('V'));
+
+    const cut = (locator) => locator.evaluate((e) => ({ cut: e.scrollWidth > e.clientWidth, width: e.clientWidth }));
+    const project = await cut(crumb(page, 'FPBJS_Project'));
+    const middle = await cut(crumb(page, long('E')));
+    const last = await cut(current(page));
+    expect(project.cut).toBe(false);
+    expect(middle.cut).toBe(true);
+    expect(last.width).toBeGreaterThan(middle.width);
   });
 });

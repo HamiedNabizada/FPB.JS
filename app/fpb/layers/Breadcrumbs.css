@@ -30,12 +30,25 @@
   list-style: none;
 }
 
-/* one line: every part may shrink, with "…" at its end */
+/* one line, "…" at the end of a cut part: the middle of the path gives way
+   first, then the current layer; the project keeps its name up to 12em */
 .fpb-breadcrumbs li {
   display: flex;
   align-items: center;
-  flex: 0 1 auto;
+  flex: 0 1000 auto;
   min-width: 0;
+}
+
+.fpb-breadcrumbs li:first-child {
+  flex-shrink: 0;
+}
+
+.fpb-breadcrumbs li:first-child > .fpb-breadcrumb {
+  max-width: 12em;
+}
+
+.fpb-breadcrumbs li:last-child {
+  flex-shrink: 1;
 }
 
 .fpb-breadcrumb,
