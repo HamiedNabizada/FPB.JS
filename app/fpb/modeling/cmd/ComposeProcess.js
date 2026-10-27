@@ -163,15 +163,7 @@ ComposeProcess.prototype.execute = function (context) {
 
         canvas._clear();
         canvas.setRootElement(processNew, true);
-        // Reset in case the view was zoomed and scrolled
-        const zoomedAndScrolledViewbox = canvas.viewbox();
-        canvas.viewbox({
-            x: 0,
-            y: 0,
-            width: zoomedAndScrolledViewbox.outer.width,
-            height: zoomedAndScrolledViewbox.outer.height
-        });
-
+        // the view of the layer comes from LayerViews (016d V3)
 
         // This should be fail-safe
         canvas.addShape(systemLimitNew, processNew);
@@ -186,14 +178,7 @@ ComposeProcess.prototype.execute = function (context) {
         // Clear the canvas and place the shapes
         canvas._clear();
         canvas.setRootElement(processNew, true);
-        // Reset in case the view was zoomed and scrolled
-        const zoomedAndScrolledViewbox = canvas.viewbox();
-        canvas.viewbox({
-            x: 0,
-            y: 0,
-            width: zoomedAndScrolledViewbox.outer.width,
-            height: zoomedAndScrolledViewbox.outer.height
-        });
+        // the view of the layer comes from LayerViews (016d V3)
         // This should be fail-safe
         canvas.addShape(systemLimitNew, processNew);
         technicalResources.forEach(element => {

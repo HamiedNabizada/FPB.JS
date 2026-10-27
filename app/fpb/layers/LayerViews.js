@@ -1,8 +1,10 @@
 import { fitToViewport } from '../help/viewport';
+import { LAYER_COMMANDS } from '../modeling/behavior/LayerUndoBoundary';
 
 /**
  * The view of each layer (016d V3): leaving a layer keeps its section and
- * zoom, returning restores them, the first visit fits the layer. Memory
+ * zoom, returning restores them, the first visit fits the layer; the same
+ * for every way between layers (switch, decompose, compose). Memory
  * only; an import or a new model forgets everything. Switches marked
  * fpbTransient (the PDF export walks every layer) keep nothing, and the
  * layer they started from looks as before when they return to it.
@@ -12,6 +14,7 @@ export default function LayerViews(eventBus, canvas) {
   this._views = new Map();
   this._transientStart = null;
   this._importing = false;
+  this._leaving = null;
 
   const self = this;
 
@@ -26,7 +29,15 @@ export default function LayerViews(eventBus, canvas) {
     self.forget();
   });
 
-  eventBus.on('commandStack.process.switch.preExecute', function (event) {
+  // switching, decomposing and composing all lead into another layer
+  const on = function (phase, callback) {
+    LAYER_COMMANDS.forEach(function (command) {
+      eventBus.on('commandStack.' + command + '.' + phase, callback);
+    });
+  };
+
+  on('preExecute', function (event) {
+    self._leaving = null;
     if (self._importing) {
       return;
     }
@@ -34,6 +45,7 @@ export default function LayerViews(eventBus, canvas) {
     if (!left || !left.businessObject) {
       return;
     }
+    self._leaving = left.id;
     if (isTransient(event.context)) {
       if (!self._transientStart) {
         self._transientStart = { id: left.id, view: self._current() };
@@ -43,21 +55,24 @@ export default function LayerViews(eventBus, canvas) {
     self._views.set(left.id, self._current());
   });
 
-  eventBus.on('commandStack.process.switch.postExecuted', function (event) {
-    if (self._importing) {
+  on('postExecuted', function (event) {
+    const leaving = self._leaving;
+    self._leaving = null;
+    const process = canvas.getRootElement();
+    // aborted (a decomposition without system limit) or still the same layer
+    if (self._importing || event.context.aborted || !leaving || !process || process.id === leaving) {
       return;
     }
-    const process = event.context.process;
     if (isTransient(event.context)) {
       const start = self._transientStart;
-      if (start && process && start.id === process.id) {
+      if (start && start.id === process.id) {
         self._transientStart = null;
         self._show(start.view);
       }
       return;
     }
     self._transientStart = null;
-    const view = process && self._views.get(process.id);
+    const view = self._views.get(process.id);
     if (view) {
       self._show(view);
     } else {

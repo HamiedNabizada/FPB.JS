@@ -92,6 +92,7 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
     // the navigation hint once per page (016d V4); the switch of an import
     // and switches that only pass through do not count
     let hinted = false;
+    let hintDue = false;
     let importing = false;
     eventBus.on('FPBJS.import', function () {
         importing = true;
@@ -104,6 +105,15 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
             return;
         }
         hinted = true;
+        hintDue = true;
+    })
+    // placed when the switch has finished: the new layer has its view from
+    // LayerViews (default priority) only then
+    eventBus.on('commandStack.process.switch.postExecuted', 500, function () {
+        if (!hintDue) {
+            return;
+        }
+        hintDue = false;
         let canvasViewbox = canvas.viewbox();
         showTipp(translate(SWITCHINGPROCESS), { x: canvasViewbox.x + 10, y: canvasViewbox.y + canvasViewbox.height - 200 })
     })

@@ -117,4 +117,66 @@ test.describe('View of each layer', () => {
     await switchTo(page, ROOT);
     close(await view(page), left);
   });
+
+  // the decompose and compose buttons of the context pad are ways into and
+  // out of a layer as well
+  const root = (page) => page.evaluate(() => window.fpbjs.get('canvas').getRootElement().id);
+  const decompose = (page, name) => page.evaluate((name) => {
+    const operator = window.fpbjs.get('elementRegistry')
+      .filter((e) => e.businessObject && e.businessObject.name === name && e.type !== 'label')[0];
+    window.fpbjs.get('modeling').decomposeProcessOperator(operator);
+  }, name);
+  const compose = (page) => page.evaluate(() => {
+    const systemLimit = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:SystemLimit')[0];
+    window.fpbjs.get('modeling').composeProcess(systemLimit);
+  });
+
+  test('the decompose button fits an existing decomposition at the first visit and the parent stays as it was left', async ({ page }) => {
+    await laden(page, SMALL);
+    await setView(page, 120, -40, 1.5);
+    const left = await view(page);
+    await decompose(page, 'Erhitzen');
+    expect(await root(page)).toBe(CHILD);
+    expect(await allVisible(page)).toBe(true);
+    await switchTo(page, ROOT);
+    close(await view(page), left);
+  });
+
+  test('composing returns to the parent as it was left and the child keeps its view', async ({ page }) => {
+    await laden(page);
+    await setView(page, 120, -40, 1.5);
+    const parent = await view(page);
+    await switchTo(page, CHILD);
+    await setView(page, 300, 300, 0.7);
+    const child = await view(page);
+    await compose(page);
+    expect(await root(page)).toBe(ROOT);
+    close(await view(page), parent);
+    await switchTo(page, CHILD);
+    close(await view(page), child);
+  });
+
+  // the one navigation hint (V4) lies where the new layer is seen
+  const hintInside = async (page) => {
+    const hint = page.locator('.djs-tooltip', { hasText: 'Switching between processes is purely for navigation purposes.' });
+    await expect(hint.first()).toBeVisible();
+    return page.evaluate(() => {
+      const tip = document.querySelector('.djs-tooltip-tipp, .djs-tooltip').getBoundingClientRect();
+      const box = document.querySelector('.djs-container.djs-parent').getBoundingClientRect();
+      return tip.left >= box.left && tip.top >= box.top && tip.right <= box.right && tip.bottom <= box.bottom;
+    });
+  };
+
+  test('the navigation hint lies in the visible part of the new layer after a zoomed and scrolled layer', async ({ page }) => {
+    await laden(page);
+    await setView(page, 1500, 900, 2);
+    await switchTo(page, CHILD);
+    expect(await hintInside(page)).toBe(true);
+  });
+
+  test('the navigation hint lies in the visible part of the new layer at the first switch after the import', async ({ page }) => {
+    await laden(page);
+    await switchTo(page, CHILD);
+    expect(await hintInside(page)).toBe(true);
+  });
 });
