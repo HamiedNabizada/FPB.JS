@@ -10,7 +10,7 @@ import NewModel from './features/NewModel';
 import DownloadOptions from './features/DownloadOptions';
 import InfoModal from './components/InfoModal';
 import ConfirmationModal from './components/ConfirmationModal';
-import ProcessTreeView from './components/ProcessTreeView';
+import LayersTreeHost from './components/LayersTreeHost';
 import { describeCounts } from '../validation/FpbValidation';
 import ThemeToggle from './components/ThemeToggle';
 import ColorSchemeToggle from './components/ColorSchemeToggle';
@@ -29,7 +29,9 @@ const LayerPanel = ({ modeler, showNewModel: newModelOption = false }) => {
     const [isOpenedLayerPanel, setIsOpenedLayerPanel] = useState(false);
     const [showInfoModal, setShowInfoModal] = useState(false);
 
-    const { selectedProcess, processes, namesRevision, switchProcess } = useProcessManagement(modeler);
+    // the export (PDF of every layer) and the layers button still read the
+    // processes from here; the tree reads them from fpbLayers (016d)
+    const { selectedProcess, processes } = useProcessManagement(modeler);
     const selectedElements = useSelectedElements(modeler);
     const { showConfirmation, confirmationData, handleConfirm, handleCancel } = useConfirmation(modeler);
 
@@ -98,12 +100,7 @@ const LayerPanel = ({ modeler, showNewModel: newModelOption = false }) => {
                         <Collapse isOpened={isOpenedLayerPanel}>
                             <div className="layerPanel-ProcessOverview-Content fpb-layers">
                                 <div className="fpb-layers-title">Layers</div>
-                                <ProcessTreeView 
-                                    processes={processes}
-                                    namesRevision={namesRevision}
-                                    selectedProcess={selectedProcess}
-                                    onProcessSwitch={switchProcess}
-                                />
+                                <LayersTreeHost modeler={modeler} />
                                 <div className="fpb-layers-project">
                                     <span className="fpb-layers-project-label">Project</span>
                                     <span className="fpb-layers-project-name">{projectName}</span>

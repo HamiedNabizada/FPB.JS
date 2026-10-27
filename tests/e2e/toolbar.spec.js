@@ -42,17 +42,17 @@ test.describe('Toolbar', () => {
     const layers = page.locator('.fpb-layers');
     await expect(layers).toContainText('Layers');
     await expect(layers.locator('[aria-current="true"]')).toBeVisible();
-    await expect(layers.locator('.arborist-node', { hasText: 'Erhitzen' })).toContainText('2 operators');
+    await expect(layers.locator('.fpb-layers-node', { hasText: 'Erhitzen' })).toContainText('2 operators');
     await expect(layers.locator('.fpb-layers-project')).toContainText('FPBJS_Project');
   });
 
   test('the operator count in Layers is not cut off', async ({ page }) => {
     await open(page);
     await page.locator('#openLayerButton').click();
-    const count = page.locator('.fpb-layers .arborist-node-count').first();
+    const count = page.locator('.fpb-layers .fpb-layers-node-count').first();
     await expect(count).toBeVisible();
     const right = (await count.boundingBox()).x + (await count.boundingBox()).width;
-    const tree = await page.locator('.fpb-layers .arborist-tree-container').boundingBox();
+    const tree = await page.locator('.fpb-layers .fpb-layers-tree').boundingBox();
     expect(right).toBeLessThanOrEqual(tree.x + tree.width);
   });
 

@@ -117,12 +117,12 @@ test.describe('Barrierefreiheit', () => {
     const obersteEbene = await importer.rootProcessId();
 
     await page.locator('#openLayerButton').click();
-    const knoten = page.locator('.arborist-node-content');
+    const knoten = page.getByRole('treeitem');
     await expect(knoten.first()).toBeVisible();
 
     // in die Kind-Ebene wechseln, ohne die Maus zu benutzen
-    const kind = knoten.nth(1);
-    await kind.focus();
+    await knoten.first().focus();
+    await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
     await page.waitForTimeout(500);
 

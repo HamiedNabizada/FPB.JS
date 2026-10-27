@@ -4,9 +4,9 @@ import { ImportPage } from './pages/ImportPage';
 import basis from './fixtures/temperieren.json';
 
 /**
- * E2E tests for the process tree in the layer panel (ProcessTreeView,
- * utils/treeUtils, hooks/useProcessManagement) and for the information
- * dialog (InfoModal, constants/keyboardShortcuts).
+ * E2E tests for the layers tree in the layer panel (layers/LayersTree, a
+ * WAI-ARIA tree since 016d) and for the information dialog (InfoModal,
+ * constants/keyboardShortcuts).
  *
  * The fixture has two layers: the root (shown with the project name
  * "FPBJS_Project") and the decomposition of "Erhitzen". Tree nodes show the
@@ -32,11 +32,14 @@ async function laden(page) {
 async function baumOeffnen(page) {
   await page.locator('#openLayerButton').click();
   await expect(page.locator('#openLayerButton')).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.locator('.arborist-tree-container')).toBeVisible();
+  await expect(page.locator('.fpb-layers-tree')).toBeVisible();
 }
 
-const knoten = (page, name) => page.locator('.arborist-node-content', { hasText: name });
-const sichtbareKnoten = (page) => page.locator('.arborist-node-content').allTextContents();
+// a tree item contains its children; clicks go to its own row
+const knoten = (page, name) => page.getByRole('treeitem', { name, exact: true });
+const zeile = (page, name) => knoten(page, name).locator(':scope > .fpb-layers-node');
+const umschalter = (page, name) => zeile(page, name).locator('.fpb-layers-toggle');
+const sichtbareKnoten = (page) => page.locator('.fpb-layers-node-name').allTextContents();
 const ebene = (page) => page.evaluate(() => window.fpbjs.get('canvas').getRootElement().id);
 
 test.describe('Process tree', () => {
@@ -56,7 +59,7 @@ test.describe('Process tree', () => {
     expect(await sichtbareKnoten(page)).toEqual(['FPBJS_Project', 'Erhitzen']);
     await expect(knoten(page, 'FPBJS_Project')).toHaveAttribute('aria-current', 'true');
     await expect(knoten(page, 'Erhitzen')).not.toHaveAttribute('aria-current', 'true');
-    await expect(page.getByRole('button', { name: 'Collapse FPBJS_Project' })).toHaveAttribute('aria-expanded', 'true');
+    await expect(knoten(page, 'FPBJS_Project')).toHaveAttribute('aria-expanded', 'true');
     expect(fehler).toEqual([]);
   });
 
@@ -65,7 +68,7 @@ test.describe('Process tree', () => {
     await baumOeffnen(page);
     expect(await ebene(page)).toBe(ROOT);
 
-    await knoten(page, 'Erhitzen').click();
+    await zeile(page, 'Erhitzen').click();
     await page.waitForTimeout(300);
     expect(await ebene(page)).toBe(CHILD);
     await expect(knoten(page, 'Erhitzen')).toHaveAttribute('aria-current', 'true');
@@ -73,34 +76,42 @@ test.describe('Process tree', () => {
     // the canvas shows the elements of the child layer
     expect(await page.evaluate(() => window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Vorwärmen').length)).toBe(1);
 
-    await knoten(page, 'FPBJS_Project').click();
+    await zeile(page, 'FPBJS_Project').click();
     await page.waitForTimeout(300);
     expect(await ebene(page)).toBe(ROOT);
     await expect(knoten(page, 'FPBJS_Project')).toHaveAttribute('aria-current', 'true');
     expect(fehler).toEqual([]);
   });
 
-  test('the nodes work by keyboard: Enter switches, Space on the toggle folds', async ({ page }) => {
+  test('the tree works by keyboard: arrows move and fold, Enter opens the layer', async ({ page }) => {
     await laden(page);
     await baumOeffnen(page);
+    // one item of the tree is in the tab order
+    await expect(page.locator('.fpb-layers-tree [role="treeitem"][tabindex="0"]')).toHaveCount(1);
 
-    await knoten(page, 'Erhitzen').focus();
+    await knoten(page, 'FPBJS_Project').focus();
+    await page.keyboard.press('ArrowDown');
+    await expect(knoten(page, 'Erhitzen')).toBeFocused();
     await page.keyboard.press('Enter');
     await page.waitForTimeout(300);
     expect(await ebene(page)).toBe(CHILD);
 
-    const toggle = page.getByRole('button', { name: 'Collapse FPBJS_Project' });
-    await toggle.focus();
-    await page.keyboard.press(' ');
-    await expect(page.getByRole('button', { name: 'Expand FPBJS_Project' })).toHaveAttribute('aria-expanded', 'false');
-    expect(await sichtbareKnoten(page)).toEqual(['FPBJS_Project']);
-
-    await page.getByRole('button', { name: 'Expand FPBJS_Project' }).focus();
-    await page.keyboard.press('Enter');
-    expect(await sichtbareKnoten(page)).toEqual(['FPBJS_Project', 'Erhitzen']);
-
     await knoten(page, 'FPBJS_Project').focus();
-    await page.keyboard.press(' ');
+    await page.keyboard.press('ArrowLeft');
+    await expect(knoten(page, 'FPBJS_Project')).toHaveAttribute('aria-expanded', 'false');
+    expect(await sichtbareKnoten(page)).toEqual(['FPBJS_Project']);
+    await page.keyboard.press('ArrowRight');
+    await expect(knoten(page, 'FPBJS_Project')).toHaveAttribute('aria-expanded', 'true');
+    await page.keyboard.press('ArrowRight');
+    await expect(knoten(page, 'Erhitzen')).toBeFocused();
+    await page.keyboard.press('ArrowLeft');
+    await expect(knoten(page, 'FPBJS_Project')).toBeFocused();
+    await page.keyboard.press('End');
+    await expect(knoten(page, 'Erhitzen')).toBeFocused();
+    await page.keyboard.press('Home');
+    await expect(knoten(page, 'FPBJS_Project')).toBeFocused();
+
+    await page.keyboard.press('Enter');
     await page.waitForTimeout(300);
     expect(await ebene(page)).toBe(ROOT);
   });
@@ -108,10 +119,10 @@ test.describe('Process tree', () => {
   test('collapsing and expanding by mouse does not switch the layer', async ({ page }) => {
     await laden(page);
     await baumOeffnen(page);
-    await page.getByRole('button', { name: 'Collapse FPBJS_Project' }).click();
+    await umschalter(page, 'FPBJS_Project').click();
     expect(await sichtbareKnoten(page)).toEqual(['FPBJS_Project']);
-    await expect(page.getByRole('button', { name: 'Expand FPBJS_Project' })).toHaveText('+');
-    await page.getByRole('button', { name: 'Expand FPBJS_Project' }).click();
+    await expect(umschalter(page, 'FPBJS_Project')).toHaveText('+');
+    await umschalter(page, 'FPBJS_Project').click();
     expect(await sichtbareKnoten(page)).toEqual(['FPBJS_Project', 'Erhitzen']);
     expect(await ebene(page)).toBe(ROOT);
   });
@@ -180,19 +191,19 @@ test.describe('Process tree', () => {
     expect(await sichtbareKnoten(page)).toEqual(['FPBJS_Project', 'Erhitzen', 'Vorwärmen']);
     await expect(knoten(page, 'Vorwärmen')).toHaveAttribute('aria-current', 'true');
     // indentation grows with the depth
-    const einzug = await page.evaluate(() => [...document.querySelectorAll('.arborist-node')].map((n) => parseFloat(getComputedStyle(n).paddingLeft) || 0));
+    const einzug = await page.evaluate(() => [...document.querySelectorAll('.fpb-layers-node')].map((n) => parseFloat(getComputedStyle(n).paddingLeft) || 0));
     expect(einzug[2]).toBeGreaterThan(einzug[1]);
     expect(einzug[1]).toBeGreaterThan(einzug[0]);
 
-    await knoten(page, 'FPBJS_Project').click();
+    await zeile(page, 'FPBJS_Project').click();
     await page.waitForTimeout(300);
     expect(await ebene(page)).toBe(ROOT);
-    await knoten(page, 'Vorwärmen').click();
+    await zeile(page, 'Vorwärmen').click();
     await page.waitForTimeout(300);
     expect(await ebene(page)).toBe(enkel);
 
     // folding the middle level hides the grandchild
-    await page.getByRole('button', { name: 'Collapse Erhitzen' }).click();
+    await umschalter(page, 'Erhitzen').click();
     expect(await sichtbareKnoten(page)).toEqual(['FPBJS_Project', 'Erhitzen']);
     expect(fehler).toEqual([]);
   });
@@ -200,7 +211,7 @@ test.describe('Process tree', () => {
   test('switching up from the canvas moves the mark in the open tree', async ({ page }) => {
     const { fehler } = await laden(page);
     await baumOeffnen(page);
-    await knoten(page, 'Erhitzen').click();
+    await zeile(page, 'Erhitzen').click();
     await page.waitForTimeout(300);
     await expect(knoten(page, 'Erhitzen')).toHaveAttribute('aria-current', 'true');
 
@@ -224,7 +235,7 @@ test.describe('Process tree', () => {
   test('a decomposition made while the tree is open shows the new layer marked', async ({ page }) => {
     await laden(page);
     await baumOeffnen(page);
-    await knoten(page, 'Erhitzen').click();
+    await zeile(page, 'Erhitzen').click();
     await page.waitForTimeout(300);
 
     const p = await page.evaluate(() => {

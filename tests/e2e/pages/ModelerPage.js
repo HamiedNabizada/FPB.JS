@@ -317,7 +317,7 @@ export class ModelerPage {
    */
   async switchToLayer(layerName) {
     await this.openLayerPanel();
-    await this.page.locator('.arborist-node-content').filter({ hasText: layerName }).click();
+    await this.page.getByRole('treeitem', { name: layerName, exact: true }).locator(':scope > .fpb-layers-node').click();
     await this.page.waitForTimeout(1000);
   }
 

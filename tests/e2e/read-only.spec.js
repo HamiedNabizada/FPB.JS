@@ -189,7 +189,7 @@ test.describe('Read-only mode', () => {
     expect(await page.evaluate(() => window.fpbjs.get('canvas').zoom())).toBeGreaterThan(zoom);
 
     await page.locator('#openLayerButton').click();
-    await page.locator('.arborist-node-content', { hasText: 'Erhitzen' }).click();
+    await page.getByRole('treeitem', { name: 'Erhitzen', exact: true }).locator(':scope > .fpb-layers-node').click();
     await page.waitForTimeout(300);
     expect(await page.evaluate(() => window.fpbjs.get('canvas').getRootElement().id)).toBe(CHILD);
 

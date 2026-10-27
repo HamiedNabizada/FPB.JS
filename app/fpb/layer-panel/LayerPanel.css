@@ -103,80 +103,6 @@ padding-top: 3px;
       color: #ffffff;
   }
 
-  /* React Arborist Tree Styles */
-  .arborist-node {
-    display: flex;
-    align-items: center;
-    padding: 6px 8px;
-    cursor: pointer;
-    border-radius: 3px;
-    margin: 1px 0;
-    transition: all 0.15s ease;
-    color: #333;
-    background: transparent;
-    position: relative;
-  }
-
-  .arborist-node:hover {
-    background-color: #f5f5f5;
-  }
-
-  .arborist-node--selected {
-    background-color: #e9e9e9;
-    font-weight: 500;
-  }
-
-  .arborist-node--selected:hover {
-    background-color: #d5d5d5;
-  }
-
-  .arborist-node-content {
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 14px;
-    line-height: 1.4;
-  }
-
-  .arborist-toggle {
-    font-size: 14px;
-    color: #666;
-    margin-right: 8px;
-    width: 16px;
-    text-align: center;
-    cursor: pointer;
-    user-select: none;
-    font-weight: bold;
-  }
-
-  .arborist-toggle:hover {
-    color: #333;
-  }
-
-  /* Hide default Arborist icons and drag handles */
-  .react-arborist-drag-handle {
-    display: none !important;
-  }
-
-  /* Custom tree container */
-  .arborist-tree-container {
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    background: white;
-    overflow: hidden;
-    min-height: 150px;
-    max-height: 300px;
-    display: inline-block;
-    width: auto;
-  }
-
-  .arborist-search {
-    margin-bottom: 8px;
-    border-radius: 3px;
-    border: 1px solid #ccc;
-  }
-
 /* Dark mode styles for LayerPanel */
 [data-theme="dark"] .layerPanel {
   color: var(--fpb-text-primary);
@@ -228,49 +154,9 @@ padding-top: 3px;
   background-color: var(--fpb-button-hover);
 }
 
-/* React Arborist dark mode */
-[data-theme="dark"] .arborist-node {
-  color: var(--fpb-text-primary);
-  background: transparent;
-}
-
-[data-theme="dark"] .arborist-node:hover {
-  background-color: var(--fpb-button-hover);
-}
-
-[data-theme="dark"] .arborist-node--selected {
-  background-color: var(--fpb-button-bg);
-  color: var(--fpb-text-primary);
-}
-
-[data-theme="dark"] .arborist-node--selected:hover {
-  background-color: var(--fpb-button-hover);
-}
-
-[data-theme="dark"] .arborist-toggle {
-  color: var(--fpb-text-secondary);
-}
-
-[data-theme="dark"] .arborist-toggle:hover {
-  color: var(--fpb-text-primary);
-}
-
-[data-theme="dark"] .arborist-tree-container {
-  border: 1px solid var(--fpb-border-color);
-  background: var(--fpb-panel-bg);
-}
-
-[data-theme="dark"] .arborist-search {
-  background: var(--fpb-input-bg);
-  border: 1px solid var(--fpb-input-border);
-  color: var(--fpb-text-primary);
-}
-
 /* Tastaturbedienung sichtbar machen (Feature 022, WCAG 2.4.7).
    Ohne diese Regeln war beim Durchtabben nicht zu erkennen, wo man steht. */
 .layerPanel button:focus-visible,
-.arborist-node [role="button"]:focus-visible,
-.arborist-node:focus-visible,
 .examples:focus-visible {
   outline: 2px solid #4A90E2;
   outline-offset: 2px;
@@ -339,51 +225,6 @@ padding-top: 3px;
   font-size: 14px;
   font-weight: 600;
   color: var(--fpb-text);
-}
-
-:root .fpb-layers .arborist-tree-container {
-  display: block;
-  width: 100%;
-  border: 0;
-  border-radius: 8px;
-  background: var(--fpb-surface);
-  box-shadow: var(--fpb-shadow-card);
-}
-
-:root .fpb-layers .arborist-search {
-  margin: 6px;
-  width: calc(100% - 12px);
-  border: 1px solid var(--fpb-control-border);
-  border-radius: var(--fpb-radius-control);
-  background: var(--fpb-surface);
-  color: var(--fpb-text);
-}
-
-:root .fpb-layers .arborist-node {
-  color: var(--fpb-text);
-  border-radius: 6px;
-}
-
-:root .fpb-layers .arborist-node:hover {
-  background: var(--fpb-surface-muted);
-}
-
-:root .fpb-layers .arborist-node--selected {
-  background: var(--fpb-accent-surface);
-  color: var(--fpb-accent-text);
-  font-weight: 600;
-}
-
-:root .fpb-layers .arborist-toggle {
-  color: var(--fpb-text-muted);
-}
-
-:root .fpb-layers .arborist-node-count {
-  flex: none;
-  margin-left: 6px;
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--fpb-text-subtle);
 }
 
 :root .fpb-layers-project {
