@@ -48,10 +48,17 @@ export default function Breadcrumbs(eventBus, canvas, fpbLayers, translate) {
     }
   };
 
+  // the crumb turns into text; the focus goes to the canvas, where Alt+Arrow
+  // and the other keys work
+  const open = function (process) {
+    fpbLayers.open(process);
+    canvas.focus();
+  };
+
   const update = function () {
     const show = fpbLayers.count() > 1 && !!fpbLayers.getCurrent();
     nav.hidden = !show;
-    render(show ? <Crumbs path={fpbLayers.getPath()} open={(process) => fpbLayers.open(process)} /> : null, nav);
+    render(show ? <Crumbs path={fpbLayers.getPath()} open={open} /> : null, nav);
     place();
   };
 

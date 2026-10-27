@@ -137,6 +137,15 @@ test.describe('Breadcrumbs', () => {
     expect(fehler).toEqual([]);
   });
 
+  test('a crumb opened by keyboard leaves the focus on the canvas', async ({ page }) => {
+    const { importer } = await laden(page);
+    await importer.switchToChildLayer();
+    await crumb(page, 'FPBJS_Project').focus();
+    await page.keyboard.press('Enter');
+    await expect.poll(() => ebene(page)).toBe(ROOT);
+    expect(await page.evaluate(() => window.fpbjs.get('canvas').isFocused())).toBe(true);
+  });
+
   test('crumbs work in read-only mode', async ({ page }) => {
     const { importer } = await laden(page);
     await importer.switchToChildLayer();
