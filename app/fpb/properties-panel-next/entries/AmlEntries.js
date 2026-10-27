@@ -6,8 +6,8 @@ import { useService } from '../context';
 /**
  * What the kept AML file says about the element (028 E6, E9): where it stands
  * in the file, its class and roles, its flows and links, and what goes beyond
- * FPD. Read only; FPB.js carries it through to the AML export. Port of
- * app/fpb/aml/AmlContent.js (React) for the new panel.
+ * FPD. Read only; FPB.js carries it through to the AML export. Taken over
+ * from the AML section of the React panel, which phase B3 removed.
  */
 const FLOW_LABELS = {
   'fpb:Flow': 'Flow',
