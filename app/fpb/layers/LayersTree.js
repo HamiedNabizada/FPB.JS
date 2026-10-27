@@ -182,6 +182,7 @@ function LayersTree(props) {
       moveTo(flat[flat.length - 1].node.id);
       break;
     case 'Enter':
+    case ' ':
       layers.open(node.process);
       break;
     default:

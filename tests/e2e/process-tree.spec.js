@@ -116,6 +116,14 @@ test.describe('Process tree', () => {
     expect(await ebene(page)).toBe(ROOT);
   });
 
+  test('Space opens the layer like Enter', async ({ page }) => {
+    await laden(page);
+    await baumOeffnen(page);
+    await knoten(page, 'Erhitzen').focus();
+    await page.keyboard.press('Space');
+    await expect.poll(() => ebene(page)).toBe(CHILD);
+  });
+
   test('collapsing and expanding by mouse does not switch the layer', async ({ page }) => {
     await laden(page);
     await baumOeffnen(page);
