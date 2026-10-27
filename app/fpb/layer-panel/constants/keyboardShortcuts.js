@@ -33,7 +33,9 @@ export const keyboardShortcuts = [
       { keys: [`${ctrlKey}+-`], description: 'Zoom out' },
       { keys: [`${ctrlKey}+0`], description: 'Reset zoom' },
       { keys: [`${ctrlKey}+Arrow Keys`], description: 'Pan canvas' },
-      { keys: ['Space + Mouse'], description: 'Hand tool (drag canvas)' }
+      { keys: ['Space + Mouse'], description: 'Hand tool (drag canvas)' },
+      { keys: ['Alt+↓'], description: 'Open the layer of the selected decomposed operator' },
+      { keys: ['Alt+↑'], description: 'Go to the parent layer' }
     ]
   },
   {
