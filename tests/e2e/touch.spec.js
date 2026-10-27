@@ -289,5 +289,41 @@ for (const [label, device] of [['tablet', devices['iPad (gen 7)']], ['phone', de
       await touch.doubleTap(await elementCenter(page, 'Gutprodukt'));
       await expect(page.locator('.djs-direct-editing-content')).toHaveCount(1, { timeout: 2000 });
     });
+
+    // the breadcrumbs (016d) lie on the canvas; a finger starting on them
+    // must not take hold of the element beneath
+    test('a swipe that starts on the breadcrumbs moves no element', async ({ page, context }) => {
+      await openModel(page);
+      const touch = touchDriver(page, context);
+      await page.evaluate(() => {
+        const operator = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+        window.fpbjs.get('modeling').decomposeProcessOperator(operator);
+      });
+      const card = page.locator('nav.fpb-breadcrumbs');
+      await expect(card).toBeVisible();
+      const [cx, cy] = center(await card.boundingBox());
+
+      // bring an operator of the new layer under the card (boundary states
+      // could not move anyway)
+      const id = await page.evaluate(({ cx, cy }) => {
+        const canvas = window.fpbjs.get('canvas');
+        const element = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+        const rect = window.fpbjs.get('elementRegistry').getGraphics(element).getBoundingClientRect();
+        canvas.scroll({ dx: cx - (rect.left + rect.width / 2), dy: cy - (rect.top + rect.height / 2) });
+        return element.id;
+      }, { cx, cy });
+      const position = () => page.evaluate((id) => {
+        const e = window.fpbjs.get('elementRegistry').get(id);
+        return [e.x, e.y];
+      }, id);
+      const before = await position();
+      await page.evaluate(() => {
+        window.__moves = 0;
+        window.fpbjs.get('eventBus').on('shape.move.start', () => window.__moves++);
+      });
+      await touch.drag([cx, cy], [cx + 80, cy + 60]);
+      expect(await page.evaluate(() => window.__moves)).toBe(0);
+      expect(await position()).toEqual(before);
+    });
   });
 }

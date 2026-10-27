@@ -80,7 +80,10 @@ TouchInteraction.prototype._onTouchStart = function (event) {
   const point = toClientPoint(event.touches[0]);
   const paletteEntry = domClosest(event.target, '.djs-palette .entry', true);
   const padEntry = domClosest(event.target, '.djs-context-pad .entry', true);
-  const element = paletteEntry || padEntry ? null : this._elementAt(point);
+  // the breadcrumbs (016d) lie above the diagram: a finger starting on them
+  // taps a crumb or pans, it never takes hold of the element beneath
+  const onCrumbs = domClosest(event.target, '.fpb-breadcrumbs', true);
+  const element = paletteEntry || padEntry || onCrumbs ? null : this._elementAt(point);
 
   this._touch = { event, start: point, last: point, paletteEntry, padEntry, element, mode: null };
 };
