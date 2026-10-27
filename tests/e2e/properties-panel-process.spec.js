@@ -1,6 +1,6 @@
-// tests/e2e/properties-panel-next-process.spec.js
+// tests/e2e/properties-panel-process.spec.js
 import { test, expect } from './support/test';
-import { openPanel, field, undo } from './helpers/panelNext';
+import { openPanel, field, undo } from './helpers/panel';
 
 /**
  * New panel with nothing selected: project and process (016b V5). In the test

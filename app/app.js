@@ -1,6 +1,6 @@
 import FpbModeler from './fpb/FpbModeler';
 
-import FpbPropertiesPanel from './fpb/properties-panel-next';
+import FpbPropertiesPanel from './fpb/properties-panel';
 import LayerOverview from './fpb/layer-panel';
 
 import configFile from './config';

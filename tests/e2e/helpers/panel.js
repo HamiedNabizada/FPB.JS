@@ -1,4 +1,4 @@
-// tests/e2e/helpers/panelNext.js
+// tests/e2e/helpers/panel.js
 import { ImportPage } from '../pages/ImportPage';
 import basis from '../fixtures/temperieren.json';
 

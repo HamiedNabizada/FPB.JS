@@ -1,7 +1,7 @@
-// tests/unit/properties-panel-next/characteristicsModel.test.js
+// tests/unit/properties-panel/characteristicsModel.test.js
 import { describe, it, expect } from 'vitest';
 
-import { newCharacteristic, withField, withoutCharacteristic, asList, withNewActualValue, withoutActualValue } from '../../../app/fpb/properties-panel-next/characteristics/model.js';
+import { newCharacteristic, withField, withoutCharacteristic, asList, withNewActualValue, withoutActualValue } from '../../../app/fpb/properties-panel/characteristics/model.js';
 import { cloneModdle } from '../../../app/fpb/help/moddleClone.js';
 
 const create = (type, attrs) => ({ $type: type, ...attrs });

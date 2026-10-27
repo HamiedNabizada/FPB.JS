@@ -1,6 +1,6 @@
-// tests/e2e/properties-panel-next-findings.spec.js
+// tests/e2e/properties-panel-findings.spec.js
 import { test, expect } from './support/test';
-import { openPanel, select } from './helpers/panelNext';
+import { openPanel, select } from './helpers/panel';
 
 /** New panel: findings of the model check at the element and its fields (016b V7) */
 

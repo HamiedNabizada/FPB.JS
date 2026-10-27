@@ -1,7 +1,7 @@
-// tests/unit/properties-panel-next/values.test.js
+// tests/unit/properties-panel/values.test.js
 import { describe, it, expect } from 'vitest';
 
-import { parseValue, formatValue } from '../../../app/fpb/properties-panel-next/values.js';
+import { parseValue, formatValue } from '../../../app/fpb/properties-panel/values.js';
 
 /** Setpoint and actual values: number or text (VDI 3682 Blatt 2 §5.2, 016b V2) */
 describe('values', () => {

@@ -91,7 +91,8 @@ function Shell(props) {
 
 /**
  * Properties panel on @bpmn-io/properties-panel (Preact), see FPB.JS_Docs
- * Geplante-Features/016. Replaces the React panel in app/fpb/properties-panel.
+ * Geplante-Features/016. The only properties panel since phase B3, which
+ * removed the React panel that stood here before.
  */
 export default class FpbPropertiesPanel {
   constructor(options) {

@@ -1,5 +1,5 @@
 import { test, expect } from './support/test';
-import { openPanel, select, field, businessObject, clone } from './helpers/panelNext';
+import { openPanel, select, field, businessObject, clone } from './helpers/panel';
 
 /**
  * New panel: input still waiting for the debounce when the user moves on

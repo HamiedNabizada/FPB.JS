@@ -1,6 +1,6 @@
-// tests/e2e/properties-panel-next-characteristics.spec.js
+// tests/e2e/properties-panel-characteristics.spec.js
 import { test, expect } from './support/test';
-import { openPanel, select, field, stackSize, undo, businessObject, clone } from './helpers/panelNext';
+import { openPanel, select, field, stackSize, undo, businessObject, clone } from './helpers/panel';
 
 /** New panel: characteristics as a table with a detail area (016 E7, 016b V1) */
 

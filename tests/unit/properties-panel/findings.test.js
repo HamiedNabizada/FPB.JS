@@ -1,7 +1,7 @@
-// tests/unit/properties-panel-next/findings.test.js
+// tests/unit/properties-panel/findings.test.js
 import { describe, it, expect } from 'vitest';
 
-import { findingsFor, fieldFindings } from '../../../app/fpb/properties-panel-next/findings.js';
+import { findingsFor, fieldFindings } from '../../../app/fpb/properties-panel/findings.js';
 
 const top = { id: 'p1' };
 const child = { id: 'p2' };

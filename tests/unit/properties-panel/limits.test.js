@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import {
   REGIONS, regionOf, readLimits, withRegionBound, withoutLimit, parseLimit
-} from '../../../app/fpb/properties-panel-next/characteristics/limits.js';
+} from '../../../app/fpb/properties-panel/characteristics/limits.js';
 
 /** Validity limits by the regions of VDI 3682 Blatt 2 Abschn. 5.2 (016c T8, T9) */
 

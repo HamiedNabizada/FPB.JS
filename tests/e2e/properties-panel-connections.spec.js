@@ -1,6 +1,6 @@
-// tests/e2e/properties-panel-next-connections.spec.js
+// tests/e2e/properties-panel-connections.spec.js
 import { test, expect } from './support/test';
-import { openPanel, header, undo } from './helpers/panelNext';
+import { openPanel, header, undo } from './helpers/panel';
 
 /**
  * New panel: connections (016 "Neu gegenüber heute", 016b V4). In the test

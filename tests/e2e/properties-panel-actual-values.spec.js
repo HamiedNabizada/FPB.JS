@@ -1,5 +1,5 @@
 import { test, expect } from './support/test';
-import { openPanel, select, field, undo } from './helpers/panelNext';
+import { openPanel, select, field, undo } from './helpers/panel';
 
 /**
  * Actual values as a list (016c decision 9): each with value and unit,

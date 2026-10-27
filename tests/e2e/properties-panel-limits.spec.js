@@ -1,5 +1,5 @@
 import { test, expect } from './support/test';
-import { openPanel, select, field, undo, clone } from './helpers/panelNext';
+import { openPanel, select, field, undo, clone } from './helpers/panel';
 
 /**
  * Validity limits by the regions of VDI 3682 Blatt 2 Abschn. 5.2: acceptance

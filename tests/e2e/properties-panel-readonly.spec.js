@@ -1,6 +1,6 @@
-// tests/e2e/properties-panel-next-readonly.spec.js
+// tests/e2e/properties-panel-readonly.spec.js
 import { test, expect } from './support/test';
-import { openPanel, select, field, businessObject } from './helpers/panelNext';
+import { openPanel, select, field, businessObject } from './helpers/panel';
 
 /** New panel: read-only mode (027, 016b V10) and the copy button of the id (E5) */
 

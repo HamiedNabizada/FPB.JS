@@ -78,7 +78,7 @@ export async function createFpbModeler(options = {}) {
     configModule
   ] = await Promise.all([
     import('../app/fpb/FpbModeler'),
-    import('../app/fpb/properties-panel-next'),
+    import('../app/fpb/properties-panel'),
     import('../app/fpb/layer-panel'),
     import('../app/fpb/xml/XMLMapper'),
     import('../app/config.json')
@@ -439,7 +439,7 @@ export async function getClasses() {
     configModule
   ] = await Promise.all([
     import('../app/fpb/FpbModeler'),
-    import('../app/fpb/properties-panel-next'),
+    import('../app/fpb/properties-panel'),
     import('../app/fpb/layer-panel'),
     import('../app/config.json')
   ]);

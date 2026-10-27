@@ -1,6 +1,6 @@
-// tests/e2e/properties-panel-next.spec.js
+// tests/e2e/properties-panel.spec.js
 import { test, expect } from './support/test';
-import { openPanel, select as auswaehlen, header as kopf, field as feld, stackSize as stapel, undo as rueckgaengig, clone } from './helpers/panelNext';
+import { openPanel, select as auswaehlen, header as kopf, field as feld, stackSize as stapel, undo as rueckgaengig, clone } from './helpers/panel';
 import { ImportPage } from './pages/ImportPage';
 
 /**
