@@ -1,8 +1,12 @@
 import { is } from '../help/utils';
+import { collectProcessShapes } from '../help/processShapes';
 import { buildTree, pathTo, isRootProcess } from './tree';
 
-// what can change the layers, their names or the current one (016d T2)
+// what can change the layers, their names or the current one (016d T2);
+// commandStack.changed covers commands that drop a decomposition without a
+// layerPanel event, and undo and redo
 const CHANGES = [
+  'commandStack.changed',
   'layerPanel.newProcess',
   'layerPanel.processDeleted',
   'layerPanel.reset',
@@ -38,8 +42,9 @@ export default function Layers(eventBus, canvas, modeling, fpbjs) {
 
 Layers.$inject = ['eventBus', 'canvas', 'modeling', 'fpbjs'];
 
+/** The process root shapes (the data store holds business objects) */
 Layers.prototype._processes = function () {
-  return (this._fpbjs.getProcesses && this._fpbjs.getProcesses()) || [];
+  return collectProcessShapes(this._fpbjs.getProjectDefinition());
 };
 
 Layers.prototype.getTree = function () {

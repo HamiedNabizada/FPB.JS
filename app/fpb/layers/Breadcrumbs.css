@@ -1,0 +1,76 @@
+/* Breadcrumbs of the layers (016d V1), a card in variant B next to the
+   palette; below the model check list (170) and the search (180) */
+.fpb-breadcrumbs {
+  position: absolute;
+  top: 20px;
+  left: 88px;
+  z-index: 160;
+  max-width: 50%;
+  box-sizing: border-box;
+  padding: 3px 4px;
+  border-radius: 10px;
+  background: var(--fpb-surface);
+  box-shadow: var(--fpb-shadow-card);
+  color: var(--fpb-text);
+  font-family: var(--fpb-font);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.fpb-breadcrumbs[hidden] {
+  display: none;
+}
+
+.fpb-breadcrumbs ol {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* one line: every part may shrink, with "…" at its end */
+.fpb-breadcrumbs li {
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.fpb-breadcrumb,
+.fpb-breadcrumb-current {
+  min-width: 2.5em;
+  padding: 3px 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fpb-breadcrumb {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fpb-accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.fpb-breadcrumb:hover {
+  background: var(--fpb-surface-muted);
+}
+
+.fpb-breadcrumb:focus-visible {
+  outline: 2px solid var(--fpb-accent);
+  outline-offset: 1px;
+}
+
+.fpb-breadcrumb-current {
+  font-weight: 600;
+}
+
+.fpb-breadcrumb-separator {
+  flex: none;
+  padding: 0 1px;
+  color: var(--fpb-text-subtle);
+}

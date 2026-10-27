@@ -353,6 +353,14 @@ test.describe('createFpbModeler', () => {
     expect(errors).toEqual([]);
   });
 
+  // 016d V1: the breadcrumbs live in the canvas, so a host gets them too
+  test('the breadcrumbs appear in the host container', async ({ page }) => {
+    const { errors } = await withModel(page, { panels: true });
+    await page.evaluate((id) => window.fpb.switchProcess(id), CHILD);
+    await expect(page.locator('#modeler nav.fpb-breadcrumbs .fpb-breadcrumb-current')).toHaveText('Erhitzen');
+    expect(errors).toEqual([]);
+  });
+
   test('showNewModel shows the New model button without the browser backup', async ({ page }) => {
     await openLibraryPage(page);
     await createModeler(page, { panels: true });
