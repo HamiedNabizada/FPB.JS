@@ -101,6 +101,13 @@ export default class FpbPropertiesPanel {
     // The import waits for this panel instead of waiting a fixed time
     modeler.get('eventBus').fire('ui.componentRegistered', { component: 'propertiesPanel' });
 
+    // light or dark like the rest of the modeler, also when a host builds the
+    // panel itself (getClasses); the facade registers the container as well
+    const theme = modeler.get('fpbTheme', false);
+    if (theme) {
+      theme.addContainer(container);
+    }
+
     this._container = container;
     render(<Shell modeler={modeler} />, container);
   }

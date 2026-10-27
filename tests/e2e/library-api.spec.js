@@ -312,6 +312,47 @@ test.describe('createFpbModeler', () => {
     expect(errors).toEqual([]);
   });
 
+  // final review of B3: a panel the host builds itself follows the theme like the facade's
+  test('a panel built through getClasses() follows a dark host page', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    const ratio = await page.evaluate(async (data) => {
+      const c = await window.FpbJS.getClasses();
+      const place = (left, width) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'position:absolute;top:0;height:600px;left:' + left + 'px;width:' + width + 'px';
+        document.body.appendChild(div);
+        return div;
+      };
+      const canvas = place(0, 600);
+      const panel = place(600, 360);
+      const modeler = new c.FpbModeler({ container: canvas, configFile: c.defaultConfig });
+      new c.PropertiesPanel({ container: panel, modeler });
+      const eventBus = modeler.get('eventBus');
+      await new Promise((resolve) => {
+        eventBus.once('import.done', resolve);
+        eventBus.fire('FPBJS.import', { data });
+        setTimeout(resolve, 8000);
+      });
+      const operator = modeler.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+      modeler.get('selection').select(operator);
+      panel.querySelector('#propertiesPanelToggle').click();
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const field = panel.querySelector('.bio-properties-panel-input');
+      const rgb = (value) => value.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number);
+      const luminance = ([r, g, b]) => {
+        const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+        return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+      };
+      const style = getComputedStyle(field);
+      const a = luminance(rgb(style.color));
+      const b = luminance(rgb(style.backgroundColor));
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    }, clone());
+    expect(ratio).toBeGreaterThanOrEqual(4.5);
+    expect(errors).toEqual([]);
+  });
+
   test('showNewModel shows the New model button without the browser backup', async ({ page }) => {
     await openLibraryPage(page);
     await createModeler(page, { panels: true });
