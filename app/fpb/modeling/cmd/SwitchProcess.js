@@ -63,14 +63,7 @@ SwitchProcess.prototype.execute = function (context) {
     // Clear the canvas and place the shapes
     canvas._clear();
     canvas.setRootElement(process, true);
-    // Reset in case the view was zoomed and scrolled
-    const zoomedAndScrolledViewbox = canvas.viewbox();
-    canvas.viewbox({
-        x: 0,
-        y: 0,
-        width: zoomedAndScrolledViewbox.outer.width,
-        height: zoomedAndScrolledViewbox.outer.height
-    });
+    // the view of the layer comes from layers/LayerViews (016d V3)
     // This should be fail-safe — guard against processes imported without
     // a SystemLimit (incomplete AMLs / corrupt JSON snapshots).
     if (systemLimit) {
@@ -115,6 +108,8 @@ SwitchProcess.prototype.postExecute = function (context) {
         selectedProcess: process
     });
     eventBus.fire('toolTips.processSwitched', {
-        selectedProcess: process
+        selectedProcess: process,
+        // a switch that only passes through (PDF export) shows no hint
+        transient: !!(context.hints && context.hints.fpbTransient)
     });
 }

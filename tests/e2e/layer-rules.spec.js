@@ -831,12 +831,18 @@ test.describe('Feedback when the editor refuses a move or create (UI drags)', ()
     await expect(errorTip(page, 'must remain on the system boundary')).toHaveCount(0);
   });
 
-  test('switching the layer shows the navigation hint', async ({ page }) => {
+  // 016d V4: once per page, the switch of the import does not count
+  test('the navigation hint shows at the first switch only, not at the import', async ({ page }) => {
     await load(page);
     const hint = page.locator('.djs-tooltip', { hasText: 'Switching between processes is purely for navigation purposes.' });
-    // the import switched to the entry layer as well; let that hint expire first
-    await expect(hint).toHaveCount(0, { timeout: 5000 });
+    // counted at once: the hint expires by itself after 2 s
+    expect(await hint.count()).toBe(0);
     await switchTo(page, IDS.child);
     await expect(hint.first()).toBeVisible();
+    // let it expire, then switch again
+    await expect(hint).toHaveCount(0, { timeout: 5000 });
+    await switchTo(page, IDS.root);
+    await page.waitForTimeout(300);
+    expect(await hint.count()).toBe(0);
   });
 });

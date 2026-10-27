@@ -89,9 +89,23 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
     })
 
 
+    // the navigation hint once per page (016d V4); the switch of an import
+    // and switches that only pass through do not count
+    let hinted = false;
+    let importing = false;
+    eventBus.on('FPBJS.import', function () {
+        importing = true;
+    });
+    eventBus.on(['import.done', 'import.error'], function () {
+        importing = false;
+    });
     eventBus.on(['toolTips.processSwitched'], function (event) {
+        if (hinted || importing || event.transient) {
+            return;
+        }
+        hinted = true;
         let canvasViewbox = canvas.viewbox();
-        showTipp(translate(SWITCHINGPROCESS), { x: canvasViewbox.x + 10, y: canvasViewbox.height - 200 })
+        showTipp(translate(SWITCHINGPROCESS), { x: canvasViewbox.x + 10, y: canvasViewbox.y + canvasViewbox.height - 200 })
     })
 
     eventBus.on(['toolTips.effectOnOtherLevel'], function (event) {
