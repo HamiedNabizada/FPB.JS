@@ -1,30 +1,11 @@
 import { is } from '../../help/utils';
+import { layerName } from '../../layers/tree';
 
 /**
- * Extracts and formats the display name for a process
- * @param {Object} process - The process object
- * @param {number} maxLength - Maximum length before truncation
- * @returns {string} Formatted process name
+ * Display name of a process, cut after `maxLength` characters; the same
+ * name the layers tree and the breadcrumbs show (layers/tree.js).
  */
-export const getProcessDisplayName = (process, maxLength = 25) => {
-    if (is(process.businessObject.parent, 'fpb:Project')) {
-        return process.businessObject.parent.name;
-    }
-    
-    if (process.businessObject.isDecomposedProcessOperator != null) {
-        if (process.businessObject.isDecomposedProcessOperator.name) {
-            let name = process.businessObject.isDecomposedProcessOperator.name;
-            if (name.length > maxLength) {
-                name = name.substring(0, maxLength) + "...";
-            }
-            return name;
-        } else {
-            return 'unnamed';
-        }
-    }
-    
-    return 'Process';
-};
+export const getProcessDisplayName = (process, maxLength = 25) => layerName(process, maxLength);
 
 /**
  * Creates tree data structure for React Arborist

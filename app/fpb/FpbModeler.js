@@ -50,6 +50,7 @@ import LabelEditingModule from './label';
 import ContextPadModule from './context-pad';
 import PaletteModule from './palette';
 import ModelingModule from './modeling';
+import LayersModule from './layers';
 import JsonImporter from './importer';
 import ServicesModule from './services';
 import TouchModule from './touch';
@@ -150,6 +151,7 @@ FpbModeler.prototype._modules = [
     ContextPadModule,
     PaletteModule,
     ModelingModule,
+    LayersModule,
     JsonImporter,
     ServicesModule,
     TouchModule,
