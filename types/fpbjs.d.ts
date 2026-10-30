@@ -436,6 +436,15 @@ export interface FpbFiles {
   open(): { close(result?: any): void; closed: Promise<any> } | null;
   /** Shows the dialog "Export", also in read-only mode */
   export(): { close(result?: any): void; closed: Promise<any> };
+  /**
+   * Saves the whole model with layout: in Chrome and Edge into its file
+   * (asks for the place the first time), else as a download. True when written.
+   */
+  save(): Promise<boolean>;
+  /** Like save(), always asking for a new place */
+  saveAs(): Promise<boolean>;
+  /** Ctrl/Cmd+S on a container of the host as well; returns a function that removes it */
+  bindKeys(element: HTMLElement): () => void;
 }
 
 /** Append an element to an existing one, connected and placed */

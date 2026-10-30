@@ -108,11 +108,17 @@ export default class FpbPropertiesPanel {
       theme.addContainer(container);
     }
 
+    // Ctrl+S in a field saves the model, not the page (016e D2); the field
+    // hands over what was typed before the key reaches the container
+    const files = modeler.get('fpbFiles', false);
+    this._unbindKeys = files ? files.bindKeys(container) : function () {};
+
     this._container = container;
     render(<Shell modeler={modeler} />, container);
   }
 
   destroy() {
+    this._unbindKeys();
     render(null, this._container);
   }
 }

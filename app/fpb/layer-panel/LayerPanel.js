@@ -7,6 +7,7 @@ import Collapse from 'react-collapse';
 
 import OpenFile from './features/OpenFile';
 import NewModel from './features/NewModel';
+import SaveFile from './features/SaveFile';
 import ExportFile from './features/ExportFile';
 import LayersTreeHost from './components/LayersTreeHost';
 import { describeCounts } from '../validation/FpbValidation';
@@ -61,6 +62,7 @@ const LayerPanel = ({ modeler, showNewModel: newModelOption = false }) => {
             <div className="fpb-toolbar-group" data-group="file">
                 {showNewModel && <NewModel modeler={modeler} />}
                 <OpenFile modeler={modeler} />
+                <SaveFile modeler={modeler} />
                 <ExportFile modeler={modeler} />
                 <AmlOverview modeler={modeler} />
             </div>

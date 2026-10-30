@@ -10,6 +10,9 @@ import DialogFrame from '../dialogs/DialogFrame';
  * and the error of the chosen file. A file dropped anywhere on the card
  * counts. Open hands the file to the importer and closes; an exception while
  * handing it over stays in the dialog.
+ *
+ * In Chrome and Edge "Choose file" uses the picker of the browser: the file
+ * chosen there is the one Ctrl+S saves into (V9).
  */
 export default function OpenDialog(props) {
   const { files, translate, aml, close, titleId } = props;
@@ -22,7 +25,7 @@ export default function OpenDialog(props) {
   // the file chosen last wins, also when an earlier one reads longer
   const reading = useRef(0);
 
-  const choose = (chosen) => {
+  const choose = (chosen, handle) => {
     if (!chosen) {
       return;
     }
@@ -35,7 +38,7 @@ export default function OpenDialog(props) {
       setError(problem);
       return;
     }
-    setFile({ name: chosen.name });
+    setFile({ name: chosen.name, handle: handle || null });
     setError(null);
     files.readFile(chosen).then((result) => {
       if (token === reading.current) {
@@ -54,7 +57,7 @@ export default function OpenDialog(props) {
       return;
     }
     try {
-      files._importParsed(parsed, { fileName: file.name, hierarchyId });
+      files._importParsed(parsed, { fileName: file.name, hierarchyId, handle: file.handle });
       close();
     } catch (exception) {
       setError({
@@ -62,6 +65,21 @@ export default function OpenDialog(props) {
         details: translate('An error occurred during import: {message}', { message: exception.message })
       });
     }
+  };
+
+  const pick = () => {
+    if (!files.canWriteFiles()) {
+      input.current.click();
+      return;
+    }
+    files.pickToOpen().then((picked) => {
+      if (picked) {
+        choose(picked.file, picked.handle);
+      }
+    }, () => {
+      // the browser refused its picker: the file field instead
+      input.current.click();
+    });
   };
 
   // Without preventDefault the browser would open the dropped file itself
@@ -107,7 +125,7 @@ export default function OpenDialog(props) {
               ? translate('Drop an FPB.js JSON, XML or AutomationML (.aml) file here')
               : translate('Drop an FPB.js JSON or XML file here'))}
           </span>
-          <button type="button" class="fpb-button fpb-choose-file" onClick={() => input.current.click()}>
+          <button type="button" class="fpb-button fpb-choose-file" onClick={pick}>
             {translate('Choose file')}
           </button>
           <input

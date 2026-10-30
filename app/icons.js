@@ -32,12 +32,14 @@ import { faEyeLowVision } from '@fortawesome/free-solid-svg-icons/faEyeLowVision
 import { faFileCode } from '@fortawesome/free-solid-svg-icons/faFileCode';
 import { faFileImport } from '@fortawesome/free-solid-svg-icons/faFileImport';
 import { faFileExport } from '@fortawesome/free-solid-svg-icons/faFileExport';
+import { faFloppyDisk } from '@fortawesome/free-solid-svg-icons/faFloppyDisk';
 
 library.add(
   faEye,
   faFileCode,
   faFileImport,
   faFileExport,
+  faFloppyDisk,
   faEyeLowVision,
   faMagnifyingGlass,
   faListCheck,

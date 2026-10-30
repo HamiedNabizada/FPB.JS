@@ -9,6 +9,7 @@ import { FindingsContext } from '../findingsContext';
 const text = (value) => (value === undefined || value === null ? '' : String(value));
 const sameText = (a, b) => a === b;
 const run = (job) => job();
+const isCmdWithChar = (event) => (event.ctrlKey || event.metaKey) && !event.altKey && /^[a-zA-Z]$/.test(event.key);
 
 /**
  * Text field in the markup of @bpmn-io/properties-panel, with what its
@@ -87,6 +88,13 @@ export function FpbTextField(props) {
               }
             }}
             onBlur={() => debounced.flush && debounced.flush()}
+            onKeyDown={(event) => {
+              // Ctrl+S and other commands work on what was typed, as in the
+              // library's field (016e D2)
+              if (isCmdWithChar(event) && debounced.flush) {
+                debounced.flush();
+              }
+            }}
           />
           {children}
         </div>

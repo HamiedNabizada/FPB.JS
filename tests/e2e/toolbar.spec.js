@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { test, expect } from './support/test';
 import { ImportPage } from './pages/ImportPage';
 import basis from './fixtures/temperieren.json';
@@ -18,6 +20,18 @@ async function open(page) {
 const group = (page, name) => page.locator('.layerPanel .fpb-toolbar-group[data-group="' + name + '"]');
 
 test.describe('Toolbar', () => {
+
+  // 016e D2, V11; "AML file" only while an AML file is kept
+  test('the file group holds New model, Open, Save, Export and AML file in this order', async ({ page }) => {
+    await open(page);
+    const ids = () => group(page, 'file').locator('button').evaluateAll((buttons) => buttons.map((b) => b.id));
+    expect(await ids()).toEqual(['newModelButton', 'openFileButton', 'saveFileButton', 'exportButton']);
+
+    const aml = fs.readFileSync(path.join(__dirname, '..', 'unit', 'aml', 'oracle', 'inputs', 'generated', 'mixed.aml'), 'utf8');
+    await page.evaluate((text) => window.fpbjs.get('amlSupport').importAml(text, { fileName: 'Anlage.aml' }), aml);
+    await expect(group(page, 'file').locator('#amlOverviewButton')).toBeVisible({ timeout: 15000 });
+    expect(await ids()).toEqual(['newModelButton', 'openFileButton', 'saveFileButton', 'exportButton', 'amlOverviewButton']);
+  });
 
   test('the toolbar shows three groups and no options menu', async ({ page }) => {
     await open(page);

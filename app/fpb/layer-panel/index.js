@@ -15,6 +15,8 @@ export default class LayerOverview {
     } = options;
     // The import waits for this panel instead of waiting a fixed time
     modeler.get('eventBus').fire('ui.componentRegistered', { component: 'layerPanel' });
+    // Ctrl+S on a button of the toolbar saves the model, not the page
+    this._unbindKeys = modeler.get('fpbFiles').bindKeys(container);
     const root = this._root = createRoot(container);
     root.render(
       <ErrorBoundary>
@@ -25,6 +27,7 @@ export default class LayerOverview {
 
   /** Unmounts the panel; its listeners on the modeler go with it */
   destroy() {
+    this._unbindKeys();
     if (this._root) {
       this._root.unmount();
       this._root = null;

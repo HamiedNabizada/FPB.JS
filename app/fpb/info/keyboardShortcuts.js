@@ -7,6 +7,14 @@ const ctrlKey = isMac ? '⌘' : 'Ctrl';
 
 export const keyboardShortcuts = [
   {
+    category: 'Files',
+    items: [
+      { keys: [`${ctrlKey}+O`], description: 'Open a file' },
+      { keys: [`${ctrlKey}+S`], description: 'Save (in Chrome and Edge into the opened file)' },
+      { keys: [`${ctrlKey}+Shift+S`], description: 'Save under a new name' }
+    ]
+  },
+  {
     category: 'Editing',
     items: [
       { keys: [`${ctrlKey}+Z`], description: 'Undo (within the current layer)' },
