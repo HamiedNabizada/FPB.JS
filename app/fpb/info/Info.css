@@ -1,0 +1,130 @@
+/* "FPB.js Information" (016e V6): tabs on the left, the content on the
+   right; on a narrow screen the tabs sit on top */
+.fpb-info {
+  display: flex;
+  gap: 20px;
+  min-height: 320px;
+}
+
+.fpb-info-tabs {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 2px;
+  width: 190px;
+}
+
+.fpb-info-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: var(--fpb-radius-control);
+  background: transparent;
+  color: var(--fpb-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fpb-info-tab .fpb-icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--fpb-text-subtle);
+}
+
+.fpb-info-tab:hover {
+  background: var(--fpb-surface-muted);
+}
+
+.fpb-info-tab.is-selected {
+  background: var(--fpb-accent-surface);
+  color: var(--fpb-accent-text);
+  font-weight: 600;
+}
+
+.fpb-info-tab.is-selected .fpb-icon {
+  color: var(--fpb-accent-text);
+}
+
+.fpb-info-tab:focus-visible {
+  outline: 2px solid var(--fpb-accent);
+  outline-offset: 1px;
+}
+
+.fpb-info-panel {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.fpb-info-panel h3 {
+  margin: 2px 0 6px;
+  color: var(--fpb-text);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.fpb-info-panel h4 {
+  margin: 14px 0 6px;
+  color: var(--fpb-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fpb-info-muted {
+  color: var(--fpb-text-muted);
+}
+
+.fpb-info-panel a {
+  color: var(--fpb-accent);
+}
+
+.fpb-info-shortcuts {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.fpb-info-shortcuts th {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--fpb-line-strong);
+  color: var(--fpb-text-muted);
+  font-weight: 600;
+  text-align: left;
+}
+
+.fpb-info-shortcuts td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--fpb-line);
+  vertical-align: top;
+}
+
+.fpb-info-shortcuts td:first-child {
+  width: 40%;
+}
+
+.fpb-info-shortcuts kbd {
+  display: inline-block;
+  margin: 0 4px 2px 0;
+  padding: 1px 6px;
+  border: 1px solid var(--fpb-line-strong);
+  border-radius: 4px;
+  background: var(--fpb-surface-muted);
+  color: var(--fpb-text);
+  font-family: var(--fpb-font-mono);
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .fpb-info {
+    flex-direction: column;
+  }
+
+  .fpb-info-tabs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: auto;
+  }
+}

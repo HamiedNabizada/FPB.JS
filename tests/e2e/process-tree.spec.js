@@ -307,7 +307,7 @@ test.describe('Information dialog', () => {
     await laden(page);
     const dialog = await oeffnen(page);
     await expect(dialog).toContainText('VDI/VDE 3682');
-    await dialog.locator('.modal-header button').click();
+    await dialog.locator('.fpb-dialog-close').click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 
@@ -325,8 +325,8 @@ test.describe('Information dialog', () => {
       await dialog.getByText('Keyboard Shortcuts', { exact: true }).click();
     });
     await expect(dialog).toContainText('Available Keyboard Shortcuts');
-    const tabelle = await dialog.locator('.tab-pane.active tbody tr').evaluateAll((rows) => rows.map((r) => ({
-      keys: [...r.querySelectorAll('.badge')].map((b) => b.textContent.trim()),
+    const tabelle = await dialog.locator('[role="tabpanel"]:not([hidden]) tbody tr').evaluateAll((rows) => rows.map((r) => ({
+      keys: [...r.querySelectorAll('kbd')].map((b) => b.textContent.trim()),
       text: r.cells[1].textContent.trim(),
     })));
     const dienst = await page.evaluate(() => window.fpbjs.get('keyboardAlignService').getShortcuts());
@@ -363,11 +363,30 @@ test.describe('Information dialog', () => {
     await laden(page);
     await page.locator('.layerPanel button[aria-label="Switch to Dark Mode"]').click();
     const dialog = await oeffnen(page);
-    const farben = await dialog.locator('.modal-content').evaluate((el) => ({
+    const farben = await dialog.evaluate((el) => ({
       bg: getComputedStyle(el).backgroundColor,
-      fg: getComputedStyle(el.querySelector('h5')).color,
+      fg: getComputedStyle(el.querySelector('[role="tabpanel"]:not([hidden]) h3')).color,
     }));
     expect(farben.bg).not.toBe('rgb(255, 255, 255)');
     expect(farben.fg).not.toBe(farben.bg);
+  });
+
+  test('the tabs work with the arrow keys', async ({ page }) => {
+    await laden(page);
+    const dialog = await oeffnen(page);
+    const tabs = dialog.getByRole('tab');
+    await expect(tabs).toHaveText(['About', 'Keyboard Shortcuts', 'Help']);
+    await tabs.first().focus();
+    await page.keyboard.press('ArrowDown');
+    await expect(dialog.getByRole('tab', { name: 'Keyboard Shortcuts' })).toBeFocused();
+    await expect(dialog.getByRole('tab', { name: 'Keyboard Shortcuts' })).toHaveAttribute('aria-selected', 'true');
+    await expect(dialog.getByRole('tabpanel')).toContainText('Available Keyboard Shortcuts');
+    await page.keyboard.press('End');
+    await expect(dialog.getByRole('tab', { name: 'Help' })).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(dialog.getByRole('tab', { name: 'About' })).toBeFocused();
+    await page.keyboard.press('ArrowUp');
+    await expect(dialog.getByRole('tab', { name: 'Help' })).toHaveAttribute('aria-selected', 'true');
+    await expect(dialog.getByRole('tabpanel')).toContainText('Report Issues');
   });
 });

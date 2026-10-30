@@ -1,6 +1,7 @@
 import { test, expect } from './support/test';
 import { ImportPage } from './pages/ImportPage';
 import basis from './fixtures/temperieren.json';
+import { DIALOG } from './helpers/ui';
 
 /**
  * Alt+Down opens the layer of the selected decomposed operator, Alt+Up goes
@@ -89,7 +90,7 @@ test.describe('Layer shortcuts', () => {
   test('the help lists Alt+Up and Alt+Down', async ({ page }) => {
     await laden(page);
     await page.getByRole('button', { name: 'Show information and help', exact: true }).click();
-    const dialog = page.locator('.modal.show');
+    const dialog = page.locator(DIALOG);
     await dialog.getByText('Keyboard Shortcuts', { exact: true }).click();
     await expect(dialog).toContainText('Alt+↓');
     await expect(dialog).toContainText('Open the layer of the selected decomposed operator');

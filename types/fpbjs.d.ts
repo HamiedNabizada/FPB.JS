@@ -414,6 +414,12 @@ export interface FpbDialogs {
   open(component: any, props?: Record<string, any>, options?: { className?: string }): { close(result?: any): void; closed: Promise<any> };
 }
 
+/** The dialog "FPB.js Information" (016e) */
+export interface FpbInfo {
+  /** Without a tab the one chosen last */
+  open(tab?: 'about' | 'shortcuts' | 'help'): { close(): void; closed: Promise<void> };
+}
+
 /** Append an element to an existing one, connected and placed */
 export interface FpbAppend {
   getOptions(element: Element): Array<{ type: string; label: string }>;
@@ -466,6 +472,7 @@ export interface FpbServiceMap {
   fpbValidation: FpbValidation;
   fpbNotifications: FpbNotifications;
   fpbDialogs: FpbDialogs;
+  fpbInfo: FpbInfo;
   fpbSearch: FpbSearch;
   fpbAppend: FpbAppend;
   fpbCopyPaste: FpbCopyPaste;

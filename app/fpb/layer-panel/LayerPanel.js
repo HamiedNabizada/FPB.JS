@@ -8,7 +8,6 @@ import Collapse from 'react-collapse';
 import Import from './features/Import';
 import NewModel from './features/NewModel';
 import DownloadOptions from './features/DownloadOptions';
-import InfoModal from './components/InfoModal';
 import LayersTreeHost from './components/LayersTreeHost';
 import { describeCounts } from '../validation/FpbValidation';
 import ThemeToggle from './components/ThemeToggle';
@@ -25,7 +24,6 @@ import './LayerPanel.css'
 
 const LayerPanel = ({ modeler, showNewModel: newModelOption = false }) => {
     const [isOpenedLayerPanel, setIsOpenedLayerPanel] = useState(false);
-    const [showInfoModal, setShowInfoModal] = useState(false);
 
     // the export (PDF of every layer) and the layers button still read the
     // processes from here; the tree reads them from fpbLayers (016d)
@@ -147,7 +145,7 @@ const LayerPanel = ({ modeler, showNewModel: newModelOption = false }) => {
                     Show information and help
                 </Tooltip>}>
                     <Button 
-                        onClick={() => setShowInfoModal(true)} 
+                        onClick={() => modeler.get('fpbInfo').open()} 
                         variant="secondary-outline"
                         aria-label="Show information and help"
                     >
@@ -156,11 +154,6 @@ const LayerPanel = ({ modeler, showNewModel: newModelOption = false }) => {
                 </OverlayTrigger>
             </div>
             
-            <InfoModal
-                show={showInfoModal}
-                onHide={() => setShowInfoModal(false)}
-                modeler={modeler}
-            />
 
         </div>
     );

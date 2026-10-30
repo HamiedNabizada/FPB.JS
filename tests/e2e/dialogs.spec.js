@@ -51,8 +51,9 @@ test.describe('Dialogs', () => {
     for (const openDialog of openers) {
       await openDialog();
       await expect(dialog(page)).toHaveClass(/fpb-dialog/);
-      await expect(dialog(page).locator('.modal-header [data-icon="rectangle-xmark"]')).toHaveCount(0);
-      await dialog(page).locator('.modal-header .btn-close').click();
+      await expect(dialog(page).locator('[data-icon="rectangle-xmark"]')).toHaveCount(0);
+      // react-bootstrap until D2 (import, export), native since D1 (information)
+      await dialog(page).locator('.modal-header .btn-close, .fpb-dialog-close').click();
       await expect(dialog(page)).toHaveCount(0);
 
       await openDialog();

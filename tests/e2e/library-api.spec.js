@@ -1518,6 +1518,12 @@ test.describe('theme set by the host', () => {
     await expect(page.locator('.modal.show .modal-content')).toHaveCSS('background-color', 'rgb(26, 32, 39)');
     // the close button is drawn dark by Bootstrap; on the dark card it is turned light
     expect(await page.locator('.modal.show .btn-close').evaluate((b) => getComputedStyle(b).filter)).toContain('invert');
+
+    // the native dialogs of the modeler (016e) live under <body> as well
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.modal.show')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Show information and help', exact: true }).click();
+    await expect(page.locator('dialog.fpb-dialog[open]')).toHaveCSS('background-color', 'rgb(26, 32, 39)');
     expect(errors).toEqual([]);
   });
 

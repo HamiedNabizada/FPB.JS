@@ -1,5 +1,5 @@
 /**
- * Keyboard shortcuts configuration for the info modal
+ * Keyboard shortcuts listed in the dialog "FPB.js Information" (info/)
  */
 
 const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
