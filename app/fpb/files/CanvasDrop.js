@@ -27,7 +27,9 @@ export default function CanvasDrop(canvas, fpbFiles, injector, translate, eventB
     if (!hint) {
       hint = document.createElement('div');
       hint.className = 'fpb-drop-hint';
-      hint.textContent = translate('Drop the file to open it');
+      const label = document.createElement('span');
+      label.textContent = translate('Drop the file to open it');
+      hint.appendChild(label);
       container.appendChild(hint);
     }
   };
