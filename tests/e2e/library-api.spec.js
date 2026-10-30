@@ -420,6 +420,47 @@ test.describe('createFpbModeler', () => {
     expect(errors).toEqual([]);
   });
 
+  // final review 016e D1: hosts that answered questions themselves before
+  test('a host that answers a question itself through on() gets one answer and no second dialog', async ({ page }) => {
+    await withModel(page);
+    const seen = await page.evaluate(async () => {
+      const seen = [];
+      window.fpb.on('confirmation.confirmed', () => seen.push('confirmed'));
+      window.fpb.on('confirmation.required', (e) => window.fpb.fire('confirmation.confirmed', { action: e.action }));
+      window.fpb.fire('confirmation.required', { title: 'Mine', message: 'm', action: { type: 'host' } });
+      await new Promise((r) => setTimeout(r, 300));
+      seen.push('dialogs ' + document.querySelectorAll('dialog.fpb-dialog').length);
+      return seen;
+    });
+    expect(seen).toEqual(['confirmed', 'dialogs 0']);
+  });
+
+  test('a host that answers a question later closes the open dialog without a second answer', async ({ page }) => {
+    await withModel(page);
+    await page.evaluate(() => {
+      window.__seen = [];
+      window.fpb.on('confirmation.confirmed', () => window.__seen.push('confirmed'));
+      window.fpb.on('confirmation.cancelled', () => window.__seen.push('cancelled'));
+      window.fpb.on('confirmation.required', (e) => {
+        window.__answer = () => window.fpb.fire('confirmation.confirmed', { action: e.action });
+      });
+      window.fpb.fire('confirmation.required', { title: 'Later', message: 'm', action: { type: 'host' } });
+    });
+    await expect(page.locator('dialog.fpb-dialog[open]')).toBeVisible();
+    await page.evaluate(() => window.__answer());
+    await expect(page.locator('dialog.fpb-dialog')).toHaveCount(0);
+    await page.waitForTimeout(200);
+    expect(await page.evaluate(() => window.__seen)).toEqual(['confirmed']);
+  });
+
+  test('with confirmations: false the modeler leaves questions to the host', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page, { options: { confirmations: false } });
+    await page.evaluate(() => window.fpb.fire('confirmation.required', { title: 'Mine', message: 'm', action: { type: 'host' } }));
+    await page.waitForTimeout(300);
+    await expect(page.locator('dialog.fpb-dialog')).toHaveCount(0);
+  });
+
   // Review Focus 2 (016e D1)
   test('destroy closes an open question as cancelled and leaves nothing behind', async ({ page }) => {
     await withModel(page);

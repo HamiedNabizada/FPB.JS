@@ -408,8 +408,8 @@ export interface ConfirmOptions {
 
 /** Native dialogs of the modeler (016e) */
 export interface FpbDialogs {
-  /** Asks one question after the other; true for the named answer */
-  confirm(options: ConfirmOptions): Promise<boolean>;
+  /** Asks one question after the other; true for the named answer; the signal withdraws the question (false) */
+  confirm(options: ConfirmOptions, control?: { signal?: AbortSignal }): Promise<boolean>;
   /**
    * Renders a component with the Preact inside FPB.js; `closed` resolves with
    * the value passed to close(). A host with its own Preact or another
@@ -524,6 +524,12 @@ export interface CreateFpbModelerOptions {
    * sets on <html> before the start is followed as well. See setTheme().
    */
   theme?: 'light' | 'dark' | 'system';
+  /**
+   * false: the modeler asks no questions itself (016e); the host answers
+   * confirmation.required with confirmation.confirmed or .cancelled and the
+   * same action. Default true.
+   */
+  confirmations?: boolean;
   /** Additional options passed to FpbModeler constructor */
   [key: string]: any;
 }

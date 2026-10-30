@@ -17,8 +17,9 @@ import ConfirmDialog from './ConfirmDialog';
  * fn(element, { close, titleId }) returns a function that clears it. Add-on
  * bundles with their own copy of Preact (fpbjs/aml) and hosts use mount,
  * since hooks only work with the render of their own copy.
- * confirm(options) asks one question after the other and resolves true for
- * the named answer, false otherwise.
+ * confirm(options, { signal }) asks one question after the other and
+ * resolves true for the named answer, false otherwise; an AbortSignal
+ * withdraws the question (false), whether it waits or is open.
  */
 export default function Dialogs(eventBus, injector, translate) {
   this._translate = translate;
@@ -97,14 +98,19 @@ Dialogs.prototype.mount = function (mount, options = {}) {
   return handle;
 };
 
-Dialogs.prototype.confirm = function (options = {}) {
+Dialogs.prototype.confirm = function (options = {}, { signal } = {}) {
   // one question after the other, in the order they were asked
   const answer = this._questions.then(() => {
-    if (this._destroyed) {
+    if (this._destroyed || (signal && signal.aborted)) {
       return false;
     }
-    return this.open(ConfirmDialog, { options, translate: this._translate }, { className: 'fpb-confirm' })
-      .closed.then((result) => result === true);
+    const handle = this.open(ConfirmDialog, { options, translate: this._translate }, { className: 'fpb-confirm' });
+    if (signal) {
+      const withdraw = () => handle.close(false);
+      signal.addEventListener('abort', withdraw, { once: true });
+      handle.closed.then(() => signal.removeEventListener('abort', withdraw));
+    }
+    return handle.closed.then((result) => result === true);
   });
   this._questions = answer.catch(() => false);
   return answer;
