@@ -4,6 +4,9 @@ import { h, render } from '@bpmn-io/properties-panel/preact';
 import { addNote, timeoutOf } from './list';
 import NotificationStack from './NotificationStack';
 
+// below this width of the canvas the stack takes the free width (CSS is-narrow)
+const NARROW = 640;
+
 /**
  * The message stack (016e V1, T1): every message that belongs to no element
  * (import errors and reports, the browser backup, hints of the canvas) as a
@@ -31,12 +34,26 @@ export default function Notifications(eventBus, canvas, translate) {
   section.addEventListener('wheel', function (event) {
     event.stopPropagation();
   });
-  canvas.getContainer().appendChild(section);
+  const container = canvas.getContainer();
+  container.appendChild(section);
+
+  const layout = function () {
+    section.classList.toggle('is-narrow', container.clientWidth > 0 && container.clientWidth < NARROW);
+  };
+  if (typeof ResizeObserver !== 'undefined') {
+    this._observer = new ResizeObserver(layout);
+    this._observer.observe(container);
+  }
+  eventBus.on('canvas.resized', layout);
+  layout();
 
   const self = this;
   eventBus.on('diagram.destroy', function () {
     self._timers.forEach((timer) => clearTimeout(timer));
     self._timers.clear();
+    if (self._observer) {
+      self._observer.disconnect();
+    }
     render(null, section);
     section.remove();
   });

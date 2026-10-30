@@ -176,4 +176,40 @@ test.describe('Message stack', () => {
     expect(card.right).toBeLessThanOrEqual(container.right);
     expect(card.bottom).toBeLessThanOrEqual(container.bottom);
   });
+
+  // final review 016e D1: narrow canvas with the list open, and a long
+  // report under the breadcrumbs and beside the minimap
+  test('on a narrow canvas a message stays in view while the model check list is open', async ({ page }) => {
+    await laden(page, { width: 390, height: 800 });
+    await page.evaluate(() => window.fpbjs.get('fpbValidation').openPanel());
+    await show(page, { key: 'narrow-list', type: 'warning', title: 'Seen with the list open' });
+    const card = await rect(noteById(page, 'narrow-list'));
+    const container = await rect(page.locator('.djs-container').first());
+    expect(card.left).toBeGreaterThanOrEqual(container.left);
+    expect(card.right).toBeLessThanOrEqual(container.right);
+    expect(card.right - card.left).toBeGreaterThan(100);
+  });
+
+  test('on a narrow canvas a long report leaves breadcrumbs and minimap free', async ({ page }) => {
+    await laden(page, { width: 390, height: 800 });
+    await page.evaluate(() => {
+      const shapes = [];
+      const queue = [window.fpbjs.getProjectDefinition().entryPoint];
+      while (queue.length) {
+        const shape = queue.shift();
+        shapes.push(shape);
+        (shape.businessObject.consistsOfProcesses || []).forEach((child) => queue.push(child));
+      }
+      window.fpbjs.get('modeling').switchProcess(shapes[1]);
+    });
+    await expect(page.locator('nav.fpb-breadcrumbs')).toBeVisible();
+    await page.evaluate(() => window.fpbjs.get('fpbNotifications').clear());
+    const items = Array.from({ length: 40 }, (_, i) => ({ message: 'A note about element number ' + i + ' of the file' }));
+    await show(page, { key: 'long', type: 'warning', title: 'A long report', items });
+    const card = await rect(noteById(page, 'long'));
+    const crumbs = await rect(page.locator('nav.fpb-breadcrumbs'));
+    const minimap = await rect(page.locator('.djs-minimap'));
+    expect(card.top).toBeGreaterThanOrEqual(crumbs.bottom);
+    expect(card.bottom <= minimap.top || card.left >= minimap.right).toBe(true);
+  });
 });

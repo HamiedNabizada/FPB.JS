@@ -12,7 +12,8 @@
   gap: 8px;
   /* the palette on the left stays free (its right edge lies near 76px) */
   width: min(380px, calc(100% - 112px));
-  max-height: calc(100% - 40px);
+  /* the top row stays free for the breadcrumbs (top 20px, about 32px high) */
+  max-height: calc(100% - 84px);
   pointer-events: none;
   font-family: var(--fpb-font);
   font-size: 13px;
@@ -22,6 +23,18 @@
 .djs-container:has(.fpb-validation-panel.open) .fpb-notifications {
   right: 380px;
   width: max(200px, min(380px, calc(100% - 492px)));
+}
+
+/* a narrow canvas (is-narrow, set by Notifications.js below 640px): between
+   the palette and the right edge, above the minimap toggle; an open model
+   check list is covered there rather than the message pushed out of view */
+.fpb-notifications.is-narrow,
+.djs-container:has(.fpb-validation-panel.open) .fpb-notifications.is-narrow {
+  left: 92px;
+  right: 12px;
+  bottom: 72px;
+  width: auto;
+  max-height: calc(100% - 136px);
 }
 
 .fpb-notification {
