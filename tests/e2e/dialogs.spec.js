@@ -1,6 +1,7 @@
 import { test, expect } from './support/test';
 import { ImportPage } from './pages/ImportPage';
 import basis from './fixtures/temperieren.json';
+import { DIALOG } from './helpers/ui';
 
 /**
  * Dialogs as cards with named answers (016c decision 13): the import has a
@@ -15,7 +16,7 @@ async function open(page) {
   await importer.import(JSON.parse(JSON.stringify(basis)));
 }
 
-const dialog = (page) => page.locator('.modal.show');
+const dialog = (page) => page.locator(DIALOG);
 const danger = (page) => page.evaluate(() => {
   const probe = document.createElement('span');
   probe.style.color = 'var(--fpb-danger)';
@@ -90,7 +91,7 @@ test.describe('Dialogs', () => {
       const operator = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Erhitzen' && e.type !== 'label')[0];
       window.fpbjs.get('fpbDelete').remove([operator]);
     });
-    await expect(dialog(page).locator('.modal-title')).toHaveText('Delete "Erhitzen"?');
+    await expect(dialog(page).locator('.fpb-dialog-title')).toHaveText('Delete "Erhitzen"?');
     const remove = dialog(page).getByRole('button', { name: 'Delete', exact: true });
     await expect(remove).toBeVisible();
     expect(await remove.evaluate((b) => getComputedStyle(b).backgroundColor)).toBe(await danger(page));

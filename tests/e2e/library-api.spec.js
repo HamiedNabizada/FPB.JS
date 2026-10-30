@@ -405,6 +405,40 @@ test.describe('createFpbModeler', () => {
     await expect(page.locator('#modeler [data-id="autosave.pending"]')).toContainText('Unsaved model found');
   });
 
+  // 016e V2: questions belong to the modeler, not to the layer panel
+  test('a host without layer panel gets the question when removing a decomposition', async ({ page }) => {
+    const { errors } = await withModel(page);
+    await page.evaluate((id) => window.fpb.switchProcess(id), CHILD);
+    await page.evaluate(() => {
+      const systemLimit = window.fpb.get('elementRegistry').filter((e) => e.type === 'fpb:SystemLimit')[0];
+      window.fpb.get('fpbDelete').remove([systemLimit]);
+    });
+    const dialog = page.locator('body > .fpb-dialogs > dialog.fpb-dialog[open]');
+    await expect(dialog).toBeVisible();
+    await dialog.locator('[data-answer="confirm"]').click();
+    await expect.poll(() => currentRootId(page)).toBe(MAIN);
+    expect(errors).toEqual([]);
+  });
+
+  // Review Focus 2 (016e D1)
+  test('destroy closes an open question as cancelled and leaves nothing behind', async ({ page }) => {
+    await withModel(page);
+    await page.evaluate(() => {
+      window.fpb.get('fpbNotifications').show({ key: 'left', type: 'warning', title: 'Still here' });
+      window.__answer = window.fpb.get('fpbDialogs').confirm({ title: 'Open question', message: 'm' });
+    });
+    await expect(page.locator('dialog.fpb-dialog[open]')).toBeVisible();
+    const result = await page.evaluate(async () => {
+      window.fpb.destroy();
+      const answer = await window.__answer;
+      return {
+        answer,
+        left: document.querySelectorAll('.fpb-dialogs, dialog.fpb-dialog, .fpb-notifications').length
+      };
+    });
+    expect(result).toEqual({ answer: false, left: 0 });
+  });
+
   test('showNewModel shows the New model button without the browser backup', async ({ page }) => {
     await openLibraryPage(page);
     await createModeler(page, { panels: true });

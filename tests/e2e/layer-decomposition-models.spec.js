@@ -2,6 +2,7 @@
 import { test, expect } from './support/test';
 import { ModelBuilder } from './helpers/modelBuilder';
 import { open, issues, rootId, switchTo, answer, modalTitle } from './helpers/layerCheck';
+import { DIALOG } from './helpers/ui';
 
 /**
  * Decompose, compose and the boundary dialogs on models built for the case
@@ -290,7 +291,7 @@ test.describe('Szenario 6 with a state the parent layer already has', () => {
       const sl = window.__lr.sl(window.fpbjs.get('canvas').getRootElement());
       window.fpbjs.get('rules').allowed('elements.delete', { elements: [sl] });
     });
-    await expect(page.locator('.modal.show')).toContainText('ProcessOperator "ProcessOperator"');
+    await expect(page.locator(DIALOG)).toContainText('ProcessOperator "ProcessOperator"');
     await answer(page, 'confirm');
     expect(await rootId(page)).toBe('m-root');
     await expect(page.locator('.djs-tooltip', { hasText: 'The decomposition of "ProcessOperator" has been removed.' })).toBeVisible();

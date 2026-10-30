@@ -1,4 +1,5 @@
 // tests/e2e/pages/ModelerPage.js
+import { DIALOG } from '../helpers/ui';
 
 /**
  * Page Object für den FPB.JS Modeler
@@ -269,8 +270,8 @@ export class ModelerPage {
    * Wartet auf den Bestätigungsdialog und bestätigt
    */
   async confirmModal() {
-    await this.page.waitForSelector('.modal.show', { timeout: 5000 });
-    await this.page.locator('.modal.show [data-answer="confirm"]').click();
+    await this.page.waitForSelector(DIALOG, { timeout: 5000 });
+    await this.page.locator(DIALOG).locator('[data-answer="confirm"]').click();
     await this.page.waitForTimeout(500);
   }
 
@@ -278,8 +279,8 @@ export class ModelerPage {
    * Wartet auf den Bestätigungsdialog und bricht ab
    */
   async cancelModal() {
-    await this.page.waitForSelector('.modal.show', { timeout: 5000 });
-    await this.page.locator('.modal.show [data-answer="cancel"]').click();
+    await this.page.waitForSelector(DIALOG, { timeout: 5000 });
+    await this.page.locator(DIALOG).locator('[data-answer="cancel"]').click();
     await this.page.waitForTimeout(500);
   }
 
@@ -287,14 +288,14 @@ export class ModelerPage {
    * Prüft ob ein Modal sichtbar ist
    */
   async isModalVisible() {
-    return await this.page.locator('.modal.show').isVisible();
+    return await this.page.locator(DIALOG).isVisible();
   }
 
   /**
    * Liest den Modal-Titel
    */
   async getModalTitle() {
-    return await this.page.locator('.modal.show .modal-title').textContent();
+    return await this.page.locator(DIALOG).locator('.fpb-dialog-title, .modal-title').textContent();
   }
 
   // ============================================

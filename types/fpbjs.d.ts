@@ -394,6 +394,26 @@ export interface FpbNotifications {
   list(): Array<NotificationOptions & { id: string }>;
 }
 
+export interface ConfirmOptions {
+  title?: string;
+  message?: string;
+  details?: string;
+  /** Text of the answer that goes ahead, named after the action (default 'Confirm') */
+  confirmLabel?: string;
+  /** The action destroys something: the answer is red */
+  danger?: boolean;
+  /** The action is not possible: only "OK", the result is false */
+  blocked?: boolean;
+}
+
+/** Native dialogs of the modeler (016e) */
+export interface FpbDialogs {
+  /** Asks one question after the other; true for the named answer */
+  confirm(options: ConfirmOptions): Promise<boolean>;
+  /** Renders a Preact component in a dialog; `closed` resolves with the value passed to close() */
+  open(component: any, props?: Record<string, any>, options?: { className?: string }): { close(result?: any): void; closed: Promise<any> };
+}
+
 /** Append an element to an existing one, connected and placed */
 export interface FpbAppend {
   getOptions(element: Element): Array<{ type: string; label: string }>;
@@ -445,6 +465,7 @@ export interface FpbServiceMap {
   elementFactory: ElementFactory;
   fpbValidation: FpbValidation;
   fpbNotifications: FpbNotifications;
+  fpbDialogs: FpbDialogs;
   fpbSearch: FpbSearch;
   fpbAppend: FpbAppend;
   fpbCopyPaste: FpbCopyPaste;

@@ -2,6 +2,7 @@
 import { test, expect } from './support/test';
 import { ImportPage } from './pages/ImportPage';
 import basis from './fixtures/temperieren.json';
+import { DIALOG } from './helpers/ui';
 
 /**
  * E2E-Tests zum Vergrößern der Systemgrenze (Bug B01, Teil Grenz-States).
@@ -185,7 +186,7 @@ test.describe('An der Kante ziehen', () => {
     await ziehen(page, 0.7, 120);
 
     expect(await page.evaluate(() => window.__nachfragen)).toEqual([]);
-    await expect(page.locator('.modal.show')).toHaveCount(0);
+    await expect(page.locator(DIALOG)).toHaveCount(0);
   });
 
 });

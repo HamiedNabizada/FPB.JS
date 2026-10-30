@@ -1,6 +1,7 @@
 // tests/e2e/helpers/layerCheck.js
 import { ImportPage } from '../pages/ImportPage';
 import basis from '../fixtures/temperieren.json';
+import { DIALOG } from './ui';
 
 /**
  * Shared setup for the layer rule and decomposition specs.
@@ -313,7 +314,7 @@ export async function switchTo(page, id) {
  * "Place on boundary", 016c decision 13).
  */
 export async function answer(page, button) {
-  const modal = page.locator('.modal.show');
+  const modal = page.locator(DIALOG);
   await modal.waitFor({ state: 'visible', timeout: 5000 });
   if (button === 'confirm') {
     await modal.locator('[data-answer="confirm"]').click();
@@ -324,4 +325,4 @@ export async function answer(page, button) {
   await page.waitForTimeout(200);
 }
 
-export const modalTitle = (page) => page.locator('.modal.show .modal-title');
+export const modalTitle = (page) => page.locator(DIALOG).locator('.fpb-dialog-title');

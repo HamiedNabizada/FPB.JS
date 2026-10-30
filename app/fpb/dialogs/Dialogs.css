@@ -1,0 +1,159 @@
+/* Dialogs of FPB.js (016e V4): a native <dialog> as a card in the look of
+   variant B (016c decision 13); light and dark from the design values of
+   the element it lives in (.fpb-dialogs, a container of fpbTheme) */
+.fpb-dialog {
+  box-sizing: border-box;
+  width: min(500px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  padding: 0;
+  border: 0;
+  border-radius: var(--fpb-radius-card);
+  background: var(--fpb-surface);
+  color: var(--fpb-text);
+  box-shadow: var(--fpb-shadow-float);
+  font-family: var(--fpb-font);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.fpb-dialog.fpb-dialog--wide {
+  width: min(820px, calc(100vw - 32px));
+}
+
+.fpb-dialog::backdrop {
+  background: rgba(16, 24, 40, 0.45);
+}
+
+.fpb-dialog-card {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 64px);
+}
+
+.fpb-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 16px 8px 20px;
+}
+
+.fpb-dialog-title {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.fpb-dialog-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+.fpb-dialog-icon-warning { color: var(--fpb-warning); }
+.fpb-dialog-icon-danger { color: var(--fpb-danger); }
+
+.fpb-dialog-close {
+  display: flex;
+  flex: none;
+  padding: 6px;
+  border: 0;
+  border-radius: var(--fpb-radius-control);
+  background: transparent;
+  color: var(--fpb-text-subtle);
+  cursor: pointer;
+}
+
+.fpb-dialog-close .fpb-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.fpb-dialog-close:hover {
+  background: var(--fpb-surface-muted);
+  color: var(--fpb-text);
+}
+
+.fpb-dialog-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 20px 16px;
+}
+
+.fpb-dialog-body p {
+  margin: 0 0 8px;
+}
+
+.fpb-dialog-details {
+  color: var(--fpb-text-muted);
+  font-size: 13px;
+}
+
+.fpb-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--fpb-line);
+}
+
+/* buttons with text (016c decision 13): the main action filled, red when
+   it destroys something, Cancel as a quiet text button */
+.fpb-button {
+  padding: 6px 14px;
+  border: 1px solid var(--fpb-control-border);
+  border-radius: var(--fpb-radius-control);
+  background: var(--fpb-surface);
+  color: var(--fpb-text);
+  font: inherit;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.fpb-button:hover {
+  background: var(--fpb-surface-muted);
+}
+
+.fpb-button--primary {
+  border-color: var(--fpb-accent);
+  background: var(--fpb-accent);
+  color: var(--fpb-on-accent);
+}
+
+.fpb-button--primary:hover {
+  border-color: var(--fpb-accent-hover);
+  background: var(--fpb-accent-hover);
+}
+
+.fpb-button--danger {
+  border-color: var(--fpb-danger);
+  background: var(--fpb-danger);
+  color: var(--fpb-on-danger);
+}
+
+.fpb-button--danger:hover {
+  filter: brightness(0.92);
+  background: var(--fpb-danger);
+}
+
+.fpb-button--quiet {
+  border-color: transparent;
+  background: transparent;
+  color: var(--fpb-accent);
+}
+
+.fpb-button--quiet:hover {
+  background: var(--fpb-accent-surface);
+}
+
+.fpb-button:focus-visible,
+.fpb-dialog-close:focus-visible {
+  outline: 2px solid var(--fpb-accent);
+  outline-offset: 2px;
+}

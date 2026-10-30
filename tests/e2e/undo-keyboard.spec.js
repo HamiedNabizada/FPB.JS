@@ -3,6 +3,7 @@ import { test, expect } from './support/test';
 import { ImportPage } from './pages/ImportPage';
 import basis from './fixtures/temperieren.json';
 import { exportiere, nachIds } from './helpers/modelExport';
+import { DIALOG } from './helpers/ui';
 
 /**
  * E2E-Tests für Rückgängig bei Shapes und die Tastenkürzel (Feature 024 A).
@@ -123,7 +124,7 @@ test.describe('Tastenkürzel', () => {
     await klicke(page, 'Erhitzen');
     await taste(page, 'Delete');
 
-    await expect(page.locator('.modal.show')).toContainText('decomposed');
+    await expect(page.locator(DIALOG)).toContainText('decomposed');
     expect((await importer.dataStore()).prozesse).toHaveLength(2);
   });
 

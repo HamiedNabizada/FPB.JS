@@ -8,6 +8,7 @@ import basis from './fixtures/temperieren.json';
 import {
   openImportDialog, pickFile, pressImport, importButton, exportViaDialog, dismissNotifications
 } from './helpers/importDialog';
+import { DIALOG } from './helpers/ui';
 
 /**
  * AutomationML import and export (feature 028). The files are the inputs of
@@ -149,7 +150,7 @@ test.describe('AutomationML import and export', () => {
     }, LINKED_STATE);
     await page.keyboard.press('Delete');
 
-    const dialog = page.locator('.modal.show');
+    const dialog = page.locator(DIALOG);
     await expect(dialog).toContainText('Other parts of the AutomationML file link to an element you are deleting.');
     await expect(dialog).toContainText('B1_Prozess (Behaelter_B1)');
     await dialog.locator('[data-answer="confirm"]').click();
@@ -172,7 +173,7 @@ test.describe('AutomationML import and export', () => {
       const po = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
       window.fpbjs.get('fpbDelete').remove([po]);
     });
-    const dialog = page.locator('.modal.show');
+    const dialog = page.locator(DIALOG);
     await expect(dialog).toContainText('decomposed layer');
     await expect(dialog).toContainText('Other parts of the AutomationML file link to elements you are deleting.');
     await expect(dialog).toContainText('PlatteToTempSensor (Plattenwärmeübertragung)');
@@ -187,7 +188,7 @@ test.describe('AutomationML import and export', () => {
     await page.evaluate((id) => {
       window.fpbjs.get('fpbDelete').remove([window.fpbjs.get('elementRegistry').get(id)]);
     }, LINKED_STATE);
-    await page.locator('.modal.show').getByRole('button', { name: 'Cancel' }).click();
+    await page.locator(DIALOG).getByRole('button', { name: 'Cancel' }).click();
     expect(await page.evaluate((id) => !!window.fpbjs.get('elementRegistry').get(id), LINKED_STATE)).toBe(true);
   });
 
@@ -388,7 +389,7 @@ test.describe('AutomationML import and export', () => {
     await page.reload();
     await page.waitForFunction(() => window.fpbjs && window.fpbjs.get);
     await page.evaluate(() => window.fpbjs.get('autosave').ready());
-    await page.locator('.autosave-notice').getByRole('button', { name: /^Restore/ }).click();
+    await page.locator('[data-id="autosave.pending"]').getByRole('button', { name: /^Restore/ }).click();
     await expect.poll(() => names(page)).toContain('Kaltes Wasser');
 
     expect(await source(page)).toMatchObject({ fileName: 'Anlage.aml', hierarchyName: 'FPD_Heating' });

@@ -3,6 +3,7 @@ import { test, expect } from './support/test';
 import { ImportPage } from './pages/ImportPage';
 import { exportiere } from './helpers/modelExport';
 import { load, install, issues, rootId, switchTo, answer, modalTitle, IDS } from './helpers/layerCheck';
+import { DIALOG } from './helpers/ui';
 
 /**
  * Decompose and compose (incl. nested layers), every confirmation dialog of
@@ -317,7 +318,7 @@ test.describe('Deleting across layers, with undo and redo', () => {
     const grandchild = await nest(page);
     await compose(page);
     await fpbDelete(page, [IDS.vorgewaermt]); // internal on the child: no dialog
-    await expect(page.locator('.modal.show')).toHaveCount(0);
+    await expect(page.locator(DIALOG)).toHaveCount(0);
     const r = await page.evaluate(({ IDS, grandchild }) => ({
       child: !!window.__lr.byId(IDS.vorgewaermt, IDS.child),
       grandchild: !!window.__lr.byId(IDS.vorgewaermt, grandchild),
@@ -395,7 +396,7 @@ test.describe('The top system limit and the technical resource', () => {
   test('deleting the top system limit with a decomposed operator in it asks first (it removes a sub layer)', async ({ page }) => {
     await load(page);
     await fpbDelete(page, [await topSl(page).then((s) => s.id)]);
-    await expect(page.locator('.modal.show')).toHaveCount(1, { timeout: 2000 });
+    await expect(page.locator(DIALOG)).toHaveCount(1, { timeout: 2000 });
   });
 
   test('moving the technical resource and the system limit keeps every layer consistent; undo and redo', async ({ page }) => {
@@ -680,7 +681,7 @@ test.describe('Confirmation: deleting a decomposed operator', () => {
     const before = await containerIds(page, IDS.root);
     await fpbDelete(page, [IDS.child]);
     await expect(modalTitle(page)).toHaveText(/^Delete ".+"\?$/);
-    await expect(page.locator('.modal.show')).toContainText('This process operator contains a decomposed layer.');
+    await expect(page.locator(DIALOG)).toContainText('This process operator contains a decomposed layer.');
     await answer(page, 'Cancel');
     expect(await containerIds(page, IDS.root)).toEqual(before);
     expect(await page.evaluate((c) => window.__lr.storeIds().includes(c), IDS.child)).toBe(true);
@@ -755,7 +756,7 @@ test.describe('Confirmation: Szenario 2, deleting a boundary state on the child 
     const root = await containerIds(page, IDS.root);
     await fpbDelete(page, [IDS.rohstoff]);
     await expect(modalTitle(page)).toHaveText(/^Delete ".+"\?$/);
-    await expect(page.locator('.modal.show')).toContainText('This state is connected to the parent layer.');
+    await expect(page.locator(DIALOG)).toContainText('This state is connected to the parent layer.');
     await answer(page, 'Cancel');
     expect(await containerIds(page, IDS.child)).toEqual(child);
     expect(await containerIds(page, IDS.root)).toEqual(root);
@@ -796,7 +797,7 @@ test.describe('Confirmation: Szenario 2, deleting a boundary state on the child 
     const grandchild = await nest(page);
     const root = await containerIds(page, IDS.root);
     await fpbDelete(page, [IDS.rohstoff]);
-    await expect(page.locator('.modal.show')).toContainText('This state is connected to the parent layer.');
+    await expect(page.locator(DIALOG)).toContainText('This state is connected to the parent layer.');
     await answer(page, 'confirm');
     const r = await page.evaluate(({ IDS, grandchild }) => ({
       grandchild: !!window.__lr.byId(IDS.rohstoff, grandchild),
@@ -814,7 +815,7 @@ test.describe('Confirmation: Szenario 2, deleting a boundary state on the child 
     await load(page);
     await switchTo(page, IDS.child);
     await fpbDelete(page, [IDS.rohstoff, IDS.vorgewaermt]);
-    await expect(page.locator('.modal.show')).toContainText('The selection contains 2 elements.');
+    await expect(page.locator(DIALOG)).toContainText('The selection contains 2 elements.');
     await answer(page, 'confirm');
     const r = await page.evaluate((IDS) => [IDS.rohstoff, IDS.vorgewaermt].map((i) => !!window.__lr.byId(i, IDS.child)), IDS);
     expect(r).toEqual([false, false]);
@@ -829,7 +830,7 @@ test.describe('Confirmation: Szenario 4, creating a state on the child boundary'
     await switchTo(page, IDS.child);
     await createOnEdge(page, 'b_in', 'upper');
     await expect(modalTitle(page)).toHaveText('Confirm boundary placement');
-    await expect(page.locator('.modal.show')).toContainText('This state will become an input/output of the parent process operator.');
+    await expect(page.locator(DIALOG)).toContainText('This state will become an input/output of the parent process operator.');
     await answer(page, 'confirm');
     const r = await page.evaluate((IDS) => {
       const s = window.__lr.byId('b_in', IDS.root);
@@ -1044,7 +1045,7 @@ test.describe('Confirmation: Szenario 6, moving an internal state onto the child
     await addSecondState(page);
     await moveBothToUpperEdge(page);
     await answer(page, 'confirm');
-    await expect(page.locator('.modal.show')).toHaveCount(0);
+    await expect(page.locator(DIALOG)).toHaveCount(0);
     const ins = await page.evaluate((IDS) => window.__lr.io(IDS.child, IDS.root).ins, IDS);
     expect(ins).toEqual(expect.arrayContaining([IDS.vorgewaermt, 'second']));
     expect(await issues(page)).toEqual([]);
@@ -1057,7 +1058,7 @@ test.describe('Confirmation: Szenario 6, moving an internal state onto the child
     const before = await positions(page);
     await moveBothToUpperEdge(page);
     await answer(page, 'Cancel');
-    await expect(page.locator('.modal.show')).toHaveCount(0);
+    await expect(page.locator(DIALOG)).toHaveCount(0);
     expect(await positions(page)).toEqual(before);
     expect(await issues(page)).toEqual([]);
   });
@@ -1103,7 +1104,7 @@ test.describe('Confirmation: Szenario 14, removing a decomposition', () => {
     const child = await containerIds(page, IDS.child);
     await deleteSystemLimitViaPad(page);
     await expect(modalTitle(page)).toContainText('Remove the decomposition of');
-    await expect(page.locator('.modal.show')).toContainText('ProcessOperator "Erhitzen"');
+    await expect(page.locator(DIALOG)).toContainText('ProcessOperator "Erhitzen"');
     await answer(page, 'Cancel');
     expect(await rootId(page)).toBe(IDS.child);
     expect(await containerIds(page, IDS.child)).toEqual(child);
@@ -1499,7 +1500,7 @@ test.describe('Names of a state on every layer (B16)', () => {
   test('clearing on the canvas clears the name on every layer without a question, one undo brings it back', async ({ page }) => {
     await load(page);
     await nameOnCanvas(page, IDS.rohstoff, '');
-    await expect(page.locator('.modal.show')).toHaveCount(0);
+    await expect(page.locator(DIALOG)).toHaveCount(0);
 
     for (const copy of await copies(page, IDS.rohstoff)) {
       expect(copy.name || '').toBe('');

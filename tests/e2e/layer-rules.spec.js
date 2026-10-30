@@ -2,6 +2,7 @@
 import { test, expect } from './support/test';
 import { ImportPage } from './pages/ImportPage';
 import { load, install, issues, switchTo, IDS } from './helpers/layerCheck';
+import { DIALOG } from './helpers/ui';
 
 /**
  * Every rule of FpbRuleProvider (docs: FPB.JS_Docs/Modeling-Regeln.md, and
@@ -628,7 +629,7 @@ test.describe('Rules: shape.resize and elements.delete', () => {
     }]);
     expect(r.otherElements).toBe(true);
     expect(r.firedTotal).toBe(1);
-    await expect(page.locator('.modal.show .modal-title')).toHaveText('Remove the decomposition of "Erhitzen"?');
+    await expect(page.locator(DIALOG).locator('.fpb-dialog-title')).toHaveText('Remove the decomposition of "Erhitzen"?');
   });
 });
 
@@ -646,7 +647,7 @@ test.describe('Messages on the canvas', () => {
       const sl = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:SystemLimit')[0];
       window.fpbjs.get('rules').allowed('elements.delete', { elements: [sl] });
     });
-    await page.locator('.modal.show [data-answer="confirm"]').click();
+    await page.locator(DIALOG).locator('[data-answer="confirm"]').click();
 
     const tip = page.locator('.djs-tooltip', { hasText: 'has been removed' });
     await expect(tip).toBeVisible();
@@ -683,7 +684,7 @@ test.describe('Feedback when the editor refuses a move or create (UI drags)', ()
     expect(Math.abs(after.x - (before.x - 80))).toBeLessThan(15);
     // it was on the boundary and stays there: no boundary placement dialog (Szenario 6)
     await page.waitForTimeout(200);
-    await expect(page.locator('.modal.show')).toHaveCount(0);
+    await expect(page.locator(DIALOG)).toHaveCount(0);
     expect(await issues(page)).toEqual([]);
   });
 

@@ -1,6 +1,7 @@
 import { test, expect } from './support/test';
 import { ImportPage } from './pages/ImportPage';
 import basis from './fixtures/temperieren.json';
+import { DIALOG } from './helpers/ui';
 
 /**
  * Breadcrumbs of the layers on the canvas (016d V1): the path from the top
@@ -117,7 +118,7 @@ test.describe('Breadcrumbs', () => {
       const systemLimit = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:SystemLimit')[0];
       window.fpbjs.get('fpbDelete').remove([systemLimit]);
     });
-    await page.locator('.modal.show [data-answer="confirm"]').click();
+    await page.locator(DIALOG).locator('[data-answer="confirm"]').click();
     await expect.poll(() => ebene(page)).toBe(ROOT);
     await expect(crumbs(page)).toBeHidden();
     expect(fehler).toEqual([]);

@@ -137,7 +137,7 @@ test.describe('Read-only mode', () => {
     await page.waitForTimeout(200);
 
     expect(await stand(page)).toEqual(vorher);
-    expect(await page.evaluate(() => document.querySelectorAll('.modal.show').length)).toBe(0);
+    expect(await page.evaluate(() => document.querySelectorAll('dialog.fpb-dialog[open], .modal.show').length)).toBe(0);
     expect(fehler).toEqual([]);
   });
 

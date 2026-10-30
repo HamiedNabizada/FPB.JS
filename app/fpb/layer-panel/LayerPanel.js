@@ -9,7 +9,6 @@ import Import from './features/Import';
 import NewModel from './features/NewModel';
 import DownloadOptions from './features/DownloadOptions';
 import InfoModal from './components/InfoModal';
-import ConfirmationModal from './components/ConfirmationModal';
 import LayersTreeHost from './components/LayersTreeHost';
 import { describeCounts } from '../validation/FpbValidation';
 import ThemeToggle from './components/ThemeToggle';
@@ -17,7 +16,6 @@ import ColorSchemeToggle from './components/ColorSchemeToggle';
 import AmlOverview from '../aml/AmlOverview';
 import { useProcessManagement } from './hooks/useProcessManagement';
 import { useSelectedElements } from './hooks/useSelectedElements';
-import { useConfirmation } from './hooks/useConfirmation';
 
 
 // Icons
@@ -33,7 +31,6 @@ const LayerPanel = ({ modeler, showNewModel: newModelOption = false }) => {
     // processes from here; the tree reads them from fpbLayers (016d)
     const { selectedProcess, processes } = useProcessManagement(modeler);
     const selectedElements = useSelectedElements(modeler);
-    const { showConfirmation, confirmationData, handleConfirm, handleCancel } = useConfirmation(modeler);
 
     // Findings of the model check for the counter on its button
     const [checkCounts, setCheckCounts] = useState({ error: 0, warning: 0, info: 0 });
@@ -165,18 +162,6 @@ const LayerPanel = ({ modeler, showNewModel: newModelOption = false }) => {
                 modeler={modeler}
             />
 
-            <ConfirmationModal
-                modeler={modeler}
-                show={showConfirmation}
-                onConfirm={handleConfirm}
-                onCancel={handleCancel}
-                title={confirmationData?.title}
-                message={confirmationData?.message}
-                details={confirmationData?.details}
-                isBlocked={confirmationData?.isBlocked}
-                confirmLabel={confirmationData?.confirmLabel}
-                confirmVariant={confirmationData?.confirmVariant}
-            />
         </div>
     );
 };
