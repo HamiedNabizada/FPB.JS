@@ -32,7 +32,7 @@ async function laden(page, modell) {
   return importer;
 }
 
-const bericht = (page) => page.locator('.import-report');
+const bericht = (page) => page.locator('[data-id="import.report"]');
 
 test.describe('Prüfung an den Übergabestellen', () => {
 
@@ -40,8 +40,8 @@ test.describe('Prüfung an den Übergabestellen', () => {
     await laden(page, mitVerstoss());
 
     await expect(bericht(page)).toBeVisible();
-    await expect(bericht(page).locator('.import-report-check')).toContainText('1 error');
-    await expect(bericht(page).locator('.import-report-check')).toContainText('0 warnings');
+    await expect(bericht(page).locator('.fpb-notification-message')).toContainText('1 error');
+    await expect(bericht(page).locator('.fpb-notification-message')).toContainText('0 warnings');
   });
 
   test('der Knopf im Bericht öffnet die Liste der Befunde', async ({ page }) => {
@@ -51,7 +51,7 @@ test.describe('Prüfung an den Übergabestellen', () => {
     await expect(knopf).toBeVisible();
     // der Knopf liegt an seiner Stelle wirklich obenauf
     const obenauf = await page.evaluate(() => {
-      const button = [...document.querySelectorAll('.import-report button')]
+      const button = [...document.querySelectorAll('[data-id="import.report"] button')]
         .find((b) => b.textContent.includes('Show findings'));
       const box = button.getBoundingClientRect();
       return document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) === button;

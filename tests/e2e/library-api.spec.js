@@ -369,6 +369,23 @@ test.describe('createFpbModeler', () => {
     expect(errors).toEqual([]);
   });
 
+  // R10: the importer's messages do not depend on the layer panel
+  test('a host without layer panel sees an import error and the import report', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page);
+    await page.evaluate(() => window.fpb.get('eventBus').fire('FPBJS.import', { data: [{ notAProject: true }] }));
+    await expect(page.locator('#modeler .fpb-notification--error')).toContainText('Import Error');
+
+    const withoutLayout = clone();
+    withoutLayout.forEach((entry) => {
+      if (entry.process) {
+        delete entry.elementVisualInformation;
+      }
+    });
+    expect(await importModel(page, withoutLayout)).toBe(true);
+    await expect(page.locator('#modeler [data-id="import.report"]')).toContainText('Import completed with');
+  });
+
   test('showNewModel shows the New model button without the browser backup', async ({ page }) => {
     await openLibraryPage(page);
     await createModeler(page, { panels: true });

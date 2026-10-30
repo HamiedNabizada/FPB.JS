@@ -6,11 +6,10 @@ import { expect } from '../support/test';
  * open, drop or pick a file, press the import button, wait for the importer.
  */
 
-/** Closes import report and error notifications, which cover the panel button. */
+/** Closes the messages of earlier imports and exports (016e message stack). */
 export async function dismissNotifications(page) {
-  await page.evaluate(() => document.querySelectorAll('.import-report .btn-close, .alert-danger .btn-close')
-    .forEach((button) => button.click()));
-  await expect(page.locator('.import-report')).toHaveCount(0);
+  await page.evaluate(() => window.fpbjs.get('fpbNotifications').clear());
+  await expect(page.locator('.fpb-notification')).toHaveCount(0);
 }
 
 /** Opens the import dialog from the toolbar. */

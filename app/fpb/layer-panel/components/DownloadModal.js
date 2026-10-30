@@ -17,7 +17,6 @@ import { exportPNG } from '../../export/PngExporter.js';
 import { exportPDF, exportMultiLayerPDF } from '../../export/PdfExporter.js';
 import { renderLayers } from '../../export/renderLayers.js';
 import { modelReplacer } from '../../export/serializeModel.js';
-import { useError } from '../../context/ErrorContext';
 import { useThemeAttributes } from '../hooks/useThemeAttributes';
 
 // Regex pattern for invalid filename characters (Windows/Unix compatible)
@@ -66,7 +65,6 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
     const [isExporting, setIsExporting] = useState(false);
     const [exportError, setExportError] = useState(null);
     const [filenameError, setFilenameError] = useState(null);
-    const { showReport } = useError();
     // the AutomationML file kept since an AML import, if any (feature 028)
     const amlSupport = modeler.get('amlSupport', false);
     const amlSource = amlSupport ? amlSupport.getSource() : null;
@@ -249,11 +247,12 @@ const DownloadModal = memo(({ modeler, processes, selectedProcess, selectedEleme
             eventBus.fire(eventName, { data: result.text, format: 'aml' });
         }
         if (result.removedLinks.length) {
-            showReport({
+            modeler.get('fpbNotifications').show({
+                key: 'export.report',
+                type: 'warning',
                 title: `AML export: ${result.removedLinks.length} ${result.removedLinks.length === 1 ? 'link' : 'links'} removed`,
-                warnings: result.removedLinks.map((message) => ({
+                items: result.removedLinks.map((message) => ({
                     message,
-                    details: null,
                     hint: 'The element was deleted in FPB.js; the link pointed to it.'
                 }))
             });

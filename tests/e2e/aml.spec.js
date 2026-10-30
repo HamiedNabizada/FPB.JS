@@ -158,8 +158,8 @@ test.describe('AutomationML import and export', () => {
     const aml = await exportViaDialog(page, { format: 'aml' });
     expect(aml).not.toContain('Name="B1_Prozess"');
     expect(aml).toContain('Name="Behaelter_B1"');
-    await expect(page.locator('.import-report')).toContainText('AML export: 1 link removed');
-    await expect(page.locator('.import-report')).toContainText("Removed link 'B1_Prozess' in 'Behaelter_B1'");
+    await expect(page.locator('[data-id="export.report"]')).toContainText('AML export: 1 link removed');
+    await expect(page.locator('[data-id="export.report"]')).toContainText("Removed link 'B1_Prozess' in 'Behaelter_B1'");
   });
 
   test('deleting a decomposed operator names the links on its layers below', async ({ page }) => {
@@ -253,7 +253,7 @@ test.describe('AutomationML import and export', () => {
     await importButton(page).click();
 
     await expect.poll(() => source(page)).toMatchObject({ fileName: 'Pumpen.aml', hierarchyId: null });
-    await expect(page.locator('.import-report')).toContainText('contains no FPD process');
+    await expect(page.locator('[data-id="import.report"]')).toContainText('contains no FPD process');
     await dismissNotifications(page);
 
     // an empty model has nothing to export
@@ -310,7 +310,7 @@ test.describe('AutomationML import and export', () => {
     await start(page);
     await importAml(page, MIXED);
 
-    const report = page.locator('.import-report');
+    const report = page.locator('[data-id="import.report"]');
     await expect(report).toContainText('elements carry more from the AML file');
     await expect(report).toContainText('Abgekühltes Medium');
     await expect(report).toContainText('"AML (read only)" in the properties panel');

@@ -256,7 +256,7 @@ test.describe('XML import - broken files', () => {
     await openImportDialog(page);
     await dropFile(page, xml, name, 'text/xml');
 
-    const alert = page.locator('.alert-danger');
+    const alert = page.locator('.fpb-import-error');
     await expect(alert).toBeVisible();
     await expect(alert).toContainText('Invalid file format');
     await alert.locator('summary').click();

@@ -10,7 +10,6 @@ import Alert from 'react-bootstrap/Alert';
 import Form from 'react-bootstrap/Form';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useError } from '../../context/ErrorContext';
 import XMLMapper from '../../xml/XMLMapper.js';
 import useReadOnly from '../../read-only/useReadOnly';
 import { isAmlText as isAml } from '../../aml/detect';
@@ -35,7 +34,18 @@ const ImportModal = memo(({ modeler }) => {
     // AutomationML: the text, its FPD hierarchies and the one to open (feature 028)
     const [aml, setAml] = useState(null);
     const [hierarchyId, setHierarchyId] = useState(null);
-    const { showError } = useError();
+    // An error about the chosen file shows in the open dialog: the message
+    // stack of the modeler lies under it (016e). After the dialog has
+    // closed, errors go to the stack.
+    const [error, setError] = useState(null);
+    const showError = (message, details) => setError({ message, details });
+    const reportError = (message, details) => modeler.get('fpbNotifications').show({
+        key: 'import.error',
+        type: 'error',
+        title: 'Import Error',
+        message,
+        details: details || undefined
+    });
     const fileLabelRef = useRef();
 
     const eventBus = modeler.get('eventBus');
@@ -47,8 +57,8 @@ const ImportModal = memo(({ modeler }) => {
     let fileReader;
     
     useEffect(() => {
-        // The notification itself comes from ImportNotificationBridge, which
-        // is mounted even while the panel is collapsed.
+        // The notification itself comes from the modeler's import messages
+        // (notifications/ImportMessages.js), with or without this panel.
         // Busy ends with the import, however it ends: before, only an error
         // reset it, and after the first good import the button stayed on
         // "Importing..." until the page was reloaded.
@@ -150,6 +160,7 @@ const ImportModal = memo(({ modeler }) => {
                 return;
             }
             
+            setError(null);
             setSelectedFile(file);
             setFileName(file.name);
             setAml(null);
@@ -177,7 +188,7 @@ const ImportModal = memo(({ modeler }) => {
                     setIsImporting(false);
                 }
             }).catch((error) => {
-                showError('Import failed', `The AutomationML file could not be imported: ${error.message}`);
+                reportError('Import failed', `The AutomationML file could not be imported: ${error.message}`);
                 setIsImporting(false);
             });
             handleClose();
@@ -213,6 +224,7 @@ const ImportModal = memo(({ modeler }) => {
             setFileName('');
             setAml(null);
             setHierarchyId(null);
+            setError(null);
         }
     };
 
@@ -287,6 +299,19 @@ const ImportModal = memo(({ modeler }) => {
                                         />
                                     ))}
                                 </div>
+                            </Row>
+                        )}
+                        {error && (
+                            <Row>
+                                <Alert variant="danger" className="fpb-import-error mt-3 mb-0" dismissible onClose={() => setError(null)}>
+                                    <div className="fw-semibold">{error.message}</div>
+                                    {error.details && (
+                                        <details>
+                                            <summary>Technical details</summary>
+                                            <pre style={{ fontSize: '0.8em', marginTop: '0.25rem', whiteSpace: 'pre-wrap' }}>{error.details}</pre>
+                                        </details>
+                                    )}
+                                </Alert>
                             </Row>
                         )}
                         {aml && !aml.hierarchies.length && (

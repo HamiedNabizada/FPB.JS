@@ -189,7 +189,7 @@ test.describe('Import errors - rejected files leave the previous model untouched
     await withOldModel(page);
     await attempt(page, smallModel().m.build().slice(1));
 
-    const alert = page.locator('.alert-danger');
+    const alert = page.locator('.fpb-notification--error');
     await expect(alert).toBeVisible();
     await expect(alert).toContainText('Import Error');
     await expect(alert).toContainText('No project definition found');

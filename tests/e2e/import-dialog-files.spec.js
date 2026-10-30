@@ -44,8 +44,10 @@ async function start(page) {
   return importer;
 }
 
+// an error about the chosen file shows in the dialog, one of the importer
+// after the dialog has closed in the message stack (016e)
 async function expectError(page, title, detail) {
-  const alert = page.locator('.alert-danger');
+  const alert = page.locator('.fpb-import-error, .fpb-notification--error');
   await expect(alert).toBeVisible();
   await expect(alert).toContainText(title);
   if (detail) {
@@ -245,7 +247,7 @@ test.describe('Import dialog - choosing files', () => {
 
     await expect(page.locator(LABEL)).toHaveText(DEFAULT_TEXT);
     await expect(importButton(page)).toBeDisabled();
-    await expect(page.locator('.alert-danger')).toHaveCount(0);
+    await expect(page.locator('.fpb-import-error')).toHaveCount(0);
   });
 
 });
