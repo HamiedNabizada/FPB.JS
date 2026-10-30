@@ -13,6 +13,12 @@ export default function ImportMessages(eventBus, injector, translate) {
   // notes of an AML import (feature 028), shown with the report of that import
   let amlNotes = [];
 
+  // a new import starts: the error of the one before no longer applies
+  // (016e D1, final review)
+  eventBus.on('FPBJS.import', function () {
+    notifications.dismiss('import.error');
+  });
+
   eventBus.on('import.error', function (event) {
     amlNotes = [];
     notifications.show({

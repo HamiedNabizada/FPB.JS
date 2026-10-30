@@ -197,6 +197,19 @@ test.describe('Import errors - rejected files leave the previous model untouched
     await expect(alert).toHaveCount(0);
   });
 
+  // final review 016e D1: errors stay until closed, but not past the next
+  // import, which would otherwise look like it failed too
+  test('the error of a rejected file goes when the next import starts', async ({ page }) => {
+    await withOldModel(page);
+    await attempt(page, smallModel().m.build().slice(1));
+    const alert = page.locator('.fpb-notification--error');
+    await expect(alert).toBeVisible();
+
+    const result = await attempt(page, smallModel('fixed', 'Repariert').m.build());
+    expect(result.done).toBe(1);
+    await expect(alert).toHaveCount(0);
+  });
+
   test('fires import.error once per rejected import', async ({ page }) => {
     await withOldModel(page);
 
