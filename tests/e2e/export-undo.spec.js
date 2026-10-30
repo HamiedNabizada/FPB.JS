@@ -40,11 +40,8 @@ const positionVon = (page, id) => page.evaluate(
 const kannRueckgaengig = (page) => page.evaluate(() => window.fpbjs.get('commandStack').canUndo());
 
 async function downloadDialogOeffnen(page) {
-  await page.evaluate(() => {
-    const knopf = [...document.querySelectorAll('button')].find((b) => b.querySelector('[data-icon="download"]'));
-    knopf.click();
-  });
-  await expect(page.locator('.modal.show')).toBeVisible();
+  await page.locator('#exportButton').click();
+  await expect(page.locator('dialog.fpb-export-dialog[open]')).toBeVisible();
 }
 
 test.describe('PDF-Export und Historie', () => {
@@ -58,7 +55,8 @@ test.describe('PDF-Export und Historie', () => {
     await downloadDialogOeffnen(page);
 
     const download = page.waitForEvent('download', { timeout: 30000 });
-    await page.locator('.modal.show button', { hasText: 'PDF' }).click();
+    await page.locator('dialog.fpb-export-dialog[open] #exportFormat-pdf').check();
+    await page.locator('dialog.fpb-export-dialog[open] [data-answer="export"]').click();
     expect((await download).suggestedFilename()).toMatch(/\.pdf$/);
 
     // zurück auf der Ausgangsebene und die Historie steht noch

@@ -288,14 +288,15 @@ test.describe('AutomationML import and export', () => {
     await importAml(page, MIXED);
     await dismissNotifications(page);
 
-    await page.evaluate(() => {
-      [...document.querySelectorAll('button')].find((b) => b.querySelector('[data-icon="download"]')).click();
-    });
-    await expect(page.locator('.modal.show .aml-kept-hint')).toContainText('Only an AML export keeps the rest of Anlage.aml');
-    await page.locator('#formatAML').check();
-    await expect(page.locator('.modal.show .aml-target-hint')).toContainText('Writes the process into Anlage.aml');
-    await expect(page.locator('#information2')).toBeDisabled();
-    await expect(page.locator('#informationLevel2')).toBeDisabled();
+    await page.locator('#exportButton').click();
+    const dialog = page.locator('dialog.fpb-export-dialog[open]');
+    await expect(dialog.locator('.aml-kept-hint')).toContainText('Only an AML export keeps the rest of Anlage.aml');
+    await dialog.locator('#exportFormat-aml').check();
+    await expect(dialog.locator('.aml-target-hint')).toContainText('Writes the process into Anlage.aml');
+    // AML is always the whole model with layout: neither scope nor layout to choose
+    await expect(dialog.locator('#exportScope-layer')).toHaveCount(0);
+    await expect(dialog.locator('#exportLayout')).toHaveCount(0);
+    await expect(dialog.locator('.fpb-export-scope')).toHaveText('AML always contains the whole model.');
   });
 
   test('importing JSON afterwards drops the kept file', async ({ page }) => {

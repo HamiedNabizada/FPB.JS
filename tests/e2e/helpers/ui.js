@@ -1,9 +1,8 @@
 /**
- * Selectors for the dialogs and messages of FPB.js (016e D1). Until D2 the
- * import and export dialogs are still react-bootstrap modals, the questions
- * and the information already native dialogs: DIALOG finds either kind.
+ * Selectors for the dialogs and messages of FPB.js (016e D1, D2): every
+ * dialog is a native <dialog> since D2.
  */
-export const DIALOG = 'dialog.fpb-dialog[open], .modal.show';
+export const DIALOG = 'dialog.fpb-dialog[open]';
 export const NOTE = '.fpb-notification';
 
 export const dialog = (page) => page.locator(DIALOG);

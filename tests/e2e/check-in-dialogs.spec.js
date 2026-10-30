@@ -1,4 +1,5 @@
 // tests/e2e/check-in-dialogs.spec.js
+import fs from 'fs';
 import { test, expect } from './support/test';
 import { ImportPage } from './pages/ImportPage';
 import basis from './fixtures/temperieren.json';
@@ -76,37 +77,26 @@ test.describe('Prüfung an den Übergabestellen', () => {
     await bericht(page).getByRole('button', { name: 'Dismiss' }).dispatchEvent('click');
     await expect(bericht(page)).toHaveCount(0);
 
-    await page.evaluate(() => {
-      const knopf = [...document.querySelectorAll('button')].find((b) => b.querySelector('[data-icon="download"]'));
-      knopf.click();
-    });
+    await page.locator('#exportButton').click();
 
-    const hinweis = page.locator('.download-check-hint');
+    const hinweis = page.locator('dialog.fpb-export-dialog[open] .fpb-export-check');
     await expect(hinweis).toContainText('1 error');
     await expect(hinweis).toContainText('The export runs anyway');
 
-    // Export als Event: läuft trotz Befund
-    const daten = await page.evaluate(() => new Promise((resolve) => {
-      window.fpbjs.get('eventBus').once('fpbjs', (e) => resolve(Array.isArray(e.data) ? e.data.length : null));
-      document.querySelector('#export1').click();
-      setTimeout(() => {
-        [...document.querySelectorAll('.modal.show .modal-footer button')].pop().click();
-      }, 150);
-      setTimeout(() => resolve(null), 6000);
-    }));
-    expect(daten).toBeGreaterThan(0);
+    // der Export läuft trotz Befund
+    const download = page.waitForEvent('download');
+    await page.locator('dialog.fpb-export-dialog[open] [data-answer="export"]').click();
+    const daten = JSON.parse(fs.readFileSync(await (await download).path(), 'utf8'));
+    expect(daten.length).toBeGreaterThan(0);
   });
 
   test('ohne Befunde steht kein Hinweis im Export-Dialog', async ({ page }) => {
     await laden(page, clone());
 
-    await page.evaluate(() => {
-      const knopf = [...document.querySelectorAll('button')].find((b) => b.querySelector('[data-icon="download"]'));
-      knopf.click();
-    });
+    await page.locator('#exportButton').click();
 
-    await expect(page.locator('.modal.show')).toBeVisible();
-    await expect(page.locator('.download-check-hint')).toHaveCount(0);
+    await expect(page.locator('dialog.fpb-export-dialog[open]')).toBeVisible();
+    await expect(page.locator('.fpb-export-check')).toHaveCount(0);
   });
 
 });

@@ -6,16 +6,21 @@ import basis from './fixtures/temperieren.json';
 import { exportiere, nachIds } from './helpers/modelExport';
 
 /**
- * E2E tests for the export dialog (layer-panel/components/DownloadModal.js)
- * and what it calls: export/PngExporter, export/PdfExporter,
- * export/renderLayers, export/serializeModel and XMLMapper.convertToXML.
+ * E2E tests for the dialog "Export" (files/ExportDialog.js, 016e D2, V10)
+ * and what it calls: files/exports.js, export/PngExporter,
+ * export/PdfExporter, export/renderLayers, export/serializeModel and
+ * XMLMapper.convertToXML.
  *
- * Every download is read back from disk and checked for its content.
+ * Every download is read back from disk and checked for its content. Sending
+ * the export to the host as an event needs the option exportEvent of the
+ * library: library-api.spec.js.
  */
 
 const clone = () => JSON.parse(JSON.stringify(basis));
 const ROOT_ID = '55b4780e-6896-4e92-b184-858cf0cb5b32';
 const CHILD_ID = '9ca400c0-a373-48c0-9f13-37ce196cee29';
+// the file name starts as the name of the project
+const NAME = 'FPBJS_Project';
 
 async function load(page, model = clone()) {
   await page.setViewportSize({ width: 1600, height: 1000 });
@@ -25,14 +30,15 @@ async function load(page, model = clone()) {
   return importer;
 }
 
-const dialog = (page) => page.locator('.modal.show');
-const footerButton = (page, text) => dialog(page).locator('.modal-footer button', { hasText: text });
-const sendButton = (page) => dialog(page).locator('.modal-footer button:has([data-icon="paper-plane"])');
+const dialog = (page) => page.locator('dialog.fpb-export-dialog[open]');
+const exportButton = (page) => dialog(page).locator('[data-answer="export"]');
+const errorBox = (page) => dialog(page).locator('.fpb-export-error');
+const format = (page, name) => dialog(page).locator(`#exportFormat-${name}`);
 
 async function openDialog(page) {
-  await page.locator('.downloadButton button:has([data-icon="download"])').click();
+  await page.locator('#exportButton').click();
   await expect(dialog(page)).toBeVisible();
-  await expect(dialog(page).locator('.modal-title')).toContainText('Export Options');
+  await expect(dialog(page).locator('.fpb-dialog-title')).toHaveText('Export');
 }
 
 /** Records events on the event bus in window.__events */
@@ -70,6 +76,16 @@ async function expectNoDownload(page, action) {
   expect(downloaded).toBeNull();
 }
 
+/** Exports JSON of a scope through the dialog and returns the parsed file */
+async function exportJson(page, scope, { layout = true } = {}) {
+  await openDialog(page);
+  await format(page, 'json').check();
+  await dialog(page).locator(`#exportScope-${scope}`).check();
+  await dialog(page).locator('#exportLayout').setChecked(layout);
+  const file = await expectDownload(page, () => exportButton(page).click());
+  return JSON.parse(file.content.toString('utf8'));
+}
+
 const rootId = (page) => page.evaluate(() => window.fpbjs.get('canvas').getRootElement().id);
 const canUndo = (page) => page.evaluate(() => window.fpbjs.get('commandStack').canUndo());
 
@@ -94,52 +110,49 @@ test.describe('Export dialog', () => {
       await load(page);
       await openDialog(page);
 
-      await expect(dialog(page).locator('#formatJSON')).toBeChecked();
-      await expect(dialog(page).locator('#formatXML')).not.toBeChecked();
-      await expect(dialog(page).locator('#informationLevel1')).toBeChecked();
-      await expect(dialog(page).locator('#informationLevel2')).not.toBeChecked();
-      await expect(dialog(page).locator('#export1')).not.toBeChecked();
-      await expect(dialog(page).locator('#export2')).not.toBeChecked();
-      await expect(dialog(page).locator('#formEvent')).toHaveValue('fpbjs');
-      await expect(dialog(page).locator('#formDownloadFileName')).toHaveValue('FPB');
-      await expect(footerButton(page, 'SVG')).toBeEnabled();
-      await expect(footerButton(page, 'PNG')).toBeEnabled();
-      await expect(footerButton(page, 'PDF')).toBeEnabled();
-      await expect(sendButton(page)).toBeEnabled();
+      await expect(format(page, 'json')).toBeChecked();
+      await expect(format(page, 'xml')).not.toBeChecked();
+      await expect(dialog(page).locator('#exportScope-model')).toBeChecked();
+      await expect(dialog(page).locator('#exportLayout')).toBeChecked();
+      // sending to the host only with the option exportEvent
+      await expect(dialog(page).locator('#exportTo-event')).toHaveCount(0);
+      await expect(dialog(page).locator('#exportFileName')).toHaveValue(NAME);
+      await expect(exportButton(page)).toBeEnabled();
       // the XML option links the paper it is based on
       await expect(dialog(page).locator('a[href*="researchgate"]')).toHaveAttribute('target', '_blank');
     });
 
-    test('the data scope used by default (All Processes) is shown as selected', async ({ page }) => {
+    test('the export dialog is native and returns the focus to the button', async ({ page }) => {
       await load(page);
-      await openDialog(page);
-      await expect(dialog(page).locator('#information1')).toBeChecked();
+      await page.locator('#exportButton').focus();
+      await page.keyboard.press('Enter');
+      await expect(dialog(page)).toBeVisible();
+      expect(await dialog(page).evaluate((d) => d.tagName === 'DIALOG' && d.matches(':modal'))).toBe(true);
+      await page.keyboard.press('Escape');
+      await expect(dialog(page)).toHaveCount(0);
+      await expect(page.locator('#exportButton')).toBeFocused();
     });
 
     test('closes with the X button', async ({ page }) => {
       await load(page);
       await openDialog(page);
-      await dialog(page).getByRole('button', { name: 'Close export options' }).click();
+      await dialog(page).getByRole('button', { name: 'Close' }).click();
       await expect(dialog(page)).toHaveCount(0);
     });
 
     test('closes when the X button is clicked outside its icon', async ({ page }) => {
       await load(page);
       await openDialog(page);
-      const button = dialog(page).locator('.modal-header button');
-      await button.click({ position: { x: 2, y: 2 } });
+      await dialog(page).locator('.fpb-dialog-close').click({ position: { x: 2, y: 2 } });
       await expect(dialog(page)).toHaveCount(0);
     });
 
-    test('closes with Escape and with a click on the backdrop, without exporting', async ({ page }) => {
+    test('closes with Escape, without exporting', async ({ page }) => {
       await load(page);
       await recordEvents(page, ['fpbjs', 'model.downloaded']);
       await openDialog(page);
       await expectNoDownload(page, async () => {
         await page.keyboard.press('Escape');
-        await expect(dialog(page)).toHaveCount(0);
-        await openDialog(page);
-        await page.mouse.click(5, 500);
         await expect(dialog(page)).toHaveCount(0);
       });
       expect(await recorded(page)).toEqual([]);
@@ -148,18 +161,36 @@ test.describe('Export dialog', () => {
     test('after closing and reopening, the export does what the dialog shows', async ({ page }) => {
       await load(page);
       await openDialog(page);
-      await dialog(page).locator('#formatXML').check();
-      await dialog(page).locator('#export2').check();
+      await format(page, 'xml').check();
       await page.keyboard.press('Escape');
       await expect(dialog(page)).toHaveCount(0);
 
       await openDialog(page);
       // the reopened form shows the choices it keeps, and exports them
-      await expect(dialog(page).locator('#formatXML')).toBeChecked();
-      await expect(dialog(page).locator('#export2')).toBeChecked();
-      await expect(dialog(page).locator('#information1')).toBeChecked();
-      const file = await expectDownload(page, () => sendButton(page).click());
-      expect(file.name).toBe('FPB.xml');
+      await expect(format(page, 'xml')).toBeChecked();
+      const file = await expectDownload(page, () => exportButton(page).click());
+      expect(file.name).toBe(`${NAME}.xml`);
+    });
+
+    test('only the options of the chosen format are shown', async ({ page }) => {
+      await load(page);
+      await openDialog(page);
+      const visible = async () => ({
+        scope: await dialog(page).locator('#exportScope-model').count(),
+        layout: await dialog(page).locator('#exportLayout').count(),
+        name: await dialog(page).locator('#exportFileName').count(),
+        hint: (await dialog(page).locator('.fpb-export-scope').allTextContents()).join()
+      });
+
+      expect(await visible()).toEqual({ scope: 1, layout: 1, name: 1, hint: '' });
+      await format(page, 'xml').check();
+      expect(await visible()).toEqual({ scope: 0, layout: 1, name: 1, hint: 'XML always contains the whole model.' });
+      await format(page, 'svg').check();
+      expect(await visible()).toEqual({ scope: 0, layout: 0, name: 1, hint: 'The current layer.' });
+      await format(page, 'png').check();
+      expect(await visible()).toEqual({ scope: 0, layout: 0, name: 1, hint: 'The current layer.' });
+      await format(page, 'pdf').check();
+      expect(await visible()).toEqual({ scope: 0, layout: 0, name: 1, hint: 'All layers, one page each.' });
     });
   });
 
@@ -168,7 +199,7 @@ test.describe('Export dialog', () => {
     test('no hint for a model without findings', async ({ page }) => {
       await load(page);
       await openDialog(page);
-      await expect(dialog(page).locator('.download-check-hint')).toHaveCount(0);
+      await expect(dialog(page).locator('.fpb-export-check')).toHaveCount(0);
     });
 
     test('an error is shown as a red hint, and the export still runs', async ({ page }) => {
@@ -185,16 +216,15 @@ test.describe('Export dialog', () => {
       expect(counts.error).toBeGreaterThan(0);
 
       await openDialog(page);
-      const hint = dialog(page).locator('.download-check-hint');
-      await expect(hint).toHaveClass(/alert-danger/);
+      const hint = dialog(page).locator('.fpb-export-check');
+      await expect(hint).toHaveClass(/is-error/);
       const errorWord = counts.error === 1 ? 'error' : 'errors';
       const warningWord = counts.warning === 1 ? 'warning' : 'warnings';
       await expect(hint).toContainText(
         `Model check (VDI 3682): ${counts.error} ${errorWord}, ${counts.warning} ${warningWord}. The export runs anyway.`);
 
-      await dialog(page).locator('#export2').check();
-      const file = await expectDownload(page, () => sendButton(page).click());
-      expect(file.name).toBe('FPB.json');
+      const file = await expectDownload(page, () => exportButton(page).click());
+      expect(file.name).toBe(`${NAME}.json`);
     });
 
     test('only warnings are shown as a yellow hint', async ({ page }) => {
@@ -213,40 +243,24 @@ test.describe('Export dialog', () => {
       expect(counts.warning).toBeGreaterThan(0);
 
       await openDialog(page);
-      const hint = dialog(page).locator('.download-check-hint');
-      await expect(hint).toHaveClass(/alert-warning/);
+      const hint = dialog(page).locator('.fpb-export-check');
+      await expect(hint).toHaveClass(/is-warning/);
       await expect(hint).toContainText(`0 errors, ${counts.warning} ${counts.warning === 1 ? 'warning' : 'warnings'}`);
     });
   });
 
-  test.describe('export method', () => {
+  test.describe('JSON', () => {
 
-    test('neither event nor download: error message, dialog stays open, nothing exported', async ({ page }) => {
-      await load(page);
-      await recordEvents(page, ['fpbjs', 'model.downloaded']);
-      await openDialog(page);
-      await expectNoDownload(page, () => sendButton(page).click());
-      const alert = dialog(page).locator('.modal-footer .alert-danger');
-      await expect(alert).toHaveText(/Please select at least one export method \(Event or Download\)/);
-      expect(await recorded(page)).toEqual([]);
-
-      // the message can be dismissed
-      await alert.locator('.btn-close').click();
-      await expect(alert).toHaveCount(0);
-      await expect(dialog(page)).toBeVisible();
-    });
-
-    test('JSON download of all processes with layout re-imports to the same model', async ({ page }) => {
+    test('JSON download of the whole model with layout re-imports to the same model', async ({ page }) => {
       const importer = await load(page);
       await recordEvents(page, ['fpbjs', 'model.downloaded']);
       const before = await exportiere(page);
 
       await openDialog(page);
-      await dialog(page).locator('#export2').check();
-      const file = await expectDownload(page, () => sendButton(page).click());
+      const file = await expectDownload(page, () => exportButton(page).click());
       await expect(dialog(page)).toHaveCount(0);
 
-      expect(file.name).toBe('FPB.json');
+      expect(file.name).toBe(`${NAME}.json`);
       const json = JSON.parse(file.content.toString('utf8'));
       expect(Array.isArray(json)).toBe(true);
       expect(json.filter((e) => e.$type === 'fpb:Project')).toHaveLength(1);
@@ -258,7 +272,7 @@ test.describe('Export dialog', () => {
       ['di', 'children', 'labels', 'markers'].forEach((k) => expect(keys.has(k)).toBe(false));
       expect(nachIds(json)).toEqual(nachIds(before));
 
-      // full model with layout: model.downloaded, no event export
+      // full model with layout: model.downloaded, no event to a host
       expect(await recorded(page)).toEqual([{ name: 'model.downloaded', format: 'json' }]);
 
       // the file re-imports to the same model
@@ -267,91 +281,30 @@ test.describe('Export dialog', () => {
       expect(await importer.unresolvedReferences()).toEqual([]);
     });
 
-    test('JSON download without graphic information leaves out the layout and does not count as saved', async ({ page }) => {
+    test('JSON download without layout leaves out the layout and does not count as saved', async ({ page }) => {
       await load(page);
       await recordEvents(page, ['model.downloaded']);
       const before = await exportiere(page);
 
-      await openDialog(page);
-      await dialog(page).locator('#informationLevel2').check();
-      await dialog(page).locator('#export2').check();
-      const file = await expectDownload(page, () => sendButton(page).click());
+      const json = await exportJson(page, 'model', { layout: false });
 
-      const json = JSON.parse(file.content.toString('utf8'));
       expect(keysDeep(json).has('elementVisualInformation')).toBe(false);
       const ids = (m) => m.filter((e) => e.process).flatMap((e) => e.elementDataInformation.map((d) => d.id)).sort();
       expect(ids(json)).toEqual(ids(before));
       expect(await recorded(page)).toEqual([]);
     });
-
-    test('event only, with a custom event name: data on the event bus, no download', async ({ page }) => {
-      await load(page);
-      await recordEvents(page, ['fpbjs', 'myExport', 'model.downloaded']);
-      const before = await exportiere(page);
-
-      await openDialog(page);
-      await dialog(page).locator('#export1').check();
-      await dialog(page).locator('#formEvent').fill('myExport');
-      await expectNoDownload(page, () => sendButton(page).click());
-      await expect(dialog(page)).toHaveCount(0);
-
-      const events = await recorded(page);
-      expect(events.map((e) => e.name)).toEqual(['myExport']);
-      expect(events[0].format).toBe('json');
-      // JSON arrives parsed, not as a string
-      expect(Array.isArray(events[0].data)).toBe(true);
-      expect(nachIds(events[0].data)).toEqual(nachIds(before));
-    });
-
-    test('event and download together deliver the same data', async ({ page }) => {
-      await load(page);
-      await recordEvents(page, ['fpbjs', 'model.downloaded']);
-
-      await openDialog(page);
-      await dialog(page).locator('#export1').check();
-      await dialog(page).locator('#export2').check();
-      const file = await expectDownload(page, () => sendButton(page).click());
-
-      const events = await recorded(page);
-      expect(events.map((e) => e.name)).toEqual(['model.downloaded', 'fpbjs']);
-      expect(events[1].data).toEqual(JSON.parse(file.content.toString('utf8')));
-    });
-
-    test('unchecking download again means no download', async ({ page }) => {
-      await load(page);
-      await recordEvents(page, ['fpbjs']);
-      await openDialog(page);
-      await dialog(page).locator('#export2').check();
-      await dialog(page).locator('#export1').check();
-      await dialog(page).locator('#export2').uncheck();
-      await expectNoDownload(page, () => sendButton(page).click());
-      expect((await recorded(page)).map((e) => e.name)).toEqual(['fpbjs']);
-    });
   });
 
   test.describe('data scope', () => {
 
-    async function exportAsEvent(page, scope, { level, format } = {}) {
-      await openDialog(page);
-      if (format === 'xml') await dialog(page).locator('#formatXML').check();
-      if (level === 2) await dialog(page).locator('#informationLevel2').check();
-      await dialog(page).locator(`#${scope}`).check();
-      await dialog(page).locator('#export1').check();
-      await sendButton(page).click();
-    }
-
-    test('current process on the child layer exports only that process', async ({ page }) => {
+    test('the current layer on the child layer exports only that layer', async ({ page }) => {
       const importer = await load(page);
       await importer.switchToChildLayer();
       expect(await rootId(page)).toBe(CHILD_ID);
-      await recordEvents(page, ['fpbjs', 'model.downloaded']);
 
-      await exportAsEvent(page, 'information2');
+      const data = await exportJson(page, 'layer');
       await expect(dialog(page)).toHaveCount(0);
 
-      const events = await recorded(page);
-      expect(events).toHaveLength(1);
-      const data = events[0].data;
       expect(data.process.id).toBe(CHILD_ID);
       const onCanvas = await page.evaluate(() => window.fpbjs.get('elementRegistry')
         .filter((e) => e.businessObject && e.type !== 'label' && e.type !== 'fpb:Process' && e.id !== window.fpbjs.get('canvas').getRootElement().id)
@@ -360,14 +313,10 @@ test.describe('Export dialog', () => {
       expect(data.elementVisualInformation.length).toBe(data.elementDataInformation.length);
     });
 
-    test('current process downloaded is not the full model (no model.downloaded)', async ({ page }) => {
+    test('the current layer downloaded is not the full model (no model.downloaded)', async ({ page }) => {
       await load(page);
       await recordEvents(page, ['model.downloaded']);
-      await openDialog(page);
-      await dialog(page).locator('#information2').check();
-      await dialog(page).locator('#export2').check();
-      const file = await expectDownload(page, () => sendButton(page).click());
-      const json = JSON.parse(file.content.toString('utf8'));
+      const json = await exportJson(page, 'layer');
       expect(json.process.id).toBe(ROOT_ID);
       expect(await recorded(page)).toEqual([]);
     });
@@ -383,24 +332,27 @@ test.describe('Export dialog', () => {
         window.fpbjs.get('selection').select(picks);
         return picks.map((e) => e.id).sort();
       });
-      await recordEvents(page, ['fpbjs', 'model.downloaded']);
 
-      await exportAsEvent(page, 'information3');
+      const data = await exportJson(page, 'selection');
 
-      const events = await recorded(page);
-      expect(events).toHaveLength(1);
-      expect(events[0].data.elementDataInformation.map((e) => e.id).sort()).toEqual(selected);
-      expect(events[0].data.elementVisualInformation.map((e) => e.id).sort()).toEqual(selected);
+      expect(data.elementDataInformation.map((e) => e.id).sort()).toEqual(selected);
+      expect(data.elementVisualInformation.map((e) => e.id).sort()).toEqual(selected);
     });
 
-    test('selected elements without graphic information and with nothing selected', async ({ page }) => {
+    test('selected elements without layout, and no such choice while nothing is selected', async ({ page }) => {
       await load(page);
       await page.evaluate(() => window.fpbjs.get('selection').select([]));
-      await recordEvents(page, ['fpbjs']);
-      await exportAsEvent(page, 'information3', { level: 2 });
-      const events = await recorded(page);
-      expect(events).toHaveLength(1);
-      expect(events[0].data).toEqual({ elementDataInformation: [] });
+      await openDialog(page);
+      await expect(dialog(page).locator('#exportScope-selection')).toBeDisabled();
+      await page.keyboard.press('Escape');
+
+      await page.evaluate(() => {
+        const op = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+        window.fpbjs.get('selection').select([op]);
+      });
+      const data = await exportJson(page, 'selection', { layout: false });
+      expect(Object.keys(data)).toEqual(['elementDataInformation']);
+      expect(data.elementDataInformation).toHaveLength(1);
     });
 
     test('selected elements downloaded does not fire model.downloaded', async ({ page }) => {
@@ -410,25 +362,18 @@ test.describe('Export dialog', () => {
         window.fpbjs.get('selection').select([op]);
       });
       await recordEvents(page, ['model.downloaded']);
-      await openDialog(page);
-      await dialog(page).locator('#information3').check();
-      await dialog(page).locator('#export2').check();
-      const file = await expectDownload(page, () => sendButton(page).click());
-      const json = JSON.parse(file.content.toString('utf8'));
+      const json = await exportJson(page, 'selection');
       expect(json.elementDataInformation).toHaveLength(1);
       expect(await recorded(page)).toEqual([]);
     });
 
-    test('switching the scope back to All Processes exports everything again', async ({ page }) => {
+    test('switching the scope back to the whole model exports everything again', async ({ page }) => {
       await load(page);
-      await recordEvents(page, ['fpbjs']);
       await openDialog(page);
-      await dialog(page).locator('#information3').check();
-      await dialog(page).locator('#information1').check();
-      await dialog(page).locator('#export1').check();
-      await sendButton(page).click();
-      const events = await recorded(page);
-      expect(events[0].data.filter((e) => e.process)).toHaveLength(2);
+      await dialog(page).locator('#exportScope-layer').check();
+      await page.keyboard.press('Escape');
+      const data = await exportJson(page, 'model');
+      expect(data.filter((e) => e.process)).toHaveLength(2);
     });
   });
 
@@ -438,12 +383,11 @@ test.describe('Export dialog', () => {
       await load(page);
       await recordEvents(page, ['fpbjs', 'model.downloaded']);
       await openDialog(page);
-      await dialog(page).locator('#formatXML').check();
-      await dialog(page).locator('#export2').check();
-      const file = await expectDownload(page, () => sendButton(page).click());
+      await format(page, 'xml').check();
+      const file = await expectDownload(page, () => exportButton(page).click());
       await expect(dialog(page)).toHaveCount(0);
 
-      expect(file.name).toBe('FPB.xml');
+      expect(file.name).toBe(`${NAME}.xml`);
       const xml = file.content.toString('utf8');
       const parsed = await page.evaluate((text) => {
         const doc = new DOMParser().parseFromString(text, 'text/xml');
@@ -465,58 +409,35 @@ test.describe('Export dialog', () => {
       expect(await recorded(page)).toEqual([{ name: 'model.downloaded', format: 'xml' }]);
     });
 
-    test('XML as event arrives as a string', async ({ page }) => {
+    test('XML without layout contains no layout', async ({ page }) => {
       await load(page);
-      await recordEvents(page, ['fpbjs']);
       await openDialog(page);
-      await dialog(page).locator('#formatXML').check();
-      await dialog(page).locator('#export1').check();
-      await sendButton(page).click();
-      await expect(dialog(page)).toHaveCount(0);
-      const events = await recorded(page);
-      expect(events[0].format).toBe('xml');
-      expect(typeof events[0].data).toBe('string');
-      expect(events[0].data).toMatch(/^<\?xml/);
+      await format(page, 'xml').check();
+      await dialog(page).locator('#exportLayout').uncheck();
+      const file = await expectDownload(page, () => exportButton(page).click());
+      expect(file.content.toString('utf8')).not.toMatch(/visual:/);
     });
 
-    test('XML without graphic information contains no layout', async ({ page }) => {
+    test('XML always exports the whole model: the scope is not offered', async ({ page }) => {
       await load(page);
-      await recordEvents(page, ['fpbjs', 'model.downloaded']);
       await openDialog(page);
-      await dialog(page).locator('#formatXML').check();
-      await dialog(page).locator('#informationLevel2').check();
-      await dialog(page).locator('#export1').check();
-      await sendButton(page).click();
-      const events = await recorded(page);
-      expect(events).toHaveLength(1);
-      expect(events[0].data).not.toMatch(/visual:/);
-    });
+      await dialog(page).locator('#exportScope-layer').check();
+      await format(page, 'xml').check();
 
-    test('XML always exports the whole model: the other data scopes are switched off', async ({ page }) => {
-      await load(page);
-      await recordEvents(page, ['fpbjs']);
+      await expect(dialog(page).locator('#exportScope-layer')).toHaveCount(0);
+      await expect(dialog(page).locator('.fpb-export-scope')).toHaveText('XML always contains the whole model.');
+
+      const file = await expectDownload(page, () => exportButton(page).click());
+      await expect(errorBox(page)).toHaveCount(0);
+      const xml = file.content.toString('utf8');
+      expect(xml).toContain(ROOT_ID);
+      expect(xml).toContain(CHILD_ID);
+
+      // back to JSON, the scope is offered again
       await openDialog(page);
-      await dialog(page).locator('#information2').check();
-      await dialog(page).locator('#formatXML').check();
-
-      // choosing XML goes back to All Processes and locks the other two
-      await expect(dialog(page).locator('#information1')).toBeChecked();
-      await expect(dialog(page).locator('#information2')).toBeDisabled();
-      await expect(dialog(page).locator('#information3')).toBeDisabled();
-      await expect(dialog(page).locator('.xml-scope-hint')).toHaveText('XML always contains the whole model.');
-
-      await dialog(page).locator('#export1').check();
-      await sendButton(page).click();
-      await expect(dialog(page).locator('.modal-footer .alert-danger')).toHaveCount(0);
-      const events = await recorded(page);
-      expect(events).toHaveLength(1);
-      expect(events[0].data).toContain(ROOT_ID);
-
-      // back to JSON, the scopes are free again
-      await openDialog(page);
-      await dialog(page).locator('#formatJSON').check();
-      await expect(dialog(page).locator('#information2')).toBeEnabled();
-      await expect(dialog(page).locator('.xml-scope-hint')).toHaveCount(0);
+      await format(page, 'json').check();
+      await expect(dialog(page).locator('#exportScope-layer')).toBeEnabled();
+      await expect(dialog(page).locator('.fpb-export-scope')).toHaveCount(0);
     });
   });
 
@@ -524,72 +445,72 @@ test.describe('Export dialog', () => {
 
     async function downloadWithName(page, name) {
       await openDialog(page);
-      await dialog(page).locator('#export2').check();
-      await dialog(page).locator('#formDownloadFileName').fill(name);
-      return dialog(page).locator('#formDownloadFileName');
+      await dialog(page).locator('#exportFileName').fill(name);
+      return dialog(page).locator('#exportFileName');
     }
 
     test('a valid name is used as is', async ({ page }) => {
       await load(page);
       const field = await downloadWithName(page, 'Temperieren v2');
-      await expect(field).not.toHaveClass(/is-invalid/);
-      const file = await expectDownload(page, () => sendButton(page).click());
+      await expect(field).not.toHaveAttribute('aria-invalid', 'true');
+      const file = await expectDownload(page, () => exportButton(page).click());
       expect(file.name).toBe('Temperieren v2.json');
     });
 
     test('invalid characters are flagged and replaced in the downloaded name', async ({ page }) => {
       await load(page);
       const field = await downloadWithName(page, 'a<b>c:d|e?f*g');
-      await expect(field).toHaveClass(/is-invalid/);
-      await expect(dialog(page).locator('.invalid-feedback')).toHaveText('Filename contains invalid characters');
+      await expect(field).toHaveAttribute('aria-invalid', 'true');
+      await expect(dialog(page).locator('.fpb-field-error')).toHaveText('Filename contains invalid characters');
       await expect(dialog(page)).toContainText('Avoid special characters: < > : " / \\ | ? *');
-      const file = await expectDownload(page, () => sendButton(page).click());
+      const file = await expectDownload(page, () => exportButton(page).click());
       expect(file.name).toBe('a_b_c_d_e_f_g.json');
     });
 
     test('an empty name is flagged and falls back to FPB', async ({ page }) => {
       await load(page);
       const field = await downloadWithName(page, '   ');
-      await expect(field).toHaveClass(/is-invalid/);
-      await expect(dialog(page).locator('.invalid-feedback')).toHaveText('Filename cannot be empty');
-      const file = await expectDownload(page, () => sendButton(page).click());
+      await expect(field).toHaveAttribute('aria-invalid', 'true');
+      await expect(dialog(page).locator('.fpb-field-error')).toHaveText('Filename cannot be empty');
+      const file = await expectDownload(page, () => exportButton(page).click());
       expect(file.name).toBe('FPB.json');
     });
 
     test('a reserved name is flagged and falls back to FPB', async ({ page }) => {
       await load(page);
       await downloadWithName(page, 'con');
-      await expect(dialog(page).locator('.invalid-feedback')).toHaveText('"con" is a reserved filename');
-      const file = await expectDownload(page, () => sendButton(page).click());
+      await expect(dialog(page).locator('.fpb-field-error')).toHaveText('"con" is a reserved filename');
+      const file = await expectDownload(page, () => exportButton(page).click());
       expect(file.name).toBe('FPB.json');
     });
 
     test('a too long name is flagged and cut to 200 characters', async ({ page }) => {
       await load(page);
       await downloadWithName(page, 'x'.repeat(230));
-      await expect(dialog(page).locator('.invalid-feedback')).toHaveText('Filename is too long (max 200 characters)');
-      const file = await expectDownload(page, () => sendButton(page).click());
+      await expect(dialog(page).locator('.fpb-field-error')).toHaveText('Filename is too long (max 200 characters)');
+      const file = await expectDownload(page, () => exportButton(page).click());
       expect(file.name).toBe('x'.repeat(200) + '.json');
     });
 
     test('correcting the name clears the message; surrounding spaces are trimmed', async ({ page }) => {
       await load(page);
       const field = await downloadWithName(page, 'a/b');
-      await expect(field).toHaveClass(/is-invalid/);
+      await expect(field).toHaveAttribute('aria-invalid', 'true');
       await field.fill('  modell  ');
-      await expect(field).not.toHaveClass(/is-invalid/);
-      await expect(dialog(page).locator('.invalid-feedback')).toBeEmpty();
-      const file = await expectDownload(page, () => sendButton(page).click());
+      await expect(field).not.toHaveAttribute('aria-invalid', 'true');
+      await expect(dialog(page).locator('.fpb-field-error')).toHaveCount(0);
+      const file = await expectDownload(page, () => exportButton(page).click());
       expect(file.name).toBe('modell.json');
     });
 
     test('the name is also used for SVG, PNG and PDF', async ({ page }) => {
       await load(page);
-      await openDialog(page);
-      await dialog(page).locator('#formDownloadFileName').fill('bild');
-      expect((await expectDownload(page, () => footerButton(page, 'SVG').click())).name).toBe('bild.svg');
-      expect((await expectDownload(page, () => footerButton(page, 'PNG').click())).name).toBe('bild.png');
-      expect((await expectDownload(page, () => footerButton(page, 'PDF').click())).name).toBe('bild.pdf');
+      for (const kind of ['svg', 'png', 'pdf']) {
+        await openDialog(page);
+        await format(page, kind).check();
+        await dialog(page).locator('#exportFileName').fill('bild');
+        expect((await expectDownload(page, () => exportButton(page).click())).name).toBe(`bild.${kind}`);
+      }
     });
   });
 
@@ -599,8 +520,9 @@ test.describe('Export dialog', () => {
       await load(page);
       await recordEvents(page, ['model.downloaded']);
       await openDialog(page);
-      const file = await expectDownload(page, () => footerButton(page, 'SVG').click());
-      expect(file.name).toBe('FPB.svg');
+      await format(page, 'svg').check();
+      const file = await expectDownload(page, () => exportButton(page).click());
+      expect(file.name).toBe(`${NAME}.svg`);
       const svg = file.content.toString('utf8');
       // XML prolog, an optional comment and doctype, then the svg root
       expect(svg).toMatch(/^<\?xml[^>]*>\s*(<!--[^>]*-->\s*)?(<!DOCTYPE svg[^>]*>\s*)?<svg[\s>]/);
@@ -613,16 +535,17 @@ test.describe('Export dialog', () => {
       expect(parsed.error).toBe(0);
       const operators = await page.evaluate(() => window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator').map((e) => e.id));
       operators.forEach((id) => expect(parsed.ids).toContain(id));
-      // the dialog stays open, the image export is not a model save
-      await expect(dialog(page)).toBeVisible();
+      // the dialog closes after every export; an image is not a model save
+      await expect(dialog(page)).toHaveCount(0);
       expect(await recorded(page)).toEqual([]);
     });
 
     test('PNG of the current layer', async ({ page }) => {
       await load(page);
       await openDialog(page);
-      const file = await expectDownload(page, () => footerButton(page, 'PNG').click());
-      expect(file.name).toBe('FPB.png');
+      await format(page, 'png').check();
+      const file = await expectDownload(page, () => exportButton(page).click());
+      expect(file.name).toBe(`${NAME}.png`);
       expect([...file.content.subarray(0, 8)]).toEqual([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
       // IHDR: width and height, scaled by 2
       const width = file.content.readUInt32BE(16);
@@ -631,7 +554,7 @@ test.describe('Export dialog', () => {
       expect(height).toBeGreaterThan(100);
       expect(width % 2).toBe(0);
       expect(height % 2).toBe(0);
-      await expect(dialog(page)).toBeVisible();
+      await expect(dialog(page)).toHaveCount(0);
     });
 
     test('PDF of all layers from the child layer: one page per layer, back on the child layer, history kept', async ({ page }) => {
@@ -646,10 +569,11 @@ test.describe('Export dialog', () => {
         .map((p) => (p.process.identification && p.process.identification.shortName) || p.process.name || p.process.id));
 
       await openDialog(page);
-      const file = await expectDownload(page, () => footerButton(page, 'PDF').click());
-      await expect(sendButton(page)).toBeEnabled();
+      await format(page, 'pdf').check();
+      const file = await expectDownload(page, () => exportButton(page).click());
+      await expect(dialog(page)).toHaveCount(0);
 
-      expect(file.name).toBe('FPB.pdf');
+      expect(file.name).toBe(`${NAME}.pdf`);
       expect(file.content.subarray(0, 5).toString('latin1')).toBe('%PDF-');
       expect(file.content.toString('latin1')).toMatch(/%%EOF\s*$/);
       expect(countPdfPages(file.content)).toBe(2);
@@ -659,7 +583,6 @@ test.describe('Export dialog', () => {
 
       expect(await rootId(page)).toBe(CHILD_ID);
       expect(await canUndo(page)).toBe(true);
-      await expect(dialog(page)).toBeVisible();
     });
 
     test('PDF of a model with a single layer has one page', async ({ page }) => {
@@ -676,7 +599,8 @@ test.describe('Export dialog', () => {
       expect(await page.evaluate(() => window.fpbjs.getProcesses().filter((p) => p.process).length)).toBe(1);
 
       await openDialog(page);
-      const file = await expectDownload(page, () => footerButton(page, 'PDF').click());
+      await format(page, 'pdf').check();
+      const file = await expectDownload(page, () => exportButton(page).click());
       expect(file.content.subarray(0, 5).toString('latin1')).toBe('%PDF-');
       expect(countPdfPages(file.content)).toBe(1);
       expect(await rootId(page)).toBe(ROOT_ID);
@@ -685,33 +609,37 @@ test.describe('Export dialog', () => {
 
   test.describe('error handling', () => {
 
+    async function exportFormat(page, kind) {
+      await format(page, kind).check();
+      await exportButton(page).click();
+    }
+
     test('a failing SVG export shows a message and leaves the dialog usable', async ({ page }) => {
       await load(page);
       await openDialog(page);
       await page.evaluate(() => { window.fpbjs.saveSVG = (o, done) => done(new Error('boom')); });
-      await expectNoDownload(page, () => footerButton(page, 'SVG').click());
-      const alert = dialog(page).locator('.modal-footer .alert-danger');
-      await expect(alert).toHaveText(/SVG export failed: boom/);
-      await expect(footerButton(page, 'SVG')).toBeEnabled();
+      await expectNoDownload(page, () => exportFormat(page, 'svg'));
+      await expect(errorBox(page)).toHaveText(/SVG export failed: boom/);
+      await expect(errorBox(page)).toHaveAttribute('role', 'alert');
+      await expect(exportButton(page)).toBeEnabled();
     });
 
     test('an empty SVG result is reported for SVG and PNG', async ({ page }) => {
       await load(page);
       await openDialog(page);
       await page.evaluate(() => { window.fpbjs.saveSVG = (o, done) => done(null, ''); });
-      const alert = dialog(page).locator('.modal-footer .alert-danger');
-      await expectNoDownload(page, () => footerButton(page, 'SVG').click());
-      await expect(alert).toHaveText(/SVG export failed: SVG generation returned empty result/);
-      await expectNoDownload(page, () => footerButton(page, 'PNG').click());
-      await expect(alert).toHaveText(/PNG export failed: SVG generation returned empty result/);
+      await expectNoDownload(page, () => exportFormat(page, 'svg'));
+      await expect(errorBox(page)).toHaveText(/SVG export failed: SVG generation returned empty result/);
+      await expectNoDownload(page, () => exportFormat(page, 'png'));
+      await expect(errorBox(page)).toHaveText(/PNG export failed: SVG generation returned empty result/);
     });
 
     test('a failing PNG export shows a message', async ({ page }) => {
       await load(page);
       await openDialog(page);
       await page.evaluate(() => { window.fpbjs.saveSVG = (o, done) => done(new Error('kaputt')); });
-      await expectNoDownload(page, () => footerButton(page, 'PNG').click());
-      await expect(dialog(page).locator('.modal-footer .alert-danger')).toHaveText(/PNG export failed: kaputt/);
+      await expectNoDownload(page, () => exportFormat(page, 'png'));
+      await expect(errorBox(page)).toHaveText(/PNG export failed: kaputt/);
     });
 
     test('a failing PDF export shows a message and returns to the start layer with history kept', async ({ page }) => {
@@ -728,8 +656,8 @@ test.describe('Export dialog', () => {
         // the second layer fails
         window.fpbjs.saveSVG = (o, done) => (++calls === 2 ? done(new Error('layer failed')) : original(o, done));
       });
-      await expectNoDownload(page, () => footerButton(page, 'PDF').click());
-      await expect(dialog(page).locator('.modal-footer .alert-danger')).toHaveText(/PDF export failed: layer failed/);
+      await expectNoDownload(page, () => exportFormat(page, 'pdf'));
+      await expect(errorBox(page)).toHaveText(/PDF export failed: layer failed/);
       expect(await rootId(page)).toBe(CHILD_ID);
       expect(await canUndo(page)).toBe(true);
     });
@@ -738,12 +666,11 @@ test.describe('Export dialog', () => {
       await load(page);
       await openDialog(page);
       await page.evaluate(() => { window.fpbjs.getProcess = () => undefined; });
-      await dialog(page).locator('#information2').check();
-      await dialog(page).locator('#export1').check();
-      await sendButton(page).click();
-      await expect(dialog(page).locator('.modal-footer .alert-danger')).toHaveText(/Export failed: No data available for export/);
+      await dialog(page).locator('#exportScope-layer').check();
+      await expectNoDownload(page, () => exportButton(page).click());
+      await expect(errorBox(page)).toHaveText(/Export failed: No data available for export/);
       await expect(dialog(page)).toBeVisible();
-      await expect(sendButton(page)).toBeEnabled();
+      await expect(exportButton(page)).toBeEnabled();
     });
   });
 });

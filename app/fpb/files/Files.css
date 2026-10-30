@@ -77,7 +77,7 @@
   accent-color: var(--fpb-accent);
 }
 
-.aml-no-fpd {
+.fpb-dialog-body .aml-no-fpd {
   margin: 14px 0 0;
   padding: 10px 12px;
   border-radius: var(--fpb-radius-control);
@@ -109,4 +109,136 @@
   font-family: var(--fpb-font-mono);
   font-size: 12px;
   white-space: pre-wrap;
+}
+
+/* Export: the formats on the left, the options of the chosen one on the
+   right; one column on a narrow screen */
+dialog.fpb-dialog.fpb-export-dialog {
+  width: min(640px, calc(100vw - 32px));
+}
+
+.fpb-export-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0 24px;
+}
+
+@media (max-width: 560px) {
+  .fpb-export-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.fpb-choice-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.fpb-choice-hint {
+  color: var(--fpb-text-muted);
+  font-size: 12px;
+}
+
+.fpb-choice-hint a {
+  color: var(--fpb-accent);
+}
+
+.fpb-choice.is-disabled {
+  color: var(--fpb-text-subtle);
+  cursor: default;
+}
+
+.fpb-dialog-body .fpb-export-note,
+.fpb-dialog-body .fpb-export-scope {
+  margin: 8px 0 0;
+  color: var(--fpb-text-muted);
+  font-size: 13px;
+}
+
+.fpb-dialog-body .fpb-export-scope {
+  margin-top: 14px;
+}
+
+.fpb-export-layout {
+  margin-top: 10px;
+}
+
+/* the hint of the model check: the export runs anyway */
+.fpb-dialog-body .fpb-export-check {
+  margin: 0 0 4px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--fpb-warning);
+  border-radius: var(--fpb-radius-control);
+  background: var(--fpb-warning-surface);
+  color: var(--fpb-warning-text);
+}
+
+.fpb-dialog-body .fpb-export-check.is-error {
+  border-left-color: var(--fpb-error);
+  background: var(--fpb-error-surface);
+  color: var(--fpb-error-text);
+}
+
+.fpb-field {
+  margin-top: 14px;
+}
+
+.fpb-field > label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fpb-file-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fpb-file-name input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid var(--fpb-control-border);
+  border-radius: var(--fpb-radius-control);
+  background: var(--fpb-surface);
+  color: var(--fpb-text);
+  font: inherit;
+}
+
+.fpb-file-name input:focus-visible {
+  outline: 2px solid var(--fpb-accent);
+  outline-offset: 1px;
+}
+
+.fpb-file-name input[aria-invalid="true"] {
+  border-color: var(--fpb-error);
+}
+
+.fpb-file-extension {
+  color: var(--fpb-text-muted);
+}
+
+.fpb-dialog-body .fpb-field-error,
+.fpb-dialog-body .fpb-field-hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+
+.fpb-dialog-body .fpb-field-error {
+  color: var(--fpb-error);
+}
+
+.fpb-dialog-body .fpb-field-hint {
+  color: var(--fpb-text-muted);
+}
+
+.fpb-export-error {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--fpb-error);
+  border-radius: var(--fpb-radius-control);
+  background: var(--fpb-error-surface);
+  color: var(--fpb-error-text);
 }

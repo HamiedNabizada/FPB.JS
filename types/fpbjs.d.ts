@@ -434,6 +434,8 @@ export interface FpbInfo {
 export interface FpbFiles {
   /** Shows the dialog "Open"; null in read-only mode */
   open(): { close(result?: any): void; closed: Promise<any> } | null;
+  /** Shows the dialog "Export", also in read-only mode */
+  export(): { close(result?: any): void; closed: Promise<any> };
 }
 
 /** Append an element to an existing one, connected and placed */
@@ -541,6 +543,12 @@ export interface CreateFpbModelerOptions {
    * same action. Default true.
    */
   confirmations?: boolean;
+  /**
+   * The dialog "Export" can send the model to the host as an event instead
+   * of a download (016e D2): true for the event "fpbjs", or its name. The
+   * event carries { data, format }: JSON parsed, XML and AML as text.
+   */
+  exportEvent?: boolean | string;
   /** Additional options passed to FpbModeler constructor */
   [key: string]: any;
 }

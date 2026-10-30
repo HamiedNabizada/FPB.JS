@@ -3,6 +3,7 @@ import { test, expect } from './support/test';
 import { ImportPage } from './pages/ImportPage';
 import basis from './fixtures/temperieren.json';
 import { exportiere, nachIds } from './helpers/modelExport';
+import { exportViaDialog } from './helpers/importDialog';
 
 /**
  * Rundreise durch das XML über die Oberfläche: Modell laden, als XML
@@ -38,25 +39,9 @@ const stuetzpunkte = (page) => page.evaluate(() => window.fpbjs.get('elementRegi
   .filter((e) => e.waypoints)
   .map((e) => `${e.id}:${e.waypoints.map((p) => `${p.x},${p.y}`).join(' ')}`).sort());
 
-/** Über den Download-Dialog als XML exportieren, Ergebnis per Event abholen */
+/** Über den Dialog "Export" als XML herunterladen und die Datei lesen */
 async function alsXmlExportieren(page) {
-  await page.evaluate(() => {
-    const knopf = [...document.querySelectorAll('button')].find((b) => b.querySelector('[data-icon="download"]'));
-    knopf.click();
-  });
-  await expect(page.locator('#formatXML')).toBeVisible();
-
-  const xml = await page.evaluate(() => new Promise((resolve) => {
-    window.fpbjs.get('eventBus').once('fpbjs', (e) => resolve(e.format === 'xml' ? e.data : null));
-    document.querySelector('#formatXML').click();
-    document.querySelector('#export1').click();
-    setTimeout(() => {
-      const senden = [...document.querySelectorAll('.modal.show .modal-footer button')].pop();
-      senden.click();
-    }, 150);
-    setTimeout(() => resolve(null), 8000);
-  }));
-  return xml;
+  return exportViaDialog(page, { format: 'xml' });
 }
 
 /** XML als Datei in den Dialog "Open" ziehen und öffnen */

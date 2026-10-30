@@ -31,11 +31,13 @@ import { faEye } from '@fortawesome/free-solid-svg-icons/faEye';
 import { faEyeLowVision } from '@fortawesome/free-solid-svg-icons/faEyeLowVision';
 import { faFileCode } from '@fortawesome/free-solid-svg-icons/faFileCode';
 import { faFileImport } from '@fortawesome/free-solid-svg-icons/faFileImport';
+import { faFileExport } from '@fortawesome/free-solid-svg-icons/faFileExport';
 
 library.add(
   faEye,
   faFileCode,
   faFileImport,
+  faFileExport,
   faEyeLowVision,
   faMagnifyingGlass,
   faListCheck,

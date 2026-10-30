@@ -7,14 +7,13 @@ import Collapse from 'react-collapse';
 
 import OpenFile from './features/OpenFile';
 import NewModel from './features/NewModel';
-import DownloadOptions from './features/DownloadOptions';
+import ExportFile from './features/ExportFile';
 import LayersTreeHost from './components/LayersTreeHost';
 import { describeCounts } from '../validation/FpbValidation';
 import ThemeToggle from './components/ThemeToggle';
 import ColorSchemeToggle from './components/ColorSchemeToggle';
 import AmlOverview from '../aml/AmlOverview';
 import { useProcessManagement } from './hooks/useProcessManagement';
-import { useSelectedElements } from './hooks/useSelectedElements';
 
 
 // Icons
@@ -25,10 +24,9 @@ import './LayerPanel.css'
 const LayerPanel = ({ modeler, showNewModel: newModelOption = false }) => {
     const [isOpenedLayerPanel, setIsOpenedLayerPanel] = useState(false);
 
-    // the export (PDF of every layer) and the layers button still read the
-    // processes from here; the tree reads them from fpbLayers (016d)
-    const { selectedProcess, processes } = useProcessManagement(modeler);
-    const selectedElements = useSelectedElements(modeler);
+    // the layers button still reads the processes from here; the tree reads
+    // them from fpbLayers (016d)
+    const { processes } = useProcessManagement(modeler);
 
     // Findings of the model check for the counter on its button
     const [checkCounts, setCheckCounts] = useState({ error: 0, warning: 0, info: 0 });
@@ -63,12 +61,7 @@ const LayerPanel = ({ modeler, showNewModel: newModelOption = false }) => {
             <div className="fpb-toolbar-group" data-group="file">
                 {showNewModel && <NewModel modeler={modeler} />}
                 <OpenFile modeler={modeler} />
-                <DownloadOptions 
-                    modeler={modeler} 
-                    processes={processes} 
-                    selectedProcess={selectedProcess} 
-                    selectedElements={selectedElements} 
-                />
+                <ExportFile modeler={modeler} />
                 <AmlOverview modeler={modeler} />
             </div>
 

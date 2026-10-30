@@ -137,7 +137,7 @@ test.describe('Read-only mode', () => {
     await page.waitForTimeout(200);
 
     expect(await stand(page)).toEqual(vorher);
-    expect(await page.evaluate(() => document.querySelectorAll('dialog.fpb-dialog[open], .modal.show').length)).toBe(0);
+    expect(await page.evaluate(() => document.querySelectorAll('dialog.fpb-dialog[open]').length)).toBe(0);
     expect(fehler).toEqual([]);
   });
 
@@ -169,9 +169,10 @@ test.describe('Read-only mode', () => {
       await expect(page.locator('#newModelButton')).toBeDisabled();
     }
 
-    await page.getByRole('button', { name: 'Export Options' }).click();
-    await expect(page.locator('.modal.show #formatJSON')).toBeVisible();
-    await page.getByRole('button', { name: 'Close export options' }).click();
+    await page.locator('#exportButton').click();
+    const exportDialog = page.locator('dialog.fpb-export-dialog[open]');
+    await expect(exportDialog.locator('#exportFormat-json')).toBeVisible();
+    await exportDialog.getByRole('button', { name: 'Close' }).click();
 
     await lesemodus(page, false);
     await expect(page.locator('#openFileButton')).toBeEnabled();

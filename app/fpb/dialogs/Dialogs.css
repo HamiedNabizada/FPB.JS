@@ -1,8 +1,7 @@
 /* Dialogs of FPB.js (016e V4): a native <dialog> as a card in the look of
    variant B (016c decision 13); light and dark from the design values of
    the element it lives in (.fpb-dialogs, a container of fpbTheme). Bound
-   to the element: the react-bootstrap overlays of import and export carry
-   the class fpb-dialog as well until D2 */
+   to the element, so a host's own .fpb-dialog is left alone */
 dialog.fpb-dialog {
   box-sizing: border-box;
   width: min(500px, calc(100vw - 32px));

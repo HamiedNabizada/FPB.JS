@@ -1,4 +1,5 @@
 // tests/e2e/helpers/importDialog.js
+import fs from 'fs';
 import { expect } from '../support/test';
 
 /**
@@ -8,6 +9,9 @@ import { expect } from '../support/test';
 
 /** The dialog "Open" while it is shown */
 export const OPEN = 'dialog.fpb-open-dialog[open]';
+
+/** The dialog "Export" while it is shown */
+export const EXPORT = 'dialog.fpb-export-dialog[open]';
 
 /** Closes the messages of earlier imports and exports (016e message stack). */
 export async function dismissNotifications(page) {
@@ -75,24 +79,24 @@ export async function pressImport(page) {
   });
 }
 
-/** Exports the whole model through the download dialog as an event and returns its data. */
+/**
+ * Exports the whole model through the dialog "Export" and returns the
+ * downloaded file: JSON parsed, XML and AML as text.
+ */
 export async function exportViaDialog(page, { format = 'json', withLayout = true } = {}) {
   await dismissNotifications(page);
-  await page.evaluate(() => {
-    const button = [...document.querySelectorAll('button')].find((b) => b.querySelector('[data-icon="download"]'));
-    button.click();
-  });
-  await expect(page.locator('#formatXML')).toBeVisible();
-  return page.evaluate(({ format, withLayout }) => new Promise((resolve) => {
-    window.fpbjs.get('eventBus').once('fpbjs', (e) => resolve(e.format === format ? e.data : null));
-    document.querySelector({ xml: '#formatXML', aml: '#formatAML' }[format] || '#formatJSON').click();
-    document.querySelector(withLayout ? '#informationLevel1' : '#informationLevel2').click();
-    document.querySelector('#information1').click();
-    document.querySelector('#export1').click();
-    setTimeout(() => {
-      const send = [...document.querySelectorAll('.modal.show .modal-footer button')].pop();
-      send.click();
-    }, 150);
-    setTimeout(() => resolve(null), 8000);
-  }), { format, withLayout });
+  await page.locator('#exportButton').click();
+  const dialog = page.locator(EXPORT);
+  await expect(dialog).toBeVisible();
+  await dialog.locator(`#exportFormat-${format}`).check();
+  if (format === 'json') {
+    await dialog.locator('#exportScope-model').check();
+  }
+  if (await dialog.locator('#exportLayout').count()) {
+    await dialog.locator('#exportLayout').setChecked(withLayout);
+  }
+  const waiting = page.waitForEvent('download', { timeout: 30000 });
+  await dialog.locator('[data-answer="export"]').click();
+  const text = fs.readFileSync(await (await waiting).path(), 'utf8').replace(/^\uFEFF/, '');
+  return format === 'json' ? JSON.parse(text) : text;
 }

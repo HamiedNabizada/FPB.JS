@@ -801,6 +801,59 @@ test.describe('Import and export', () => {
 
 // ---------------------------------------------------------------------------
 
+/**
+ * Sending the export to the host (016e D2, V10): only with the option
+ * exportEvent; the name of the event comes from the option (true: fpbjs).
+ */
+test.describe('Export dialog and exportEvent', () => {
+
+  const EXPORT = 'dialog.fpb-export-dialog[open]';
+
+  async function sendToHost(page, format) {
+    await page.locator('#exportButton').click();
+    await page.locator(`${EXPORT} #exportFormat-${format}`).check();
+    await page.locator(`${EXPORT} #exportTo-event`).check();
+    await expect(page.locator(`${EXPORT} #exportFileName`)).toHaveCount(0);
+    await page.locator(`${EXPORT} [data-answer="export"]`).click();
+    await expect(page.locator(EXPORT)).toHaveCount(0);
+  }
+
+  test('with exportEvent the export goes to the host as JSON and as XML text', async ({ page }) => {
+    await withModel(page, { panels: true, options: { exportEvent: 'myExport' } });
+    await page.evaluate(() => {
+      window.__events = [];
+      ['myExport', 'fpbjs', 'model.downloaded'].forEach((name) => window.fpb.get('eventBus').on(name, (e) => {
+        window.__events.push({ name, format: e.format, data: e.data });
+      }));
+    });
+    let downloads = 0;
+    page.on('download', () => downloads++);
+
+    await sendToHost(page, 'json');
+    await sendToHost(page, 'xml');
+    await page.waitForTimeout(500);
+
+    const events = await page.evaluate(() => window.__events);
+    expect(events.map((e) => [e.name, e.format])).toEqual([['myExport', 'json'], ['myExport', 'xml']]);
+    // JSON arrives parsed, XML as text
+    expect(Array.isArray(events[0].data)).toBe(true);
+    expect(events[0].data.filter((e) => e.process).length).toBe(2);
+    expect(typeof events[1].data).toBe('string');
+    expect(events[1].data).toMatch(/^<\?xml/);
+    expect(downloads).toBe(0);
+  });
+
+  test('without exportEvent there is no destination choice', async ({ page }) => {
+    await withModel(page, { panels: true });
+    await page.locator('#exportButton').click();
+    await expect(page.locator(`${EXPORT} #exportFormat-json`)).toBeChecked();
+    await expect(page.locator(`${EXPORT} #exportTo-event`)).toHaveCount(0);
+    await expect(page.locator(`${EXPORT} #exportFileName`)).toBeVisible();
+  });
+});
+
+// ---------------------------------------------------------------------------
+
 test.describe('Image and PDF export', () => {
 
   test('toSVG returns a standalone SVG document of the current layer', async ({ page }) => {
@@ -1398,11 +1451,9 @@ test.describe('AutomationML (importAML, toAML)', () => {
     await expect(open.locator('.fpb-drop-zone-text')).toHaveText('Drop an FPB.js JSON or XML file here');
     await open.getByRole('button', { name: 'Close' }).click();
 
-    await page.evaluate(() => {
-      [...document.querySelectorAll('button')].find((b) => b.querySelector('[data-icon="download"]')).click();
-    });
-    await expect(page.locator('#formatXML')).toBeVisible();
-    await expect(page.locator('#formatAML')).toHaveCount(0);
+    await page.locator('#layers #exportButton').click();
+    await expect(page.locator('#exportFormat-xml')).toBeVisible();
+    await expect(page.locator('#exportFormat-aml')).toHaveCount(0);
   });
 
   test('the bundle does not contain the old properties panel', () => {

@@ -41,37 +41,18 @@ test.describe('Dialogs', () => {
     await expect(dialog(page)).toHaveCount(0);
   });
 
-  // final review 016e D1: the card rules of the native dialogs must not
-  // reach the react-bootstrap overlays (class fpb-dialog on .modal); the
-  // export dialog stays react-bootstrap until task 2 of D2
-  test('the overlay of the export dialog stays see-through', async ({ page }) => {
-    await open(page);
-    for (const openDialog of [
-      () => page.getByRole('button', { name: 'Export Options', exact: true }).click()
-    ]) {
-      await openDialog();
-      const overlay = page.locator('.modal.show');
-      await expect(overlay).toBeVisible();
-      await expect(overlay).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-      await expect(overlay).toHaveCSS('box-shadow', 'none');
-      await page.keyboard.press('Escape');
-      await expect(overlay).toHaveCount(0);
-    }
-  });
-
   test('open, export and information are cards with the plain close and close with Escape', async ({ page }) => {
     await open(page);
     const openers = [
       () => page.locator('#openFileButton').click(),
-      () => page.getByRole('button', { name: 'Export Options', exact: true }).click(),
+      () => page.locator('#exportButton').click(),
       () => page.getByRole('button', { name: 'Show information and help', exact: true }).click()
     ];
     for (const openDialog of openers) {
       await openDialog();
       await expect(dialog(page)).toHaveClass(/fpb-dialog/);
       await expect(dialog(page).locator('[data-icon="rectangle-xmark"]')).toHaveCount(0);
-      // react-bootstrap until D2 (import, export), native since D1 (information)
-      await dialog(page).locator('.modal-header .btn-close, .fpb-dialog-close').click();
+      await dialog(page).locator('.fpb-dialog-close').click();
       await expect(dialog(page)).toHaveCount(0);
 
       await openDialog();
