@@ -294,7 +294,7 @@ test.describe('Szenario 6 with a state the parent layer already has', () => {
     await expect(page.locator(DIALOG)).toContainText('ProcessOperator "ProcessOperator"');
     await answer(page, 'confirm');
     expect(await rootId(page)).toBe('m-root');
-    await expect(page.locator('.djs-tooltip', { hasText: 'The decomposition of "ProcessOperator" has been removed.' })).toBeVisible();
+    await expect(page.locator('.fpb-notification', { hasText: 'The decomposition of "ProcessOperator" has been removed.' })).toBeVisible();
     expect(await issues(page)).toEqual([]);
   });
 });

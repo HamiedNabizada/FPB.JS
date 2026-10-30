@@ -156,12 +156,13 @@ test.describe('View of each layer', () => {
     close(await view(page), child);
   });
 
-  // the one navigation hint (V4) lies where the new layer is seen
+  // the one navigation hint (V4) lies where the new layer is seen; since
+  // 016e D1 in the message stack
   const hintInside = async (page) => {
-    const hint = page.locator('.djs-tooltip', { hasText: 'Switching between processes is purely for navigation purposes.' });
+    const hint = page.locator('.fpb-notification', { hasText: 'Switching between processes is purely for navigation purposes.' });
     await expect(hint.first()).toBeVisible();
     return page.evaluate(() => {
-      const tip = document.querySelector('.djs-tooltip-tipp, .djs-tooltip').getBoundingClientRect();
+      const tip = document.querySelector('.fpb-notification[data-id="feedback.navigation"]').getBoundingClientRect();
       const box = document.querySelector('.djs-container.djs-parent').getBoundingClientRect();
       return tip.left >= box.left && tip.top >= box.top && tip.right <= box.right && tip.bottom <= box.bottom;
     });

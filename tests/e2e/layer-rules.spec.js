@@ -635,6 +635,15 @@ test.describe('Rules: shape.resize and elements.delete', () => {
 
 test.describe('Messages on the canvas', () => {
 
+  // 016e V3: a refused delete says why in the message stack
+  test('a refused delete says why in the message stack', async ({ page }) => {
+    await load(page);
+    await page.evaluate(() => window.fpbjs.get('eventBus').fire('illegalDelete', { message: 'This state is locked.' }));
+    const note = page.locator('.fpb-notification[data-id="feedback.illegalDelete"]');
+    await expect(note).toHaveClass(/fpb-notification--info/);
+    await expect(note).toContainText('This state is locked.');
+  });
+
   // B12: names come from files made by others; the message must not run them as HTML
   test('Szenario 14: the message after removing a decomposition shows the operator name as text', async ({ page }) => {
     await load(page);
@@ -649,7 +658,7 @@ test.describe('Messages on the canvas', () => {
     });
     await page.locator(DIALOG).locator('[data-answer="confirm"]').click();
 
-    const tip = page.locator('.djs-tooltip', { hasText: 'has been removed' });
+    const tip = page.locator('.fpb-notification', { hasText: 'has been removed' });
     await expect(tip).toBeVisible();
     await expect(tip).toContainText(name);
     expect(await tip.locator('img').count()).toBe(0);
@@ -835,13 +844,14 @@ test.describe('Feedback when the editor refuses a move or create (UI drags)', ()
   // 016d V4: once per page, the switch of the import does not count
   test('the navigation hint shows at the first switch only, not at the import', async ({ page }) => {
     await load(page);
-    const hint = page.locator('.djs-tooltip', { hasText: 'Switching between processes is purely for navigation purposes.' });
-    // counted at once: the hint expires by itself after 2 s
+    const hint = page.locator('.fpb-notification', { hasText: 'Switching between processes is purely for navigation purposes.' });
+    // counted at once, before the hint could go by itself
     expect(await hint.count()).toBe(0);
     await switchTo(page, IDS.child);
     await expect(hint.first()).toBeVisible();
-    // let it expire, then switch again
-    await expect(hint).toHaveCount(0, { timeout: 5000 });
+    // closed by the user (016e: a message in the stack), then switch again
+    await hint.getByRole('button', { name: 'Dismiss' }).click();
+    await expect(hint).toHaveCount(0);
     await switchTo(page, IDS.root);
     await page.waitForTimeout(300);
     expect(await hint.count()).toBe(0);

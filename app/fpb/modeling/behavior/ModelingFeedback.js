@@ -18,7 +18,7 @@ function textNode(message) {
     return node;
 }
 
-export default function ModelingFeedback(eventBus, tooltips, translate, canvas) {
+export default function ModelingFeedback(eventBus, tooltips, translate, canvas, fpbNotifications) {
 
     function showError(position, message, timeout) {
         tooltips.add({
@@ -31,16 +31,10 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
             html: textNode(message)
         });
     }
-    function showTipp(message, position) {
-        tooltips.add({
-            position: {
-                x: position.x,
-                y: position.y
-            },
-            type: 'tipp',
-            timeout: 2000,
-            html: textNode(message)
-        })
+    // hints that belong to no element go to the message stack (016e V3);
+    // the stack shows them as text, never as HTML
+    function showHint(key, message) {
+        fpbNotifications.show({ key: 'feedback.' + key, type: 'info', message });
     }
     // 
     eventBus.on(['illegalMove'], function (event) {
@@ -56,19 +50,15 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
         showError(event.position, msg)
     });
 
-    // Error message for blocked deletions
+    // Message for blocked deletions
     eventBus.on(['illegalDelete'], function (event) {
-        let canvasViewbox = canvas.viewbox();
-        let msg = event.message || translate('This element cannot be deleted.');
-        showError({ x: canvasViewbox.x + canvasViewbox.width / 2 - 150, y: canvasViewbox.y + 100 }, msg, 4000);
+        showHint('illegalDelete', event.message || translate('This element cannot be deleted.'));
     });
 
     // Scenario 14/12: Feedback after decomposition removal
     eventBus.on(['toolTips.decompositionRemoved'], function (event) {
-        let canvasViewbox = canvas.viewbox();
         let poName = event.processOperator?.name || 'ProcessOperator';
-        let msg = translate('The decomposition of "{po}" has been removed.', { po: poName });
-        showTipp(msg, { x: canvasViewbox.x + 10, y: canvasViewbox.height - 200 });
+        showHint('decompositionRemoved', translate('The decomposition of "{po}" has been removed.', { po: poName }));
     });
     eventBus.on(['toolTips.decomposedProcessOperator'], function (event) {
         let command = event.command;
@@ -78,9 +68,7 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
             showError({ x: processOperator.x, y: processOperator.y }, msg);
         }
         if (command === 'newStateConnected') {
-            let canvasViewbox = canvas.viewbox();
-            let msg = translate('The ProcessOperator has a decomposed view. The connected state is placed on its system boundary as soon as the decompose icon is clicked again.');
-            showTipp(msg, { x: canvasViewbox.x + 10, y: canvasViewbox.height - 200 })
+            showHint('newStateConnected', translate('The ProcessOperator has a decomposed view. The connected state is placed on its system boundary as soon as the decompose icon is clicked again.'));
         }
         if (command === 'deletedConnection') {
             let msg = translate('The deleted connection was connected to a decomposed ProcessOperator. The connected state is thus deleted in the decomposed view.')
@@ -92,7 +80,6 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
     // the navigation hint once per page (016d V4); the switch of an import
     // and switches that only pass through do not count
     let hinted = false;
-    let hintDue = false;
     let importing = false;
     eventBus.on('FPBJS.import', function () {
         importing = true;
@@ -105,17 +92,7 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas) 
             return;
         }
         hinted = true;
-        hintDue = true;
-    })
-    // placed when the switch has finished: the new layer has its view from
-    // LayerViews (default priority) only then
-    eventBus.on('commandStack.process.switch.postExecuted', 500, function () {
-        if (!hintDue) {
-            return;
-        }
-        hintDue = false;
-        let canvasViewbox = canvas.viewbox();
-        showTipp(translate(SWITCHINGPROCESS), { x: canvasViewbox.x + 10, y: canvasViewbox.y + canvasViewbox.height - 200 })
+        showHint('navigation', translate(SWITCHINGPROCESS));
     })
 
     eventBus.on(['toolTips.effectOnOtherLevel'], function (event) {
@@ -163,5 +140,6 @@ ModelingFeedback.$inject = [
     'eventBus',
     'tooltips',
     'translate',
-    'canvas'
+    'canvas',
+    'fpbNotifications'
 ];

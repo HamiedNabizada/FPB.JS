@@ -150,7 +150,7 @@ test.describe('Decompose', () => {
     }, IDS);
     const b = await page.evaluate((c) => window.__lr.boundary(c), IDS.child);
     expect(b.upper).toContain('neu_energie');
-    await expect(page.locator('.djs-tooltip', { hasText: 'The ProcessOperator has a decomposed view.' })).toBeVisible();
+    await expect(page.locator('.fpb-notification', { hasText: 'The ProcessOperator has a decomposed view.' })).toBeVisible();
     expect(await issues(page)).toEqual([]);
   });
 
@@ -1124,7 +1124,7 @@ test.describe('Confirmation: Szenario 14, removing a decomposition', () => {
       store: window.__lr.storeIds().includes(IDS.child),
     }), IDS);
     expect(r).toEqual({ root: IDS.root, dv: null, listed: 0, store: false });
-    await expect(page.locator('.djs-tooltip', { hasText: 'The decomposition of "Erhitzen" has been removed.' })).toBeVisible();
+    await expect(page.locator('.fpb-notification', { hasText: 'The decomposition of "Erhitzen" has been removed.' })).toBeVisible();
     expect(await canUndo(page)).toBe(false);
     expect(await issues(page)).toEqual([]);
 
