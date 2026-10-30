@@ -15,13 +15,19 @@ import DialogFrame from '../dialogs/DialogFrame';
  * chosen there is the one Ctrl+S saves into (V9).
  */
 export default function OpenDialog(props) {
-  const { files, translate, aml, close, titleId } = props;
-  const [file, setFile] = useState(null);
-  const [parsed, setParsed] = useState(null);
-  const [hierarchyId, setHierarchyId] = useState(null);
+  const { files, translate, aml, close, titleId, preload } = props;
+  // a dropped file that needs a choice comes read already
+  const [file, setFile] = useState(preload ? { name: preload.file.name, handle: preload.handle } : null);
+  const [parsed, setParsed] = useState(preload ? preload.parsed : null);
+  const [hierarchyId, setHierarchyId] = useState(() => {
+    const hierarchies = preload && preload.parsed.kind === 'aml' ? preload.parsed.hierarchies : [];
+    return hierarchies.length ? hierarchies[0].id : null;
+  });
   const [error, setError] = useState(null);
   const [dragging, setDragging] = useState(false);
   const input = useRef(null);
+  // a question about unsaved changes is open
+  const submitting = useRef(false);
   // the file chosen last wins, also when an earlier one reads longer
   const reading = useRef(0);
 
@@ -53,18 +59,26 @@ export default function OpenDialog(props) {
   };
 
   const submit = () => {
-    if (!parsed) {
+    if (!parsed || submitting.current) {
       return;
     }
-    try {
-      files._importParsed(parsed, { fileName: file.name, hierarchyId, handle: file.handle });
-      close();
-    } catch (exception) {
-      setError({
-        message: translate('Import failed'),
-        details: translate('An error occurred during import: {message}', { message: exception.message })
-      });
-    }
+    submitting.current = true;
+    // the question comes over the dialog; Cancel goes back to it
+    files.confirmReplace().then((confirmed) => {
+      submitting.current = false;
+      if (!confirmed || files._isReadOnly()) {
+        return;
+      }
+      try {
+        files._importParsed(parsed, { fileName: file.name, hierarchyId, handle: file.handle });
+        close();
+      } catch (exception) {
+        setError({
+          message: translate('Import failed'),
+          details: translate('An error occurred during import: {message}', { message: exception.message })
+        });
+      }
+    });
   };
 
   const pick = () => {

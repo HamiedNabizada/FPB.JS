@@ -63,11 +63,12 @@ test.describe('Import-Dialog - Drag and Drop', () => {
     await expect(page.locator(`${OPEN} [data-answer="open"]`)).toBeDisabled();
   });
 
-  test('eine neben dem Dialog abgelegte Datei öffnet der Browser nicht', async ({ page }) => {
+  // auf der Zeichenfläche öffnet sie sich (016e D2), daneben weist die Seite sie ab
+  test('eine neben der Zeichenfläche abgelegte Datei öffnet der Browser nicht', async ({ page }) => {
     const importer = new ImportPage(page);
     await importer.goto();
 
-    const abgefangen = await dateiAblegen(page, '#modeler-container .djs-container', JSON.stringify(basis), DATEINAME);
+    const abgefangen = await dateiAblegen(page, '#layer-container', JSON.stringify(basis), DATEINAME);
 
     expect(abgefangen).toBe(true);
     expect((await importer.dataStore()).prozesse).toHaveLength(0);

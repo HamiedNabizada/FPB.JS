@@ -843,6 +843,38 @@ test.describe('Export dialog and exportEvent', () => {
     expect(downloads).toBe(0);
   });
 
+  // 016e D2: a host with its own storage turns the keys and the drop off
+  test('with files: false Ctrl+S, Ctrl+O and a dropped file do nothing', async ({ page }) => {
+    const { errors } = await withModel(page, { panels: true, options: { files: false } });
+    let downloads = 0;
+    page.on('download', () => downloads++);
+    await page.evaluate(() => window.fpb.get('canvas').focus());
+    await page.keyboard.press('Control+s');
+    await page.keyboard.press('Control+o');
+    await page.locator('#bio-properties-panel-name, #propertiesPanelToggle').first().focus();
+    await page.keyboard.press('Control+s');
+
+    const taken = await page.evaluate(() => {
+      const target = document.querySelector('#modeler .djs-container.djs-parent > svg');
+      const transfer = new DataTransfer();
+      transfer.items.add(new File(['[]'], 'leer.json', { type: 'application/json' }));
+      const options = { bubbles: true, cancelable: true, dataTransfer: transfer };
+      target.dispatchEvent(new DragEvent('dragover', options));
+      const drop = new DragEvent('drop', options);
+      target.dispatchEvent(drop);
+      return drop.defaultPrevented;
+    });
+    // refused as everywhere outside a dialog, so the browser keeps the page
+    expect(taken).toBe(true);
+    await page.waitForTimeout(500);
+    await expect(page.locator('dialog.fpb-dialog[open]')).toHaveCount(0);
+    await expect(page.locator('.fpb-notification')).toHaveCount(0);
+    await expect(page.locator('#modeler .djs-container.djs-parent')).not.toHaveClass(/fpb-drop-active/);
+    expect(downloads).toBe(0);
+    expect(await currentRootId(page)).toBe(MAIN);
+    expect(errors).toEqual([]);
+  });
+
   test('without exportEvent there is no destination choice', async ({ page }) => {
     await withModel(page, { panels: true });
     await page.locator('#exportButton').click();

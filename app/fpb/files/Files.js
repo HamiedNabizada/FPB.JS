@@ -83,8 +83,12 @@ export default function Files(eventBus, injector, fpbjs, translate, config) {
 
 Files.$inject = ['eventBus', 'injector', 'fpbjs', 'translate', 'config'];
 
-/** Shows the dialog "Open"; one at a time, none in read-only mode */
-Files.prototype.open = function () {
+/**
+ * Shows the dialog "Open"; one at a time, none in read-only mode. With
+ * `preload` ({ file, handle, parsed }) the dialog starts with that file,
+ * as for a dropped AML file with several process views.
+ */
+Files.prototype.open = function (preload) {
   if (this._isReadOnly()) {
     return null;
   }
@@ -94,7 +98,8 @@ Files.prototype.open = function () {
   const handle = this._injector.get('fpbDialogs').open(OpenDialog, {
     files: this,
     translate: this._translate,
-    aml: !!this._amlSupport()
+    aml: !!this._amlSupport(),
+    preload: preload || null
   }, { className: 'fpb-open-dialog' });
   this._openDialog = handle;
   handle.closed.then(() => {
@@ -152,6 +157,97 @@ Files.prototype.pickToOpen = function () {
   ), (error) => {
     this._noPickers = true;
     throw error;
+  });
+};
+
+/**
+ * Opens a file without the dialog, as one dropped on the canvas. Errors go
+ * to the message stack; an AML file with several process views opens the
+ * dialog to choose one; a model with unsaved changes asks first.
+ *
+ * @param {File} file
+ * @param {FileSystemFileHandle} [handle] the file to save into later
+ * @return {Promise<boolean>} true when the file went to the importer
+ */
+Files.prototype.openFile = function (file, handle) {
+  if (this._isReadOnly()) {
+    this._notInReadOnly();
+    return Promise.resolve(false);
+  }
+  const problem = this.checkFile(file);
+  if (problem) {
+    this._importError(problem);
+    return Promise.resolve(false);
+  }
+  return this.readFile(file).then((parsed) => {
+    if (parsed.kind === 'aml' && parsed.hierarchies.length > 1) {
+      this.open({ file, handle: handle || null, parsed });
+      return false;
+    }
+    return this.confirmReplace().then((confirmed) => {
+      if (!confirmed || this._isReadOnly()) {
+        return false;
+      }
+      try {
+        this._importParsed(parsed, {
+          fileName: file.name,
+          handle,
+          hierarchyId: parsed.kind === 'aml' && parsed.hierarchies.length ? parsed.hierarchies[0].id : undefined
+        });
+      } catch (exception) {
+        this._importError({
+          message: this._translate('Import failed'),
+          details: this._translate('An error occurred during import: {message}', { message: exception.message })
+        });
+        return false;
+      }
+      return true;
+    });
+  }, (problem) => {
+    this._importError(problem);
+    return false;
+  });
+};
+
+/**
+ * Asks before a file replaces a model with changes that are in no file.
+ * Only the browser backup knows that (the web app); without it there is no
+ * question, as before 2.0. Resolves true to go on.
+ */
+Files.prototype.confirmReplace = function () {
+  const autosave = this._injector.get('autosave', false);
+  if (!autosave || !autosave.isEnabled()) {
+    return Promise.resolve(true);
+  }
+  autosave.flush();
+  if (!autosave.isDirty()) {
+    return Promise.resolve(true);
+  }
+  const translate = this._translate;
+  return this._injector.get('fpbDialogs').confirm({
+    title: translate('Open another model?'),
+    message: translate('The current model has changes that are in no file.'),
+    details: translate('They are lost when the file opens.'),
+    confirmLabel: translate('Open file'),
+    danger: true
+  });
+};
+
+Files.prototype._importError = function (problem) {
+  this._notify({
+    key: 'import.error',
+    type: 'error',
+    title: this._translate('Import Error'),
+    message: problem.message,
+    details: problem.details || undefined
+  });
+};
+
+Files.prototype._notInReadOnly = function () {
+  this._notify({
+    key: 'files.readOnly',
+    type: 'info',
+    title: this._translate('Opening a file is not possible in read-only mode.')
   });
 };
 
@@ -346,11 +442,20 @@ Files.prototype._notify = function (options) {
 };
 
 /**
- * Ctrl/Cmd+S and Ctrl/Cmd+Shift+S. True when the key was taken.
+ * Ctrl/Cmd+O, Ctrl/Cmd+S and Ctrl/Cmd+Shift+S. True when the key was taken;
+ * Ctrl+O also in read-only mode, where it says why nothing opens.
  */
 Files.prototype._handleKey = function (event) {
   if (this._config.files === false || !isCmd(event)) {
     return false;
+  }
+  if (isKey(['o', 'O'], event) && !isShift(event)) {
+    if (this._isReadOnly()) {
+      this._notInReadOnly();
+    } else {
+      this.open();
+    }
+    return true;
   }
   if (isKey(['s', 'S'], event)) {
     if (isShift(event)) {

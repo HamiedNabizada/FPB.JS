@@ -434,6 +434,11 @@ export interface FpbInfo {
 export interface FpbFiles {
   /** Shows the dialog "Open"; null in read-only mode */
   open(): { close(result?: any): void; closed: Promise<any> } | null;
+  /**
+   * Opens a file without the dialog, as one dropped on the canvas; errors go
+   * to the message stack. With a handle, save() writes into that file.
+   */
+  openFile(file: File, handle?: any): Promise<boolean>;
   /** Shows the dialog "Export", also in read-only mode */
   export(): { close(result?: any): void; closed: Promise<any> };
   /**
@@ -558,6 +563,12 @@ export interface CreateFpbModelerOptions {
    * event carries { data, format }: JSON parsed, XML and AML as text.
    */
   exportEvent?: boolean | string;
+  /**
+   * false: no Ctrl+O, Ctrl+S and Ctrl+Shift+S and no opening of a file
+   * dropped on the canvas, for hosts that store the model themselves
+   * (016e D2). Default true.
+   */
+  files?: boolean;
   /** Additional options passed to FpbModeler constructor */
   [key: string]: any;
 }

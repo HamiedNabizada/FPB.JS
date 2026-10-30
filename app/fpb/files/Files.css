@@ -242,3 +242,22 @@ dialog.fpb-dialog.fpb-export-dialog {
   background: var(--fpb-error-surface);
   color: var(--fpb-error-text);
 }
+
+/* a file dragged over the canvas: where it can be dropped (016e V8); the
+   hint lets the events through to the canvas below */
+.fpb-drop-hint {
+  position: absolute;
+  inset: 12px;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--fpb-accent);
+  border-radius: var(--fpb-radius-card);
+  background: rgba(var(--fpb-accent-rgb), 0.08);
+  color: var(--fpb-accent-text);
+  font-family: var(--fpb-font);
+  font-size: 16px;
+  font-weight: 600;
+  pointer-events: none;
+}
