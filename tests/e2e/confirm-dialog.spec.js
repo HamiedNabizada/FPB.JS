@@ -93,6 +93,36 @@ test.describe('Questions', () => {
     await expect(question(page)).toHaveCount(0);
   });
 
+  // final review 016e D1: names come from files and can be long
+  test('a long name wraps inside the dialog and the cross stays reachable', async ({ page }) => {
+    await laden(page);
+    const name = 'X'.repeat(160);
+    await ask(page, { title: `Delete "${name}"?`, message: `The element "${name}" will be removed.`, action: { type: 'long' } });
+    const dialog = question(page);
+    await expect(dialog).toBeVisible();
+    const box = await dialog.evaluate((d) => {
+      const r = d.getBoundingClientRect();
+      const close = d.querySelector('.fpb-dialog-close').getBoundingClientRect();
+      return {
+        overflow: d.scrollWidth - d.clientWidth,
+        closeInside: close.left >= r.left && close.right <= r.right
+      };
+    });
+    expect(box.overflow).toBeLessThanOrEqual(1);
+    expect(box.closeInside).toBe(true);
+  });
+
+  test('the question tells screen readers its consequence', async ({ page }) => {
+    await laden(page);
+    await ask(page, { title: 'Delete "Erhitzen"?', message: 'It has a decomposition.', details: 'The layer below goes too.', action: { type: 'sr' } });
+    const dialog = question(page);
+    await expect(dialog).toHaveAttribute('role', 'alertdialog');
+    const describedBy = await dialog.getAttribute('aria-describedby');
+    expect(describedBy).toBeTruthy();
+    await expect(page.locator('#' + describedBy)).toContainText('It has a decomposition.');
+    await expect(page.locator('#' + describedBy)).toContainText('The layer below goes too.');
+  });
+
   for (const [scheme, surface] of [['light', 'rgb(255, 255, 255)'], ['dark', 'rgb(26, 32, 39)']]) {
     test(`the dialog follows the ${scheme} theme`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme });

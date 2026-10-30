@@ -12,7 +12,7 @@ import DialogFrame from './DialogFrame';
  * helpers, whatever their names.
  */
 export default function ConfirmDialog(props) {
-  const { options, translate, close, titleId } = props;
+  const { options, translate, close, titleId, descriptionId } = props;
   const { title, message, details, confirmLabel, danger, blocked } = options;
   const footer = blocked
     ? (
@@ -38,8 +38,10 @@ export default function ConfirmDialog(props) {
       closeLabel={translate('Close')}
       footer={footer}
     >
-      {message && <p>{message}</p>}
-      {details && <p class="fpb-dialog-details">{details}</p>}
+      <div id={descriptionId}>
+        {message && <p>{message}</p>}
+        {details && <p class="fpb-dialog-details">{details}</p>}
+      </div>
     </DialogFrame>
   );
 }

@@ -10,8 +10,8 @@ import ConfirmDialog from './ConfirmDialog';
  * <body>, which follows light and dark like the containers of FPB.js; the
  * wheel and touch handlers of the canvas do not reach them there.
  *
- * open(Component, props, { className }) renders <Component {...props}
- * close titleId /> with the Preact of FPB.js and returns { close(result),
+ * open(Component, props, { className, role, described }) renders
+ * <Component {...props} close titleId descriptionId /> with the Preact of FPB.js and returns { close(result),
  * closed }, a promise of the result; Escape and close() without a result
  * give undefined. mount(fn, { className }) leaves the drawing to the caller:
  * fn(element, { close, titleId }) returns a function that clears it. Add-on
@@ -44,8 +44,8 @@ export default function Dialogs(eventBus, injector, translate) {
 Dialogs.$inject = ['eventBus', 'injector', 'translate'];
 
 Dialogs.prototype.open = function (Component, props = {}, options = {}) {
-  return this.mount(function (element, { close, titleId }) {
-    render(<Component {...props} close={close} titleId={titleId} />, element);
+  return this.mount(function (element, { close, titleId, descriptionId }) {
+    render(<Component {...props} close={close} titleId={titleId} descriptionId={descriptionId} />, element);
     return () => render(null, element);
   }, options);
 };
@@ -54,7 +54,15 @@ Dialogs.prototype.mount = function (mount, options = {}) {
   const dialog = document.createElement('dialog');
   dialog.className = options.className ? 'fpb-dialog ' + options.className : 'fpb-dialog';
   const titleId = 'fpb-dialog-title-' + (++this._count);
+  const descriptionId = titleId + '-description';
   dialog.setAttribute('aria-labelledby', titleId);
+  // a question (alertdialog) is read with what it says, not only its title
+  if (options.role) {
+    dialog.setAttribute('role', options.role);
+  }
+  if (options.described) {
+    dialog.setAttribute('aria-describedby', descriptionId);
+  }
   this._hostElement().appendChild(dialog);
 
   // given back on close ourselves: the browser does not in every case
@@ -93,7 +101,7 @@ Dialogs.prototype.mount = function (mount, options = {}) {
   });
 
   this._open.add(handle);
-  unmount = mount(dialog, { close: handle.close, titleId }) || null;
+  unmount = mount(dialog, { close: handle.close, titleId, descriptionId }) || null;
   dialog.showModal();
   return handle;
 };
@@ -104,7 +112,11 @@ Dialogs.prototype.confirm = function (options = {}, { signal } = {}) {
     if (this._destroyed || (signal && signal.aborted)) {
       return false;
     }
-    const handle = this.open(ConfirmDialog, { options, translate: this._translate }, { className: 'fpb-confirm' });
+    const handle = this.open(ConfirmDialog, { options, translate: this._translate }, {
+      className: 'fpb-confirm',
+      role: 'alertdialog',
+      described: true
+    });
     if (signal) {
       const withdraw = () => handle.close(false);
       signal.addEventListener('abort', withdraw, { once: true });

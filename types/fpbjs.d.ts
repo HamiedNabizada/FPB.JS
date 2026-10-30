@@ -421,7 +421,7 @@ export interface FpbDialogs {
    */
   open(component: any, props?: Record<string, any>, options?: { className?: string }): { close(result?: any): void; closed: Promise<any> };
   /** The caller draws into the dialog element and returns a function that clears it */
-  mount(mount: (element: HTMLDialogElement, api: { close(result?: any): void; titleId: string }) => (() => void) | void, options?: { className?: string }): { close(result?: any): void; closed: Promise<any> };
+  mount(mount: (element: HTMLDialogElement, api: { close(result?: any): void; titleId: string; descriptionId: string }) => (() => void) | void, options?: { className?: string; role?: string; described?: boolean }): { close(result?: any): void; closed: Promise<any> };
 }
 
 /** The dialog "FPB.js Information" (016e) */
