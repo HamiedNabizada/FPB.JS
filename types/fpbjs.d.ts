@@ -353,6 +353,47 @@ export interface FpbSearch {
   close(): void;
 }
 
+/** A button in a message */
+export interface NotificationAction {
+  label: string;
+  run(): void;
+  ariaLabel?: string;
+  primary?: boolean;
+  /** Close the message after running */
+  dismiss?: boolean;
+}
+
+/** One entry in the list of a message, such as a warning of an import */
+export interface NotificationItem {
+  message: string;
+  hint?: string;
+  details?: string;
+  actions?: NotificationAction[];
+}
+
+export interface NotificationOptions {
+  /** The same key replaces a message instead of stacking it */
+  key?: string;
+  type: 'error' | 'warning' | 'info' | 'success';
+  title?: string;
+  message?: string;
+  items?: NotificationItem[];
+  /** Shown under "Technical details" */
+  details?: string;
+  actions?: NotificationAction[];
+  /** Milliseconds until it goes, 0 = stays; default 8000 for info and success without buttons, else 0 */
+  timeout?: number;
+}
+
+/** The message stack on the canvas (016e); texts are shown as text, never as HTML */
+export interface FpbNotifications {
+  /** Returns the id: the key if given */
+  show(options: NotificationOptions): string;
+  dismiss(id: string): void;
+  clear(): void;
+  list(): Array<NotificationOptions & { id: string }>;
+}
+
 /** Append an element to an existing one, connected and placed */
 export interface FpbAppend {
   getOptions(element: Element): Array<{ type: string; label: string }>;
@@ -403,6 +444,7 @@ export interface FpbServiceMap {
   commandStack: CommandStack;
   elementFactory: ElementFactory;
   fpbValidation: FpbValidation;
+  fpbNotifications: FpbNotifications;
   fpbSearch: FpbSearch;
   fpbAppend: FpbAppend;
   fpbCopyPaste: FpbCopyPaste;

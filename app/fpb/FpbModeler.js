@@ -70,6 +70,7 @@ import 'diagram-js/assets/diagram-js.css';
 import './theme/tokens.css';
 import './theme/fonts.css';
 import ThemeModule from './theme';
+import NotificationsModule from './notifications';
 import ReadOnlyModule from './read-only';
 import { DebounceInputModule } from '@bpmn-io/properties-panel';
 import SnappingModule from 'diagram-js/lib/features/snapping';
@@ -147,6 +148,7 @@ FpbModeler.prototype._modules = [
     KeepSelectionVisibleModule,
     FpbCoreModule,
     ThemeModule,
+    NotificationsModule,
     LabelEditingModule,
     ContextPadModule,
     PaletteModule,

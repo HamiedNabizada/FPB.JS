@@ -361,6 +361,14 @@ test.describe('createFpbModeler', () => {
     expect(errors).toEqual([]);
   });
 
+  // 016e V2: messages belong to the modeler, not to the layer panel
+  test('messages appear in the host container without a layer panel', async ({ page }) => {
+    const { errors } = await withModel(page);
+    await page.evaluate(() => window.fpb.get('fpbNotifications').show({ key: 'host', type: 'info', title: 'Hello host' }));
+    await expect(page.locator('#modeler .fpb-notification[data-id="host"]')).toContainText('Hello host');
+    expect(errors).toEqual([]);
+  });
+
   test('showNewModel shows the New model button without the browser backup', async ({ page }) => {
     await openLibraryPage(page);
     await createModeler(page, { panels: true });

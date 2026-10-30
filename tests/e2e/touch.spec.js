@@ -325,5 +325,37 @@ for (const [label, device] of [['tablet', devices['iPad (gen 7)']], ['phone', de
       expect(await page.evaluate(() => window.__moves)).toBe(0);
       expect(await position()).toEqual(before);
     });
+
+    // the message stack (016e T7) lies on the canvas as well
+    test('a swipe that starts on a message moves no element', async ({ page, context }) => {
+      await openModel(page);
+      const touch = touchDriver(page, context);
+      await page.evaluate(() => window.fpbjs.get('fpbNotifications').show({
+        key: 'touch', type: 'warning', title: 'A message to swipe on', message: 'It stays until dismissed.'
+      }));
+      const card = page.locator('.fpb-notification[data-id="touch"]');
+      await expect(card).toBeVisible();
+      const [cx, cy] = center(await card.boundingBox());
+
+      const id = await page.evaluate(({ cx, cy }) => {
+        const canvas = window.fpbjs.get('canvas');
+        const element = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+        const rect = window.fpbjs.get('elementRegistry').getGraphics(element).getBoundingClientRect();
+        canvas.scroll({ dx: cx - (rect.left + rect.width / 2), dy: cy - (rect.top + rect.height / 2) });
+        return element.id;
+      }, { cx, cy });
+      const position = () => page.evaluate((id) => {
+        const e = window.fpbjs.get('elementRegistry').get(id);
+        return [e.x, e.y];
+      }, id);
+      const before = await position();
+      await page.evaluate(() => {
+        window.__moves = 0;
+        window.fpbjs.get('eventBus').on('shape.move.start', () => window.__moves++);
+      });
+      await touch.drag([cx, cy], [cx - 80, cy - 60]);
+      expect(await page.evaluate(() => window.__moves)).toBe(0);
+      expect(await position()).toEqual(before);
+    });
   });
 }

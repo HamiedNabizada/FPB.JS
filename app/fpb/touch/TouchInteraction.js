@@ -77,6 +77,10 @@ TouchInteraction.prototype._onTouchStart = function (event) {
   if (event.touches.length !== 1 || this._touch) {
     return;
   }
+  // the message stack (016e) scrolls and is tapped as a page would be
+  if (domClosest(event.target, '.fpb-notifications', true)) {
+    return;
+  }
   const point = toClientPoint(event.touches[0]);
   const paletteEntry = domClosest(event.target, '.djs-palette .entry', true);
   const padEntry = domClosest(event.target, '.djs-context-pad .entry', true);

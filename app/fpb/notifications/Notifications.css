@@ -1,0 +1,163 @@
+/* The message stack (016e V1): cards at the bottom right of the canvas in
+   the look of variant B, the newest in the corner; beside the model check
+   list (170) while it is open, below the search (180). Clicks between the
+   cards reach the canvas. */
+.fpb-notifications {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  z-index: 175;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* the palette on the left stays free (its right edge lies near 76px) */
+  width: min(380px, calc(100% - 112px));
+  max-height: calc(100% - 40px);
+  pointer-events: none;
+  font-family: var(--fpb-font);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.djs-container:has(.fpb-validation-panel.open) .fpb-notifications {
+  right: 380px;
+  width: max(200px, min(380px, calc(100% - 492px)));
+}
+
+.fpb-notification {
+  --fpb-note-color: var(--fpb-info);
+  pointer-events: auto;
+  display: flex;
+  gap: 10px;
+  flex: 0 1 auto;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 10px 8px 10px 12px;
+  border-left: 4px solid var(--fpb-note-color);
+  border-radius: var(--fpb-radius-card);
+  background: var(--fpb-surface);
+  color: var(--fpb-text);
+  box-shadow: var(--fpb-shadow-float);
+}
+
+.fpb-notification--error { --fpb-note-color: var(--fpb-error); }
+.fpb-notification--warning { --fpb-note-color: var(--fpb-warning); }
+.fpb-notification--info { --fpb-note-color: var(--fpb-info); }
+.fpb-notification--success { --fpb-note-color: var(--fpb-accent); }
+
+.fpb-notification-icon {
+  flex: none;
+  align-self: flex-start;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: var(--fpb-note-color);
+}
+
+/* a long report scrolls inside its card */
+.fpb-notification-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+}
+
+.fpb-notification-title {
+  font-weight: 600;
+}
+
+.fpb-notification-message {
+  margin-top: 2px;
+}
+
+.fpb-notification-items {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.fpb-notification-items li {
+  margin-bottom: 6px;
+}
+
+.fpb-notification-hint {
+  color: var(--fpb-text-muted);
+  font-size: 12px;
+}
+
+.fpb-notification-details {
+  margin-top: 4px;
+}
+
+.fpb-notification-details summary {
+  color: var(--fpb-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.fpb-notification-details pre {
+  margin: 4px 0 0;
+  font-family: var(--fpb-font-mono);
+  font-size: 11px;
+  white-space: pre-wrap;
+}
+
+.fpb-notification-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.fpb-notification-action {
+  padding: 3px 10px;
+  border: 1px solid var(--fpb-control-border);
+  border-radius: var(--fpb-radius-control);
+  background: var(--fpb-surface);
+  color: var(--fpb-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.fpb-notification-action:hover {
+  background: var(--fpb-surface-muted);
+}
+
+.fpb-notification-action.is-primary {
+  border-color: var(--fpb-accent);
+  background: var(--fpb-accent);
+  color: var(--fpb-on-accent);
+}
+
+.fpb-notification-action.is-primary:hover {
+  border-color: var(--fpb-accent-hover);
+  background: var(--fpb-accent-hover);
+}
+
+.fpb-notification-close {
+  flex: none;
+  align-self: flex-start;
+  display: flex;
+  padding: 3px;
+  border: 0;
+  border-radius: var(--fpb-radius-control);
+  background: transparent;
+  color: var(--fpb-text-subtle);
+  cursor: pointer;
+}
+
+.fpb-notification-close .fpb-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.fpb-notification-close:hover {
+  background: var(--fpb-surface-muted);
+  color: var(--fpb-text);
+}
+
+.fpb-notification-action:focus-visible,
+.fpb-notification-close:focus-visible,
+.fpb-notification-details summary:focus-visible {
+  outline: 2px solid var(--fpb-accent);
+  outline-offset: 1px;
+}
