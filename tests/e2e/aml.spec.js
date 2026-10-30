@@ -325,6 +325,8 @@ test.describe('AutomationML import and export', () => {
     await page.locator('#amlOverviewButton').click();
     const modal = page.locator('.aml-overview-modal');
     await expect(modal).toContainText('AML file: Anlage.aml');
+    // a dialog of the modeler since 016e D1
+    expect(await modal.evaluate((d) => d.tagName === 'DIALOG' && d.open)).toBe(true);
     const hierarchies = modal.locator('.aml-overview-hierarchies');
     await expect(hierarchies.locator('tr', { hasText: 'FPD_Heating' })).toContainText('process view, open in FPB.js');
     await expect(hierarchies.locator('tr', { hasText: 'FPBJS_Project' })).toContainText('process view');

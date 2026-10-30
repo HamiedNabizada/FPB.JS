@@ -1,0 +1,53 @@
+/* "AML file" as a dialog of the modeler (016e V7) */
+.aml-overview-modal h3 {
+  margin: 16px 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.aml-overview-intro {
+  color: var(--fpb-text-muted);
+  font-size: 13px;
+}
+
+.aml-overview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.aml-overview-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--fpb-line);
+  vertical-align: middle;
+}
+
+.aml-overview-muted {
+  color: var(--fpb-text-muted);
+}
+
+.aml-overview-end {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.fpb-button.fpb-button--small {
+  padding: 2px 10px;
+  font-size: 12px;
+}
+
+.aml-overview-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.aml-overview-switch input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--fpb-accent);
+}
