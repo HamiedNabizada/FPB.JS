@@ -63,18 +63,24 @@ test.describe('Message stack', () => {
     expect(fehler).toEqual([]);
   });
 
-  test('an info message goes by itself, but not while the pointer rests on it', async ({ page }) => {
+  // the clock is moved by the test, so a slow browser does not decide
+  test('an info message goes by itself after 8 seconds, but not while the pointer rests on it', async ({ page }) => {
+    await page.clock.install();
     await laden(page);
-    await show(page, { key: 'short', type: 'info', title: 'Short', timeout: 300 });
-    await expect(noteById(page, 'short')).toHaveCount(0, { timeout: 3000 });
+    await show(page, { key: 'short', type: 'info', title: 'Short' });
+    await page.clock.fastForward(7000);
+    await expect(noteById(page, 'short')).toBeVisible();
+    await page.clock.fastForward(1500);
+    await expect(noteById(page, 'short')).toHaveCount(0);
 
-    await show(page, { key: 'rest', type: 'info', title: 'Resting', timeout: 600 });
+    await show(page, { key: 'rest', type: 'info', title: 'Resting' });
     const card = noteById(page, 'rest');
     await card.hover();
-    await page.waitForTimeout(1000);
+    await page.clock.fastForward(20000);
     await expect(card).toBeVisible();
     await page.mouse.move(700, 450);
-    await expect(card).toHaveCount(0, { timeout: 3000 });
+    await page.clock.fastForward(8500);
+    await expect(card).toHaveCount(0);
   });
 
   test('the same key replaces the message instead of stacking it', async ({ page }) => {
