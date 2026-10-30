@@ -143,7 +143,8 @@ test.describe('Export dialog', () => {
     test('closes when the X button is clicked outside its icon', async ({ page }) => {
       await load(page);
       await openDialog(page);
-      await dialog(page).locator('.fpb-dialog-close').click({ position: { x: 2, y: 2 } });
+      // in the padding beside the icon; Firefox hits nothing in the rounded corner
+      await dialog(page).locator('.fpb-dialog-close').click({ position: { x: 3, y: 13 } });
       await expect(dialog(page)).toHaveCount(0);
     });
 
