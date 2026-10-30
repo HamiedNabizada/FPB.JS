@@ -7,7 +7,7 @@ import basis from './fixtures/temperieren.json';
 import { exportiere, nachIds } from './helpers/modelExport';
 import { OPEN } from './helpers/importDialog';
 import { noteById } from './helpers/ui';
-import { installFakeFileSystem, withoutFileSystem, fileSystem, nextPick } from './helpers/fileSystem';
+import { installFakeFileSystem, withoutFileSystem, fileSystem, nextPick, changeOnDisk } from './helpers/fileSystem';
 import { openPanel, select, field } from './helpers/panel';
 
 /**
@@ -321,6 +321,68 @@ test.describe('Save', () => {
     await pressSave(page);
     download = await waiting;
     expect(download.suggestedFilename()).toBe('mein-modell.json');
+  });
+
+  // final review 016e D2, I1: Chrome grants the permission only shortly
+  // after the key press, so it is asked before the AML export is built
+  test('the permission to write an opened AML file is asked before the export is built', async ({ page }) => {
+    await start(page, { files: { 'Anlage.aml': MIXED }, model: false });
+    expect(await openFromDisk(page, 'Anlage.aml')).toBe('import.done');
+    await page.evaluate(() => {
+      const aml = window.fpbjs.get('amlSupport');
+      const original = aml.exportAml.bind(aml);
+      aml.exportAml = () => {
+        window.__askedAtExport = window.__fs.asked;
+        return original();
+      };
+    });
+    await pressSave(page);
+    await waitForWrites(page, 1);
+    expect(await page.evaluate(() => window.__askedAtExport)).toBe(1);
+  });
+
+  // final review 016e D2, I4: the rest of an AML file may have been edited
+  // elsewhere, in the AML Editor for one
+  test('a file changed on disk after it was opened is not overwritten without a question', async ({ page }) => {
+    await start(page, { files: { 'Anlage.aml': MIXED }, model: false });
+    expect(await openFromDisk(page, 'Anlage.aml')).toBe('import.done');
+    const external = MIXED.replace('Name="Behaelter_B1"', 'Name="Behaelter_B1_extern"');
+    await changeOnDisk(page, 'Anlage.aml', external);
+
+    await pressSave(page);
+    const question = page.getByRole('alertdialog');
+    await expect(question).toContainText('Anlage.aml has changed on disk');
+    await question.getByRole('button', { name: 'Cancel' }).click();
+    await page.waitForTimeout(300);
+    expect(await writes(page)).toEqual([]);
+    expect((await fileSystem(page)).files['Anlage.aml']).toBe(external);
+
+    await pressSave(page);
+    await question.getByRole('button', { name: 'Overwrite' }).click();
+    await waitForWrites(page, 1);
+    // its own write is no change from outside
+    await pressSave(page);
+    await waitForWrites(page, 2);
+    await expect(question).toHaveCount(0);
+  });
+
+  // final review 016e D2, I2: the keyboard focus is on the page after loading
+  test('right after the page loads Ctrl+S saves the model, not the page', async ({ page }) => {
+    await start(page);
+    await nextPick(page, 'gleich.json');
+    await page.keyboard.press('Control+s');
+    await waitForWrites(page, 1);
+    expect((await fileSystem(page)).pickers).toHaveLength(1);
+  });
+
+  test('Ctrl+S in a field of a dialog saves nothing and leaves the dialog open', async ({ page }) => {
+    await start(page);
+    await page.locator('#exportButton').click();
+    await page.locator('#exportFileName').focus();
+    await page.keyboard.press('Control+s');
+    await page.waitForTimeout(500);
+    expect((await fileSystem(page)).pickers).toEqual([]);
+    await expect(page.locator('dialog.fpb-export-dialog[open]')).toBeVisible();
   });
 
   test('Save in the toolbar saves, also in read-only mode', async ({ page }) => {

@@ -17,7 +17,7 @@ import DialogFrame from '../dialogs/DialogFrame';
 export default function OpenDialog(props) {
   const { files, translate, aml, close, titleId, preload } = props;
   // a dropped file that needs a choice comes read already
-  const [file, setFile] = useState(preload ? { name: preload.file.name, handle: preload.handle } : null);
+  const [file, setFile] = useState(preload ? { name: preload.file.name, handle: preload.handle, lastModified: preload.file.lastModified } : null);
   const [parsed, setParsed] = useState(preload ? preload.parsed : null);
   const [hierarchyId, setHierarchyId] = useState(() => {
     const hierarchies = preload && preload.parsed.kind === 'aml' ? preload.parsed.hierarchies : [];
@@ -44,7 +44,7 @@ export default function OpenDialog(props) {
       setError(problem);
       return;
     }
-    setFile({ name: chosen.name, handle: handle || null });
+    setFile({ name: chosen.name, handle: handle || null, lastModified: chosen.lastModified });
     setError(null);
     files.readFile(chosen).then((result) => {
       if (token === reading.current) {
@@ -70,7 +70,7 @@ export default function OpenDialog(props) {
         return;
       }
       try {
-        files._importParsed(parsed, { fileName: file.name, hierarchyId, handle: file.handle });
+        files._importParsed(parsed, { fileName: file.name, hierarchyId, handle: file.handle, lastModified: file.lastModified });
         close();
       } catch (exception) {
         setError({

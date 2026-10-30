@@ -24,14 +24,21 @@ export async function installFakeFileSystem(page, { files = {} } = {}) {
       next: null,
       permission: 'granted',
       asked: 0,
-      granted: {}
+      granted: {},
+      // a time per file, as the disk keeps it: changed by every write
+      modified: {},
+      clock: 1000
     };
+    fs.touch = (name) => {
+      fs.modified[name] = ++fs.clock;
+    };
+    Object.keys(fs.files).forEach(fs.touch);
 
     const handle = (name) => ({
       kind: 'file',
       name,
       async getFile() {
-        return new File([fs.files[name] || ''], name);
+        return new File([fs.files[name] || ''], name, { lastModified: fs.modified[name] || 1 });
       },
       async queryPermission() {
         return fs.granted[name] ? 'granted' : 'prompt';
@@ -55,6 +62,7 @@ export async function installFakeFileSystem(page, { files = {} } = {}) {
           async close() {
             const text = await new Blob(parts).text();
             fs.files[name] = text;
+            fs.touch(name);
             fs.writes.push({ name, text });
           }
         };
@@ -81,8 +89,12 @@ export async function installFakeFileSystem(page, { files = {} } = {}) {
 
     window.showSaveFilePicker = (options) => pick('save', options);
     window.showOpenFilePicker = (options) => pick('open', options).then((h) => [h]);
+    // a dropped file and its handle are the same file on the disk
     DataTransferItem.prototype.getAsFileSystemHandle = function () {
       const file = this.getAsFile();
+      if (file) {
+        fs.modified[file.name] = file.lastModified;
+      }
       return Promise.resolve(file ? handle(file.name) : null);
     };
   }, files);
@@ -100,6 +112,12 @@ export const fileSystem = (page) => page.evaluate(() => {
   const fs = window.__fs;
   return { files: fs.files, writes: fs.writes, pickers: fs.pickers, asked: fs.asked };
 });
+
+/** Another program writes a file on the disk */
+export const changeOnDisk = (page, name, text) => page.evaluate(({ name, text }) => {
+  window.__fs.files[name] = text;
+  window.__fs.touch(name);
+}, { name, text });
 
 /** The answer of the next picker: a file name, or 'abort' */
 export const nextPick = (page, answer) => page.evaluate((answer) => {

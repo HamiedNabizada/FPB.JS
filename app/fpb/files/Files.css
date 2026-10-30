@@ -262,6 +262,12 @@ dialog.fpb-dialog.fpb-export-dialog {
   pointer-events: none;
 }
 
+.fpb-drop-hint.is-refused {
+  border-color: var(--fpb-text-subtle);
+  background: rgba(127, 127, 127, 0.08);
+  color: var(--fpb-text);
+}
+
 /* on a card of its own: over a drawing the text alone is hard to read */
 .fpb-drop-hint span {
   padding: 10px 18px;

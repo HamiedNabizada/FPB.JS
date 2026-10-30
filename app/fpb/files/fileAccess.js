@@ -42,11 +42,12 @@ function cancelled(error) {
 }
 
 /**
- * Writes into a chosen file. A file the user opened was granted for reading
- * only: the browser asks once whether FPB.js may write to it. Rejects with
- * an error named NotAllowedError when that is refused.
+ * Makes sure FPB.js may write into a chosen file. A file the user opened was
+ * granted for reading only: the browser asks once. Chrome asks only shortly
+ * after the key press or click, so call this before anything slow. Rejects
+ * with an error named NotAllowedError when it is refused.
  */
-export async function writeFile(handle, data) {
+export async function ensureWritable(handle) {
   const mode = { mode: 'readwrite' };
   let permission = handle.queryPermission ? await handle.queryPermission(mode) : 'granted';
   if (permission !== 'granted' && handle.requestPermission) {
@@ -57,6 +58,20 @@ export async function writeFile(handle, data) {
     error.name = 'NotAllowedError';
     throw error;
   }
+}
+
+/** When the file was last changed on the disk, or null when unknown */
+export async function lastModifiedOf(handle) {
+  try {
+    return (await handle.getFile()).lastModified;
+  } catch (error) {
+    return null;
+  }
+}
+
+/** Writes into a chosen file (asks for the permission if not yet given) */
+export async function writeFile(handle, data) {
+  await ensureWritable(handle);
   const writable = await handle.createWritable();
   await writable.write(data instanceof Blob ? data : new Blob([data]));
   await writable.close();

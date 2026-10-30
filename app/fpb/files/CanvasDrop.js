@@ -22,16 +22,18 @@ export default function CanvasDrop(canvas, fpbFiles, injector, translate, eventB
   };
   const hasFiles = (event) => event.dataTransfer && Array.from(event.dataTransfer.types || []).includes('Files');
 
-  const show = () => {
+  // refused: in read-only mode the browser drops nothing, the hint says why
+  const show = (refused) => {
     container.classList.add('fpb-drop-active');
     if (!hint) {
       hint = document.createElement('div');
-      hint.className = 'fpb-drop-hint';
-      const label = document.createElement('span');
-      label.textContent = translate('Drop the file to open it');
-      hint.appendChild(label);
+      hint.appendChild(document.createElement('span'));
       container.appendChild(hint);
     }
+    hint.className = refused ? 'fpb-drop-hint is-refused' : 'fpb-drop-hint';
+    hint.firstChild.textContent = refused
+      ? translate('Opening a file is not possible in read-only mode.')
+      : translate('Drop the file to open it');
   };
   const hide = () => {
     container.classList.remove('fpb-drop-active');
@@ -49,10 +51,11 @@ export default function CanvasDrop(canvas, fpbFiles, injector, translate, eventB
     event.preventDefault();
     if (readOnly()) {
       event.dataTransfer.dropEffect = 'none';
+      show(true);
       return;
     }
     event.dataTransfer.dropEffect = 'copy';
-    show();
+    show(false);
   };
 
   const leave = (event) => {

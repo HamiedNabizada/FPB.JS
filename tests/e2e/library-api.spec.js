@@ -843,6 +843,41 @@ test.describe('Export dialog and exportEvent', () => {
     expect(downloads).toBe(0);
   });
 
+  // final review 016e D2, I5: without the browser backup FPB.js compares the
+  // model with the one opened or saved last
+  test('a file dropped on a changed model asks first, also without the browser backup', async ({ page }) => {
+    const { errors } = await withModel(page, { panels: true });
+    const drop = () => page.evaluate((text) => {
+      const target = document.querySelector('#modeler .djs-container.djs-parent > svg');
+      const transfer = new DataTransfer();
+      transfer.items.add(new File([text], 'anderes.json', { type: 'application/json' }));
+      const options = { bubbles: true, cancelable: true, dataTransfer: transfer };
+      target.dispatchEvent(new DragEvent('dragover', options));
+      target.dispatchEvent(new DragEvent('drop', options));
+    }, JSON.stringify(clone()));
+    const question = page.getByRole('alertdialog');
+
+    // a layer switch is no change
+    await page.evaluate((id) => window.fpb.switchProcess(id), CHILD);
+    await page.evaluate((id) => window.fpb.switchProcess(id), MAIN);
+    const imported = page.evaluate(() => new Promise((resolve) => {
+      window.fpb.get('eventBus').once('import.done', () => resolve(true));
+      setTimeout(() => resolve(false), 8000);
+    }));
+    await drop();
+    expect(await imported).toBe(true);
+    await expect(question).toHaveCount(0);
+
+    await page.evaluate(() => {
+      const operator = window.fpb.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+      window.fpb.get('modeling').moveElements([operator], { x: 30, y: 0 });
+    });
+    await drop();
+    await expect(question).toContainText('Open another model?');
+    await question.getByRole('button', { name: 'Cancel' }).click();
+    expect(errors).toEqual([]);
+  });
+
   // 016e D2: a host with its own storage turns the keys and the drop off
   test('with files: false Ctrl+S, Ctrl+O and a dropped file do nothing', async ({ page }) => {
     const { errors } = await withModel(page, { panels: true, options: { files: false } });

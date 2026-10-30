@@ -43,6 +43,10 @@ try {
 
 window.fpbjs = modeler;
 
+// the page belongs to FPB.js: Ctrl+O and Ctrl+S work wherever the focus is,
+// also before the first click (016e D2)
+modeler.get('fpbFiles').bindKeys(document);
+
 try {
   new LayerOverview({
     container: layerContainer,

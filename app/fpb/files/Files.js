@@ -7,7 +7,7 @@ import { serializeModel } from '../export/serializeModel.js';
 import { checkFile, parseModelText, readText } from './readModelFile';
 import { exportContent } from './exports';
 import { defaultFileName, validateFileName } from './fileName';
-import { canWriteFiles, downloadFile, pickFileToOpen, pickFileToSave, writeFile } from './fileAccess';
+import { canWriteFiles, downloadFile, ensureWritable, lastModifiedOf, pickFileToOpen, pickFileToSave, writeFile } from './fileAccess';
 
 /**
  * Opening, saving and exporting the model (016e D2, T8): one place for the
@@ -36,8 +36,13 @@ export default function Files(eventBus, injector, fpbjs, translate, config) {
   // the choices of the export dialog, kept until the page is reloaded; the
   // file name only once typed, else the name of the project
   this._exportChoices = { format: 'json', scope: 'model', layout: true, to: 'file', fileName: null };
-  // the file of the model on screen: { name, format: 'json'|'aml', handle }
+  // the file of the model on screen: { name, format: 'json'|'aml', handle,
+  // lastModified } (when it was last read or written, to see changes made
+  // elsewhere)
   this._target = null;
+  // the model as it was opened or saved last, to tell whether opening
+  // another file would lose changes (without the browser backup)
+  this._baseline = null;
   // the file an import of our own brings, taken when the import starts
   this._incoming = null;
   // the file before the running import, put back if the import fails
@@ -64,6 +69,7 @@ export default function Files(eventBus, injector, fpbjs, translate, config) {
 
   eventBus.on('import.done', function () {
     self._before = undefined;
+    self._baseline = self._serialize();
   });
 
   eventBus.on('import.error', function () {
@@ -78,6 +84,12 @@ export default function Files(eventBus, injector, fpbjs, translate, config) {
     self._target = self._incoming;
     self._incoming = null;
     self._before = undefined;
+    self._baseline = self._serialize();
+  });
+
+  // saved by fpbFiles or by an export of the whole model
+  eventBus.on('model.downloaded', function () {
+    self._baseline = self._serialize();
   });
 }
 
@@ -192,6 +204,7 @@ Files.prototype.openFile = function (file, handle) {
         this._importParsed(parsed, {
           fileName: file.name,
           handle,
+          lastModified: file.lastModified,
           hierarchyId: parsed.kind === 'aml' && parsed.hierarchies.length ? parsed.hierarchies[0].id : undefined
         });
       } catch (exception) {
@@ -210,17 +223,13 @@ Files.prototype.openFile = function (file, handle) {
 };
 
 /**
- * Asks before a file replaces a model with changes that are in no file.
- * Only the browser backup knows that (the web app); without it there is no
- * question, as before 2.0. Resolves true to go on.
+ * Asks before a file replaces a model with changes that are in no file. The
+ * browser backup knows that best (the web app); without it the model is
+ * compared with the one opened or saved last, a model drawn from scratch
+ * counts once it has content. Resolves true to go on.
  */
 Files.prototype.confirmReplace = function () {
-  const autosave = this._injector.get('autosave', false);
-  if (!autosave || !autosave.isEnabled()) {
-    return Promise.resolve(true);
-  }
-  autosave.flush();
-  if (!autosave.isDirty()) {
+  if (!this._hasUnsavedChanges()) {
     return Promise.resolve(true);
   }
   const translate = this._translate;
@@ -231,6 +240,24 @@ Files.prototype.confirmReplace = function () {
     confirmLabel: translate('Open file'),
     danger: true
   });
+};
+
+Files.prototype._hasUnsavedChanges = function () {
+  const autosave = this._injector.get('autosave', false);
+  if (autosave && autosave.isEnabled()) {
+    autosave.flush();
+    return autosave.isDirty();
+  }
+  if (this._baseline === null) {
+    return (this._fpbjs.getProcesses() || []).length > 0;
+  }
+  return this._serialize() !== this._baseline;
+};
+
+/** The model as the browser backup compares it: layer switches are no change */
+Files.prototype._serialize = function () {
+  this._eventBus.fire('dataStore.updateAll', {});
+  return serializeModel(this._fpbjs.getProcesses() || [], { indent: 0 });
 };
 
 Files.prototype._importError = function (problem) {
@@ -270,7 +297,12 @@ Files.prototype._importParsed = function (parsed, options = {}) {
   const fileName = options.fileName;
   this._incoming = parsed.kind === 'xml'
     ? { name: fileName.replace(/\.[^.]*$/, '') + '.json', format: 'json', handle: null }
-    : { name: fileName, format: parsed.kind === 'aml' ? 'aml' : 'json', handle: options.handle || null };
+    : {
+      name: fileName,
+      format: parsed.kind === 'aml' ? 'aml' : 'json',
+      handle: options.handle || null,
+      lastModified: options.handle ? options.lastModified : undefined
+    };
 
   if (parsed.kind === 'aml') {
     const translate = this._translate;
@@ -351,17 +383,12 @@ Files.prototype._save = function (asNew) {
     if (!file) {
       return false;
     }
-    return this._saveContent(file.format).then((content) => {
-      if (file.handle) {
-        return writeFile(file.handle, content.data).then(() => {
-          this._target = file;
-          this._saved(file, translate('Saved to {name}', { name: file.name }));
-          return true;
-        });
+    // the permission while the key press still counts, then the content
+    return (file.handle ? this._readyToWrite(file) : Promise.resolve(true)).then((ready) => {
+      if (!ready) {
+        return false;
       }
-      downloadFile(content.data, file.name, content.mime);
-      this._saved(file, translate('Downloaded {name}', { name: file.name }));
-      return true;
+      return this._saveContent(file.format).then((content) => this._write(file, content));
     });
   }).catch((error) => {
     this._saveFailed(error, target);
@@ -369,6 +396,49 @@ Files.prototype._save = function (asNew) {
   }).then((result) => {
     this._saving = false;
     return result;
+  });
+};
+
+/**
+ * May FPB.js write into the file, and does that keep what is in it? A file
+ * changed on the disk since it was opened or saved, by another program or
+ * another tab, is overwritten only after a question: for an AML file it may
+ * hold new content beside the process.
+ */
+Files.prototype._readyToWrite = function (file) {
+  const translate = this._translate;
+  return ensureWritable(file.handle).then(() => {
+    if (file.lastModified === undefined || file.lastModified === null) {
+      return true;
+    }
+    return lastModifiedOf(file.handle).then((now) => {
+      if (now === null || now === file.lastModified) {
+        return true;
+      }
+      return this._injector.get('fpbDialogs').confirm({
+        title: translate('{name} has changed on disk', { name: file.name }),
+        message: translate('Another program changed the file after FPB.js opened or saved it.'),
+        details: translate('Saving overwrites those changes. Cancel and use Save as to keep both.'),
+        confirmLabel: translate('Overwrite'),
+        danger: true
+      });
+    });
+  });
+};
+
+Files.prototype._write = function (file, content) {
+  const translate = this._translate;
+  return Promise.resolve().then(() => {
+    if (file.handle) {
+      return writeFile(file.handle, content.data).then(() => lastModifiedOf(file.handle)).then((lastModified) => {
+        this._target = Object.assign({}, file, { lastModified });
+        this._saved(file, translate('Saved to {name}', { name: file.name }));
+        return true;
+      });
+    }
+    downloadFile(content.data, file.name, content.mime);
+    this._saved(file, translate('Downloaded {name}', { name: file.name }));
+    return true;
   });
 };
 
@@ -479,6 +549,19 @@ Files.prototype.bindKeys = function (element) {
   }
   const self = this;
   const listener = function (event) {
+    // taken already on the canvas or in a panel inside this element
+    if (event.defaultPrevented) {
+      return;
+    }
+    // in a dialog of FPB.js the keys do nothing, the browser does not save
+    // the page either
+    const target = event.target;
+    if (target && target.closest && target.closest('dialog.fpb-dialog')) {
+      if (self._config.files !== false && isCmd(event) && isKey(['s', 'S', 'o', 'O'], event)) {
+        event.preventDefault();
+      }
+      return;
+    }
     if (self._handleKey(event)) {
       event.preventDefault();
     }

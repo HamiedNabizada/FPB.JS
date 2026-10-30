@@ -195,6 +195,32 @@ test.describe('Open with the keyboard and by dropping on the canvas', () => {
     expect(await done).toBe(true);
   });
 
+  // final review 016e D2, I2
+  test('right after the page loads, before any click, Ctrl+O opens the dialog', async ({ page }) => {
+    await start(page);
+    await page.keyboard.press('Control+o');
+    await expect(page.locator(OPEN)).toBeVisible();
+  });
+
+  // final review 016e D2, I3: a browser drops nothing where the drop is
+  // refused, so the reason shows while the file is dragged
+  test('in read-only mode a file dragged over the canvas says why it cannot be dropped', async ({ page }) => {
+    await start(page);
+    await page.evaluate(() => window.fpbjs.get('readOnly').set(true));
+    const dropEffect = await page.evaluate((selector) => {
+      const target = document.querySelector(selector + ' > svg');
+      const transfer = new DataTransfer();
+      transfer.items.add(new File(['[]'], 'x.json'));
+      const over = new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: transfer });
+      target.dispatchEvent(over);
+      return transfer.dropEffect;
+    }, CANVAS);
+    expect(dropEffect).toBe('none');
+    const hint = page.locator(`${CANVAS} .fpb-drop-hint`);
+    await expect(hint).toHaveClass(/is-refused/);
+    await expect(hint).toHaveText('Opening a file is not possible in read-only mode.');
+  });
+
   test('Ctrl+O opens the dialog; in read-only mode it says why not', async ({ page }) => {
     await start(page);
     await page.evaluate(() => window.fpbjs.get('canvas').focus());
