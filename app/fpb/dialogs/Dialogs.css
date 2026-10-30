@@ -1,7 +1,9 @@
 /* Dialogs of FPB.js (016e V4): a native <dialog> as a card in the look of
    variant B (016c decision 13); light and dark from the design values of
-   the element it lives in (.fpb-dialogs, a container of fpbTheme) */
-.fpb-dialog {
+   the element it lives in (.fpb-dialogs, a container of fpbTheme). Bound
+   to the element: the react-bootstrap overlays of import and export carry
+   the class fpb-dialog as well until D2 */
+dialog.fpb-dialog {
   box-sizing: border-box;
   width: min(500px, calc(100vw - 32px));
   max-height: calc(100vh - 64px);
@@ -16,11 +18,11 @@
   line-height: 1.5;
 }
 
-.fpb-dialog.fpb-dialog--wide {
+dialog.fpb-dialog.fpb-dialog--wide {
   width: min(820px, calc(100vw - 32px));
 }
 
-.fpb-dialog::backdrop {
+dialog.fpb-dialog::backdrop {
   background: rgba(16, 24, 40, 0.45);
 }
 

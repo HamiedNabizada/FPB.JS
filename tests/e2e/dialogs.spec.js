@@ -41,6 +41,24 @@ test.describe('Dialogs', () => {
     await expect(dialog(page)).toHaveCount(0);
   });
 
+  // final review 016e D1: the card rules of the native dialogs must not
+  // reach the react-bootstrap overlays (class fpb-dialog on .modal)
+  test('the overlay of the import and export dialogs stays see-through', async ({ page }) => {
+    await open(page);
+    for (const openDialog of [
+      () => page.locator('#importOptionsButton').click(),
+      () => page.getByRole('button', { name: 'Export Options', exact: true }).click()
+    ]) {
+      await openDialog();
+      const overlay = page.locator('.modal.show');
+      await expect(overlay).toBeVisible();
+      await expect(overlay).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+      await expect(overlay).toHaveCSS('box-shadow', 'none');
+      await page.keyboard.press('Escape');
+      await expect(overlay).toHaveCount(0);
+    }
+  });
+
   test('import, export and information are cards with the plain close and close with Escape', async ({ page }) => {
     await open(page);
     const openers = [
