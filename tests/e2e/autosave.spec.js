@@ -250,7 +250,8 @@ test.describe('Sicherung im Browser', () => {
     await sichern(page);
 
     await page.locator('#newModelButton').click();
-    const dialog = page.getByRole('dialog');
+    // a question is an alertdialog since the final review of 016e D1
+    const dialog = page.getByRole('alertdialog');
     await expect(dialog).toContainText('Start a new model?');
     await dialog.locator('[data-answer="confirm"]').click();
 
@@ -282,7 +283,7 @@ test.describe('Sicherung im Browser', () => {
 
     await page.locator('#newModelButton').click();
 
-    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.getByRole('alertdialog')).toHaveCount(0);
     expect(await namen(page)).toEqual([]);
   });
 
