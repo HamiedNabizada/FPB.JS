@@ -5,7 +5,6 @@ import { createRoot } from 'react-dom/client';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import LayerPanel from './LayerPanel';
 import ErrorBoundary from '../ErrorBoundary';
-import AutosaveNotice from '../components/AutosaveNotice';
 
 export default class LayerOverview {
   constructor(options) {
@@ -18,12 +17,9 @@ export default class LayerOverview {
     modeler.get('eventBus').fire('ui.componentRegistered', { component: 'layerPanel' });
     const root = this._root = createRoot(container);
     root.render(
-      <>
-        <AutosaveNotice modeler={modeler} />
-        <ErrorBoundary>
-          <LayerPanel modeler={modeler} showNewModel={showNewModel} />
-        </ErrorBoundary>
-      </>
+      <ErrorBoundary>
+        <LayerPanel modeler={modeler} showNewModel={showNewModel} />
+      </ErrorBoundary>
     );
   }
 

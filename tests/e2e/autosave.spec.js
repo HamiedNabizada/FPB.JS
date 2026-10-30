@@ -62,7 +62,7 @@ async function neuLaden(page) {
   await bereit(page);
 }
 
-const hinweis = (page) => page.locator('.autosave-notice');
+const hinweis = (page) => page.locator('[data-id="autosave.pending"]');
 
 /** Der Browser gibt das Schloss eines geschlossenen Tabs nicht sofort frei, unter Last erst nach Sekunden */
 const schlossFrei = (page, id) => expect.poll(() => page.evaluate((id) => navigator.locks.query()
@@ -156,7 +156,7 @@ test.describe('Sicherung im Browser', () => {
     const d = await context.newPage();
     await oeffnen(d);
     await expect(hinweis(d)).toBeVisible();
-    await expect(hinweis(d).locator('.autosave-entry')).toHaveCount(1);
+    await expect(hinweis(d).locator('.fpb-notification-items li')).toHaveCount(1);
     await hinweis(d).getByRole('button', { name: /^Restore/ }).click();
     await expect.poll(() => namen(d)).toContain('Modell B');
   });
@@ -318,5 +318,13 @@ test.describe('Sicherung im Browser', () => {
     expect(await ungespeichert(page)).toBe(false);
     expect(await verlassenWarnt(page)).toBe(false);
     expect(await sicherungen(page)).toEqual([]);
+  });
+
+  test('verweigert der Browser die Sicherung, sagt eine Warnung das', async ({ page }) => {
+    await laden(page);
+    await page.evaluate(() => window.fpbjs.get('eventBus').fire('autosave.failed', { error: new Error('quota') }));
+    const warnung = page.locator('[data-id="autosave.failed"]');
+    await expect(warnung).toHaveClass(/fpb-notification--warning/);
+    await expect(warnung).toContainText('This browser could not keep a backup of your model.');
   });
 });

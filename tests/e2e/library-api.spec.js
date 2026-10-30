@@ -386,6 +386,25 @@ test.describe('createFpbModeler', () => {
     await expect(page.locator('#modeler [data-id="import.report"]')).toContainText('Import completed with');
   });
 
+  test('the offer of a backup also appears without layer panel', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page, { options: { autosave: true } });
+    await page.evaluate(() => window.fpb.get('autosave').ready());
+    expect(await importModel(page, clone())).toBe(true);
+    await page.evaluate(() => {
+      const element = window.fpb.get('elementRegistry')
+        .filter((e) => e.businessObject && e.businessObject.name === 'Erhitzen' && e.type !== 'label')[0];
+      window.fpb.get('modeling').updateLabel(element, 'Erwärmen');
+      return window.fpb.get('autosave').flush();
+    });
+
+    await page.reload();
+    await page.waitForFunction(() => window.FpbJS && typeof window.FpbJS.createFpbModeler === 'function');
+    await createModeler(page, { options: { autosave: true } });
+    await page.evaluate(() => window.fpb.get('autosave').ready());
+    await expect(page.locator('#modeler [data-id="autosave.pending"]')).toContainText('Unsaved model found');
+  });
+
   test('showNewModel shows the New model button without the browser backup', async ({ page }) => {
     await openLibraryPage(page);
     await createModeler(page, { panels: true });
