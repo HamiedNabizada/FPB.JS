@@ -11,8 +11,12 @@ import ConfirmDialog from './ConfirmDialog';
  * wheel and touch handlers of the canvas do not reach them there.
  *
  * open(Component, props, { className }) renders <Component {...props}
- * close titleId /> and returns { close(result), closed }, a promise of the
- * result; Escape and close() without a result give undefined.
+ * close titleId /> with the Preact of FPB.js and returns { close(result),
+ * closed }, a promise of the result; Escape and close() without a result
+ * give undefined. mount(fn, { className }) leaves the drawing to the caller:
+ * fn(element, { close, titleId }) returns a function that clears it. Add-on
+ * bundles with their own copy of Preact (fpbjs/aml) and hosts use mount,
+ * since hooks only work with the render of their own copy.
  * confirm(options) asks one question after the other and resolves true for
  * the named answer, false otherwise.
  */
@@ -39,6 +43,13 @@ export default function Dialogs(eventBus, injector, translate) {
 Dialogs.$inject = ['eventBus', 'injector', 'translate'];
 
 Dialogs.prototype.open = function (Component, props = {}, options = {}) {
+  return this.mount(function (element, { close, titleId }) {
+    render(<Component {...props} close={close} titleId={titleId} />, element);
+    return () => render(null, element);
+  }, options);
+};
+
+Dialogs.prototype.mount = function (mount, options = {}) {
   const dialog = document.createElement('dialog');
   dialog.className = options.className ? 'fpb-dialog ' + options.className : 'fpb-dialog';
   const titleId = 'fpb-dialog-title-' + (++this._count);
@@ -52,6 +63,7 @@ Dialogs.prototype.open = function (Component, props = {}, options = {}) {
     resolve = r;
   });
   let done = false;
+  let unmount = null;
   const handle = {
     close: (result) => {
       if (done) {
@@ -62,7 +74,9 @@ Dialogs.prototype.open = function (Component, props = {}, options = {}) {
       if (dialog.open) {
         dialog.close();
       }
-      render(null, dialog);
+      if (unmount) {
+        unmount();
+      }
       dialog.remove();
       if (!this._destroyed && opener && opener.isConnected && typeof opener.focus === 'function') {
         opener.focus();
@@ -78,7 +92,7 @@ Dialogs.prototype.open = function (Component, props = {}, options = {}) {
   });
 
   this._open.add(handle);
-  render(<Component {...props} close={handle.close} titleId={titleId} />, dialog);
+  unmount = mount(dialog, { close: handle.close, titleId }) || null;
   dialog.showModal();
   return handle;
 };

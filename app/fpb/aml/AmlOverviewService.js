@@ -1,3 +1,6 @@
+/** @jsx h */
+import { h, render } from '@bpmn-io/properties-panel/preact';
+
 import AmlOverviewDialog from './AmlOverviewDialog';
 import { collectProcessShapes } from '../help/processShapes';
 import { collectEntries } from '../search/SearchIndex';
@@ -15,14 +18,21 @@ export default function AmlOverviewService(eventBus, injector, translate) {
 
 AmlOverviewService.$inject = ['eventBus', 'injector', 'translate'];
 
+// drawn with the render of this module's own Preact: in the library the
+// AML add-on is a bundle of its own (fpbjs/aml) with its own copy, and hooks
+// only work with that copy (016e D1, final review)
 AmlOverviewService.prototype.open = function () {
   const injector = this._injector;
-  return injector.get('fpbDialogs').open(AmlOverviewDialog, {
+  const props = {
     eventBus: this._eventBus,
     amlSupport: injector.get('amlSupport'),
     amlMarkers: injector.get('amlMarkers', false),
     translate: this._translate,
     goTo: (id) => this._goTo(id)
+  };
+  return injector.get('fpbDialogs').mount(function (element, { close, titleId }) {
+    render(<AmlOverviewDialog {...props} close={close} titleId={titleId} />, element);
+    return () => render(null, element);
   }, { className: 'fpb-dialog--wide aml-overview-modal' });
 };
 

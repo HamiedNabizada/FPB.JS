@@ -1304,6 +1304,24 @@ test.describe('AutomationML (importAML, toAML)', () => {
     expect(aml).not.toContain('Behaelter_B1');
   });
 
+  // final review 016e D1: the add-on bundle has its own Preact; its dialog
+  // must not be drawn with the core's
+  test('the AML file overview opens in a host with the AML add-on', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await createModeler(page, { aml: true, panels: true });
+    await importAml(page, mixed, { fileName: 'Anlage.aml' });
+    await page.evaluate(() => window.fpb.get('amlOverview').open());
+    const dialog = page.locator('dialog.aml-overview-modal[open]');
+    await expect(dialog).toContainText('AML file: Anlage.aml');
+    await expect(dialog.locator('.aml-overview-hierarchies')).toContainText('FPD_Heating');
+    await dialog.getByRole('button', { name: 'Close AML file overview' }).click();
+    await expect(page.locator('dialog.fpb-dialog')).toHaveCount(0);
+
+    await page.locator('#amlOverviewButton').click();
+    await expect(page.locator('dialog.aml-overview-modal[open]')).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
   test('importJSON after importAML drops the kept file', async ({ page }) => {
     await openLibraryPage(page);
     await createModeler(page, { aml: true });

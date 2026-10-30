@@ -410,8 +410,14 @@ export interface ConfirmOptions {
 export interface FpbDialogs {
   /** Asks one question after the other; true for the named answer */
   confirm(options: ConfirmOptions): Promise<boolean>;
-  /** Renders a Preact component in a dialog; `closed` resolves with the value passed to close() */
+  /**
+   * Renders a component with the Preact inside FPB.js; `closed` resolves with
+   * the value passed to close(). A host with its own Preact or another
+   * framework uses mount(): hooks only work with the render of their copy.
+   */
   open(component: any, props?: Record<string, any>, options?: { className?: string }): { close(result?: any): void; closed: Promise<any> };
+  /** The caller draws into the dialog element and returns a function that clears it */
+  mount(mount: (element: HTMLDialogElement, api: { close(result?: any): void; titleId: string }) => (() => void) | void, options?: { className?: string }): { close(result?: any): void; closed: Promise<any> };
 }
 
 /** The dialog "FPB.js Information" (016e) */
