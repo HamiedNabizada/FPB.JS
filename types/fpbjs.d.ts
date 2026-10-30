@@ -383,6 +383,8 @@ export interface NotificationOptions {
   actions?: NotificationAction[];
   /** Milliseconds until it goes, 0 = stays; default 8000 for info and success without buttons, else 0 */
   timeout?: number;
+  /** Runs when the user closes the message with its cross */
+  onDismiss?(): void;
 }
 
 /** The message stack on the canvas (016e); texts are shown as text, never as HTML */
@@ -390,6 +392,8 @@ export interface FpbNotifications {
   /** Returns the id: the key if given */
   show(options: NotificationOptions): string;
   dismiss(id: string): void;
+  /** As the cross does: onDismiss of the message, then dismiss */
+  close(id: string): void;
   clear(): void;
   list(): Array<NotificationOptions & { id: string }>;
 }

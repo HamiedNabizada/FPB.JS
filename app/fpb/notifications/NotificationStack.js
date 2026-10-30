@@ -96,7 +96,7 @@ function Card(props) {
         class="fpb-notification-close"
         aria-label={translate('Dismiss')}
         title={translate('Dismiss')}
-        onClick={() => service.dismiss(note.id)}
+        onClick={() => service.close(note.id)}
       >
         <Icon icon={faXmark} />
       </button>

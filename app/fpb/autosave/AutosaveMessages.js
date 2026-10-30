@@ -8,16 +8,28 @@
  */
 export default function AutosaveMessages(eventBus, autosave, injector, translate) {
   const notifications = injector.get('fpbNotifications');
+  // the backups offered when the user closed the offer: it stays closed
+  // until another backup comes along (autosave.changed also fires whenever
+  // the unsaved state flips)
+  let closedFor = null;
+  const idsOf = (pending) => pending.map((backup) => backup.id).sort().join(' ');
 
   const offer = function (pending, dirty) {
     if (!pending || !pending.length) {
+      closedFor = null;
       notifications.dismiss('autosave.pending');
+      return;
+    }
+    if (closedFor === idsOf(pending)) {
       return;
     }
     const one = pending.length === 1;
     notifications.show({
       key: 'autosave.pending',
       type: 'info',
+      onDismiss: () => {
+        closedFor = idsOf(pending);
+      },
       title: one
         ? translate('Unsaved model found')
         : translate('{count} unsaved models found', { count: String(pending.length) }),

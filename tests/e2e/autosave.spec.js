@@ -320,6 +320,26 @@ test.describe('Sicherung im Browser', () => {
     expect(await sicherungen(page)).toEqual([]);
   });
 
+  // Abschlussprüfung 016e D1: das Angebot kam mit jedem autosave.changed wieder
+  test('ein geschlossenes Angebot bleibt zu, auch wenn danach etwas bearbeitet wird', async ({ page }) => {
+    await laden(page);
+    await umbenennen(page, 'Erhitzen', 'Erwärmen');
+    await sichern(page);
+    await neuLaden(page);
+
+    await expect(hinweis(page)).toBeVisible();
+    await hinweis(page).getByRole('button', { name: 'Dismiss' }).click();
+    await expect(hinweis(page)).toHaveCount(0);
+
+    // eigene Arbeit in diesem Tab: der Zustand "ungespeichert" wechselt
+    const importer = new ImportPage(page);
+    await importer.import(clone());
+    await umbenennen(page, 'Erhitzen', 'Aufwärmen');
+    await expect.poll(() => ungespeichert(page)).toBe(true);
+    await page.waitForTimeout(300);
+    await expect(hinweis(page)).toHaveCount(0);
+  });
+
   test('verweigert der Browser die Sicherung, sagt eine Warnung das', async ({ page }) => {
     await laden(page);
     await page.evaluate(() => window.fpbjs.get('eventBus').fire('autosave.failed', { error: new Error('quota') }));

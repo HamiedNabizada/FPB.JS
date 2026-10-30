@@ -13,9 +13,10 @@ const NARROW = 640;
  * card at the bottom right of the canvas. Part of the modeler, so a host
  * without layer panel sees them too (R10).
  *
- * show({ key, type, title, message, items, details, actions, timeout })
- * returns the id of the message: the key if given, so the same key replaces
- * a message instead of stacking it.
+ * show({ key, type, title, message, items, details, actions, timeout,
+ * onDismiss }) returns the id of the message: the key if given, so the same
+ * key replaces a message instead of stacking it. onDismiss runs when the
+ * user closes the message with its cross.
  */
 export default function Notifications(eventBus, canvas, translate) {
   this._eventBus = eventBus;
@@ -87,6 +88,15 @@ Notifications.prototype.dismiss = function (id) {
   this._held.delete(id);
   this._notes = this._notes.filter((n) => n.id !== id);
   this._changed();
+};
+
+/** Closed by the user (the cross): onDismiss of the message runs first */
+Notifications.prototype.close = function (id) {
+  const note = this._notes.find((n) => n.id === id);
+  if (note && typeof note.onDismiss === 'function') {
+    note.onDismiss();
+  }
+  this.dismiss(id);
 };
 
 Notifications.prototype.clear = function () {
