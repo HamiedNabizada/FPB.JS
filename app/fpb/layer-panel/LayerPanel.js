@@ -5,7 +5,7 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import Collapse from 'react-collapse';
 
-import Import from './features/Import';
+import OpenFile from './features/OpenFile';
 import NewModel from './features/NewModel';
 import DownloadOptions from './features/DownloadOptions';
 import LayersTreeHost from './components/LayersTreeHost';
@@ -62,7 +62,7 @@ const LayerPanel = ({ modeler, showNewModel: newModelOption = false }) => {
         <div className="layerPanel">
             <div className="fpb-toolbar-group" data-group="file">
                 {showNewModel && <NewModel modeler={modeler} />}
-                <Import modeler={modeler} />
+                <OpenFile modeler={modeler} />
                 <DownloadOptions 
                     modeler={modeler} 
                     processes={processes} 

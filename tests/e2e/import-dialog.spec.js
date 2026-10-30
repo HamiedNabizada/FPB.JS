@@ -4,19 +4,21 @@ import { ImportPage } from './pages/ImportPage';
 import basis from './fixtures/temperieren.json';
 
 /**
- * E2E-Tests für den Import-Dialog: Datei per Drag and Drop.
+ * E2E-Tests für den Dialog "Open" (bis 2.0 "Import Options"): Datei per Drag and Drop.
  *
  * Die Datei wird im Browser als File erzeugt und über DragEvents mit einem
  * DataTransfer abgelegt, so wie es der Browser beim Ziehen aus dem Explorer tut.
  */
 
 const DATEINAME = 'temperieren.json';
+const OPEN = 'dialog.fpb-open-dialog[open]';
+const KARTE = `${OPEN} .fpb-dialog-card`;
 
 async function dialogOeffnen(page) {
   const importer = new ImportPage(page);
   await importer.goto();
-  await page.locator('.upload-properties button').click();
-  await expect(page.locator('.modal-body .fileLabel')).toBeVisible();
+  await page.locator('#openFileButton').click();
+  await expect(page.locator(`${OPEN} .fpb-drop-zone`)).toBeVisible();
   return importer;
 }
 
@@ -40,11 +42,11 @@ test.describe('Import-Dialog - Drag and Drop', () => {
   test('übernimmt eine abgelegte Datei und importiert sie', async ({ page }) => {
     const importer = await dialogOeffnen(page);
 
-    const abgefangen = await dateiAblegen(page, '.modal-body', JSON.stringify(basis), DATEINAME);
+    const abgefangen = await dateiAblegen(page, KARTE, JSON.stringify(basis), DATEINAME);
 
     expect(abgefangen).toBe(true);
-    await expect(page.locator('.modal-body .fileLabel')).toHaveText(DATEINAME);
-    const knopf = page.locator('.modal-footer [data-answer="import"]');
+    await expect(page.locator(`${OPEN} .fpb-drop-zone-text`)).toHaveText(DATEINAME);
+    const knopf = page.locator(`${OPEN} [data-answer="open"]`);
     await expect(knopf).toBeEnabled();
     await knopf.click();
     await page.waitForTimeout(importer.importDelay);
@@ -55,10 +57,10 @@ test.describe('Import-Dialog - Drag and Drop', () => {
   test('lehnt eine Datei mit falscher Endung ab', async ({ page }) => {
     await dialogOeffnen(page);
 
-    await dateiAblegen(page, '.modal-body', 'kein Modell', 'notizen.txt');
+    await dateiAblegen(page, KARTE, 'kein Modell', 'notizen.txt');
 
-    await expect(page.locator('.modal-body .fileLabel')).not.toHaveText('notizen.txt');
-    await expect(page.locator('.modal-footer [data-answer="import"]')).toBeDisabled();
+    await expect(page.locator(`${OPEN} .fpb-drop-zone-text`)).not.toHaveText('notizen.txt');
+    await expect(page.locator(`${OPEN} [data-answer="open"]`)).toBeDisabled();
   });
 
   test('eine neben dem Dialog abgelegte Datei öffnet der Browser nicht', async ({ page }) => {

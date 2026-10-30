@@ -59,26 +59,20 @@ async function alsXmlExportieren(page) {
   return xml;
 }
 
-/** XML als Datei in den Import-Dialog ziehen und importieren */
+/** XML als Datei in den Dialog "Open" ziehen und öffnen */
 async function xmlImportieren(page, xml) {
-  await page.evaluate(() => {
-    const knopf = [...document.querySelectorAll('button')].find((b) => b.querySelector('[data-icon="upload"]'));
-    knopf.click();
-  });
-  await expect(page.locator('.fileLabel')).toBeVisible();
+  await page.locator('#openFileButton').click();
+  const dialog = page.locator('dialog.fpb-open-dialog[open]');
+  await expect(dialog.locator('.fpb-drop-zone')).toBeVisible();
   await page.evaluate((text) => {
     const transfer = new DataTransfer();
     transfer.items.add(new File([text], 'modell.xml', { type: 'text/xml' }));
-    // genau der Dialog mit dem Dateifeld, der Export-Dialog kann noch im DOM sein
-    const ziel = document.querySelector('.fileLabel').closest('.modal-body');
+    const ziel = document.querySelector('dialog.fpb-open-dialog[open] .fpb-dialog-card');
     ziel.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: transfer }));
     ziel.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: transfer }));
   }, xml);
-  await expect(page.locator('.fileLabel')).toHaveText('modell.xml');
-  await page.evaluate(() => {
-    const dialog = document.querySelector('.fileLabel').closest('.modal-content');
-    dialog.querySelector('.modal-footer [data-answer="import"]').click();
-  });
+  await expect(dialog.locator('.fpb-drop-zone-text')).toHaveText('modell.xml');
+  await dialog.locator('[data-answer="open"]').click();
   await page.waitForTimeout(3500);
 }
 

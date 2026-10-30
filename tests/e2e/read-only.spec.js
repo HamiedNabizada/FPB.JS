@@ -164,7 +164,7 @@ test.describe('Read-only mode', () => {
     await lesemodus(page, true);
     await optionenOeffnen(page);
 
-    await expect(page.locator('#importOptionsButton')).toBeDisabled();
+    await expect(page.locator('#openFileButton')).toBeDisabled();
     if (await page.locator('#newModelButton').count()) {
       await expect(page.locator('#newModelButton')).toBeDisabled();
     }
@@ -174,7 +174,7 @@ test.describe('Read-only mode', () => {
     await page.getByRole('button', { name: 'Close export options' }).click();
 
     await lesemodus(page, false);
-    await expect(page.locator('#importOptionsButton')).toBeEnabled();
+    await expect(page.locator('#openFileButton')).toBeEnabled();
     expect(fehler).toEqual([]);
   });
 

@@ -6,7 +6,7 @@ import path from 'path';
 import { ImportPage } from './pages/ImportPage';
 import basis from './fixtures/temperieren.json';
 import {
-  openImportDialog, pickFile, pressImport, importButton, exportViaDialog, dismissNotifications
+  openImportDialog, pickFile, pressImport, importButton, exportViaDialog, dismissNotifications, OPEN
 } from './helpers/importDialog';
 import { DIALOG } from './helpers/ui';
 
@@ -41,7 +41,7 @@ async function importAml(page, text, name = 'Anlage.aml', view = null) {
   await pickFile(page, text, name, 'application/xml');
   await expect(importButton(page)).toBeEnabled({ timeout: 15000 });
   if (view) {
-    await page.locator('.modal.show .aml-hierarchies').getByLabel(view).check();
+    await page.locator(`${OPEN} .aml-hierarchies`).getByLabel(view).check();
   }
   return pressImport(page);
 }
@@ -105,7 +105,7 @@ test.describe('AutomationML import and export', () => {
     await openImportDialog(page);
     await pickFile(page, MIXED, 'Anlage.aml', 'application/xml');
 
-    const choice = page.locator('.modal.show .aml-hierarchies');
+    const choice = page.locator(`${OPEN} .aml-hierarchies`);
     await expect(choice).toBeVisible({ timeout: 15000 });
     await expect(choice).toContainText('2 process views');
     await expect(choice.getByLabel('FPD_Heating')).toBeChecked();
@@ -250,7 +250,7 @@ test.describe('AutomationML import and export', () => {
     const { fehler } = await start(page);
     await openImportDialog(page);
     await pickFile(page, NO_FPD, 'Pumpen.aml', 'application/xml');
-    await expect(page.locator('.modal.show .aml-no-fpd')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator(`${OPEN} .aml-no-fpd`)).toBeVisible({ timeout: 15000 });
     await importButton(page).click();
 
     await expect.poll(() => source(page)).toMatchObject({ fileName: 'Pumpen.aml', hierarchyId: null });
@@ -368,7 +368,7 @@ test.describe('AutomationML import and export', () => {
     const { importer } = await start(page);
     await importer.import(JSON.parse(read('json/fpbjs-temperieren.json')));
     await openImportDialog(page);
-    await page.getByRole('button', { name: 'Close import options' }).click();
+    await page.locator(OPEN).getByRole('button', { name: 'Close' }).click();
     await expect(page.locator('#amlOverviewButton')).toHaveCount(0);
 
     await page.locator('#propertiesPanelToggle').click();

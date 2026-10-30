@@ -2,9 +2,12 @@
 import { expect } from '../support/test';
 
 /**
- * Drives the import and download dialogs of the layer panel like a user:
- * open, drop or pick a file, press the import button, wait for the importer.
+ * Drives the dialogs Open and Export of FPB.js like a user (016e D2): open,
+ * drop or pick a file, press Open, wait for the importer.
  */
+
+/** The dialog "Open" while it is shown */
+export const OPEN = 'dialog.fpb-open-dialog[open]';
 
 /** Closes the messages of earlier imports and exports (016e message stack). */
 export async function dismissNotifications(page) {
@@ -12,17 +15,17 @@ export async function dismissNotifications(page) {
   await expect(page.locator('.fpb-notification')).toHaveCount(0);
 }
 
-/** Opens the import dialog from the toolbar. */
+/** Opens the dialog "Open" from the toolbar. */
 export async function openImportDialog(page) {
   await dismissNotifications(page);
-  await page.locator('.upload-properties button').first().click();
-  await expect(page.locator('.modal.show .fileLabel')).toBeVisible();
+  await page.locator('#openFileButton').click();
+  await expect(page.locator(`${OPEN} .fpb-drop-zone`)).toBeVisible();
 }
 
-/** Drops a file on the dialog body, as the browser does when dragging from the explorer. */
+/** Drops a file on the card of the dialog, as the browser does when dragging from the explorer. */
 export async function dropFile(page, content, name, type = 'application/json') {
   return page.evaluate(({ content, name, type }) => {
-    const target = document.querySelector('.modal.show .fileLabel').closest('.modal-body');
+    const target = document.querySelector('dialog.fpb-open-dialog[open] .fpb-dialog-card');
     const transfer = new DataTransfer();
     transfer.items.add(new File([content], name, { type }));
     const options = { bubbles: true, cancelable: true, dataTransfer: transfer };
@@ -36,10 +39,10 @@ export async function dropFile(page, content, name, type = 'application/json') {
 
 /** Picks a file through the hidden file input. */
 export async function pickFile(page, content, name, mimeType = 'application/json') {
-  await page.locator('.modal.show input#file').setInputFiles({ name, mimeType, buffer: Buffer.from(content) });
+  await page.locator(`${OPEN} input#fpb-open-input`).setInputFiles({ name, mimeType, buffer: Buffer.from(content) });
 }
 
-export const importButton = (page) => page.locator('.modal.show [data-answer="import"]');
+export const importButton = (page) => page.locator(`${OPEN} [data-answer="open"]`);
 
 /**
  * Presses the import button and waits for the importer's answer.

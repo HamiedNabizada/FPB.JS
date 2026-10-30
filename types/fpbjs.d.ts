@@ -430,6 +430,12 @@ export interface FpbInfo {
   open(tab?: 'about' | 'shortcuts' | 'help'): { close(): void; closed: Promise<void> };
 }
 
+/** Open, save and export the model (016e D2) */
+export interface FpbFiles {
+  /** Shows the dialog "Open"; null in read-only mode */
+  open(): { close(result?: any): void; closed: Promise<any> } | null;
+}
+
 /** Append an element to an existing one, connected and placed */
 export interface FpbAppend {
   getOptions(element: Element): Array<{ type: string; label: string }>;
@@ -483,6 +489,7 @@ export interface FpbServiceMap {
   fpbNotifications: FpbNotifications;
   fpbDialogs: FpbDialogs;
   fpbInfo: FpbInfo;
+  fpbFiles: FpbFiles;
   fpbSearch: FpbSearch;
   fpbAppend: FpbAppend;
   fpbCopyPaste: FpbCopyPaste;

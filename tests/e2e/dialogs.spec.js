@@ -28,25 +28,25 @@ const danger = (page) => page.evaluate(() => {
 
 test.describe('Dialogs', () => {
 
-  test('import is a text button, disabled until a file is chosen, and Cancel closes', async ({ page }) => {
+  test('open is a text button, disabled until a file is chosen, and Cancel closes', async ({ page }) => {
     await open(page);
-    await page.locator('#importOptionsButton').click();
-    await expect(dialog(page).getByRole('button', { name: 'Import', exact: true })).toBeDisabled();
+    await page.locator('#openFileButton').click();
+    await expect(dialog(page).getByRole('button', { name: 'Open', exact: true })).toBeDisabled();
     await dialog(page).getByRole('button', { name: 'Cancel' }).click();
     await expect(dialog(page)).toHaveCount(0);
 
-    await page.locator('#importOptionsButton').click();
+    await page.locator('#openFileButton').click();
     await expect(dialog(page)).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(dialog(page)).toHaveCount(0);
   });
 
   // final review 016e D1: the card rules of the native dialogs must not
-  // reach the react-bootstrap overlays (class fpb-dialog on .modal)
-  test('the overlay of the import and export dialogs stays see-through', async ({ page }) => {
+  // reach the react-bootstrap overlays (class fpb-dialog on .modal); the
+  // export dialog stays react-bootstrap until task 2 of D2
+  test('the overlay of the export dialog stays see-through', async ({ page }) => {
     await open(page);
     for (const openDialog of [
-      () => page.locator('#importOptionsButton').click(),
       () => page.getByRole('button', { name: 'Export Options', exact: true }).click()
     ]) {
       await openDialog();
@@ -59,10 +59,10 @@ test.describe('Dialogs', () => {
     }
   });
 
-  test('import, export and information are cards with the plain close and close with Escape', async ({ page }) => {
+  test('open, export and information are cards with the plain close and close with Escape', async ({ page }) => {
     await open(page);
     const openers = [
-      () => page.locator('#importOptionsButton').click(),
+      () => page.locator('#openFileButton').click(),
       () => page.getByRole('button', { name: 'Export Options', exact: true }).click(),
       () => page.getByRole('button', { name: 'Show information and help', exact: true }).click()
     ];
@@ -85,8 +85,8 @@ test.describe('Dialogs', () => {
     test(`the drop area shows keyboard focus and a dragged file (${scheme})`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme });
       await open(page);
-      await page.locator('#importOptionsButton').click();
-      const label = dialog(page).locator('.fileLabel');
+      await page.locator('#openFileButton').click();
+      const label = dialog(page).locator('.fpb-drop-zone');
       const look = () => label.evaluate((l) => {
         const s = getComputedStyle(l);
         return [s.borderTopColor, s.backgroundColor, s.outlineStyle].join(' ');
@@ -94,12 +94,12 @@ test.describe('Dialogs', () => {
       const plain = await look();
 
       // colours fade in (dark-mode.css), so the look is polled
-      await dialog(page).locator('#file').focus();
+      await dialog(page).locator('.fpb-choose-file').focus();
       await expect.poll(look).not.toBe(plain);
-      await dialog(page).locator('#file').blur();
+      await dialog(page).locator('.fpb-choose-file').blur();
       await expect.poll(look).toBe(plain);
 
-      await label.evaluate((l) => l.classList.add('fileLabel--dragover'));
+      await label.evaluate((l) => l.classList.add('is-dragover'));
       await expect.poll(look).not.toBe(plain);
     });
   }

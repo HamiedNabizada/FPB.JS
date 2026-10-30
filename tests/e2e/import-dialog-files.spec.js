@@ -4,17 +4,18 @@ import fs from 'fs';
 import path from 'path';
 import { ImportPage } from './pages/ImportPage';
 import { ModelBuilder } from './helpers/modelBuilder';
-import { openImportDialog, dropFile, pickFile, pressImport, importButton } from './helpers/importDialog';
+import { openImportDialog, dropFile, pickFile, pressImport, importButton, OPEN } from './helpers/importDialog';
 
 /**
- * The import dialog (ImportModal.js) beyond drag and drop of a good file:
+ * The dialog "Open" (files/OpenDialog.js, until 2.0 the import dialog)
+ * beyond drag and drop of a good file:
  * file picker, wrong extensions and contents, format detection by content,
  * size limit, unreadable files, a failing hand-over, cancel, the drag
  * highlight, and a later import replacing the model.
  */
 
-const LABEL = '.modal.show .fileLabel';
-const DEFAULT_TEXT = 'Import a local stored FPB.js JSON file, XML file or AutomationML (.aml) file, or drop it here';
+const LABEL = `${OPEN} .fpb-drop-zone-text`;
+const DEFAULT_TEXT = 'Drop an FPB.js JSON, XML or AutomationML (.aml) file here';
 
 function model(prefix, name) {
   const m = new ModelBuilder(name);
@@ -47,7 +48,7 @@ async function start(page) {
 // an error about the chosen file shows in the dialog, one of the importer
 // after the dialog has closed in the message stack (016e)
 async function expectError(page, title, detail) {
-  const alert = page.locator('.fpb-import-error, .fpb-notification--error');
+  const alert = page.locator('.fpb-open-error, .fpb-notification--error');
   await expect(alert).toBeVisible();
   await expect(alert).toContainText(title);
   if (detail) {
@@ -69,7 +70,7 @@ test.describe('Import dialog - choosing files', () => {
     await expect(page.locator(LABEL)).toHaveText('gewaehlt.json');
     const outcome = await pressImport(page);
     expect(outcome).toEqual({ done: 1, errors: [], warnings: [] });
-    await expect(page.locator('.modal.show')).toHaveCount(0);
+    await expect(page.locator(OPEN)).toHaveCount(0);
     expect(await state(page)).toEqual({ project: 'Gewaehlt', processes: ['pick-root'], root: 'pick-root' });
   });
 
@@ -100,7 +101,7 @@ test.describe('Import dialog - choosing files', () => {
     await openImportDialog(page);
 
     await page.evaluate(() => {
-      const target = document.querySelector('.modal.show .fileLabel').closest('.modal-body');
+      const target = document.querySelector('dialog.fpb-open-dialog[open] .fpb-dialog-card');
       const transfer = new DataTransfer();
       transfer.items.add(new File([new Uint8Array(50 * 1024 * 1024 + 1)], 'riesig.json', { type: 'application/json' }));
       target.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: transfer }));
@@ -119,10 +120,9 @@ test.describe('Import dialog - choosing files', () => {
     await dropFile(page, '{ "kaputt": ', 'kaputt.json');
 
     await expectError(page, 'Invalid file format', 'File format not recognized');
-    // the button stays usable, but there is nothing to import
-    await importButton(page).click();
-    await expectError(page, 'No file selected', 'Please select a valid JSON file');
-    await expect(page.locator('.modal.show')).toHaveCount(1);
+    // there is nothing to open: the button stays off (016e D2)
+    await expect(importButton(page)).toBeDisabled();
+    await expect(page.locator(OPEN)).toHaveCount(1);
     expect(await state(page)).toEqual(before);
   });
 
@@ -145,8 +145,8 @@ test.describe('Import dialog - choosing files', () => {
     await openImportDialog(page);
 
     const classes = await page.evaluate(async () => {
-      const label = document.querySelector('.modal.show .fileLabel');
-      const body = label.closest('.modal-body');
+      const label = document.querySelector('dialog.fpb-open-dialog[open] .fpb-drop-zone');
+      const body = label.closest('.fpb-dialog-card');
       const transfer = new DataTransfer();
       transfer.items.add(new File(['[]'], 'x.json'));
       const tick = () => new Promise((r) => setTimeout(r, 50));
@@ -162,9 +162,9 @@ test.describe('Import dialog - choosing files', () => {
       return { during, inside, after: label.className };
     });
 
-    expect(classes.during).toContain('fileLabel--dragover');
-    expect(classes.inside).toContain('fileLabel--dragover');
-    expect(classes.after).not.toContain('fileLabel--dragover');
+    expect(classes.during).toContain('is-dragover');
+    expect(classes.inside).toContain('is-dragover');
+    expect(classes.after).not.toContain('is-dragover');
   });
 
   test('the content decides the format: VDI 3682 XML in a .json file is read as XML', async ({ page }) => {
@@ -207,8 +207,7 @@ test.describe('Import dialog - choosing files', () => {
     await dropFile(page, JSON.stringify(model('new', 'Neues Projekt')), 'gesperrt.json');
 
     await expectError(page, 'File read error', 'Unable to read the selected file');
-    await importButton(page).click();
-    await expectError(page, 'No file selected');
+    await expect(importButton(page)).toBeDisabled();
     await page.waitForTimeout(300);
     expect(await state(page)).toEqual(before);
   });
@@ -230,7 +229,7 @@ test.describe('Import dialog - choosing files', () => {
     await importButton(page).click();
 
     await expectError(page, 'Import failed', 'An error occurred during import: Host listener failed');
-    await expect(page.locator('.modal.show')).toHaveCount(1);
+    await expect(page.locator(OPEN)).toHaveCount(1);
     await expect(page.locator(LABEL)).toHaveText('neu.json');
     await expect(importButton(page)).toBeEnabled();
     expect(await state(page)).toEqual(before);
@@ -241,13 +240,13 @@ test.describe('Import dialog - choosing files', () => {
     await openImportDialog(page);
 
     await page.evaluate(() => {
-      const body = document.querySelector('.modal.show .fileLabel').closest('.modal-body');
+      const body = document.querySelector('dialog.fpb-open-dialog[open] .fpb-dialog-card');
       body.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: new DataTransfer() }));
     });
 
     await expect(page.locator(LABEL)).toHaveText(DEFAULT_TEXT);
     await expect(importButton(page)).toBeDisabled();
-    await expect(page.locator('.fpb-import-error')).toHaveCount(0);
+    await expect(page.locator('.fpb-open-error')).toHaveCount(0);
   });
 
 });
@@ -262,8 +261,8 @@ test.describe('Import dialog - cancel and re-import', () => {
     await openImportDialog(page);
     await dropFile(page, JSON.stringify(model('new', 'Neues Projekt')), 'neu.json');
     await expect(page.locator(LABEL)).toHaveText('neu.json');
-    await page.getByRole('button', { name: 'Close import options' }).click();
-    await expect(page.locator('.modal.show')).toHaveCount(0);
+    await page.locator(OPEN).getByRole('button', { name: 'Close' }).click();
+    await expect(page.locator(OPEN)).toHaveCount(0);
     await page.waitForTimeout(500);
 
     expect(await state(page)).toEqual(before);
@@ -282,7 +281,7 @@ test.describe('Import dialog - cancel and re-import', () => {
     await openImportDialog(page);
     await dropFile(page, JSON.stringify(model('new', 'Neues Projekt')), 'neu.json');
     await page.keyboard.press('Escape');
-    await expect(page.locator('.modal.show')).toHaveCount(0);
+    await expect(page.locator(OPEN)).toHaveCount(0);
     await page.waitForTimeout(500);
 
     expect(await state(page)).toEqual(before);

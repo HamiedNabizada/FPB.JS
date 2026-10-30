@@ -1392,10 +1392,11 @@ test.describe('AutomationML (importAML, toAML)', () => {
     messages.forEach((m) => expect(m).toContain('AutomationML is not enabled'));
     expect(await page.evaluate(() => !!window.fpb.get('amlSupport', false))).toBe(false);
 
-    await page.locator('#layers .upload-properties button').first().click();
-    await expect(page.locator('.modal.show input#file')).toHaveAttribute('accept', '.json,.xml');
-    await expect(page.locator('.modal.show .fileLabel')).toHaveText('Import a local stored FPB.js JSON file or XML file, or drop it here');
-    await page.getByRole('button', { name: 'Close import options' }).click();
+    await page.locator('#layers #openFileButton').click();
+    const open = page.locator('dialog.fpb-open-dialog[open]');
+    await expect(open.locator('input#fpb-open-input')).toHaveAttribute('accept', '.json,.xml');
+    await expect(open.locator('.fpb-drop-zone-text')).toHaveText('Drop an FPB.js JSON or XML file here');
+    await open.getByRole('button', { name: 'Close' }).click();
 
     await page.evaluate(() => {
       [...document.querySelectorAll('button')].find((b) => b.querySelector('[data-icon="download"]')).click();
@@ -1572,15 +1573,11 @@ test.describe('theme set by the host', () => {
   test('dialogs of a modeler with a host theme carry the theme, outside the containers too', async ({ page }) => {
     const { errors } = await openLibraryPage(page);
     await createModeler(page, { panels: true, options: { theme: 'dark' } });
-    await page.locator('#importOptionsButton').click();
-    // react-bootstrap puts the attribute on .modal-dialog; what counts is the colour
-    await expect(page.locator('.modal.show .modal-content')).toHaveCSS('background-color', 'rgb(26, 32, 39)');
-    // the close button is drawn dark by Bootstrap; on the dark card it is turned light
-    expect(await page.locator('.modal.show .btn-close').evaluate((b) => getComputedStyle(b).filter)).toContain('invert');
-
-    // the native dialogs of the modeler (016e) live under <body> as well
+    // the native dialogs of the modeler (016e) live under <body>
+    await page.locator('#openFileButton').click();
+    await expect(page.locator('dialog.fpb-open-dialog[open]')).toHaveCSS('background-color', 'rgb(26, 32, 39)');
     await page.keyboard.press('Escape');
-    await expect(page.locator('.modal.show')).toHaveCount(0);
+    await expect(page.locator('dialog.fpb-open-dialog[open]')).toHaveCount(0);
     await page.getByRole('button', { name: 'Show information and help', exact: true }).click();
     await expect(page.locator('dialog.fpb-dialog[open]')).toHaveCSS('background-color', 'rgb(26, 32, 39)');
     expect(errors).toEqual([]);

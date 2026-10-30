@@ -73,6 +73,7 @@ import ThemeModule from './theme';
 import NotificationsModule from './notifications';
 import DialogsModule from './dialogs';
 import InfoModule from './info';
+import FilesModule from './files';
 import ReadOnlyModule from './read-only';
 import { DebounceInputModule } from '@bpmn-io/properties-panel';
 import SnappingModule from 'diagram-js/lib/features/snapping';
@@ -153,6 +154,7 @@ FpbModeler.prototype._modules = [
     NotificationsModule,
     DialogsModule,
     InfoModule,
+    FilesModule,
     LabelEditingModule,
     ContextPadModule,
     PaletteModule,

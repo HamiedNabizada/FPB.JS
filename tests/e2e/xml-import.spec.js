@@ -5,7 +5,7 @@ import path from 'path';
 import { ImportPage } from './pages/ImportPage';
 import { ModelBuilder } from './helpers/modelBuilder';
 import { exportiere, nachIds } from './helpers/modelExport';
-import { openImportDialog, dropFile, pressImport, importButton, exportViaDialog } from './helpers/importDialog';
+import { openImportDialog, dropFile, pressImport, importButton, exportViaDialog, OPEN } from './helpers/importDialog';
 
 /**
  * XML import through the import dialog (XMLMapper._convertXMLtoJSON and the
@@ -28,7 +28,7 @@ async function start(page) {
 async function importXml(page, xml, name = 'modell.xml') {
   await openImportDialog(page);
   expect(await dropFile(page, xml, name, 'text/xml')).toBe(true);
-  await expect(page.locator('.modal.show .fileLabel')).toHaveText(name);
+  await expect(page.locator(`${OPEN} .fpb-drop-zone-text`)).toHaveText(name);
   await expect(importButton(page)).toBeEnabled();
   return pressImport(page);
 }
@@ -256,7 +256,7 @@ test.describe('XML import - broken files', () => {
     await openImportDialog(page);
     await dropFile(page, xml, name, 'text/xml');
 
-    const alert = page.locator('.fpb-import-error');
+    const alert = page.locator('.fpb-open-error');
     await expect(alert).toBeVisible();
     await expect(alert).toContainText('Invalid file format');
     await alert.locator('summary').click();

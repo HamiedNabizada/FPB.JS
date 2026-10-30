@@ -23,7 +23,7 @@ test.describe('Toolbar', () => {
     await open(page);
     await expect(page.getByRole('button', { name: /Show Options|Hide Options/ })).toHaveCount(0);
     await expect(group(page, 'file').getByRole('button', { name: 'New model' })).toBeVisible();
-    await expect(group(page, 'file').locator('#importOptionsButton')).toBeVisible();
+    await expect(group(page, 'file').locator('#openFileButton')).toBeVisible();
     await expect(group(page, 'work').locator('#openLayerButton')).toBeVisible();
     await expect(group(page, 'work').locator('#openValidationButton')).toBeVisible();
     await expect(group(page, 'work').getByRole('button', { name: 'Search all layers' })).toBeVisible();

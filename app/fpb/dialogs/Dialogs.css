@@ -166,3 +166,10 @@ dialog.fpb-dialog::backdrop {
   outline: 2px solid var(--fpb-accent);
   outline-offset: 2px;
 }
+
+/* an answer that is not possible yet, such as Open before a file is read */
+.fpb-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
