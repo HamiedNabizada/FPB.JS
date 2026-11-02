@@ -2,6 +2,8 @@ import { test, expect } from './support/test';
 import { ImportPage } from './pages/ImportPage';
 import { ModelerPage } from './pages/ModelerPage';
 import basis from './fixtures/temperieren.json';
+import { noteById } from './helpers/ui';
+import { installFakeFileSystem, fileSystem, nextPick } from './helpers/fileSystem';
 
 /**
  * The start card on an empty canvas (016e D3, V12): how to begin, drawn,
@@ -21,6 +23,11 @@ async function start(page, size = { width: 1400, height: 900 }) {
 }
 
 const processCount = (page) => page.evaluate(() => (window.fpbjs.getProcesses() || []).length);
+const imported = (page) => page.evaluate(() => new Promise((resolve) => {
+  window.fpbjs.get('eventBus').once('import.done', () => resolve(true));
+  setTimeout(() => resolve(false), 15000);
+}));
+const example = (page, title) => page.locator(`${CARD} .fpb-start-example`, { hasText: title });
 
 test.describe('Start card', () => {
 
@@ -83,6 +90,63 @@ test.describe('Start card', () => {
     await expect(page.locator(CARD)).toHaveCount(0);
     await page.evaluate(() => window.fpbjs.get('readOnly').set(false));
     await expect(page.locator(CARD)).toBeVisible();
+  });
+
+  test('the web app offers four examples and Temperieren opens', async ({ page }) => {
+    const { errors } = await start(page);
+    const examples = page.locator(`${CARD} .fpb-start-example`);
+    await expect(examples).toHaveCount(4);
+    await expect(examples.locator('.fpb-start-example-title')).toHaveText([
+      'Temperieren', 'Showcase A: heat exchanger', 'Showcase B: pharma batch', 'Showcase C: assembly'
+    ]);
+    const done = imported(page);
+    await example(page, 'Temperieren').click();
+    expect(await done).toBe(true);
+    const project = await page.evaluate(() => window.fpbjs.getProcesses().find((e) => e.$type === 'fpb:Project').name);
+    expect(project).toBe('Temperieren');
+    expect(await page.evaluate(() => window.fpbjs.getProcesses().filter((e) => e.process).length)).toBe(2);
+    await expect(page.locator(CARD)).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
+  test('Showcase B asks which process view to open', async ({ page }) => {
+    await start(page);
+    await example(page, 'Showcase B').click();
+    const dialog = page.locator(OPEN);
+    await expect(dialog.locator('.aml-hierarchies')).toBeVisible({ timeout: 15000 });
+    await expect(dialog.locator('.fpb-drop-zone-text')).toHaveText('Showcase-B-PharmaChargeUndReinigung.aml');
+    const done = imported(page);
+    await dialog.locator('[data-answer="open"]').click();
+    expect(await done).toBe(true);
+  });
+
+  // Review Focus 3
+  test('an example that does not load says so and the card stays usable', async ({ page }) => {
+    await start(page);
+    await page.route('**/examples/temperieren.json', (route) => route.fulfill({ status: 404, body: 'not found' }));
+    await example(page, 'Temperieren').click();
+    const note = noteById(page, 'start.example');
+    await expect(note).toHaveClass(/fpb-notification--error/);
+    await expect(note).toContainText('The example could not be loaded');
+    await expect(note).toContainText('Temperieren');
+    await expect(page.locator(CARD)).toBeVisible();
+    await expect(example(page, 'Temperieren')).toBeEnabled();
+    expect(await processCount(page)).toBe(0);
+  });
+
+  test('Ctrl+S after an example asks for a place, it never writes into the example', async ({ page }) => {
+    await installFakeFileSystem(page);
+    await start(page);
+    const done = imported(page);
+    await example(page, 'Temperieren').click();
+    expect(await done).toBe(true);
+    await nextPick(page, 'mein-modell.json');
+    await page.evaluate(() => window.fpbjs.get('canvas').focus());
+    await page.keyboard.press('Control+s');
+    await expect.poll(async () => (await fileSystem(page)).writes.length).toBe(1);
+    const disk = await fileSystem(page);
+    expect(disk.pickers).toEqual([expect.objectContaining({ kind: 'save', suggestedName: 'temperieren.json' })]);
+    expect(disk.writes[0].name).toBe('mein-modell.json');
   });
 
   // Review Focus 4

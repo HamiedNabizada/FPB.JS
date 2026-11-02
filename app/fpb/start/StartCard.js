@@ -8,7 +8,7 @@ import { h } from '@bpmn-io/properties-panel/preact';
  * anywhere.
  */
 export default function StartCard(props) {
-  const { translate, canOpen, ctrlKey, onOpen, onNotation } = props;
+  const { translate, canOpen, ctrlKey, onOpen, onNotation, examples = [], loading, onExample } = props;
   return (
     <div class="fpb-start-card">
       <h2 class="fpb-start-title">{translate('Start a model')}</h2>
@@ -20,6 +20,23 @@ export default function StartCard(props) {
           </button>
           <span class="fpb-start-drop">{translate('or drop a file here')}</span>
         </p>
+      )}
+      {examples.length > 0 && (
+        <div class="fpb-start-examples">
+          <h3>{translate('Examples')}</h3>
+          {examples.map((example) => (
+            <button
+              key={example.url}
+              type="button"
+              class="fpb-start-example"
+              disabled={loading === example}
+              onClick={() => onExample(example)}
+            >
+              <span class="fpb-start-example-title">{example.title}</span>
+              {example.description && <span class="fpb-start-example-description">{example.description}</span>}
+            </button>
+          ))}
+        </div>
       )}
       <button type="button" class="fpb-button fpb-button--quiet fpb-start-notation" onClick={onNotation}>
         {translate('Symbols of VDI 3682')}

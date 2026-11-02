@@ -456,6 +456,10 @@ export interface FpbFiles {
 export interface FpbStart {
   /** Is the card on the canvas? */
   isShown(): boolean;
+  /** The examples offered: from the option examples, AML ones only with the AML module */
+  examples(): Array<{ title: string; description?: string; url: string }>;
+  /** Loads an example and opens it as a file; a failed load goes to the message stack */
+  openExample(example: { title: string; url: string }): Promise<boolean>;
 }
 
 /** Append an element to an existing one, connected and placed */
@@ -581,6 +585,11 @@ export interface CreateFpbModelerOptions {
    * Default true.
    */
   startCard?: boolean;
+  /**
+   * Example models on the start card (016e D3): files of the host, opened
+   * like a dropped file. Entries with .aml only with the AML module.
+   */
+  examples?: Array<{ title: string; description?: string; url: string }>;
   /** Additional options passed to FpbModeler constructor */
   [key: string]: any;
 }

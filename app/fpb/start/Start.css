@@ -8,13 +8,16 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  padding: 16px 16px 16px 96px;
   pointer-events: none;
+  /* the card fits itself to the canvas, not to the window */
+  container-type: size;
 }
 
+/* beside the palette on the left */
 .fpb-start-card {
   box-sizing: border-box;
-  width: min(420px, 100%);
+  width: min(420px, 100% - 112px);
+  margin: 16px 16px 16px 96px;
   padding: 20px 22px;
   border-radius: var(--fpb-radius-card);
   background: var(--fpb-surface);
@@ -24,6 +27,9 @@
   font-size: 14px;
   line-height: 1.5;
   pointer-events: none;
+  /* a last resort on a very small canvas; the buttons scroll into view on focus */
+  max-height: calc(100% - 16px);
+  overflow-y: auto;
 }
 
 .fpb-start-card button {
@@ -64,7 +70,80 @@
   font-size: 13px;
 }
 
+.fpb-start-examples {
+  margin: 0 0 10px;
+}
+
+.fpb-start-examples h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* one button per example: title and a line of description */
+.fpb-start-example {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 0 0 4px;
+  padding: 6px 10px;
+  border: 1px solid var(--fpb-line);
+  border-radius: var(--fpb-radius-control);
+  background: var(--fpb-surface);
+  color: var(--fpb-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fpb-start-example:hover {
+  border-color: var(--fpb-accent);
+  background: var(--fpb-accent-surface);
+}
+
+.fpb-start-example:focus-visible {
+  outline: 2px solid var(--fpb-accent);
+  outline-offset: 1px;
+}
+
+.fpb-start-example:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.fpb-start-example-title {
+  font-weight: 600;
+}
+
+.fpb-start-example-description {
+  color: var(--fpb-text-muted);
+  font-size: 12px;
+}
+
 .fpb-start-notation {
   padding-left: 0;
   padding-right: 0;
+}
+
+/* a narrow or low canvas (a phone, where the toolbar takes half the
+   width): closer to the palette, without the descriptions of the examples */
+@container (max-width: 480px) or (max-height: 560px) {
+  .fpb-start-card {
+    padding: 14px;
+  }
+
+  .fpb-start-title {
+    font-size: 15px;
+  }
+
+  .fpb-start-example-description {
+    display: none;
+  }
+}
+
+@container (max-width: 480px) {
+  .fpb-start-card {
+    width: calc(100% - 92px);
+    margin: 8px 8px 8px 84px;
+  }
 }

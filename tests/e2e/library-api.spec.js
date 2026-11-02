@@ -852,6 +852,44 @@ test.describe('Export dialog and exportEvent', () => {
     expect(errors).toEqual([]);
   });
 
+  // 016e D3, V13: the examples are files of the host, named by the option
+  test('examples come from the option examples, AML ones only with the AML module', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await page.route('**/beispiel.json', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(clone()) }));
+    const examples = [
+      { title: 'Beispiel', description: 'Aus dem Host', url: 'beispiel.json' },
+      { title: 'Anlage', url: 'anlage.aml' }
+    ];
+    await createModeler(page, { options: { examples } });
+    const buttons = page.locator('#modeler .fpb-start-example');
+    await expect(buttons).toHaveCount(1);
+    await expect(buttons).toContainText('Aus dem Host');
+    const done = page.evaluate(() => new Promise((resolve) => {
+      window.fpb.on('import.done', () => resolve(true));
+      setTimeout(() => resolve(false), 8000);
+    }));
+    await buttons.click();
+    expect(await done).toBe(true);
+    expect(await currentRootId(page)).toBe(MAIN);
+
+    await page.evaluate(() => window.fpb.destroy());
+    await createModeler(page, { options: { examples }, aml: true });
+    await expect(page.locator('#modeler .fpb-start-example')).toHaveCount(2);
+    expect(errors).toEqual([]);
+  });
+
+  test('the bundle does not contain the example models', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const lib = path.join(__dirname, '..', '..', 'dist');
+    for (const file of ['fpbjs.js', 'fpbjs.esm.js']) {
+      const text = fs.readFileSync(path.join(lib, file), 'utf8');
+      expect(text, file).not.toContain('WaermetauscherMitRegelung');
+      expect(text, file).not.toContain('PharmaChargeUndReinigung');
+      expect(text, file).not.toContain('Aufheizen mit');
+    }
+  });
+
   test('with startCard: false there is no start card', async ({ page }) => {
     await openLibraryPage(page);
     await createModeler(page, { options: { startCard: false } });

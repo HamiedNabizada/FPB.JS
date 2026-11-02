@@ -104,6 +104,9 @@ module.exports = (env, argv) => {
           { from: 'css/dark-mode.css', context: 'app', to: '../css/dark-mode.css' },
           { from: 'fpb/**/*.css', context: 'app', to: '../css/' },
           { from: 'favicon.*', context: 'app', to: '.' },
+          // the example models of the start card (016e D3); files of the web
+          // app only, never in the bundle of the library (T9)
+          { from: 'examples/*', context: 'app', to: '.' },
           // third-party notices of the AML engine chunk (feature 028)
           { from: 'NOTICE', to: '.' }
         ]

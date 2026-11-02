@@ -29,7 +29,14 @@ var modeler = new FpbModeler({
   // light or dark: the user's choice, else the system (016b V9, fpbTheme);
   // the page is the web app's own, so the attribute goes on the document
   theme: 'system',
-  themeScope: 'page'
+  themeScope: 'page',
+  // the example models of the start card (016e D3), files of the web app
+  examples: [
+    { title: 'Temperieren', description: 'Heating with inspection, one decomposition', url: 'examples/temperieren.json' },
+    { title: 'Showcase A: heat exchanger', description: 'Temperature control over four layers, with a plant hierarchy', url: 'examples/Showcase-A-WaermetauscherMitRegelung.aml' },
+    { title: 'Showcase B: pharma batch', description: 'Batch production and cleaning, two process views', url: 'examples/Showcase-B-PharmaChargeUndReinigung.aml' },
+    { title: 'Showcase C: assembly', description: 'CNC machining and robot assembly, two process views', url: 'examples/Showcase-C-CncRobotikMontage.aml' }
+  ]
 });
 
 
