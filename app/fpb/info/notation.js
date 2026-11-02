@@ -10,7 +10,7 @@ export const NOTATION = [
     id: 'product',
     name: 'Product',
     symbol: 'icon-fpb-product',
-    text: 'The generic term for materials and substances, including their streams.'
+    text: 'The generic term under which streams of materials, substances and the like can also be described.'
   },
   {
     id: 'energy',
@@ -34,13 +34,13 @@ export const NOTATION = [
     id: 'technicalResource',
     name: 'Technical resource',
     symbol: 'icon-fpb-technicalresource',
-    text: 'The asset with which a process operator carries out its conversion.'
+    text: 'An asset with which a process operator carries out its conversion.'
   },
   {
     id: 'systemLimit',
     name: 'System limit',
     symbol: 'icon-fpb-systemlimit',
-    text: 'Encloses the process under consideration; states on it cross the limit.'
+    text: 'Marks the limit of the process under consideration with a dashed frame.'
   },
   {
     id: 'flow',
@@ -57,4 +57,4 @@ export const NOTATION = [
 ];
 
 /** Section 4.2: parallel and alternative processes need no symbols of their own */
-export const NOTATION_FLOWS = 'No symbols of their own: parallel flows share part of their way, alternative flows run apart.';
+export const NOTATION_FLOWS = 'Parallel and alternative flows have no symbols of their own: parallel flows share part of their way, alternative flows run apart.';

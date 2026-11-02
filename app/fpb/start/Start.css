@@ -13,11 +13,12 @@
   container-type: size;
 }
 
-/* beside the palette on the left */
+/* beside the palette on the left; a host whose panels float over the
+   right of the canvas sets --fpb-start-inset-right to their width */
 .fpb-start-card {
   box-sizing: border-box;
-  width: min(420px, 100% - 112px);
-  margin: 16px 16px 16px 96px;
+  width: min(420px, 100% - 112px - var(--fpb-start-inset-right, 0px));
+  margin: 16px calc(16px + var(--fpb-start-inset-right, 0px)) 16px 96px;
   padding: 20px 22px;
   border-radius: var(--fpb-radius-card);
   background: var(--fpb-surface);
@@ -30,6 +31,12 @@
   /* a last resort on a very small canvas; the buttons scroll into view on focus */
   max-height: calc(100% - 16px);
   overflow-y: auto;
+}
+
+/* a low canvas has a palette in two columns, 120 px wide */
+.djs-palette-two-column .fpb-start-card {
+  width: min(420px, 100% - 158px - var(--fpb-start-inset-right, 0px));
+  margin-left: 142px;
 }
 
 .fpb-start-card button {
@@ -106,7 +113,8 @@
   outline-offset: 1px;
 }
 
-.fpb-start-example:disabled {
+/* while an example loads, the others wait */
+.fpb-start-example[aria-disabled="true"] {
   opacity: 0.6;
   cursor: progress;
 }
@@ -143,7 +151,12 @@
 
 @container (max-width: 480px) {
   .fpb-start-card {
-    width: calc(100% - 92px);
-    margin: 8px 8px 8px 84px;
+    width: calc(100% - 92px - var(--fpb-start-inset-right, 0px));
+    margin: 8px calc(8px + var(--fpb-start-inset-right, 0px)) 8px 84px;
+  }
+
+  .djs-palette-two-column .fpb-start-card {
+    width: calc(100% - 136px - var(--fpb-start-inset-right, 0px));
+    margin-left: 128px;
   }
 }

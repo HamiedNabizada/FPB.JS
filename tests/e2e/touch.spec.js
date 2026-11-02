@@ -326,6 +326,19 @@ for (const [label, device] of [['tablet', devices['iPad (gen 7)']], ['phone', de
       expect(await position()).toEqual(before);
     });
 
+    // final review 016e D3, I1: on touch devices the side panels float over
+    // the canvas (index.html)
+    test('the start card keeps clear of the toolbar that floats over the canvas', async ({ page }) => {
+      await page.goto('/');
+      await page.waitForFunction(() => window.fpbjs && window.fpbjs.get);
+      await expect(page.locator('.fpb-start-card')).toBeVisible();
+      const boxes = await page.evaluate(() => ({
+        card: document.querySelector('.fpb-start-card').getBoundingClientRect().toJSON(),
+        panels: document.querySelector('.side-panels').getBoundingClientRect().toJSON()
+      }));
+      expect(boxes.card.right).toBeLessThanOrEqual(boxes.panels.left);
+    });
+
     // the start card (016e D3) lies on the canvas as well
     test('a tap on Open a file in the start card opens the dialog', async ({ page }) => {
       await page.goto('/');

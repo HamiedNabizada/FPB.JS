@@ -50,6 +50,19 @@ try {
 
 window.fpbjs = modeler;
 
+// On touch tablets and phones the side panels float over the right of the
+// canvas (index.html): the start card keeps clear of them (016e D3)
+const sidePanels = document.querySelector('.side-panels');
+const floatingPanels = window.matchMedia('(max-width: 900px) and (pointer: coarse)');
+const keepStartCardClear = () => {
+  container.style.setProperty('--fpb-start-inset-right', floatingPanels.matches && sidePanels ? sidePanels.offsetWidth + 'px' : '0px');
+};
+if (sidePanels && typeof ResizeObserver !== 'undefined') {
+  new ResizeObserver(keepStartCardClear).observe(sidePanels);
+}
+floatingPanels.addEventListener('change', keepStartCardClear);
+keepStartCardClear();
+
 // the page belongs to FPB.js: Ctrl+O and Ctrl+S work wherever the focus is,
 // also before the first click (016e D2)
 modeler.get('fpbFiles').bindKeys(document);

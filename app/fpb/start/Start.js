@@ -25,8 +25,10 @@ export default function Start(eventBus, canvas, injector, fpbjs, translate, conf
   this._config = config || {};
   this._element = null;
   this._creating = false;
-  // the example being loaded, its button is off meanwhile
+  // the example being loaded; the others wait meanwhile
   this._loading = null;
+  // counts the loads, so a load that something else overtook is dropped
+  this._token = 0;
 
   if (this._config.startCard === false) {
     return;
@@ -38,6 +40,15 @@ export default function Start(eventBus, canvas, injector, fpbjs, translate, conf
   };
 
   eventBus.on(['import.done', 'import.error', 'model.new', 'commandStack.changed', 'readOnly.changed'], update);
+
+  // another file opens while an example loads: that file wins
+  eventBus.on(['FPBJS.import', 'model.new'], function () {
+    if (self._loading) {
+      self._loading = null;
+      self._token++;
+      self._update();
+    }
+  });
 
   // the first element may go where the card stands
   eventBus.on(['create.init', 'create.start'], function () {
@@ -77,8 +88,12 @@ Start.prototype.examples = function () {
  * @return {Promise<boolean>} true when the file went to the importer
  */
 Start.prototype.openExample = function (example) {
+  if (this._loading) {
+    return Promise.resolve(false);
+  }
   const translate = this._translate;
   const name = decodeURIComponent(String(example.url).split(/[?#]/)[0].split('/').pop()) || 'example.json';
+  const token = ++this._token;
   this._loading = example;
   this._update();
   return fetch(example.url).then((response) => {
@@ -87,10 +102,16 @@ Start.prototype.openExample = function (example) {
     }
     return response.text();
   }).then((text) => {
+    if (token !== this._token) {
+      return false;
+    }
     this._loading = null;
     this._update();
     return this._injector.get('fpbFiles').openFile(new File([text], name));
   }, (error) => {
+    if (token !== this._token) {
+      return false;
+    }
     this._loading = null;
     this._update();
     this._injector.get('fpbNotifications').show({
@@ -144,8 +165,13 @@ Start.prototype._show = function () {
 
 Start.prototype._hide = function () {
   if (this._element) {
+    // the keyboard goes on on the canvas, not at the top of the page
+    const focused = this._element.contains(document.activeElement);
     render(null, this._element);
     this._element.remove();
     this._element = null;
+    if (focused) {
+      this._canvas.focus();
+    }
   }
 };

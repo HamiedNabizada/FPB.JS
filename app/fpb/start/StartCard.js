@@ -29,7 +29,8 @@ export default function StartCard(props) {
               key={example.url}
               type="button"
               class="fpb-start-example"
-              disabled={loading === example}
+              aria-disabled={loading ? 'true' : undefined}
+              aria-busy={loading === example ? 'true' : undefined}
               onClick={() => onExample(example)}
             >
               <span class="fpb-start-example-title">{example.title}</span>

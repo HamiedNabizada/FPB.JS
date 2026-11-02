@@ -4,6 +4,7 @@ import { ModelerPage } from './pages/ModelerPage';
 import basis from './fixtures/temperieren.json';
 import { noteById } from './helpers/ui';
 import { installFakeFileSystem, fileSystem, nextPick } from './helpers/fileSystem';
+import { pickFile } from './helpers/importDialog';
 
 /**
  * The start card on an empty canvas (016e D3, V12): how to begin, drawn,
@@ -147,6 +148,61 @@ test.describe('Start card', () => {
     const disk = await fileSystem(page);
     expect(disk.pickers).toEqual([expect.objectContaining({ kind: 'save', suggestedName: 'temperieren.json' })]);
     expect(disk.writes[0].name).toBe('mein-modell.json');
+  });
+
+  // final review 016e D3, I2: a low canvas has a palette in two columns
+  test('on a low canvas the card leaves the palette in two columns free', async ({ page }) => {
+    await start(page, { width: 618, height: 450 });
+    await expect(page.locator('.djs-palette-two-column')).toHaveCount(1);
+    const boxes = await page.evaluate(() => ({
+      card: document.querySelector('.fpb-start-card').getBoundingClientRect().toJSON(),
+      palette: document.querySelector('.djs-palette').getBoundingClientRect().toJSON()
+    }));
+    expect(boxes.card.left).toBeGreaterThanOrEqual(boxes.palette.right);
+  });
+
+  // final review 016e D3, I3
+  test('the keyboard focus goes to the canvas when the card goes', async ({ page }) => {
+    await start(page);
+    const done = imported(page);
+    await example(page, 'Temperieren').focus();
+    await page.keyboard.press('Enter');
+    expect(await done).toBe(true);
+    await expect.poll(() => page.evaluate(() => window.fpbjs.get('canvas').isFocused())).toBe(true);
+
+    await page.evaluate(() => window.fpbjs.newModel());
+    await page.locator(`${CARD} .fpb-start-open`).focus();
+    await page.keyboard.press('Enter');
+    await pickFile(page, JSON.stringify(basis), 'temperieren.json');
+    const again = imported(page);
+    await page.locator(`${OPEN} [data-answer="open"]`).click();
+    expect(await again).toBe(true);
+    await expect.poll(() => page.evaluate(() => window.fpbjs.get('canvas').isFocused())).toBe(true);
+  });
+
+  // final review 016e D3, I4
+  test('while an example loads the others wait, and an import meanwhile wins', async ({ page }) => {
+    await start(page);
+    let release;
+    const held = new Promise((resolve) => { release = resolve; });
+    await page.route('**/examples/Showcase-A-WaermetauscherMitRegelung.aml', async (route) => {
+      await held;
+      await route.continue();
+    });
+    await example(page, 'Showcase A').click();
+    await expect(page.locator(`${CARD} .fpb-start-example[aria-disabled="true"]`)).toHaveCount(4);
+    await example(page, 'Temperieren').click({ force: true });
+    await page.waitForTimeout(500);
+    expect(await processCount(page)).toBe(0);
+
+    // the user opens something else before the example arrives
+    await page.evaluate((model) => window.fpbjs.get('eventBus').fire('FPBJS.import', { data: model }), JSON.parse(JSON.stringify(basis)));
+    await expect.poll(() => processCount(page)).toBeGreaterThan(0);
+    release();
+    await page.waitForTimeout(2000);
+    const project = await page.evaluate(() => window.fpbjs.getProcesses().find((e) => e.$type === 'fpb:Project').name);
+    expect(project).toBe('FPBJS_Project');
+    await expect(page.locator(OPEN)).toHaveCount(0);
   });
 
   // Review Focus 4

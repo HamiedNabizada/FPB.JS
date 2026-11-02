@@ -42,7 +42,15 @@ describe('NOTATION', () => {
       .toBe('Converts products, energies and information into new ones; only process operators can be decomposed.');
   });
 
+  // final review 016e D3, I5: no more than VDI 3682 Blatt 1, section 4.1
+  it('keeps the other sentences close to the guideline', () => {
+    const text = (id) => NOTATION.find((entry) => entry.id === id).text;
+    expect(text('product')).toBe('The generic term under which streams of materials, substances and the like can also be described.');
+    expect(text('technicalResource')).toBe('An asset with which a process operator carries out its conversion.');
+    expect(text('systemLimit')).toBe('Marks the limit of the process under consideration with a dashed frame.');
+  });
+
   it('says how parallel and alternative flows are drawn', () => {
-    expect(NOTATION_FLOWS).toBe('No symbols of their own: parallel flows share part of their way, alternative flows run apart.');
+    expect(NOTATION_FLOWS).toBe('Parallel and alternative flows have no symbols of their own: parallel flows share part of their way, alternative flows run apart.');
   });
 });
