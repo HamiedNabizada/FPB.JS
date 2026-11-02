@@ -375,8 +375,10 @@ test.describe('Information dialog', () => {
     await laden(page);
     const dialog = await oeffnen(page);
     const tabs = dialog.getByRole('tab');
-    await expect(tabs).toHaveText(['About', 'Keyboard Shortcuts', 'Help']);
+    await expect(tabs).toHaveText(['About', 'Notation', 'Keyboard Shortcuts', 'Help']);
     await tabs.first().focus();
+    await page.keyboard.press('ArrowDown');
+    await expect(dialog.getByRole('tab', { name: 'Notation' })).toBeFocused();
     await page.keyboard.press('ArrowDown');
     await expect(dialog.getByRole('tab', { name: 'Keyboard Shortcuts' })).toBeFocused();
     await expect(dialog.getByRole('tab', { name: 'Keyboard Shortcuts' })).toHaveAttribute('aria-selected', 'true');

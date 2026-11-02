@@ -4,13 +4,16 @@ import { useRef, useState } from '@bpmn-io/properties-panel/preact/hooks';
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons/faCircleInfo';
 import { faKeyboard } from '@fortawesome/free-solid-svg-icons/faKeyboard';
 import { faCircleQuestion } from '@fortawesome/free-solid-svg-icons/faCircleQuestion';
+import { faShapes } from '@fortawesome/free-solid-svg-icons/faShapes';
 
 import DialogFrame from '../dialogs/DialogFrame';
 import Icon from '../ui/Icon';
 import { keyboardShortcuts } from './keyboardShortcuts';
+import { NOTATION, NOTATION_FLOWS } from './notation';
 
 const TABS = [
   { id: 'about', label: 'About', icon: faCircleInfo },
+  { id: 'notation', label: 'Notation', icon: faShapes },
   { id: 'shortcuts', label: 'Keyboard Shortcuts', icon: faKeyboard },
   { id: 'help', label: 'Help', icon: faCircleQuestion }
 ];
@@ -22,6 +25,51 @@ function About(props) {
     <p key="p" class="fpb-info-muted">
       {translate('A JavaScript library for creating formalized process descriptions according to VDI/VDE 3682 standard.')}
     </p>
+  ];
+}
+
+/** The symbol of an element: the icon of the palette, or a line for the connections */
+function NotationSymbol(props) {
+  const { symbol } = props;
+  if (symbol === 'arrow' || symbol === 'double-arrow') {
+    const both = symbol === 'double-arrow';
+    return (
+      <span class="fpb-notation-symbol fpb-notation-line" aria-hidden="true">
+        <svg viewBox="0 0 46 46" width="32" height="32">
+          <line
+            x1={both ? 11 : 4}
+            y1="23"
+            x2="35"
+            y2="23"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-dasharray={both ? '4 3' : undefined}
+          />
+          <path d="M34 17 L43 23 L34 29 Z" fill="currentColor" />
+          {both && <path d="M12 17 L3 23 L12 29 Z" fill="currentColor" />}
+        </svg>
+      </span>
+    );
+  }
+  return <span class={'fpb-notation-symbol ' + symbol} aria-hidden="true" />;
+}
+
+/** The notation of VDI 3682 Blatt 1 (016e V14) */
+function Notation(props) {
+  const { translate } = props;
+  return [
+    <h3 key="h">{translate('Symbols of VDI 3682')}</h3>,
+    <dl key="l" class="fpb-notation">
+      {NOTATION.map((entry) => (
+        <div key={entry.id} class="fpb-notation-entry" data-id={entry.id}>
+          <NotationSymbol symbol={entry.symbol} />
+          <dt>{translate(entry.name)}</dt>
+          <dd>{translate(entry.text)}</dd>
+        </div>
+      ))}
+    </dl>,
+    <p key="f" class="fpb-notation-flows">{translate(NOTATION_FLOWS)}</p>,
+    <p key="s" class="fpb-info-muted fpb-notation-source">{translate('Source: VDI 3682 Blatt 1 (2015), section 4.')}</p>
   ];
 }
 
@@ -67,10 +115,10 @@ function Help(props) {
   ];
 }
 
-const PANELS = { about: About, shortcuts: Shortcuts, help: Help };
+const PANELS = { about: About, notation: Notation, shortcuts: Shortcuts, help: Help };
 
 /**
- * About, keyboard shortcuts and help (016e V6): tabs on the left after the
+ * About, notation, keyboard shortcuts and help (016e V6, V14): tabs on the left after the
  * WAI-ARIA tabs pattern, the arrow keys move between them and select.
  */
 export default function InfoDialog(props) {

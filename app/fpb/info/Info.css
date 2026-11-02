@@ -117,6 +117,53 @@
   font-size: 12px;
 }
 
+/* the notation of VDI 3682 (016e V14): symbol, name, one sentence */
+.fpb-notation {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px 18px;
+  margin: 10px 0 0;
+}
+
+.fpb-notation-entry {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: start;
+}
+
+/* the symbols of the palette set the whole background: size and place here */
+.fpb-notation .fpb-notation-symbol {
+  grid-row: 1 / span 2;
+  width: 36px;
+  height: 36px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.fpb-notation .fpb-notation-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fpb-text);
+}
+
+.fpb-notation dt {
+  font-weight: 600;
+}
+
+.fpb-notation dd {
+  margin: 0;
+  color: var(--fpb-text-muted);
+  font-size: 13px;
+}
+
+.fpb-notation-flows {
+  margin-top: 14px;
+}
+
 @media (max-width: 640px) {
   .fpb-info {
     flex-direction: column;

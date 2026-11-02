@@ -427,7 +427,7 @@ export interface FpbDialogs {
 /** The dialog "FPB.js Information" (016e) */
 export interface FpbInfo {
   /** Without a tab the one chosen last */
-  open(tab?: 'about' | 'shortcuts' | 'help'): { close(): void; closed: Promise<void> };
+  open(tab?: 'about' | 'notation' | 'shortcuts' | 'help'): { close(): void; closed: Promise<void> };
 }
 
 /** Open, save and export the model (016e D2) */

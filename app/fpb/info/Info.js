@@ -1,9 +1,9 @@
 import InfoDialog from './InfoDialog';
 
 /**
- * The dialog "FPB.js Information" (016e V6, T5): about, keyboard shortcuts,
- * help. open() shows the tab chosen last, open(tab) that tab ('about',
- * 'shortcuts', 'help').
+ * The dialog "FPB.js Information" (016e V6, V14, T5): about, notation,
+ * keyboard shortcuts, help. open() shows the tab chosen last, open(tab) that
+ * tab ('about', 'notation', 'shortcuts', 'help').
  */
 export default function Info(fpbDialogs, translate) {
   this._dialogs = fpbDialogs;
