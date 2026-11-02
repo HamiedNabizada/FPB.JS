@@ -452,6 +452,12 @@ export interface FpbFiles {
   bindKeys(element: HTMLElement): () => void;
 }
 
+/** The card on an empty canvas (016e D3) */
+export interface FpbStart {
+  /** Is the card on the canvas? */
+  isShown(): boolean;
+}
+
 /** Append an element to an existing one, connected and placed */
 export interface FpbAppend {
   getOptions(element: Element): Array<{ type: string; label: string }>;
@@ -506,6 +512,7 @@ export interface FpbServiceMap {
   fpbDialogs: FpbDialogs;
   fpbInfo: FpbInfo;
   fpbFiles: FpbFiles;
+  fpbStart: FpbStart;
   fpbSearch: FpbSearch;
   fpbAppend: FpbAppend;
   fpbCopyPaste: FpbCopyPaste;
@@ -569,6 +576,11 @@ export interface CreateFpbModelerOptions {
    * (016e D2). Default true.
    */
   files?: boolean;
+  /**
+   * false: no card on an empty canvas that says how to begin (016e D3).
+   * Default true.
+   */
+  startCard?: boolean;
   /** Additional options passed to FpbModeler constructor */
   [key: string]: any;
 }

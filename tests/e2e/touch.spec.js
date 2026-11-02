@@ -326,6 +326,16 @@ for (const [label, device] of [['tablet', devices['iPad (gen 7)']], ['phone', de
       expect(await position()).toEqual(before);
     });
 
+    // the start card (016e D3) lies on the canvas as well
+    test('a tap on Open a file in the start card opens the dialog', async ({ page }) => {
+      await page.goto('/');
+      await page.waitForFunction(() => window.fpbjs && window.fpbjs.get);
+      const button = page.locator('.fpb-start .fpb-start-open');
+      await expect(button).toBeVisible();
+      await page.touchscreen.tap(...center(await button.boundingBox()));
+      await expect(page.locator('dialog.fpb-open-dialog[open]')).toBeVisible();
+    });
+
     // the message stack (016e T7) lies on the canvas as well
     test('a swipe that starts on a message moves no element', async ({ page, context }) => {
       await openModel(page);

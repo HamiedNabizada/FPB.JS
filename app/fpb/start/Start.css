@@ -1,0 +1,70 @@
+/* The start card on an empty canvas (016e V12): in the middle, beside the
+   palette on the left; only its buttons take a click */
+.fpb-start {
+  position: absolute;
+  inset: 0;
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 16px 16px 16px 96px;
+  pointer-events: none;
+}
+
+.fpb-start-card {
+  box-sizing: border-box;
+  width: min(420px, 100%);
+  padding: 20px 22px;
+  border-radius: var(--fpb-radius-card);
+  background: var(--fpb-surface);
+  box-shadow: var(--fpb-shadow-float);
+  color: var(--fpb-text);
+  font-family: var(--fpb-font);
+  font-size: 14px;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.fpb-start-card button {
+  pointer-events: auto;
+}
+
+.fpb-start-title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.fpb-start-draw {
+  margin: 0 0 14px;
+  color: var(--fpb-text-muted);
+}
+
+.fpb-start-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 0 0 12px;
+}
+
+.fpb-start-open kbd {
+  margin-left: 6px;
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-family: var(--fpb-font-mono);
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.fpb-start-drop {
+  color: var(--fpb-text-subtle);
+  font-size: 13px;
+}
+
+.fpb-start-notation {
+  padding-left: 0;
+  padding-right: 0;
+}

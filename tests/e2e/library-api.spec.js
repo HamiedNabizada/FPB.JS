@@ -843,6 +843,32 @@ test.describe('Export dialog and exportEvent', () => {
     expect(downloads).toBe(0);
   });
 
+  // 016e D3, Review Focus 1
+  test('a host that imports right after creating the modeler never shows the start card over its model', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await createModeler(page, { panels: true });
+    expect(await importModel(page, clone())).toBe(true);
+    await expect(page.locator('#modeler .fpb-start')).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
+  test('with startCard: false there is no start card', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page, { options: { startCard: false } });
+    await page.waitForTimeout(300);
+    await expect(page.locator('#modeler .fpb-start')).toHaveCount(0);
+  });
+
+  test('with files: false the start card offers no file to open', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page, { options: { files: false } });
+    const card = page.locator('#modeler .fpb-start');
+    await expect(card).toBeVisible();
+    await expect(card.locator('.fpb-start-draw')).toBeVisible();
+    await expect(card.locator('.fpb-start-open')).toHaveCount(0);
+    await expect(card.locator('.fpb-start-drop')).toHaveCount(0);
+  });
+
   // final review 016e D2, I5: without the browser backup FPB.js compares the
   // model with the one opened or saved last
   test('a file dropped on a changed model asks first, also without the browser backup', async ({ page }) => {
