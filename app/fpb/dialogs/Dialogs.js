@@ -28,6 +28,7 @@ import ConfirmDialog from './ConfirmDialog';
 export default function Dialogs(eventBus, injector, translate) {
   this._translate = translate;
   this._theme = injector.get('fpbTheme', false);
+  this._canvas = injector.get('canvas', false);
   this._host = null;
   this._open = new Set();
   this._count = 0;
@@ -96,6 +97,10 @@ Dialogs.prototype.mount = function (mount, options = {}) {
       dialog.remove();
       if (!this._destroyed && opener && opener.isConnected && typeof opener.focus === 'function') {
         opener.focus();
+      } else if (!this._destroyed && opener && opener !== document.body && !opener.isConnected && this._canvas) {
+        // the opener went meanwhile (the start card goes when the import
+        // begins): the keyboard goes on on the canvas (016g)
+        this._canvas.focus();
       }
       resolve(result);
     },

@@ -33,6 +33,11 @@
   overflow-y: auto;
 }
 
+/* cut off: the card takes the pointer, so the wheel scrolls it (016g F2) */
+.fpb-start-card.fpb-start-card--scrolls {
+  pointer-events: auto;
+}
+
 /* a low canvas has a palette in two columns, 120 px wide */
 .djs-palette-two-column .fpb-start-card {
   width: min(420px, 100% - 158px - var(--fpb-start-inset-right, 0px));

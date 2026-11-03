@@ -93,6 +93,39 @@ test.describe('Start card', () => {
     await expect(page.locator(CARD)).toBeVisible();
   });
 
+  // 016g F2
+  test('the wheel scrolls a start card that is cut off', async ({ page }) => {
+    await start(page, { width: 1000, height: 340 });
+    const card = page.locator(CARD + ' .fpb-start-card');
+    await expect(card).toBeVisible();
+    expect(await card.evaluate((c) => c.scrollHeight > c.clientHeight)).toBe(true);
+    const viewbox = () => page.evaluate(() => {
+      const box = window.fpbjs.get('canvas').viewbox();
+      return [box.x, box.y, box.scale];
+    });
+    const before = await viewbox();
+    const box = await card.boundingBox();
+    // on the card itself, not on one of its buttons
+    await page.mouse.move(box.x + 8, box.y + 8);
+    await page.mouse.wheel(0, 200);
+    await expect.poll(() => card.evaluate((c) => c.scrollTop)).toBeGreaterThan(0);
+    expect(await viewbox()).toEqual(before);
+  });
+
+  // review focus 5
+  test('a failed import brings the start card back', async ({ page }) => {
+    await start(page);
+    await expect(page.locator(CARD)).toBeVisible();
+    const failed = await page.evaluate(() => new Promise((resolve) => {
+      const bus = window.fpbjs.get('eventBus');
+      bus.once('import.error', () => resolve(true));
+      bus.fire('FPBJS.import', { data: {} });
+      setTimeout(() => resolve(false), 5000);
+    }));
+    expect(failed).toBe(true);
+    await expect(page.locator(CARD)).toBeVisible();
+  });
+
   test('the web app offers four examples and Temperieren opens', async ({ page }) => {
     const { errors } = await start(page);
     const examples = page.locator(`${CARD} .fpb-start-example`);

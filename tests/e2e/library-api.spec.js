@@ -198,6 +198,51 @@ test.describe('Library bundle', () => {
     expect(errors).toEqual([]);
   });
 
+  // 016g F1
+  test('a host that imports right after creating the modeler never shows the start card', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    const seen = await page.evaluate(async (data) => {
+      const container = document.getElementById('modeler');
+      const fpb = window.fpb = await window.FpbJS.createFpbModeler({ container });
+      const shown = () => !!container.querySelector('.fpb-start');
+      const result = [];
+      const done = new Promise((resolve) => fpb.on('import.done', resolve));
+      fpb.importJSON(data);
+      result.push(shown());
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      result.push(shown());
+      await done;
+      result.push(shown());
+      return result;
+    }, clone());
+    expect(seen).toEqual([false, false, false]);
+    expect(errors).toEqual([]);
+  });
+
+  // 016g F3
+  test('an example that finishes loading after destroy adds nothing', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    let release = null;
+    await page.route('**/slow-example.json', async (route) => {
+      await new Promise((resolve) => {
+        release = resolve;
+      });
+      await route.fulfill({ contentType: 'application/json', body: JSON.stringify(clone()) });
+    });
+    await page.evaluate(async () => {
+      const container = document.getElementById('modeler');
+      const fpb = await window.FpbJS.createFpbModeler({ container, examples: [{ title: 'Slow', url: '/slow-example.json' }] });
+      const start = fpb.get('fpbStart');
+      window.__loading = start.openExample(start.examples()[0]);
+      fpb.destroy();
+    });
+    await expect.poll(() => release !== null).toBe(true);
+    release();
+    expect(await page.evaluate(() => window.__loading)).toBe(false);
+    expect(await page.locator('.fpb-start').count()).toBe(0);
+    expect(errors).toEqual([]);
+  });
+
   // 016g D2
   test('after destroy the dialogs open nothing and add no container', async ({ page }) => {
     const { errors } = await openLibraryPage(page);

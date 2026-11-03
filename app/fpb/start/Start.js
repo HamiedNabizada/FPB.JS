@@ -2,6 +2,7 @@
 import { h, render } from '@bpmn-io/properties-panel/preact';
 
 import StartCard from './StartCard';
+import { exampleName, isAmlUrl } from './exampleName';
 import { getCtrlKey } from '../info/keyboardShortcuts';
 
 /**
@@ -15,6 +16,11 @@ import { getCtrlKey } from '../info/keyboardShortcuts';
  * Examples (V13) are files of the host, named by the option `examples`
  * (`[{ title, description, url }]`); the web app brings four. They open like
  * a dropped file, so they are never saved into their source.
+ *
+ * While an import runs there is no card: a host that imports right after
+ * creating the modeler never sees it. After the modeler is destroyed nothing
+ * comes back, also not with a late example. A card cut off on a small canvas
+ * takes the wheel and scrolls (016g F1 to F4).
  */
 export default function Start(eventBus, canvas, injector, fpbjs, translate, config) {
   this._eventBus = eventBus;
@@ -29,6 +35,9 @@ export default function Start(eventBus, canvas, injector, fpbjs, translate, conf
   this._loading = null;
   // counts the loads, so a load that something else overtook is dropped
   this._token = 0;
+  // an import runs, from FPBJS.import until it is done or failed
+  this._importing = false;
+  this._destroyed = false;
 
   if (this._config.startCard === false) {
     return;
@@ -39,7 +48,21 @@ export default function Start(eventBus, canvas, injector, fpbjs, translate, conf
     self._update();
   };
 
+  eventBus.on('FPBJS.import', 3000, function () {
+    self._importing = true;
+    self._update();
+  });
+  // before the update below, which shows the card again where it belongs
+  eventBus.on(['import.done', 'import.error', 'model.new'], 1500, function () {
+    self._importing = false;
+  });
+
   eventBus.on(['import.done', 'import.error', 'model.new', 'commandStack.changed', 'readOnly.changed'], update);
+
+  // a card cut off on a small canvas takes the wheel
+  eventBus.on('canvas.resized', function () {
+    self._fitCard();
+  });
 
   // another file opens while an example loads: that file wins
   eventBus.on(['FPBJS.import', 'model.new'], function () {
@@ -61,6 +84,7 @@ export default function Start(eventBus, canvas, injector, fpbjs, translate, conf
   });
 
   eventBus.on('diagram.destroy', function () {
+    self._destroyed = true;
     self._hide();
   });
 
@@ -78,7 +102,7 @@ Start.prototype.isShown = function () {
 Start.prototype.examples = function () {
   const examples = Array.isArray(this._config.examples) ? this._config.examples : [];
   const aml = !!this._injector.get('amlSupport', false);
-  return examples.filter((example) => example && example.url && (aml || !/\.aml$/i.test(example.url)));
+  return examples.filter((example) => example && example.url && (aml || !isAmlUrl(example.url)));
 };
 
 /**
@@ -92,7 +116,6 @@ Start.prototype.openExample = function (example) {
     return Promise.resolve(false);
   }
   const translate = this._translate;
-  const name = decodeURIComponent(String(example.url).split(/[?#]/)[0].split('/').pop()) || 'example.json';
   const token = ++this._token;
   this._loading = example;
   this._update();
@@ -102,14 +125,14 @@ Start.prototype.openExample = function (example) {
     }
     return response.text();
   }).then((text) => {
-    if (token !== this._token) {
+    if (token !== this._token || this._destroyed) {
       return false;
     }
     this._loading = null;
     this._update();
-    return this._injector.get('fpbFiles').openFile(new File([text], name));
+    return this._injector.get('fpbFiles').openFile(new File([text], exampleName(example.url, text)));
   }, (error) => {
-    if (token !== this._token) {
+    if (token !== this._token || this._destroyed) {
       return false;
     }
     this._loading = null;
@@ -127,7 +150,9 @@ Start.prototype.openExample = function (example) {
 
 Start.prototype._wanted = function () {
   const readOnly = this._injector.get('readOnly', false);
-  return !this._creating
+  return !this._destroyed
+    && !this._importing
+    && !this._creating
     && !(readOnly && readOnly.isEnabled())
     && !(this._fpbjs.getProcesses() || []).length;
 };
@@ -145,6 +170,11 @@ Start.prototype._show = function () {
     const element = this._element = document.createElement('section');
     element.className = 'fpb-start';
     element.setAttribute('aria-label', this._translate('Start a model'));
+    // diagram-js takes the wheel on its container: over the card it scrolls
+    // the card, as over the message stack
+    element.addEventListener('wheel', function (event) {
+      event.stopPropagation();
+    });
     this._canvas.getContainer().appendChild(element);
   }
   const injector = this._injector;
@@ -161,6 +191,18 @@ Start.prototype._show = function () {
     />,
     this._element
   );
+  this._fitCard();
+};
+
+/**
+ * The card lets clicks through to the canvas; cut off, it takes them, so
+ * the wheel scrolls it (016g F2)
+ */
+Start.prototype._fitCard = function () {
+  const card = this._element && this._element.querySelector('.fpb-start-card');
+  if (card) {
+    card.classList.toggle('fpb-start-card--scrolls', card.scrollHeight > card.clientHeight + 1);
+  }
 };
 
 Start.prototype._hide = function () {
