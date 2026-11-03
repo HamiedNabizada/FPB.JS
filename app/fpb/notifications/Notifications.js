@@ -17,9 +17,14 @@ const NARROW = 640;
  * onDismiss }) returns the id of the message: the key if given, so the same
  * key replaces a message instead of stacking it. onDismiss runs when the
  * user closes the message with its cross.
+ *
+ * Inside the canvas (role "application") the stack is a document, so a
+ * screen reader reads the messages; it says each one once, politely, also
+ * errors (016g D4).
  */
 export default function Notifications(eventBus, canvas, translate) {
   this._eventBus = eventBus;
+  this._canvas = canvas;
   this._translate = translate;
   this._notes = [];
   this._timers = new Map();
@@ -28,6 +33,7 @@ export default function Notifications(eventBus, canvas, translate) {
 
   const section = this._section = document.createElement('section');
   section.className = 'fpb-notifications';
+  section.setAttribute('role', 'document');
   section.setAttribute('aria-label', translate('Messages'));
   section.setAttribute('aria-live', 'polite');
   // diagram-js takes the wheel on its container: over a message it scrolls
@@ -69,10 +75,16 @@ Notifications.prototype.show = function (options) {
   const note = Object.assign({}, options, { id });
   delete note.key;
   this._notes = addNote(this._notes, note);
-  // messages pushed out of the stack take their timers with them
+  // messages pushed out of the stack take their timers and their hold with
+  // them: one that comes back goes by itself again (016g D1)
   this._timers.forEach((timer, timerId) => {
     if (!this._notes.some((n) => n.id === timerId)) {
       this._stop(timerId);
+    }
+  });
+  this._held.forEach((reasons, heldId) => {
+    if (!this._notes.some((n) => n.id === heldId)) {
+      this._held.delete(heldId);
     }
   });
   this._schedule(note);
@@ -90,13 +102,29 @@ Notifications.prototype.dismiss = function (id) {
   this._changed();
 };
 
-/** Closed by the user (the cross): onDismiss of the message runs first */
-Notifications.prototype.close = function (id) {
+/**
+ * Closed by the user (the cross): onDismiss of the message runs first. With
+ * `restoreFocus` (the cross was used with the keyboard) the focus goes to
+ * the cross of the message now in its place, else the one before, else to
+ * the canvas (016g D3).
+ */
+Notifications.prototype.close = function (id, options) {
   const note = this._notes.find((n) => n.id === id);
+  const index = this._notes.findIndex((n) => n.id === id);
   if (note && typeof note.onDismiss === 'function') {
     note.onDismiss();
   }
   this.dismiss(id);
+  if (options && options.restoreFocus && index !== -1) {
+    const cards = this._section.querySelectorAll('.fpb-notification');
+    const card = cards[index] || cards[index - 1];
+    const cross = card && card.querySelector('.fpb-notification-close');
+    if (cross) {
+      cross.focus();
+    } else {
+      this._canvas.focus();
+    }
+  }
 };
 
 Notifications.prototype.clear = function () {

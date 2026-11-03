@@ -45,7 +45,8 @@ test.describe('Message stack', () => {
     });
     const card = noteById(page, 'probe');
     await expect(card).toHaveClass(/fpb-notification--error/);
-    await expect(card).toHaveAttribute('role', 'alert');
+    // the stack announces it once; an alert inside it was said twice (016g D4)
+    expect(await card.getAttribute('role')).toBeNull();
     await expect(card.locator('.fpb-notification-title')).toHaveText('Broken');
     await expect(card.locator('.fpb-notification-message')).toHaveText('Something failed');
     await expect(card.locator('.fpb-notification-items li')).toHaveCount(1);
@@ -81,6 +82,62 @@ test.describe('Message stack', () => {
     await page.mouse.move(700, 450);
     await page.clock.fastForward(8500);
     await expect(card).toHaveCount(0);
+  });
+
+  // 016g D1
+  test('a message pushed out of the stack while held times out when it comes back', async ({ page }) => {
+    await page.clock.install();
+    await laden(page);
+    await show(page, { key: 'held', type: 'info', title: 'Held' });
+    await page.evaluate(() => window.fpbjs.get('fpbNotifications').hold('held', 'pointer', true));
+    for (const n of [1, 2, 3, 4, 5]) {
+      await show(page, { key: 'n' + n, type: 'warning', title: 'Message ' + n });
+    }
+    await expect(noteById(page, 'held')).toHaveCount(0);
+    await show(page, { key: 'held', type: 'info', title: 'Held again' });
+    await expect(noteById(page, 'held')).toBeVisible();
+    await page.clock.fastForward(8500);
+    await expect(noteById(page, 'held')).toHaveCount(0);
+  });
+
+  // 016g, gap of D1
+  test('the time of a message stops while the focus is in it', async ({ page }) => {
+    await page.clock.install();
+    await laden(page);
+    await show(page, { key: 'focus', type: 'info', title: 'Focus' });
+    await noteById(page, 'focus').locator('.fpb-notification-close').focus();
+    await page.clock.fastForward(20000);
+    await expect(noteById(page, 'focus')).toBeVisible();
+    await page.evaluate(() => window.fpbjs.get('canvas').focus());
+    await page.clock.fastForward(8500);
+    await expect(noteById(page, 'focus')).toHaveCount(0);
+  });
+
+  // 016g D3, review focus 4
+  test('closing a message with the keyboard moves the focus to the message in its place, then to the canvas', async ({ page }) => {
+    await laden(page);
+    await show(page, { key: 'a', type: 'warning', title: 'A' });
+    await show(page, { key: 'b', type: 'warning', title: 'B' });
+    await noteById(page, 'b').locator('.fpb-notification-close').focus();
+    await page.keyboard.press('Enter');
+    await expect(noteById(page, 'b')).toHaveCount(0);
+    await expect(noteById(page, 'a').locator('.fpb-notification-close')).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(noteById(page, 'a')).toHaveCount(0);
+    expect(await page.evaluate(() => window.fpbjs.get('canvas').getContainer().contains(document.activeElement))).toBe(true);
+    await page.keyboard.press('Control+a');
+    await expect.poll(() => page.evaluate(() => window.fpbjs.get('selection').get().length)).toBeGreaterThan(1);
+  });
+
+  // 016g D4
+  test('the stack can be read inside the canvas and says each message once', async ({ page }) => {
+    await laden(page);
+    const stack = page.locator('.fpb-notifications');
+    await expect(stack).toHaveAttribute('role', 'document');
+    await expect(stack).toHaveAttribute('aria-live', 'polite');
+    await show(page, { key: 'err', type: 'error', title: 'Broken' });
+    await expect(noteById(page, 'err')).toBeVisible();
+    await expect(stack.locator('[role="alert"]')).toHaveCount(0);
   });
 
   test('the same key replaces the message instead of stacking it', async ({ page }) => {

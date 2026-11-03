@@ -46,6 +46,9 @@ function Actions(props) {
   );
 }
 
+/** A click of the keyboard (Enter, Space) has no pointer behind it */
+const isKeyboardClick = (event) => event.detail === 0;
+
 function Card(props) {
   const { note, service, translate } = props;
   const hold = (reason, on) => service.hold(note.id, reason, on);
@@ -66,7 +69,6 @@ function Card(props) {
     <div
       class={`fpb-notification fpb-notification--${note.type}`}
       data-id={note.id}
-      role={note.type === 'error' ? 'alert' : undefined}
       onMouseEnter={() => hold('pointer', true)}
       onMouseLeave={() => hold('pointer', false)}
       onFocusCapture={() => hold('focus', true)}
@@ -96,7 +98,7 @@ function Card(props) {
         class="fpb-notification-close"
         aria-label={translate('Dismiss')}
         title={translate('Dismiss')}
-        onClick={() => service.close(note.id)}
+        onClick={(event) => service.close(note.id, { restoreFocus: isKeyboardClick(event) })}
       >
         <Icon icon={faXmark} />
       </button>
