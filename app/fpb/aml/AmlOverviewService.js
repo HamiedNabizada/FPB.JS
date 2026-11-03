@@ -8,7 +8,7 @@ import { goToElement } from '../help/navigation';
 
 /**
  * Opens "AML file" (016e V7, T5) as a dialog of the modeler; the button of
- * the React toolbar calls open() and shows only while a file is kept.
+ * the toolbar calls open() and shows only while a file is kept.
  */
 export default function AmlOverviewService(eventBus, injector, translate) {
   this._eventBus = eventBus;

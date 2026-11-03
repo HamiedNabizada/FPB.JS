@@ -4,8 +4,8 @@ import basis from './fixtures/temperieren.json';
 
 /**
  * One set of design values for the whole interface (016c T1, T6, T7b): the
- * colours of light and dark, IBM Plex in the interface, Arial on the canvas,
- * and Bootstrap 5 shipped with the app.
+ * colours of light and dark, IBM Plex in the interface, Arial on the canvas;
+ * no Bootstrap since 016f E1.
  */
 
 async function open(page) {
@@ -78,17 +78,43 @@ test.describe('Design values', () => {
     });
   }
 
-  test('Bootstrap 5 comes with the app, nothing from a CDN', async ({ page }) => {
+  // 016f E1, V4, V5
+  test('no Bootstrap, nothing from a CDN', async ({ page }) => {
     await open(page);
     expect(await page.locator('link[href*="bootstrapcdn"]').count()).toBe(0);
-    // only Bootstrap 5 has this variable; the toolbar has no .btn since 016f E1
     const bootstrap = await page.evaluate(() => Array.from(document.styleSheets).some((sheet) => {
       try {
-        return Array.from(sheet.cssRules).some((rule) => rule.cssText.includes('--bs-btn-padding-x'));
+        return Array.from(sheet.cssRules).some((rule) => rule.cssText.includes('--bs-'));
       } catch (e) {
         return false;
       }
     }));
-    expect(bootstrap).toBe(true);
+    expect(bootstrap).toBe(false);
   });
+
+  // 016f E1, review focus 5
+  for (const theme of ['light', 'dark']) {
+    test(`the name beside a toolbar button reaches 4.5:1 (${theme})`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: theme });
+      await open(page);
+      await page.locator('#exportButton').hover();
+      const tip = page.locator('.fpb-tooltip:visible');
+      await expect(tip).toHaveText('Export');
+      const ratio = await tip.evaluate((e) => {
+        const channels = (value) => value.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number);
+        const luminance = ([r, g, b]) => {
+          const c = (v) => {
+            const s = v / 255;
+            return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+          };
+          return 0.2126 * c(r) + 0.7152 * c(g) + 0.0722 * c(b);
+        };
+        const style = getComputedStyle(e);
+        const a = luminance(channels(style.color));
+        const b = luminance(channels(style.backgroundColor));
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      });
+      expect(ratio).toBeGreaterThanOrEqual(4.5);
+    });
+  }
 });

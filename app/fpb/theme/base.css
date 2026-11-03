@@ -1,0 +1,103 @@
+/*
+ * Base values of the parts of FPB.js (016f E1). Until 2.0 the reboot of
+ * Bootstrap set them for the whole page; the parts of FPB.js were drawn on
+ * top of it. Now they hold only inside FPB.js: its own page (the web app),
+ * its containers (class fpb-ui) and its dialogs. A host page keeps its own.
+ * :where() keeps them as weak as the element rules of Bootstrap were, so
+ * every rule of a part still wins.
+ */
+
+:where(.fpb-ui, .fpb-dialogs),
+:where(:root.fpb-ui) body {
+  color: var(--fpb-text);
+  font-family: var(--fpb-font);
+  line-height: 1.5;
+}
+
+:where(.fpb-ui, .fpb-dialogs),
+:where(.fpb-ui, .fpb-dialogs) *,
+:where(.fpb-ui, .fpb-dialogs) *::before,
+:where(.fpb-ui, .fpb-dialogs) *::after {
+  box-sizing: border-box;
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(button, input, select, textarea, optgroup) {
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(p, ul, ol, dl) {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(h1, h2, h3, h4, h5, h6) {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(dd) {
+  margin-bottom: 0.5rem;
+  margin-left: 0;
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(table) {
+  border-collapse: collapse;
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(th) {
+  text-align: inherit;
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(ol, ul) {
+  padding-left: 2rem;
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(a) {
+  color: var(--fpb-accent);
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(img, svg) {
+  vertical-align: middle;
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(label) {
+  display: inline-block;
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(button:not(:disabled)) {
+  cursor: pointer;
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(button:focus:not(:focus-visible)) {
+  outline: 0;
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(code, kbd, pre, samp) {
+  font-family: var(--fpb-font-mono);
+  font-size: 1em;
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(summary) {
+  display: list-item;
+  cursor: pointer;
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(fieldset) {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+:where(.fpb-ui, .fpb-dialogs) :where(textarea) {
+  resize: vertical;
+}
+
+:where(.fpb-ui, .fpb-dialogs) [hidden] {
+  display: none !important;
+}

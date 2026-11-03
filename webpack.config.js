@@ -73,12 +73,6 @@ module.exports = (env, argv) => {
             chunks: 'all',
             priority: 10,
           },
-          react: {
-            test: /[\\/]node_modules[\\/](react|react-dom|react-bootstrap)[\\/]/,
-            name: 'react',
-            chunks: 'all',
-            priority: 20,
-          },
           // The AutomationML engine loads with the first AML import or export
           // (feature 028); without this group it went into vendors, which
           // every page loads at the start

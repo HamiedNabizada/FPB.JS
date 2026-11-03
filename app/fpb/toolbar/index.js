@@ -1,7 +1,5 @@
 /** @jsx h */
 import { h, render } from '@bpmn-io/properties-panel/preact';
-// Bootstrap 5 for the rest of the page until it goes in 016f E1 task 3
-import 'bootstrap/dist/css/bootstrap.min.css';
 
 import ToolbarRoot from './ToolbarRoot';
 import { createTooltips } from '../ui/Tooltip';

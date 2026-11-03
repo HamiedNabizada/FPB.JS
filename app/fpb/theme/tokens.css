@@ -1,10 +1,10 @@
 /*
  * Design values of FPB.js (016c T1): one set for light and one for dark,
  * taken from design variant B. Every part of the interface reads these;
- * the properties panel library (--bio-*) and Bootstrap 5.3 (--bs-*) are fed
- * from them below, only inside FPB.js: its own page (the web app), its
+ * the properties panel library (--bio-*) is fed from them below, only
+ * inside FPB.js: its own page (the web app), its
  * containers (class fpb-ui, set by fpbTheme) and its dialogs (.fpb-dialog),
- * so a host page keeps its own Bootstrap and bpmn-io look. Dark applies
+ * so a host page keeps its own bpmn-io look. Dark applies
  * wherever data-theme="dark" is set, light wherever data-theme="light" is,
  * also below a dark page. A host sets its own font with --fpb-font on its
  * container.
@@ -115,37 +115,4 @@
   --bio-primary-surface: var(--fpb-accent-surface);
   --bio-neutral: var(--fpb-text-subtle);
   font-family: var(--fpb-font);
-}
-
-/* Bootstrap 5.3: it sets --bs-* on :root and [data-bs-theme]; here only for
-   the parts of FPB.js, a host page keeps its colours and font */
-:root.fpb-ui,
-:root.fpb-ui [data-theme],
-:root .fpb-ui,
-:root .fpb-ui [data-theme],
-:root .fpb-dialog,
-:root .fpb-dialog [data-theme] {
-  --bs-body-bg: var(--fpb-surface);
-  --bs-body-color: var(--fpb-text);
-  --bs-emphasis-color: var(--fpb-text);
-  --bs-secondary-color: var(--fpb-text-muted);
-  --bs-tertiary-color: var(--fpb-text-subtle);
-  --bs-secondary-bg: var(--fpb-surface-muted);
-  --bs-tertiary-bg: var(--fpb-surface-sunken);
-  --bs-border-color: var(--fpb-line);
-  --bs-border-radius: var(--fpb-radius-control);
-  --bs-primary: var(--fpb-accent);
-  --bs-primary-rgb: var(--fpb-accent-rgb);
-  --bs-link-color: var(--fpb-accent);
-  --bs-link-color-rgb: var(--fpb-accent-rgb);
-  --bs-font-sans-serif: var(--fpb-font);
-  --bs-font-monospace: var(--fpb-font-mono);
-  --bs-body-font-family: var(--fpb-font);
-  /* dialogs: Bootstrap sets these on .modal, react-bootstrap puts a host's
-     data-theme on .modal-dialog below it (theme/ThemeService) */
-  --bs-modal-bg: var(--fpb-surface);
-  --bs-modal-color: var(--fpb-text);
-  --bs-modal-border-color: var(--fpb-line);
-  --bs-modal-header-border-color: var(--fpb-line);
-  --bs-modal-footer-border-color: var(--fpb-line);
 }

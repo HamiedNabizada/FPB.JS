@@ -137,7 +137,7 @@ ThemeService.prototype.isHostControlled = function () {
 
 /**
  * The attribute to put on elements that leave the containers, such as the
- * dialogs React renders into <body>; empty when the page carries it anyway.
+ * dialogs under <body>; empty when the page carries it anyway.
  */
 ThemeService.prototype.attributes = function () {
   return this._scope === 'containers' ? { 'data-theme': this._theme } : {};

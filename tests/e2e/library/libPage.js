@@ -10,9 +10,8 @@ import path from 'path';
  * origin of its own: nothing touches the dev server, its configuration or the
  * browser storage of the web app tests.
  *
- * React and ReactDOM are peer dependencies of the library (externals, root
- * `React` / `ReactDOM`) and come from node_modules as UMD files, the way a host
- * page would load them.
+ * The page loads neither React nor Bootstrap: since 2.0 (016f E1) the library
+ * needs neither.
  *
  * The bundle must be built first: `npm run build:lib`. FPBJS_LIB_DIR points to
  * another build output if needed.
@@ -25,8 +24,6 @@ export const ORIGIN = 'http://fpbjs-libtest.invalid';
 export const PAGE_URL = ORIGIN + '/index.html';
 
 const FILES = {
-  '/react.js': path.join(ROOT, 'node_modules', 'react', 'umd', 'react.production.min.js'),
-  '/react-dom.js': path.join(ROOT, 'node_modules', 'react-dom', 'umd', 'react-dom.production.min.js'),
   '/fpbjs.js': path.join(LIB_DIR, 'fpbjs.js'),
   '/fpbjs.esm.js': path.join(LIB_DIR, 'fpbjs.esm.js'),
   // the AutomationML add-on: loaded, but only used where a test passes it
@@ -44,8 +41,6 @@ const HTML = `<!DOCTYPE html>
     #properties { position: absolute; left: 1100px; top: 0; width: 300px; height: 800px; overflow: auto; }
     #layers { position: absolute; left: 0; top: 800px; width: 1400px; height: 200px; overflow: auto; }
   </style>
-  <script src="/react.js"></script>
-  <script src="/react-dom.js"></script>
   <script src="/fpbjs.js"></script>
   <script src="/fpbjs-aml.js"></script>
 </head>

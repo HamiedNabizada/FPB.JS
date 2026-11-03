@@ -136,38 +136,66 @@ test.describe('Library bundle', () => {
     });
   });
 
+  // 016f E1, V5, V6, T6
+  test('the bundles contain neither React nor Bootstrap', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const lib = path.join(__dirname, '..', '..', 'dist');
+    for (const file of ['fpbjs.js', 'fpbjs.esm.js', 'fpbjs-aml.js']) {
+      const text = fs.readFileSync(path.join(lib, file), 'utf8');
+      // booleans: a failing match would print the whole bundle
+      expect({
+        reactDom: text.includes('react-dom'),
+        reactRoot: text.includes('__reactContainer'),
+        bootstrapButtons: text.includes('--bs-btn-padding-x'),
+        bootstrapBanner: /Bootstrap\s+v5/.test(text)
+      }, file).toEqual({ reactDom: false, reactRoot: false, bootstrapButtons: false, bootstrapBanner: false });
+    }
+  });
+
+  test('the library leaves the styles of the host page alone', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    const look = () => page.evaluate(() => {
+      const probe = document.createElement('p');
+      probe.textContent = 'host text';
+      document.body.appendChild(probe);
+      const body = getComputedStyle(document.body);
+      const p = getComputedStyle(probe);
+      const out = [body.fontFamily, body.fontSize, body.lineHeight, body.color, p.marginTop, p.marginBottom, getComputedStyle(probe).boxSizing].join('|');
+      probe.remove();
+      return out;
+    });
+    const before = await look();
+    await createModeler(page, { panels: true });
+    expect(await look()).toBe(before);
+    const bootstrapRules = await page.evaluate(() => Array.from(document.querySelectorAll('style')).some((s) => s.textContent.includes('.btn{') || s.textContent.includes('--bs-')));
+    expect(bootstrapRules).toBe(false);
+    expect(errors).toEqual([]);
+  });
+
   test('the ESM bundle exposes the same API and creates a working modeler', async ({ page }) => {
     const { errors } = await openLibraryPage(page);
 
     const result = await page.evaluate(async (data) => {
-      // The ESM bundle imports "react" and "react-dom" by bare specifier; map them
-      // onto the UMD globals the page already loaded, as a host would.
-      const shim = (name, obj) => {
-        const lines = ['const m = window.' + name + ';', 'export default m;'];
-        Object.keys(obj).filter((k) => /^[A-Za-z_$][\w$]*$/.test(k) && k !== 'default')
-          .forEach((k) => lines.push('export const ' + k + ' = m.' + k + ';'));
-        return URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/javascript' }));
-      };
-      const reactUrl = shim('React', window.React);
-      const reactDomUrl = shim('ReactDOM', window.ReactDOM);
-      // Rewrite the two bare imports instead of relying on an import map added after load
+      // 016f E1, V6: no React to map, no import map; the bundle loads as it is
       const source = await (await fetch('/fpbjs.esm.js')).text();
-      const rewritten = source
-        .replace('from"react-dom"', 'from"' + reactDomUrl + '"')
-        .replace('from"react"', 'from"' + reactUrl + '"');
-      const url = URL.createObjectURL(new Blob([rewritten], { type: 'text/javascript' }));
+      const url = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
       const esm = await import(url);
 
       const host = document.createElement('div');
       host.style.cssText = 'width:800px;height:600px;position:absolute;left:0;top:0';
       document.body.appendChild(host);
-      const fpb = await esm.createFpbModeler({ container: host });
+      const layers = document.createElement('div');
+      document.body.appendChild(layers);
+      const fpb = await esm.createFpbModeler({ container: host, layerContainer: layers });
       await new Promise((resolve) => {
         fpb.on('import.done', resolve);
         fpb.importJSON(data);
         setTimeout(resolve, 8000);
       });
       const out = {
+        imports: /from\s*"(react|react-dom)"/.test(source),
+        toolbar: !!layers.querySelector('.fpb-toolbar #exportButton'),
         exports: Object.keys(esm).sort(),
         defaultIsFactory: esm.default === esm.createFpbModeler,
         processes: fpb.getProcesses().length,
@@ -182,6 +210,8 @@ test.describe('Library bundle', () => {
       'defaultConfig', 'getClasses', 'layoutImportData', 'needsLayout'
     ]);
     expect(result.defaultIsFactory).toBe(true);
+    expect(result.imports).toBe(false);
+    expect(result.toolbar).toBe(true);
     expect(result.processes).toBe(3);
     expect(result.root).toBe(MAIN);
     expect(errors).toEqual([]);
@@ -1814,10 +1844,14 @@ test.describe('theme set by the host', () => {
     expect(errors).toEqual([]);
   });
 
-  test('the host page keeps its own Bootstrap colours, font and bpmn-io look', async ({ page }) => {
+  // since 016f E1 FPB.js brings no Bootstrap: the host's own styles stand in for it
+  test('the host page keeps its own colours, font and bpmn-io look', async ({ page }) => {
     const { errors } = await openLibraryPage(page);
     await page.evaluate(() => {
       document.documentElement.setAttribute('data-bs-theme', 'dark');
+      const style = document.createElement('style');
+      style.textContent = 'body { background-color: rgb(33, 37, 41); font-family: Georgia, serif; line-height: 1.25; }';
+      document.head.appendChild(style);
       const other = document.createElement('div');
       other.id = 'other-bpmn-io';
       other.className = 'bio-theme-parent';
@@ -1827,11 +1861,13 @@ test.describe('theme set by the host', () => {
     const host = await page.evaluate(() => ({
       background: getComputedStyle(document.body).backgroundColor,
       font: getComputedStyle(document.body).fontFamily,
+      lineHeight: getComputedStyle(document.body).lineHeight,
       bio: getComputedStyle(document.getElementById('other-bpmn-io')).getPropertyValue('--bio-text').trim()
     }));
-    // Bootstrap 5.3 dark body, its own font stack, the bpmn-io default
+    // the host's body, its own font stack, the bpmn-io default
     expect(host.background).toBe('rgb(33, 37, 41)');
-    expect(host.font).not.toContain('IBM Plex');
+    expect(host.font).toBe('Georgia, serif');
+    expect(host.lineHeight).toBe('20px');
     expect(host.bio).toBe('hsl(225, 10%, 15%)');
     expect(errors).toEqual([]);
   });

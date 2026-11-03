@@ -6,8 +6,6 @@ import Toolbar from './fpb/toolbar';
 import configFile from './config';
 import AmlModule from './fpb/aml';
 
-import './icons';
-
 
 
 // Div Id (#container) von index.html abholen

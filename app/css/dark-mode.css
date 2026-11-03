@@ -111,99 +111,10 @@ body {
   color: var(--fpb-text-primary);
 }
 
-/* Bootstrap overrides for dark mode */
-[data-theme="dark"] .modal-content {
-  background-color: var(--fpb-modal-bg);
-  color: var(--fpb-text-primary);
-}
-
-[data-theme="dark"] .card {
-  background-color: var(--fpb-card-bg);
-  border-color: var(--fpb-border-color);
-  color: var(--fpb-text-primary);
-}
-
-[data-theme="dark"] .form-control {
-  background-color: var(--fpb-input-bg);
-  border-color: var(--fpb-input-border);
-  color: var(--fpb-text-primary);
-}
-
-[data-theme="dark"] .form-control:focus {
-  background-color: var(--fpb-input-bg);
-  border-color: var(--fpb-selection-border);
-  color: var(--fpb-text-primary);
-}
-
-[data-theme="dark"] .form-control::placeholder {
-  color: var(--fpb-text-muted);
-  opacity: 0.8;
-}
-
+/* placeholders of inputs (016f E1: the Bootstrap rules around it are gone) */
 [data-theme="dark"] input::placeholder {
   color: var(--fpb-text-muted);
   opacity: 0.8;
-}
-
-/* InfoModal specific dark mode styling */
-[data-theme="dark"] .modal-content .text-dark {
-  color: var(--fpb-text-primary) !important;
-}
-
-[data-theme="dark"] .modal-content .text-muted {
-  color: var(--fpb-text-secondary) !important;
-}
-
-[data-theme="dark"] .modal-content p.text-muted {
-  color: var(--fpb-text-secondary) !important;
-}
-
-[data-theme="dark"] .modal-content .bg-light {
-  background-color: var(--fpb-button-hover) !important;
-}
-
-[data-theme="dark"] .modal-content .table {
-  color: var(--fpb-text-primary);
-}
-
-[data-theme="dark"] .modal-content .table th {
-  background-color: var(--fpb-bg-secondary);
-  color: var(--fpb-text-primary);
-  border-color: var(--fpb-border-color);
-}
-
-[data-theme="dark"] .modal-content .table td {
-  background-color: var(--fpb-bg-primary);
-  color: var(--fpb-text-primary);
-  border-color: var(--fpb-border-color);
-}
-
-[data-theme="dark"] .modal-content .table-striped tbody tr:nth-of-type(odd) td {
-  background-color: var(--fpb-bg-secondary);
-}
-
-[data-theme="dark"] .modal-content .badge {
-  background-color: var(--fpb-button-bg) !important;
-  color: var(--fpb-text-primary);
-}
-
-[data-theme="dark"] .modal-content a {
-  color: var(--fpb-text-primary);
-}
-
-[data-theme="dark"] .modal-content a:hover {
-  color: #ffffff;
-}
-
-[data-theme="dark"] .btn {
-  background-color: var(--fpb-button-bg);
-  border-color: var(--fpb-button-border);
-  color: var(--fpb-text-primary);
-}
-
-[data-theme="dark"] .btn:hover {
-  background-color: var(--fpb-button-hover);
-  color: var(--fpb-text-primary);
 }
 
 /* Smooth transitions for theme switching */

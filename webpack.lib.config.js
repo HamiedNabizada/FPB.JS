@@ -58,21 +58,6 @@ module.exports = (env, argv) => {
           // JSON files handled natively by webpack 5 (parsed as objects)
         ]
       },
-      externals: {
-        // Don't bundle peer dependencies
-        'react': {
-          commonjs: 'react',
-          commonjs2: 'react',
-          amd: 'react',
-          root: 'React'
-        },
-        'react-dom': {
-          commonjs: 'react-dom',
-          commonjs2: 'react-dom',
-          amd: 'react-dom',
-          root: 'ReactDOM'
-        }
-      },
       plugins: [
         new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
         new webpack.BannerPlugin({
@@ -144,10 +129,6 @@ if (typeof global !== 'undefined' && typeof document === 'undefined') {
           },
           // JSON files handled natively by webpack 5 (parsed as objects)
         ]
-      },
-      externals: {
-        'react': 'react',
-        'react-dom': 'react-dom'
       },
       plugins: [
         new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),

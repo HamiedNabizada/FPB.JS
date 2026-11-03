@@ -68,6 +68,7 @@ import AutosaveModule from './autosave';
 import 'diagram-js/assets/diagram-js.css';
 // one set of design values and the interface font for every host (016c T1, T6)
 import './theme/tokens.css';
+import './theme/base.css';
 import './theme/fonts.css';
 import ThemeModule from './theme';
 import NotificationsModule from './notifications';
