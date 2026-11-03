@@ -327,6 +327,7 @@ Files.prototype._importParsed = function (parsed, options = {}) {
       fileName,
       hierarchyId: options.hierarchyId
     }).catch((error) => {
+      this._abortImport(error);
       this._injector.get('fpbNotifications').show({
         key: 'import.error',
         type: 'error',
@@ -341,17 +342,31 @@ Files.prototype._importParsed = function (parsed, options = {}) {
   try {
     this._eventBus.fire('FPBJS.import', { data: parsed.data });
   } catch (exception) {
-    // a listener threw before the importer put the new model in place: the
-    // model on screen keeps its file (016g A3)
-    if (!this._replaced && this._before !== undefined) {
-      this._target = this._before;
-      this._before = undefined;
-    }
+    this._abortImport(exception);
     throw exception;
   } finally {
     // not taken when a listener before ours threw
     this._incoming = null;
   }
+};
+
+/**
+ * An import of ours stopped by an exception after FPBJS.import began and
+ * before the importer put the new model in place (a listener threw): the
+ * model on screen stays, and every module that prepared for the import goes
+ * back, as on a refused import. Files gets its file back, amlSupport its
+ * AML file, the start card and the views of the layers end their wait
+ * (016g A3, final review I1).
+ */
+Files.prototype._abortImport = function (error) {
+  if (this._before === undefined || this._replaced) {
+    return;
+  }
+  const translate = this._translate;
+  this._eventBus.fire('import.error', {
+    message: translate('Import failed'),
+    details: translate('An error occurred during import: {message}', { message: (error && error.message) || String(error) })
+  });
 };
 
 /** Saves the model, into its file where the browser allows (Ctrl+S) */

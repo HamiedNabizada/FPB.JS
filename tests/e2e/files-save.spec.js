@@ -431,6 +431,64 @@ test.describe('Save', () => {
     expect((await writes(page)).map((w) => w.name)).toEqual(['a.json']);
   });
 
+  // final review 016g, I1: every module that prepared for the import goes
+  // back, also the AML file of amlSupport
+  test('an import a listener aborts keeps the AML file of the model on screen with all it holds', async ({ page }) => {
+    await start(page, { files: { 'Anlage.aml': MIXED }, model: false });
+    expect(await openFromDisk(page, 'Anlage.aml')).toBe('import.done');
+    const opened = await page.evaluate(async (text) => {
+      const bus = window.fpbjs.get('eventBus');
+      const fail = () => {
+        throw new Error('a listener of the host');
+      };
+      bus.on('FPBJS.import', 1500, fail);
+      try {
+        return await window.fpbjs.get('fpbFiles').openFile(new File([text], 'b.json'));
+      } finally {
+        bus.off('FPBJS.import', fail);
+      }
+    }, MODEL);
+    expect(opened).toBe(false);
+    expect(await page.evaluate(() => {
+      const source = window.fpbjs.get('amlSupport').getSource();
+      return source ? source.fileName : null;
+    })).toBe('Anlage.aml');
+
+    await pressSave(page);
+    await waitForWrites(page, 1);
+    const written = (await writes(page))[0];
+    expect(written.name).toBe('Anlage.aml');
+    // the rest of the file
+    expect(written.text).toContain('Name="Behaelter_B1"');
+  });
+
+  test('an AML import a listener aborts leaves the JSON model with its file and without an AML file', async ({ page }) => {
+    await start(page, { files: { 'a.json': MODEL }, model: false });
+    expect(await openFromDisk(page, 'a.json')).toBe('import.done');
+    await page.evaluate((text) => new Promise((resolve) => {
+      const bus = window.fpbjs.get('eventBus');
+      const fail = () => {
+        throw new Error('a listener of the host');
+      };
+      bus.on('FPBJS.import', 1500, fail);
+      // the AML import runs on after openFile: wait for its error message
+      const done = (event) => {
+        if (event.notes.some((note) => note.id === 'import.error')) {
+          bus.off('notifications.changed', done);
+          bus.off('FPBJS.import', fail);
+          resolve();
+        }
+      };
+      bus.on('notifications.changed', done);
+      window.fpbjs.get('fpbFiles').openFile(new File([text], 'x.aml'));
+    }), SINGLE);
+    expect(await page.evaluate(() => {
+      const file = window.fpbjs.get('fpbFiles')._target;
+      const source = window.fpbjs.get('amlSupport').getSource();
+      return { file: file ? file.name : null, source: source ? source.fileName : null };
+    })).toEqual({ file: 'a.json', source: null });
+  });
+
   // 016g A4
   test('a host import while an AML file is loading does not get that file', async ({ page }) => {
     await start(page);
