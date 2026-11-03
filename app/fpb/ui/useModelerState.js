@@ -1,9 +1,9 @@
 import { useEffect, useState } from '@bpmn-io/properties-panel/preact/hooks';
 
 /**
- * A value of the modeler for the toolbar, read again whenever one of
- * `events` fires (016f E1): the toolbar follows the services instead of
- * keeping a copy of its own.
+ * A value of the modeler for a part of the interface, read again whenever
+ * one of `events` fires (016f E1): toolbar and panels follow the services
+ * instead of keeping copies of their own.
  */
 export function useModelerState(modeler, events, read) {
   const [value, setValue] = useState(read);

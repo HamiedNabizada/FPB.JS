@@ -36,6 +36,14 @@ const box = (page, selector) => page.evaluate((s) => {
 
 const pageSize = (page) => page.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight }));
 
+const select = (page, name) => page.evaluate((name) => {
+  const element = window.fpbjs.get('elementRegistry')
+    .filter((e) => e.businessObject && e.businessObject.name === name && e.type !== 'label')[0];
+  window.fpbjs.get('selection').select(element);
+}, name);
+
+const propertiesSheet = (page) => page.locator('.fpb-sheet[data-sheet="properties"]');
+
 /** Drag the head of the sheet with the mouse: pointer events, as a finger gives them */
 async function dragHead(page, toY) {
   const head = await box(page, '.fpb-sheet-head');
@@ -122,6 +130,62 @@ for (const [label, device] of [['phone', devices['Pixel 5']], ['tablet', devices
       await expect(page.locator('.fpb-sheet')).toHaveCount(0);
     });
 
+    // V11, plan decision 7
+    test('Properties in the toolbar opens the panel as a sheet', async ({ page }) => {
+      const errors = await load(page);
+      const button = page.locator('#propertiesSheetButton');
+      await expect(button).toBeVisible();
+      await expect(button).toHaveAttribute('aria-pressed', 'false');
+      await button.tap();
+      await expect(button).toHaveAttribute('aria-pressed', 'true');
+      const sheet = propertiesSheet(page);
+      await expect(sheet.locator('.fpb-sheet-title')).toHaveText('Properties');
+      await expect(sheet.locator('.fpb-panel-header')).toBeVisible();
+      // the panel at the side shows nothing meanwhile
+      await expect(page.locator('#propertiesPanelToggle')).toHaveCount(0);
+      expect(await page.evaluate(() => document.getElementById('properties-container').children.length)).toBe(0);
+      await expect(page.locator('#properties-container')).toBeHidden();
+      await button.tap();
+      await expect(sheet).toHaveCount(0);
+      expect(errors).toEqual([]);
+    });
+
+    // V10
+    test('a tap on an element above the sheet shows it in the sheet', async ({ page }) => {
+      await load(page);
+      await page.locator('#propertiesSheetButton').tap();
+      await expect(propertiesSheet(page)).toBeVisible();
+      await page.waitForTimeout(400);
+      await page.evaluate(() => window.fpbjs.get('canvas').zoom('fit-viewport'));
+      const target = await page.evaluate(() => {
+        const element = window.fpbjs.get('elementRegistry')
+          .filter((e) => e.businessObject && e.businessObject.name === 'Erhitzen' && e.type !== 'label')[0];
+        const r = document.querySelector('[data-element-id="' + element.id + '"] .djs-visual').getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      });
+      expect(target.y).toBeLessThan((await box(page, '.fpb-sheet')).top);
+      await page.touchscreen.tap(target.x, target.y);
+      await expect(propertiesSheet(page).locator('.fpb-panel-header-name')).toHaveText('Erhitzen');
+    });
+
+    // review focus 1: the on-screen keyboard makes the page lower
+    test('a field in the sheet stays in view when the page gets lower', async ({ page }) => {
+      await load(page);
+      await select(page, 'Erhitzen');
+      await page.locator('#propertiesSheetButton').tap();
+      const name = propertiesSheet(page).locator('#bio-properties-panel-shortName');
+      await expect(name).toBeVisible();
+      await name.focus();
+      const size = await pageSize(page);
+      const lower = Math.round(size.height * 0.55);
+      await page.setViewportSize({ width: size.width, height: lower });
+      await page.waitForTimeout(300);
+      const field = await name.boundingBox();
+      expect(field.y).toBeGreaterThanOrEqual(0);
+      expect(field.y + field.height).toBeLessThanOrEqual(lower);
+      await expect(name).toBeFocused();
+    });
+
     test('a lower page keeps the sheet inside it', async ({ page }) => {
       await load(page);
       await openSheet(page);
@@ -135,6 +199,44 @@ for (const [label, device] of [['phone', devices['Pixel 5']], ['tablet', devices
     });
   });
 }
+
+test.describe('Sheets and the rest of the modeler', () => {
+  const { defaultBrowserType: a, ...phone } = devices['Pixel 5'];
+  const { defaultBrowserType: b, ...tablet } = devices['iPad (gen 7)'];
+
+  // review focus 4
+  test('read-only: the sheet shows the properties, nothing is editable', async ({ browser }) => {
+    const context = await browser.newContext(phone);
+    const page = await context.newPage();
+    await load(page);
+    await page.evaluate(() => window.fpbjs.get('readOnly').set(true));
+    await select(page, 'Erhitzen');
+    await page.locator('#propertiesSheetButton').tap();
+    await expect(propertiesSheet(page).locator('#bio-properties-panel-longName')).toHaveAttribute('readonly', '');
+    await context.close();
+  });
+
+  // review focus 2, plan decision 9
+  test('turning to landscape closes the sheet and the panel is back at the side', async ({ browser }) => {
+    const context = await browser.newContext(tablet);
+    const page = await context.newPage();
+    await load(page);
+    await page.locator('#propertiesSheetButton').tap();
+    await expect(propertiesSheet(page)).toBeVisible();
+    await page.setViewportSize({ width: 1080, height: 810 });
+    await expect(page.locator('.fpb-sheet')).toHaveCount(0);
+    await expect(page.locator('#propertiesSheetButton')).toHaveCount(0);
+    const toggle = page.locator('#propertiesPanelToggle');
+    await expect(toggle).toBeVisible();
+    if ((await toggle.getAttribute('aria-expanded')) !== 'true') {
+      await toggle.tap();
+    }
+    await expect(page.locator('#properties-container .fpb-panel-header')).toBeVisible();
+    await page.waitForTimeout(400);
+    expect(Math.round((await box(page, '#modeler-container')).bottom)).toBe(810);
+    await context.close();
+  });
+});
 
 test.describe('No sheets', () => {
 

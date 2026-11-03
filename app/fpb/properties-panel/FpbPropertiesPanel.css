@@ -32,6 +32,19 @@
   background: var(--fpb-surface-muted);
 }
 
+/* in the sheet of a narrow touch screen (016f E2): the whole width, the
+   sheet scrolls */
+.fpb-properties--sheet,
+.fpb-properties--sheet .fpb-properties-body {
+  height: auto;
+}
+
+.fpb-properties--sheet .fpb-properties-body {
+  width: 100%;
+  overflow: visible;
+  border-left: 0;
+}
+
 /* variant B (016c): the head and every group are cards on a muted ground */
 .fpb-properties-body .bio-properties-panel {
   height: auto;

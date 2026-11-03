@@ -2,6 +2,9 @@
 
 import { h, render } from '@bpmn-io/properties-panel/preact';
 import { useEffect, useRef, useState } from '@bpmn-io/properties-panel/preact/hooks';
+import { createPortal } from '@bpmn-io/properties-panel/preact/compat';
+
+import { useModelerState } from '../ui/useModelerState';
 
 import '@bpmn-io/properties-panel/dist/assets/properties-panel.css';
 import './FpbPropertiesPanel.css';
@@ -22,9 +25,21 @@ function initiallyOpen() {
   return false;
 }
 
+/** Where the sheets stand (016f E2); without the module, no sheets */
+function readSheets(modeler) {
+  const sheets = modeler.get('fpbSheets', false);
+  return sheets
+    ? { active: sheets.isActive(), current: sheets.current(), body: sheets.body() }
+    : { active: false, current: null, body: null };
+}
+
 function Shell(props) {
   const { modeler } = props;
   const [open, setOpen] = useState(initiallyOpen);
+  const sheet = useModelerState(modeler, 'sheets.changed', () => readSheets(modeler));
+  const inSheet = sheet.active && sheet.current === 'properties' && sheet.body;
+  // what the user sees: the sheet on narrow touch screens, else the side
+  const visible = sheet.active ? !!inSheet : open;
 
   const pendingEntry = useRef(null);
 
@@ -38,6 +53,12 @@ function Shell(props) {
     // The model check opens the panel at a finding (016b V7)
     const onOpen = (event) => {
       pendingEntry.current = (event && event.entry) || null;
+      const sheets = modeler.get('fpbSheets', false);
+      if (sheets && sheets.isActive()) {
+        // one sheet at a time: the properties take the place of the list
+        sheets.open('properties', { title: modeler.get('translate')('Properties') });
+        return;
+      }
       setOpen(true);
     };
     eventBus.on('propertiesPanel.open', onOpen);
@@ -45,7 +66,7 @@ function Shell(props) {
   }, [modeler]);
 
   useEffect(() => {
-    if (open && pendingEntry.current) {
+    if (visible && pendingEntry.current) {
       const entry = pendingEntry.current;
       pendingEntry.current = null;
       // after the body has rendered its entries
@@ -62,6 +83,18 @@ function Shell(props) {
       // only a convenience
     }
   };
+
+  if (sheet.active) {
+    // the side shows nothing; the body goes into the sheet
+    return inSheet ? createPortal(
+      <div class="fpb-properties fpb-properties--sheet">
+        <div class="fpb-properties-body">
+          <PanelRoot modeler={modeler} />
+        </div>
+      </div>,
+      sheet.body
+    ) : null;
+  }
 
   const label = open ? 'Hide properties' : 'Show properties';
 

@@ -15,9 +15,10 @@ import { faSun } from '@fortawesome/free-solid-svg-icons/faSun';
 import { faEye } from '@fortawesome/free-solid-svg-icons/faEye';
 import { faEyeLowVision } from '@fortawesome/free-solid-svg-icons/faEyeLowVision';
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons/faCircleInfo';
+import { faSliders } from '@fortawesome/free-solid-svg-icons/faSliders';
 
 import { ToolbarButton, TooltipContext } from './ToolbarButton';
-import { useModelerState } from './useModelerState';
+import { useModelerState } from '../ui/useModelerState';
 import { LayersTree } from '../layers/LayersTree';
 import { describeCounts } from '../validation/FpbValidation';
 import { getCtrlKey } from '../info/keyboardShortcuts';
@@ -150,12 +151,27 @@ function WorkGroup(props) {
   const validation = modeler.get('fpbValidation');
   const counts = useModelerState(modeler, 'fpbValidation.changed', () => validation.getCounts());
   const [layersOpen, setLayersOpen] = useState(false);
+  // narrow touch screens: properties, layers and the check as sheets (016f E2)
+  const sheets = modeler.get('fpbSheets', false);
+  const sheet = useModelerState(modeler, 'sheets.changed', () => ({
+    active: !!(sheets && sheets.isActive()),
+    current: sheets ? sheets.current() : null
+  }));
 
   const shownFindings = counts.error + counts.warning;
   const checkLabel = translate('Model check (VDI 3682): {counts}', { counts: describeCounts(counts) });
 
   return (
     <div class="fpb-toolbar-group" data-group="work">
+      {sheet.active && (
+        <ToolbarButton
+          id="propertiesSheetButton"
+          label={translate('Properties')}
+          icon={faSliders}
+          pressed={sheet.current === 'properties'}
+          onClick={() => sheets.toggle('properties', { title: translate('Properties') })}
+        />
+      )}
       {layerCount > 1 && (
         <div class="fpb-toolbar-layers">
           <ToolbarButton
