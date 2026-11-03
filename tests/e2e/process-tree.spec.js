@@ -171,6 +171,21 @@ test.describe('Process tree', () => {
     expect(await sichtbareKnoten(page)).toEqual(['FPBJS_Project', 'Erhitzen']);
   });
 
+  // 016g C1
+  test('a match whose children are all filtered out shows as a leaf', async ({ page }) => {
+    await laden(page);
+    await baumOeffnen(page);
+    await page.getByPlaceholder('Search processes...').fill('fpbjs');
+    await expect.poll(() => sichtbareKnoten(page)).toEqual(['FPBJS_Project']);
+    const root = knoten(page, 'FPBJS_Project');
+    expect(await root.getAttribute('aria-expanded')).toBeNull();
+    await expect(umschalter(page, 'FPBJS_Project')).toHaveText('');
+    await expect(root.locator('[role="group"]')).toHaveCount(0);
+    await root.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(root).toBeFocused();
+  });
+
   test('a rename on the canvas shows up in the tree, a long name is cut after 25 characters', async ({ page }) => {
     await laden(page);
     await baumOeffnen(page);

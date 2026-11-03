@@ -5,7 +5,8 @@ import { LAYER_COMMANDS } from '../modeling/behavior/LayerUndoBoundary';
  * The view of each layer (016d V3): leaving a layer keeps its section and
  * zoom, returning restores them, the first visit fits the layer; the same
  * for every way between layers (switch, decompose, compose). Memory
- * only; an import or a new model forgets everything. Switches marked
+ * only; an import or a new model forgets everything, a failed import
+ * nothing: its model stays (016g C2). Switches marked
  * fpbTransient (the PDF export walks every layer) keep nothing, and the
  * layer they started from looks as before when they return to it.
  */
@@ -21,9 +22,12 @@ export default function LayerViews(eventBus, canvas) {
   eventBus.on('FPBJS.import', function () {
     self._importing = true;
   });
-  eventBus.on(['import.done', 'import.error'], function () {
+  eventBus.on('import.done', function () {
     self._importing = false;
     self.forget();
+  });
+  eventBus.on('import.error', function () {
+    self._importing = false;
   });
   eventBus.on(['layerPanel.reset', 'model.new'], function () {
     self.forget();

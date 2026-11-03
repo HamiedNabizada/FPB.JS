@@ -1,5 +1,5 @@
 /** @jsx h */
-import { h, render } from '@bpmn-io/properties-panel/preact';
+import { h } from '@bpmn-io/properties-panel/preact';
 import { useEffect, useLayoutEffect, useRef, useState } from '@bpmn-io/properties-panel/preact/hooks';
 
 import { getSystemLimit } from '../help/helpUtils';
@@ -105,13 +105,16 @@ export function LayersTree(props) {
   const kept = filterTree(tree, search);
   const isOpen = (node) => (kept ? true : open.has(node.id));
   const shown = (node) => !kept || kept.has(node.id);
+  // only the children the search leaves count: a match whose children are
+  // all filtered out is a leaf (016g C1)
+  const childrenOf = (node) => node.children.filter(shown);
 
   // the items as the user sees them, top to bottom, for the keyboard
   const flat = [];
   const flatten = (nodes, parent) => nodes.filter(shown).forEach((node) => {
     flat.push({ node, parent });
-    if (node.children.length && isOpen(node)) {
-      flatten(node.children, node);
+    if (childrenOf(node).length && isOpen(node)) {
+      flatten(childrenOf(node), node);
     }
   });
   flatten(tree, null);
@@ -155,7 +158,7 @@ export function LayersTree(props) {
       return;
     }
     const { node, parent } = flat[index];
-    const hasChildren = node.children.length > 0;
+    const hasChildren = childrenOf(node).length > 0;
     switch (event.key) {
     case 'ArrowDown':
       moveTo(flat[index + 1] && flat[index + 1].node.id);
@@ -200,7 +203,7 @@ export function LayersTree(props) {
       return null;
     }
     const name = layerName(node.process);
-    const hasChildren = node.children.length > 0;
+    const hasChildren = childrenOf(node).length > 0;
     const expanded = hasChildren && isOpen(node);
     const isCurrent = node.id === currentId;
     const count = operatorCount(node.process);
@@ -247,7 +250,7 @@ export function LayersTree(props) {
         </div>
         {expanded && (
           <ul role="group">
-            {node.children.map((child) => renderNode(child, level + 1))}
+            {childrenOf(node).map((child) => renderNode(child, level + 1))}
           </ul>
         )}
       </li>
