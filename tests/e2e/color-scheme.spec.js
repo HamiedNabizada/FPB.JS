@@ -92,7 +92,7 @@ test.describe('Farbschema', () => {
         const box = document.querySelector(wahl).getBoundingClientRect();
         return { x: Math.round(box.x), y: Math.round(box.y) };
       };
-      return { theme: kasten('.layerPanel button[aria-label*="Mode"]'), farben: kasten('#colorSchemeButton') };
+      return { theme: kasten('.fpb-toolbar button[aria-label*="Mode"]'), farben: kasten('#colorSchemeButton') };
     });
 
     expect(lage.farben.x).toBe(lage.theme.x);

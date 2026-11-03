@@ -53,7 +53,7 @@ async function ziehen(page, von, dx, dy) {
 
 /** The toolbar has no options menu any more (016c); kept as a no-op for the tests */
 async function optionenOeffnen(page) {
-  await expect(page.locator('.layerPanel .fpb-toolbar-group').first()).toBeVisible();
+  await expect(page.locator('.fpb-toolbar .fpb-toolbar-group').first()).toBeVisible();
 }
 
 test.describe('Read-only mode', () => {

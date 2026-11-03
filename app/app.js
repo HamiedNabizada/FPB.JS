@@ -1,7 +1,7 @@
 import FpbModeler from './fpb/FpbModeler';
 
 import FpbPropertiesPanel from './fpb/properties-panel';
-import LayerOverview from './fpb/layer-panel';
+import Toolbar from './fpb/toolbar';
 
 import configFile from './config';
 import AmlModule from './fpb/aml';
@@ -68,12 +68,12 @@ keepStartCardClear();
 modeler.get('fpbFiles').bindKeys(document);
 
 try {
-  new LayerOverview({
+  new Toolbar({
     container: layerContainer,
     modeler
   });
 } catch (e) {
-  console.error('[FPB.JS] LayerOverview init failed:', e);
+  console.error('[FPB.JS] Toolbar init failed:', e);
 }
 
 // Debug: Watch for panel containers disappearing (remove after bug is found)

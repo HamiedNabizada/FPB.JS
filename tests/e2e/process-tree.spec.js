@@ -286,7 +286,7 @@ test.describe('Process tree', () => {
     await expect(page.locator('#openLayerButton')).toHaveAttribute('aria-expanded', 'false');
     await page.waitForTimeout(600);
     const hoehe = await page.evaluate(() => {
-      const c = document.querySelector('.layerPanel-ProcessOverview-Content');
+      const c = document.querySelector('.fpb-layers');
       return c ? c.getBoundingClientRect().height : 0;
     });
     expect(hoehe).toBe(0);
@@ -361,7 +361,7 @@ test.describe('Information dialog', () => {
 
   test('the dialog is readable in dark mode', async ({ page }) => {
     await laden(page);
-    await page.locator('.layerPanel button[aria-label="Switch to Dark Mode"]').click();
+    await page.locator('.fpb-toolbar button[aria-label="Switch to Dark Mode"]').click();
     const dialog = await oeffnen(page);
     const farben = await dialog.evaluate((el) => ({
       bg: getComputedStyle(el).backgroundColor,

@@ -897,6 +897,17 @@ test.describe('Export dialog and exportEvent', () => {
     await expect(page.locator('#modeler .fpb-start')).toHaveCount(0);
   });
 
+  // 016f E1, V7: the files belong to the host
+  test('with files: false the toolbar has no Open and Save', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await createModeler(page, { panels: true, options: { files: false } });
+    const toolbar = page.locator('#layers .fpb-toolbar');
+    await expect(toolbar.locator('#exportButton')).toBeVisible();
+    await expect(toolbar.locator('#openFileButton')).toHaveCount(0);
+    await expect(toolbar.locator('#saveFileButton')).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
   test('with files: false the start card offers no file to open', async ({ page }) => {
     await openLibraryPage(page);
     await createModeler(page, { options: { files: false } });
@@ -1702,6 +1713,23 @@ test.describe('destroy', () => {
     });
 
     expect(state).toEqual({ properties: 0, layers: 0 });
+  });
+
+  // 016f E1, review focus 1: the plugin builds and destroys a modeler per tab
+  test('the toolbar of a destroyed modeler leaves nothing behind', async ({ page }) => {
+    const { errors } = await withModel(page, { panels: true });
+    await expect(page.locator('#layers #openLayerButton')).toBeVisible();
+    await expect(page.locator('#layers #openValidationButton')).toBeVisible();
+
+    await page.evaluate(() => window.fpb.destroy());
+    expect(await page.evaluate(() => document.getElementById('layers').children.length)).toBe(0);
+    await expect(page.locator('body > .fpb-tooltips')).toHaveCount(0);
+
+    await createModeler(page, { panels: true });
+    expect(await importModel(page, clone())).toBe(true);
+    await expect(page.locator('#layers #openLayerButton')).toHaveCount(1);
+    await expect(page.locator('#layers .fpb-toolbar')).toHaveCount(1);
+    expect(errors).toEqual([]);
   });
 
   test('a new modeler can be created in the same container after destroy', async ({ page }) => {

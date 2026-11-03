@@ -101,7 +101,7 @@ export class ImportPage {
     return this.page.evaluate(async () => {
       const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       const button = document.querySelector('#openLayerButton');
-      const content = () => document.querySelector('.layerPanel-ProcessOverview-Content');
+      const content = () => document.querySelector('.fpb-layers');
       if (button && (!content() || !content().textContent.trim())) {
         button.click();
         await sleep(600);

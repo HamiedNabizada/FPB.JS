@@ -79,7 +79,7 @@ export async function createFpbModeler(options = {}) {
   ] = await Promise.all([
     import('../app/fpb/FpbModeler'),
     import('../app/fpb/properties-panel'),
-    import('../app/fpb/layer-panel'),
+    import('../app/fpb/toolbar'),
     import('../app/fpb/xml/XMLMapper'),
     import('../app/config.json')
   ]);
@@ -123,7 +123,7 @@ export async function createFpbModeler(options = {}) {
     });
   }
 
-  // Set up layer overview if container provided
+  // the toolbar (016f E1), still called layer overview towards hosts
   let layerOverview = null;
   if (layerContainer) {
     layerOverview = new LayerOverview({
@@ -440,7 +440,7 @@ export async function getClasses() {
   ] = await Promise.all([
     import('../app/fpb/FpbModeler'),
     import('../app/fpb/properties-panel'),
-    import('../app/fpb/layer-panel'),
+    import('../app/fpb/toolbar'),
     import('../app/config.json')
   ]);
 

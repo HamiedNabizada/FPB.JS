@@ -306,7 +306,7 @@ export class ModelerPage {
    * Öffnet das Layer-Panel (falls geschlossen)
    */
   async openLayerPanel() {
-    const panel = this.page.locator('.layerPanel');
+    const panel = this.page.locator('.fpb-layers');
     if (!await panel.isVisible()) {
       await this.page.locator('#openLayerButton').click();
       await this.page.waitForTimeout(300);

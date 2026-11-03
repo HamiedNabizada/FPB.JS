@@ -17,7 +17,7 @@ async function open(page) {
   await importer.import(JSON.parse(JSON.stringify(basis)));
 }
 
-const group = (page, name) => page.locator('.layerPanel .fpb-toolbar-group[data-group="' + name + '"]');
+const group = (page, name) => page.locator('.fpb-toolbar .fpb-toolbar-group[data-group="' + name + '"]');
 
 test.describe('Toolbar', () => {
 
@@ -31,6 +31,38 @@ test.describe('Toolbar', () => {
     await page.evaluate((text) => window.fpbjs.get('amlSupport').importAml(text, { fileName: 'Anlage.aml' }), aml);
     await expect(group(page, 'file').locator('#amlOverviewButton')).toBeVisible({ timeout: 15000 });
     expect(await ids()).toEqual(['newModelButton', 'openFileButton', 'saveFileButton', 'exportButton', 'amlOverviewButton']);
+  });
+
+  // 016f E1, V6: no React root in the toolbar container
+  test('the toolbar is built without React', async ({ page }) => {
+    await open(page);
+    await expect(page.locator('#layer-container .fpb-toolbar')).toBeVisible();
+    const react = await page.evaluate(() => {
+      const container = document.getElementById('layer-container');
+      return {
+        global: typeof window.React,
+        root: Object.keys(container).some((key) => key.startsWith('__reactContainer')),
+        marked: document.querySelectorAll('[data-reactroot]').length
+      };
+    });
+    expect(react).toEqual({ global: 'undefined', root: false, marked: 0 });
+  });
+
+  // 016f E1, V3 and plan decision 3: the tree stays, only hidden
+  test('Layers keeps its tree when closed and opened again', async ({ page }) => {
+    await open(page);
+    const button = page.locator('#openLayerButton');
+    const layers = page.locator('.fpb-layers');
+    await button.click();
+    await expect(button).toBeFocused();
+    await layers.locator('.fpb-layers-search').fill('Erh');
+    await button.click();
+    await expect(layers).toHaveAttribute('hidden', '');
+    await expect(button).toBeFocused();
+    await button.click();
+    await expect(layers).toBeVisible();
+    await expect(layers.locator('.fpb-layers-search')).toHaveValue('Erh');
+    await expect(button).toBeFocused();
   });
 
   // 016f E1: held before the toolbar left React, so the new one keeps it

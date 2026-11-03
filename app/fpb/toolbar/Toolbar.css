@@ -1,0 +1,123 @@
+/* The toolbar in three cards, the layers as a card in the same column
+   (variant B, 016c decisions 11, 12; Preact since 016f E1). Light and dark
+   come from the design values. */
+.fpb-toolbar {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  gap: 10px;
+  padding: 6px;
+  font-family: var(--fpb-font);
+  background: transparent;
+}
+
+.fpb-toolbar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--fpb-surface);
+  box-shadow: var(--fpb-shadow-card);
+}
+
+.fpb-toolbar-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 8px;
+  color: var(--fpb-text-muted);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.fpb-toolbar-button .fpb-icon {
+  width: auto;
+  height: 20px;
+}
+
+.fpb-toolbar-button:hover {
+  background: var(--fpb-surface-muted);
+  color: var(--fpb-text);
+}
+
+.fpb-toolbar-button[aria-pressed="true"] {
+  background: var(--fpb-accent-surface);
+  color: var(--fpb-accent);
+}
+
+.fpb-toolbar-button:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.fpb-toolbar-button:disabled:hover {
+  background: transparent;
+  color: var(--fpb-text-muted);
+}
+
+/* keyboard focus visible (feature 022, WCAG 2.4.7) */
+.fpb-toolbar-button:focus-visible {
+  outline: 2px solid #4A90E2;
+  outline-offset: 2px;
+}
+
+/* the layers button stays at the left above its card */
+.fpb-toolbar-layers {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.fpb-toolbar-failed {
+  max-width: 200px;
+  font-size: 13px;
+  color: var(--fpb-error-text);
+}
+
+.fpb-layers {
+  width: 280px;
+  max-width: 100%;
+  margin-top: 6px;
+  padding: 8px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: var(--fpb-surface-muted);
+  overflow: hidden;
+}
+
+.fpb-layers-title {
+  padding: 0 4px 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fpb-text);
+}
+
+.fpb-layers-project {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--fpb-surface);
+  box-shadow: var(--fpb-shadow-card);
+}
+
+.fpb-layers-project-label {
+  font-size: 12px;
+  color: var(--fpb-text-muted);
+}
+
+.fpb-layers-project-name {
+  font-weight: 600;
+  color: var(--fpb-text);
+  overflow-wrap: anywhere;
+}

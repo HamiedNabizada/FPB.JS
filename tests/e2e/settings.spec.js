@@ -33,10 +33,10 @@ async function laden(page) {
 
 /** The toolbar has no options menu any more (016c); kept as a no-op for the tests */
 async function optionenOeffnen(page) {
-  await expect(page.locator('.layerPanel .fpb-toolbar-group').first()).toBeVisible();
+  await expect(page.locator('.fpb-toolbar .fpb-toolbar-group').first()).toBeVisible();
 }
 
-const themeKnopf = (page) => page.locator('.layerPanel button[aria-label^="Switch to"]');
+const themeKnopf = (page) => page.locator('.fpb-toolbar button[aria-label^="Switch to"]');
 
 const zustand = (page) => page.evaluate(() => ({
   theme: document.documentElement.getAttribute('data-theme'),

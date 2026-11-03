@@ -65,7 +65,7 @@ test.describe('Design values', () => {
     await open(page);
     await page.evaluate(() => document.fonts.ready);
     expect(await page.evaluate(() => document.fonts.check('13px "IBM Plex Sans"'))).toBe(true);
-    expect(await page.locator('.layerPanel').evaluate((e) => getComputedStyle(e).fontFamily)).toContain('IBM Plex Sans');
+    expect(await page.locator('.fpb-toolbar').evaluate((e) => getComputedStyle(e).fontFamily)).toContain('IBM Plex Sans');
     expect(await page.locator('.djs-label').first().evaluate((e) => getComputedStyle(e).fontFamily)).toContain('Arial');
   });
 
@@ -81,9 +81,14 @@ test.describe('Design values', () => {
   test('Bootstrap 5 comes with the app, nothing from a CDN', async ({ page }) => {
     await open(page);
     expect(await page.locator('link[href*="bootstrapcdn"]').count()).toBe(0);
-    // only Bootstrap 5 sets this variable at its buttons, the design values do not
-    const padding = await page.locator('.layerPanel .btn').first()
-      .evaluate((e) => getComputedStyle(e).getPropertyValue('--bs-btn-padding-x').trim());
-    expect(padding).not.toBe('');
+    // only Bootstrap 5 has this variable; the toolbar has no .btn since 016f E1
+    const bootstrap = await page.evaluate(() => Array.from(document.styleSheets).some((sheet) => {
+      try {
+        return Array.from(sheet.cssRules).some((rule) => rule.cssText.includes('--bs-btn-padding-x'));
+      } catch (e) {
+        return false;
+      }
+    }));
+    expect(bootstrap).toBe(true);
   });
 });

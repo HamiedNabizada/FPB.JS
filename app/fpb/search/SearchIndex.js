@@ -1,5 +1,5 @@
 import { is, isAny } from '../help/utils';
-import { getProcessDisplayName } from '../layer-panel/utils/treeUtils';
+import { layerName } from '../layers/tree';
 
 const SEARCHABLE = ['fpb:State', 'fpb:ProcessOperator', 'fpb:TechnicalResource', 'fpb:SystemLimit'];
 
@@ -23,7 +23,7 @@ export function collectEntries(processShapes) {
     if (!process || !process.businessObject) {
       return;
     }
-    const layer = getProcessDisplayName(process, 40);
+    const layer = layerName(process, 40);
     const add = function (element) {
       if (!element || !element.businessObject || !isAny(element, SEARCHABLE)) {
         return;

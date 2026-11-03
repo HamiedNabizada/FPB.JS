@@ -59,7 +59,7 @@ function filterTree(nodes, term) {
  * marked, the path to it is open, a decomposition counts its operators.
  * Arrows move and fold, Enter opens the layer, Home and End jump.
  */
-function LayersTree(props) {
+export function LayersTree(props) {
   const { modeler } = props;
   const eventBus = modeler.get('eventBus');
   const layers = modeler.get('fpbLayers');
@@ -269,11 +269,3 @@ function LayersTree(props) {
   );
 }
 
-/** Draw the tree into `container`; the React card of the toolbar calls this */
-export function mountLayersTree(container, modeler) {
-  render(<LayersTree modeler={modeler} />, container);
-}
-
-export function unmountLayersTree(container) {
-  render(null, container);
-}
