@@ -1,0 +1,20 @@
+/* The names of the toolbar buttons (016f E1, V2): the look of the hover
+   tooltips of diagram-js in the palette, the same in light and dark. */
+.fpb-tooltip {
+  position: fixed;
+  z-index: 1000;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background-color: hsl(0, 0%, 22%);
+  color: hsl(0, 0%, 100%);
+  font-family: var(--fpb-font, "IBM Plex Sans", sans-serif);
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.fpb-tooltip[hidden] {
+  display: none;
+}

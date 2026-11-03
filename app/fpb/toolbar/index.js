@@ -4,6 +4,7 @@ import { h, render } from '@bpmn-io/properties-panel/preact';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import ToolbarRoot from './ToolbarRoot';
+import { createTooltips } from '../ui/Tooltip';
 
 import './Toolbar.css';
 
@@ -24,7 +25,8 @@ export default class Toolbar {
     modeler.get('eventBus').fire('ui.componentRegistered', { component: 'layerPanel' });
     // Ctrl+S on a button of the toolbar saves the model, not the page
     this._unbindKeys = modeler.get('fpbFiles').bindKeys(container);
-    render(<ToolbarRoot modeler={modeler} showNewModel={showNewModel} />, container);
+    this._tooltips = createTooltips(modeler.get('fpbTheme', false));
+    render(<ToolbarRoot modeler={modeler} showNewModel={showNewModel} tooltips={this._tooltips} />, container);
   }
 
   /** Unmounts the toolbar; its listeners on the modeler go with it */
@@ -32,6 +34,7 @@ export default class Toolbar {
     if (this._container) {
       this._unbindKeys();
       render(null, this._container);
+      this._tooltips.destroy();
       this._container = null;
     }
   }

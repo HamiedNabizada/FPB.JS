@@ -1715,6 +1715,27 @@ test.describe('destroy', () => {
     expect(state).toEqual({ properties: 0, layers: 0 });
   });
 
+  // 016f E1, review focus 2: the plugin puts the toolbar in a narrow column with overflow
+  test('the name of a toolbar button is not cut off in a narrow container with overflow', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await page.evaluate(() => {
+      document.getElementById('layers').style.cssText = 'position:absolute;left:1336px;top:0;width:64px;height:800px;overflow:auto';
+    });
+    await createModeler(page, { panels: true });
+    const button = page.locator('#layers #openValidationButton');
+    await button.hover();
+    const tip = page.locator('.fpb-tooltip:visible');
+    await expect(tip).toContainText('Model check (VDI 3682)');
+    const box = await tip.boundingBox();
+    const buttonBox = await button.boundingBox();
+    expect(box.width).toBeGreaterThan(64);
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(buttonBox.x);
+    // drawn outside the column, so its overflow cannot cut it off
+    expect(await tip.evaluate((e) => !!e.closest('#layers'))).toBe(false);
+    expect(errors).toEqual([]);
+  });
+
   // 016f E1, review focus 1: the plugin builds and destroys a modeler per tab
   test('the toolbar of a destroyed modeler leaves nothing behind', async ({ page }) => {
     const { errors } = await withModel(page, { panels: true });

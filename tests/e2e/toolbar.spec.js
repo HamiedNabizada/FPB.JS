@@ -54,15 +54,65 @@ test.describe('Toolbar', () => {
     const button = page.locator('#openLayerButton');
     const layers = page.locator('.fpb-layers');
     await button.click();
-    await expect(button).toBeFocused();
     await layers.locator('.fpb-layers-search').fill('Erh');
     await button.click();
     await expect(layers).toHaveAttribute('hidden', '');
-    await expect(button).toBeFocused();
     await button.click();
     await expect(layers).toBeVisible();
     await expect(layers.locator('.fpb-layers-search')).toHaveValue('Erh');
+
+    // with the keyboard the focus stays on the button (WebKit does not focus a clicked button)
+    await button.focus();
+    await page.keyboard.press('Enter');
+    await expect(layers).toHaveAttribute('hidden', '');
     await expect(button).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(layers).toBeVisible();
+    await expect(button).toBeFocused();
+  });
+
+  // 016f E1, V2: the name beside the button, as the palette does it
+  test('hovering a button shows its name beside it', async ({ page }) => {
+    await open(page);
+    const button = page.locator('#openSearchButton');
+    const tip = page.locator('.fpb-tooltip:visible');
+    await button.hover();
+    await expect(tip).toHaveText(/^Search all layers \((Ctrl|⌘)\+F\)$/, { timeout: 1000 });
+    const tipBox = await tip.boundingBox();
+    const buttonBox = await button.boundingBox();
+    expect(tipBox.x + tipBox.width).toBeLessThanOrEqual(buttonBox.x);
+    expect(Math.abs((tipBox.y + tipBox.height / 2) - (buttonBox.y + buttonBox.height / 2))).toBeLessThanOrEqual(1);
+    await page.mouse.move(5, 850);
+    await expect(tip).toHaveCount(0);
+  });
+
+  test('the keyboard shows the name at once and Escape hides it', async ({ page }) => {
+    await open(page);
+    // the check list stays open while the focus is in the toolbar
+    await page.locator('#openValidationButton').click();
+    await expect(page.locator('.fpb-validation-panel.open')).toBeVisible();
+    await page.mouse.move(5, 850);
+    await page.locator('#saveFileButton').focus();
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#exportButton')).toBeFocused();
+    const tip = page.locator('.fpb-tooltip:visible');
+    await expect(tip).toHaveText('Export', { timeout: 200 });
+    await page.keyboard.press('Escape');
+    await expect(tip).toHaveCount(0);
+    await expect(page.locator('#exportButton')).toBeFocused();
+    await expect(page.locator('.fpb-validation-panel.open')).toBeVisible();
+  });
+
+  test('a screen reader hears the name once', async ({ page }) => {
+    await open(page);
+    await page.locator('#exportButton').hover();
+    await expect(page.locator('.fpb-tooltip:visible')).toHaveText('Export');
+    await expect(page.getByRole('button', { name: 'Export', exact: true })).toHaveCount(1);
+    await expect(page.locator('.fpb-tooltip')).toHaveAttribute('aria-hidden', 'true');
+    // the accessibility tree has the button and no text of the tooltip
+    const tree = await page.locator('body').ariaSnapshot();
+    expect(tree).toMatch(/button "Export"/);
+    expect(tree).not.toMatch(/text: Export/);
   });
 
   // 016f E1: held before the toolbar left React, so the new one keeps it

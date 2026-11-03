@@ -16,7 +16,7 @@ import { faEye } from '@fortawesome/free-solid-svg-icons/faEye';
 import { faEyeLowVision } from '@fortawesome/free-solid-svg-icons/faEyeLowVision';
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons/faCircleInfo';
 
-import { ToolbarButton } from './ToolbarButton';
+import { ToolbarButton, TooltipContext } from './ToolbarButton';
 import { useModelerState } from './useModelerState';
 import { LayersTree } from '../layers/LayersTree';
 import { describeCounts } from '../validation/FpbValidation';
@@ -29,7 +29,7 @@ import { isReadOnly } from '../read-only/ReadOnly';
  * toolbar instead of taking the page with it.
  */
 export default function ToolbarRoot(props) {
-  const { modeler, showNewModel } = props;
+  const { modeler, showNewModel, tooltips } = props;
   const translate = modeler.get('translate');
   const [failure] = useErrorBoundary((error) => console.error('[FPB.JS] toolbar', error));
 
@@ -47,11 +47,13 @@ export default function ToolbarRoot(props) {
   }
 
   return (
-    <div class="fpb-toolbar">
-      <FileGroup modeler={modeler} translate={translate} showNewModel={showNewModel} />
-      <WorkGroup modeler={modeler} translate={translate} />
-      <ViewGroup modeler={modeler} translate={translate} />
-    </div>
+    <TooltipContext.Provider value={tooltips}>
+      <div class="fpb-toolbar">
+        <FileGroup modeler={modeler} translate={translate} showNewModel={showNewModel} />
+        <WorkGroup modeler={modeler} translate={translate} />
+        <ViewGroup modeler={modeler} translate={translate} />
+      </div>
+    </TooltipContext.Provider>
   );
 }
 
@@ -175,6 +177,7 @@ function WorkGroup(props) {
       <ToolbarButton
         id="openSearchButton"
         label={translate('Search all layers')}
+        tip={translate('Search all layers ({key}+F)', { key: getCtrlKey() })}
         icon={faMagnifyingGlass}
         onClick={() => modeler.get('fpbSearch').open()}
       />
