@@ -87,6 +87,30 @@ test.describe('Layer shortcuts', () => {
     await expect(feld).toBeFocused();
   });
 
+  // 016g C3: a module of a host with the same name would replace them silently
+  test('the layer services carry the prefix fpb', async ({ page }) => {
+    await laden(page);
+    const services = await page.evaluate(() => ['fpbLayers', 'fpbBreadcrumbs', 'fpbLayerViews', 'fpbLayerShortcuts', 'breadcrumbs', 'layerViews', 'layerShortcuts']
+      .map((name) => [name, !!window.fpbjs.get(name, false)]));
+    expect(Object.fromEntries(services)).toEqual({
+      fpbLayers: true, fpbBreadcrumbs: true, fpbLayerViews: true, fpbLayerShortcuts: true,
+      breadcrumbs: false, layerViews: false, layerShortcuts: false
+    });
+  });
+
+  // 016g, review focus 5 of C
+  test('Alt+Arrow in the search field of the tree changes no layer', async ({ page }) => {
+    const importer = await laden(page);
+    await importer.switchToChildLayer();
+    await page.locator('#openLayerButton').click();
+    const search = page.getByPlaceholder('Search processes...');
+    await search.click();
+    await page.keyboard.press('Alt+ArrowUp');
+    await page.waitForTimeout(300);
+    expect(await ebene(page)).toBe(CHILD);
+    await expect(search).toBeFocused();
+  });
+
   test('the help lists Alt+Up and Alt+Down', async ({ page }) => {
     await laden(page);
     await page.getByRole('button', { name: 'Show information and help', exact: true }).click();

@@ -106,6 +106,40 @@ test.describe('View of each layer', () => {
     expect(await allVisible(page)).toBe(true);
   });
 
+  // 016g C2: the importer refuses the content, the model and its views stay
+  test('a failed import keeps the remembered views', async ({ page }) => {
+    await laden(page);
+    await setView(page, 120, -40, 1.5);
+    const left = await view(page);
+    await switchTo(page, CHILD);
+    const failed = await page.evaluate(() => new Promise((resolve) => {
+      const bus = window.fpbjs.get('eventBus');
+      bus.once('import.error', () => resolve(true));
+      bus.fire('FPBJS.import', { data: {} });
+      setTimeout(() => resolve(false), 5000);
+    }));
+    expect(failed).toBe(true);
+    await switchTo(page, ROOT);
+    close(await view(page), left);
+  });
+
+  // 016g, review focus 1 of C: the import comes while deep in a decomposition
+  test('a new import while deep in a decomposition forgets the views and fits the new model', async ({ page }) => {
+    const importer = await laden(page, SMALL);
+    await switchTo(page, CHILD);
+    await setView(page, 900, 900, 2);
+    await page.evaluate(() => {
+      const operator = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Vorwärmen' && e.type !== 'label')[0];
+      window.fpbjs.get('modeling').decomposeProcessOperator(operator);
+    });
+    await expect.poll(() => page.evaluate(() => window.fpbjs.get('canvas').getRootElement().id)).not.toBe(CHILD);
+    await importer.import(clone());
+    await expect.poll(() => page.evaluate(() => window.fpbjs.get('canvas').getRootElement().id)).toBe(ROOT);
+    expect(await allVisible(page)).toBe(true);
+    await switchTo(page, CHILD);
+    expect(await allVisible(page)).toBe(true);
+  });
+
   // Review Focus 3
   test('a resized window between leaving and returning keeps origin and zoom', async ({ page }) => {
     await laden(page);

@@ -124,6 +124,28 @@ test.describe('Breadcrumbs', () => {
     expect(fehler).toEqual([]);
   });
 
+  // 016g, review focus 2 of C: the removed layer is not the current one
+  test('removing a decomposition that is not the current layer but has a remembered view leaves no error', async ({ page }) => {
+    const { importer, fehler } = await laden(page);
+    await importer.switchToChildLayer();
+    await page.evaluate(() => {
+      const canvas = window.fpbjs.get('canvas');
+      const outer = canvas.viewbox().outer;
+      canvas.viewbox({ x: 300, y: 200, width: outer.width / 1.5, height: outer.height / 1.5 });
+    });
+    await crumb(page, 'FPBJS_Project').click();
+    await expect.poll(() => ebene(page)).toBe(ROOT);
+    await expect(crumbs(page)).toBeVisible();
+    await page.evaluate(() => {
+      const operator = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Erhitzen' && e.type !== 'label')[0];
+      window.fpbjs.get('fpbDelete').remove([operator]);
+    });
+    await page.locator(DIALOG).locator('[data-answer="confirm"]').click();
+    await expect(crumbs(page)).toBeHidden();
+    expect(await ebene(page)).toBe(ROOT);
+    expect(fehler).toEqual([]);
+  });
+
   // Review Focus 1
   test('a new import while deep in a decomposition shows the new model', async ({ page }) => {
     const { importer, fehler } = await laden(page);
