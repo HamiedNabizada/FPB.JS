@@ -8,7 +8,7 @@
   --fpb-border-color: #CCC;
   --fpb-text-primary: #333333;
   --fpb-text-secondary: #666666;
-  --fpb-text-muted: #999999;
+  /* --fpb-text-muted comes from theme/tokens.css only (016g H1) */
   
   /* Panel backgrounds */
   --fpb-panel-bg: #FAFAFA;
@@ -42,7 +42,6 @@
   --fpb-border-color: #404040;
   --fpb-text-primary: #e0e0e0;
   --fpb-text-secondary: #b0b0b0;
-  --fpb-text-muted: #808080;
   
   /* Panel backgrounds */
   --fpb-panel-bg: #2d2d2d;

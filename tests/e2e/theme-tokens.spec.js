@@ -80,6 +80,20 @@ test.describe('Design values', () => {
     });
   }
 
+  // 016g H1: dark-mode.css of 1.x set the muted text too light for the
+  // design values; a host that loads it after the bundle got #999 on white
+  test('a host that loads dark-mode.css after FPB.js keeps the muted text of the design values', async ({ page }) => {
+    await open(page);
+    const href = await page.evaluate(() => document.querySelector('link[href*="dark-mode.css"]').href);
+    await page.addStyleTag({ url: href });
+    const muted = (theme) => page.evaluate((theme) => {
+      document.documentElement.setAttribute('data-theme', theme);
+      return getComputedStyle(document.documentElement).getPropertyValue('--fpb-text-muted').trim().toLowerCase();
+    }, theme);
+    expect(await muted('light')).toBe('#4a545e');
+    expect(await muted('dark')).toBe('#b6bfc9');
+  });
+
   // 016f E1, V4, V5
   test('no Bootstrap, nothing from a CDN', async ({ page }) => {
     await open(page);
