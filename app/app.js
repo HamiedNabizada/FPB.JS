@@ -24,6 +24,9 @@ var modeler = new FpbModeler({
   // AutomationML import and export, likewise only here; library hosts add
   // the module themselves (fpbjs/aml). The engine loads on first use.
   additionalModules: [AmlModule],
+  // on phones and tablets upright, properties, layers and the model check
+  // open as a sheet in the row below the canvas (016f E2)
+  sheets: { container: document.querySelector('#sheet-container') },
   // light or dark: the user's choice, else the system (016b V9, fpbTheme);
   // the page is the web app's own, so the attribute goes on the document
   theme: 'system',

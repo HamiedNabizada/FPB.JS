@@ -1,0 +1,84 @@
+/* One sheet from the bottom (016f E2): a card of variant B over the whole
+   width, rounded at the top. Its container sits below the canvas and has
+   the height of the sheet, so the canvas above gets smaller. */
+.fpb-sheet {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  border-radius: 16px 16px 0 0;
+  background: var(--fpb-surface);
+  color: var(--fpb-text);
+  font-family: var(--fpb-font);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+/* the head drags the sheet; the grip shows where */
+.fpb-sheet-head {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 14px 8px 4px 16px;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.fpb-sheet-grip {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 36px;
+  height: 4px;
+  margin-left: -18px;
+  border-radius: 2px;
+  background: var(--fpb-control-border);
+}
+
+.fpb-sheet-grip:focus-visible {
+  outline: 2px solid var(--fpb-accent);
+  outline-offset: 4px;
+}
+
+.fpb-sheet-title {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--fpb-text);
+}
+
+.fpb-sheet-close {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--fpb-radius-control);
+  background: transparent;
+  color: var(--fpb-text-muted);
+  cursor: pointer;
+}
+
+.fpb-sheet-close:hover {
+  background: var(--fpb-surface-muted);
+  color: var(--fpb-text);
+}
+
+.fpb-sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--fpb-surface-muted);
+  -webkit-overflow-scrolling: touch;
+}
