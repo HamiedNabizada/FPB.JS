@@ -535,7 +535,12 @@ export interface CreateFpbModelerOptions {
   container: HTMLElement;
   /** DOM element for the properties panel (optional) */
   propertiesContainer?: HTMLElement;
-  /** DOM element for the layer overview panel (optional) */
+  /**
+   * DOM element for the toolbar (optional): file, layers, model check,
+   * search, light and dark, colours, information. The name stays from 1.x;
+   * since 2.0 the toolbar is Preact and needs neither React nor Bootstrap
+   * (016f E1).
+   */
   layerContainer?: HTMLElement;
   /** Custom config object (defaults to built-in config.json) */
   config?: Record<string, any>;
@@ -575,9 +580,9 @@ export interface CreateFpbModelerOptions {
    */
   exportEvent?: boolean | string;
   /**
-   * false: no Ctrl+O, Ctrl+S and Ctrl+Shift+S and no opening of a file
-   * dropped on the canvas, for hosts that store the model themselves
-   * (016e D2). Default true.
+   * false: no Ctrl+O, Ctrl+S and Ctrl+Shift+S, no opening of a file
+   * dropped on the canvas and no Open and Save in the toolbar, for hosts
+   * that store the model themselves (016e D2, 016f E1). Default true.
    */
   files?: boolean;
   /**
@@ -615,8 +620,8 @@ export interface FpbInstance {
   readonly modeler: any;
   /** Properties panel instance (null if no propertiesContainer provided) */
   readonly propertiesPanel: any | null;
-  /** Layer overview instance (null if no layerContainer provided) */
-  readonly layerOverview: any | null;
+  /** The toolbar in layerContainer (null without one); the name stays from 1.x */
+  readonly layerOverview: LayerOverview | null;
 
   // --- Event API ---
 
@@ -810,9 +815,22 @@ export function createFpbModeler(options: CreateFpbModelerOptions): Promise<FpbI
 export function getClasses(): Promise<{
   FpbModeler: any;
   PropertiesPanel: any;
-  LayerOverview: any;
+  LayerOverview: LayerOverviewConstructor;
   defaultConfig: Record<string, any>;
 }>;
+
+/**
+ * The toolbar (Preact since 2.0, 016f E1). createFpbModeler builds it in
+ * `layerContainer`; getClasses().LayerOverview builds it by hand.
+ */
+export interface LayerOverview {
+  /** Unmounts the toolbar and removes its tooltips from the page */
+  destroy(): void;
+}
+
+export interface LayerOverviewConstructor {
+  new (options: { container: HTMLElement; modeler: any; showNewModel?: boolean }): LayerOverview;
+}
 
 /** Server-side stub class (throws on instantiation) */
 export const FpbModeler: any;
@@ -822,7 +840,10 @@ export const FpbModeler: any;
  * constructor takes { container, modeler }.
  */
 export const PropertiesPanel: any;
-/** Server-side stub class (throws on instantiation) */
+/**
+ * Server-side stub class (throws on instantiation). In the browser,
+ * getClasses().LayerOverview is the toolbar.
+ */
 export const LayerOverview: any;
 /** Default modeler config (empty object on server) */
 /** Options for layoutImportData */
