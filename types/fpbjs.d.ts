@@ -462,6 +462,23 @@ export interface FpbStart {
   openExample(example: { title: string; url: string }): Promise<boolean>;
 }
 
+/**
+ * One sheet from the bottom on narrow touch screens (016f E2): properties,
+ * layers and the model check. Only with the option `sheets`.
+ */
+export interface FpbSheets {
+  /** A container is given and the media query matches */
+  isActive(): boolean;
+  /** 'properties' | 'layers' | 'check' or another name, null when none is open */
+  current(): string | null;
+  /** Opens a sheet; an open other one closes first. Does nothing while not active */
+  open(name: string, options: { title: string }): void;
+  close(): void;
+  toggle(name: string, options: { title: string }): void;
+  /** The body of the open sheet, where its part shows itself */
+  body(): HTMLElement | null;
+}
+
 /** Append an element to an existing one, connected and placed */
 export interface FpbAppend {
   getOptions(element: Element): Array<{ type: string; label: string }>;
@@ -517,6 +534,7 @@ export interface FpbServiceMap {
   fpbInfo: FpbInfo;
   fpbFiles: FpbFiles;
   fpbStart: FpbStart;
+  fpbSheets: FpbSheets;
   fpbSearch: FpbSearch;
   fpbAppend: FpbAppend;
   fpbCopyPaste: FpbCopyPaste;
@@ -595,6 +613,14 @@ export interface CreateFpbModelerOptions {
    * like a dropped file. Entries with .aml only with the AML module.
    */
   examples?: Array<{ title: string; description?: string; url: string }>;
+  /**
+   * Sheets on narrow touch screens (016f E2): properties, layers and the
+   * model check open as one sheet from the bottom in `container`, an element
+   * of the host below the canvas whose height the sheet takes (give it a
+   * row of its own). `media` is the media query for sheets, default
+   * '(max-width: 900px) and (pointer: coarse)'. Event 'sheets.changed'.
+   */
+  sheets?: { container: HTMLElement; media?: string };
   /** Additional options passed to FpbModeler constructor */
   [key: string]: any;
 }
