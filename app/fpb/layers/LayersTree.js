@@ -1,6 +1,6 @@
 /** @jsx h */
 import { h, render } from '@bpmn-io/properties-panel/preact';
-import { useEffect, useRef, useState } from '@bpmn-io/properties-panel/preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from '@bpmn-io/properties-panel/preact/hooks';
 
 import { getSystemLimit } from '../help/helpUtils';
 import { is } from '../help/utils';
@@ -89,7 +89,9 @@ export function LayersTree(props) {
     });
   }, [currentId, revision]);
 
-  useEffect(() => {
+  // at once after rendering, not after the next frame: a quick Enter after
+  // an arrow must reach the item the arrow went to
+  useLayoutEffect(() => {
     if (pendingFocus.current && listRef.current) {
       const item = listRef.current.querySelector('[data-id="' + pendingFocus.current + '"]');
       pendingFocus.current = null;

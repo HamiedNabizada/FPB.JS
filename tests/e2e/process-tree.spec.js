@@ -50,6 +50,25 @@ test.describe('Process tree', () => {
     await expect(page.locator('#openLayerButton')).toHaveCount(0);
   });
 
+  // found in the full run of 016f E2: the focus moved only after the next
+  // frame, so a quick Enter still opened the layer the arrow came from
+  test('Enter right after an arrow opens the layer the arrow went to', async ({ page }) => {
+    const { fehler } = await laden(page);
+    const oben = await ebene(page);
+    await baumOeffnen(page);
+    await knoten(page, 'FPBJS_Project').focus();
+    await page.evaluate(async () => {
+      const press = (key) => document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+      press('ArrowDown');
+      // the next key comes as the next task; rendering may happen before it, a frame may not
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      press('Enter');
+    });
+    await expect.poll(() => ebene(page)).toBe(CHILD);
+    expect(oben).not.toBe(CHILD);
+    expect(fehler).toEqual([]);
+  });
+
   test('opens with the root expanded and the current layer marked', async ({ page }) => {
     const { fehler } = await laden(page);
     await expect(page.locator('#openLayerButton')).toHaveAttribute('aria-label', 'Show layers');
