@@ -76,6 +76,9 @@ export default function FpbValidation(eventBus, canvas, overlays, elementRegistr
     } else if (self._panel.parentNode !== canvasContainer) {
       self._panel.classList.remove('open');
       canvasContainer.appendChild(self._panel);
+    } else if (event.active) {
+      // turned upright with the floating list open: the list is a sheet now
+      self._panel.classList.remove('open');
     }
   });
   // a chosen finding marks its other elements until the next selection
@@ -226,10 +229,8 @@ FpbValidation.prototype.openPanel = function () {
 
 FpbValidation.prototype.closePanel = function () {
   const sheets = this._sheets();
-  if (sheets) {
-    if (sheets.current() === 'check') {
-      sheets.close();
-    }
+  if (sheets && sheets.current() === 'check') {
+    sheets.close();
     return;
   }
   this._panel.classList.remove('open');

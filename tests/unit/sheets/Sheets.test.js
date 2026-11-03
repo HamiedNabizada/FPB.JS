@@ -15,7 +15,18 @@ import Sheets from '../../../app/fpb/sheets/Sheets.js';
 
 let media;
 
+/** The screen as a phone has it: upright, or held sideways */
+function screenOf(width, height, type) {
+  Object.defineProperty(window.screen, 'width', { value: width, configurable: true });
+  Object.defineProperty(window.screen, 'height', { value: height, configurable: true });
+  Object.defineProperty(window.screen, 'orientation', {
+    value: { type, addEventListener: () => {}, removeEventListener: () => {} },
+    configurable: true
+  });
+}
+
 beforeEach(() => {
+  screenOf(393, 851, 'portrait-primary');
   media = { matches: true, listeners: [] };
   window.matchMedia = () => ({
     get matches() {
@@ -79,6 +90,13 @@ describe('Sheets', () => {
     const count = events.length;
     service.close();
     expect(events.length).toBe(count);
+  });
+
+  // final review 016f E2, I1
+  it('a screen held sideways has no sheets, a host query alone decides', () => {
+    screenOf(851, 393, 'landscape-primary');
+    expect(build(withContainer()).service.isActive()).toBe(false);
+    expect(build({ container: document.createElement('div'), media: '(pointer: coarse)' }).service.isActive()).toBe(true);
   });
 
   it('when the media query stops matching, the open sheet closes', () => {

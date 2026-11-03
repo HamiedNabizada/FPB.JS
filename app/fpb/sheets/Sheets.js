@@ -1,4 +1,4 @@
-// the narrow touch screens of 016f V8: phones, tablets upright
+// the narrow touch screens of 016f V8: phones and tablets
 const MEDIA = '(max-width: 900px) and (pointer: coarse)';
 // a sheet at its tallest leaves this much of the page above it
 const TOP_GAP = 56;
@@ -17,7 +17,11 @@ const CLOSE_ICON = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden=
  * canvas instead of lying on it. The parts show themselves in the body of
  * the open sheet: they listen to `sheets.changed` ({ active, current, body }).
  * Without a container, or while the media query does not match, there are
- * no sheets and `open` does nothing.
+ * no sheets and `open` does nothing. With the default query the screen must
+ * also be upright: a phone held sideways is too low for a sheet and has room
+ * for the side panel (final review of E2). That is the screen, not the page:
+ * an on-screen keyboard that makes the page lower than wide must not close
+ * the sheet one is typing in.
  */
 export default function Sheets(eventBus, config, translate, injector) {
   const options = (config && config.sheets) || {};
@@ -34,20 +38,30 @@ export default function Sheets(eventBus, config, translate, injector) {
   this._query = this._container && typeof window !== 'undefined' && window.matchMedia
     ? window.matchMedia(options.media || MEDIA)
     : null;
-  this._active = !!(this._query && this._query.matches);
+  const upright = options.media ? function () { return true; } : uprightScreen;
+  this._applies = function () {
+    return !!(self._query && self._query.matches && upright());
+  };
+  this._active = this._applies();
 
   if (!this._query) {
     return;
   }
 
   const onMedia = function () {
-    self._setActive(!!self._query.matches);
+    self._setActive(self._applies());
   };
   const onResize = function () {
+    self._setActive(self._applies());
     self._fit();
   };
+  const orientation = window.screen && window.screen.orientation;
   listen(this._query, onMedia);
   window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', onMedia);
+  if (orientation && orientation.addEventListener) {
+    orientation.addEventListener('change', onMedia);
+  }
 
   // light and dark, and Ctrl+S in a field of a sheet, as in the panels
   const theme = injector.get('fpbTheme', false);
@@ -60,6 +74,10 @@ export default function Sheets(eventBus, config, translate, injector) {
   eventBus.on('diagram.destroy', function () {
     unlisten(self._query, onMedia);
     window.removeEventListener('resize', onResize);
+    window.removeEventListener('orientationchange', onMedia);
+    if (orientation && orientation.removeEventListener) {
+      orientation.removeEventListener('change', onMedia);
+    }
     unbindKeys();
     self._unmount();
     self._current = null;
@@ -258,6 +276,21 @@ Sheets.prototype._fit = function () {
     focused.scrollIntoView({ block: 'nearest' });
   }
 };
+
+/**
+ * Whether the screen stands upright. iOS keeps screen.width and height in
+ * portrait, so the orientation API counts first; either sign of landscape
+ * means landscape.
+ */
+function uprightScreen() {
+  const screen = window.screen || {};
+  const type = screen.orientation && screen.orientation.type;
+  const angle = typeof window.orientation === 'number' ? window.orientation : 0;
+  const landscape = (type && type.indexOf('landscape') === 0) ||
+    angle % 180 !== 0 ||
+    (screen.width > screen.height);
+  return !landscape;
+}
 
 function listen(query, listener) {
   if (query.addEventListener) {

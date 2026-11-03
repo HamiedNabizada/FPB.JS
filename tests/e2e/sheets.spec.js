@@ -26,6 +26,24 @@ async function load(page, withModel = true) {
   return errors;
 }
 
+/**
+ * The screen of a device held upright. Two things of the emulation need it:
+ * an on-screen keyboard makes the page lower while the screen stays upright,
+ * but Playwright turns the emulated screen with setViewportSize; and Firefox
+ * does not emulate the orientation of the screen at all (it reports the
+ * landscape monitor of the test machine).
+ */
+const keepScreenUpright = (page) => page.addInitScript(() => {
+  const width = screen.width;
+  const height = screen.height;
+  Object.defineProperty(screen, 'width', { get: () => Math.min(width, height) });
+  Object.defineProperty(screen, 'height', { get: () => Math.max(width, height) });
+  Object.defineProperty(screen, 'orientation', {
+    get: () => ({ type: 'portrait-primary', angle: 0, addEventListener() {}, removeEventListener() {} })
+  });
+  Object.defineProperty(window, 'orientation', { get: () => 0 });
+});
+
 const openSheet = (page, name = 'test', title = 'Test') =>
   page.evaluate(({ name, title }) => window.fpbjs.get('fpbSheets').open(name, { title }), { name, title });
 
@@ -70,6 +88,7 @@ for (const [label, device] of [['phone', devices['Pixel 5']], ['tablet', devices
 
   test.describe(`Sheets on a ${label}`, () => {
     test.use(deviceOptions);
+    test.beforeEach(({ page }) => keepScreenUpright(page));
 
     test('a sheet opens from the bottom over the whole width, at half the height', async ({ page }) => {
       const errors = await load(page);
@@ -279,6 +298,7 @@ test.describe('Sheets and the rest of the modeler', () => {
   test('read-only: the sheet shows the properties, nothing is editable', async ({ browser }) => {
     const context = await browser.newContext(phone);
     const page = await context.newPage();
+    await keepScreenUpright(page);
     await load(page);
     await page.evaluate(() => window.fpbjs.get('readOnly').set(true));
     await select(page, 'Erhitzen');
@@ -291,6 +311,7 @@ test.describe('Sheets and the rest of the modeler', () => {
   test('the sheet follows light and dark', async ({ browser }) => {
     const context = await browser.newContext({ ...phone, colorScheme: 'dark' });
     const page = await context.newPage();
+    await keepScreenUpright(page);
     await load(page);
     await page.locator('#propertiesSheetButton').tap();
     const colours = await page.evaluate(() => {
@@ -327,10 +348,44 @@ test.describe('Sheets and the rest of the modeler', () => {
     await context.close();
   });
 
+  // final review 016f E2, I1: a phone held sideways has room at the side, not below
+  test('a phone in landscape keeps the panels at the side', async ({ browser }) => {
+    const { defaultBrowserType: c, ...landscape } = devices['Pixel 5 landscape'];
+    const context = await browser.newContext(landscape);
+    const page = await context.newPage();
+    await load(page);
+    expect(await page.evaluate(() => window.fpbjs.get('fpbSheets').isActive())).toBe(false);
+    await expect(page.locator('#propertiesSheetButton')).toHaveCount(0);
+    await expect(page.locator('#propertiesPanelToggle')).toBeVisible();
+    await page.locator('#openValidationButton').tap();
+    await expect(page.locator('.fpb-sheet')).toHaveCount(0);
+    await expect(page.locator('.fpb-validation-panel.open')).toBeVisible();
+    await context.close();
+  });
+
+  // final review 016f E2, I2: the floating list does not stay behind in sheet mode
+  // (the page gets narrow: rotation, or split view; emulation turns only the page)
+  test('a model check list open at the side closes when the page becomes narrow', async ({ browser }) => {
+    const context = await browser.newContext({ ...tablet, viewport: { width: 1080, height: 810 } });
+    const page = await context.newPage();
+    await keepScreenUpright(page);
+    await load(page);
+    expect(await page.evaluate(() => window.fpbjs.get('fpbSheets').isActive())).toBe(false);
+    await page.locator('#openValidationButton').tap();
+    await expect(page.locator('.fpb-validation-panel.open')).toBeVisible();
+    await page.setViewportSize({ width: 810, height: 1080 });
+    await expect(page.locator('.fpb-validation-panel.open')).toHaveCount(0);
+    expect(await page.evaluate(() => window.fpbjs.get('fpbValidation').isPanelOpen())).toBe(false);
+    await page.locator('#openValidationButton').tap();
+    await expect(page.locator('.fpb-sheet[data-sheet="check"] .fpb-validation-panel')).toBeVisible();
+    await context.close();
+  });
+
   // review focus 2, plan decision 9
   test('turning to landscape closes the sheet and the panel is back at the side', async ({ browser }) => {
     const context = await browser.newContext(tablet);
     const page = await context.newPage();
+    await keepScreenUpright(page);
     await load(page);
     await page.locator('#propertiesSheetButton').tap();
     await expect(propertiesSheet(page)).toBeVisible();

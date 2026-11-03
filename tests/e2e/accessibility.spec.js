@@ -124,9 +124,10 @@ test.describe('Barrierefreiheit', () => {
     await knoten.first().focus();
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
-    await page.waitForTimeout(500);
 
-    expect(await importer.rootProcessId()).not.toBe(obersteEbene);
+    // waits for the switch instead of a fixed time: under a full parallel
+    // run it took longer than 500 ms
+    await expect.poll(() => importer.rootProcessId()).not.toBe(obersteEbene);
   });
 
 });

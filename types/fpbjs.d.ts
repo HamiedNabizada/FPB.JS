@@ -617,8 +617,9 @@ export interface CreateFpbModelerOptions {
    * Sheets on narrow touch screens (016f E2): properties, layers and the
    * model check open as one sheet from the bottom in `container`, an element
    * of the host below the canvas whose height the sheet takes (give it a
-   * row of its own). `media` is the media query for sheets, default
-   * '(max-width: 900px) and (pointer: coarse)'. Event 'sheets.changed'.
+   * row of its own). Default: '(max-width: 900px) and (pointer: coarse)'
+   * and an upright screen (a phone held sideways keeps the side panel); a
+   * host's own `media` query alone decides. Event 'sheets.changed'.
    */
   sheets?: { container: HTMLElement; media?: string };
   /** Additional options passed to FpbModeler constructor */
