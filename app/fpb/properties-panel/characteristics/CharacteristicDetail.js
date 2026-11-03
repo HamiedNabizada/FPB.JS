@@ -50,7 +50,7 @@ const SECTIONS = [
  * chosen (Review Focus 2).
  */
 export function CharacteristicDetail(props) {
-  const { element, characteristic, index, setField, updateLimits, addActual, removeActual, onRemove } = props;
+  const { element, characteristic, index, setField, updateLimits, removeActual, onRemove } = props;
   const translate = useService('translate');
   const debounce = useService('debounceInput');
   const readOnly = usePanelReadOnly();
@@ -82,6 +82,7 @@ export function CharacteristicDetail(props) {
             type="button"
             role="tab"
             id={'characteristic-tab-' + t.id}
+            aria-controls={'characteristic-panel-' + index}
             class="fpb-characteristic-tab"
             aria-selected={t === active ? 'true' : 'false'}
             tabIndex={t === active ? 0 : -1}
@@ -92,7 +93,7 @@ export function CharacteristicDetail(props) {
         ))}
       </div>
       {[section].map(([title, fields]) => (
-        <div class="fpb-characteristic-section" role="tabpanel" aria-labelledby={'characteristic-tab-' + active.id}>
+        <div class="fpb-characteristic-section" role="tabpanel" id={'characteristic-panel-' + index} aria-labelledby={'characteristic-tab-' + active.id}>
           {fields.map(([key, label, path, options = {}]) => [
             <FpbTextField
               element={element}
@@ -108,9 +109,9 @@ export function CharacteristicDetail(props) {
             key === 'setpointUnit' && updateLimits && (
               <LimitsEditor element={element} characteristic={characteristic} index={index} update={updateLimits} />
             ),
-            key === 'setpointUnit' && addActual && (
+            key === 'setpointUnit' && removeActual && (
               <ActualValuesEditor element={element} characteristic={characteristic} index={index}
-                setField={setField} onAdd={addActual} onRemove={removeActual} />
+                setField={setField} onRemove={removeActual} />
             )
           ])}
         </div>

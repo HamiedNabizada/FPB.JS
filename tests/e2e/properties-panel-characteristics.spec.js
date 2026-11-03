@@ -62,6 +62,18 @@ test.describe('New properties panel, characteristics', () => {
     await expect(field(page, 'characteristic-0-view')).toBeVisible();
   });
 
+  // 016g B3
+  test('the tabs of a characteristic name the part they show', async ({ page }) => {
+    await openPanel(page);
+    await select(page, 'Rohstoff');
+    await rows(page).first().getByRole('button').click();
+    const panelId = await page.getByRole('tabpanel').getAttribute('id');
+    expect(panelId).toBeTruthy();
+    for (const name of ['Category', 'Descriptive', 'Relational']) {
+      await expect(page.getByRole('tab', { name })).toHaveAttribute('aria-controls', panelId);
+    }
+  });
+
   test('the arrow keys choose the next tab and move the focus with it', async ({ page }) => {
     await openPanel(page);
     await select(page, 'Rohstoff');
