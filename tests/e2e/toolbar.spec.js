@@ -92,6 +92,15 @@ test.describe('Toolbar', () => {
     await page.locator('#openValidationButton').click();
     await expect(page.locator('.fpb-validation-panel.open')).toBeVisible();
     await page.mouse.move(5, 850);
+    // whoever else listens gets Escape untouched (016g, gap of E1); the
+    // window hears it after the document, where the tooltip listens
+    await page.evaluate(() => {
+      window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          window.__escapePrevented = event.defaultPrevented;
+        }
+      });
+    });
     await page.locator('#saveFileButton').focus();
     await page.keyboard.press('Tab');
     await expect(page.locator('#exportButton')).toBeFocused();
@@ -99,8 +108,40 @@ test.describe('Toolbar', () => {
     await expect(tip).toHaveText('Export', { timeout: 200 });
     await page.keyboard.press('Escape');
     await expect(tip).toHaveCount(0);
+    expect(await page.evaluate(() => window.__escapePrevented)).toBe(false);
     await expect(page.locator('#exportButton')).toBeFocused();
     await expect(page.locator('.fpb-validation-panel.open')).toBeVisible();
+  });
+
+  // 016g E2
+  test('an open name follows a changed name of its button', async ({ page }) => {
+    await open(page);
+    const button = page.locator('#openValidationButton');
+    await page.locator('#openLayerButton').focus();
+    await page.keyboard.press('Tab');
+    await expect(button).toBeFocused();
+    const tip = page.locator('.fpb-toolbar-tip:visible');
+    await expect(tip).toHaveText(await button.getAttribute('aria-label'));
+    await page.evaluate(() => {
+      const operator = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Prüfen')[0];
+      window.fpbjs.get('modeling').moveElements([operator], { x: 900, y: 0 });
+    });
+    await expect(button.locator('.fpb-validation-count')).toHaveText('1');
+    await expect(tip).toHaveText(await button.getAttribute('aria-label'));
+  });
+
+  // 016g, gap of E1: the error boundary of the toolbar
+  test('a toolbar that fails says so instead of vanishing', async ({ page }) => {
+    await open(page);
+    // the tree of Layers reads the layers while it is drawn; opening Layers
+    // draws the toolbar again
+    await page.evaluate(() => {
+      window.fpbjs.get('fpbLayers').getTree = () => {
+        throw new Error('broken tree');
+      };
+    });
+    await page.locator('#openLayerButton').click();
+    await expect(page.locator('#layer-container .fpb-toolbar-failed')).toHaveText('The toolbar stopped working. Details are in the console.');
   });
 
   test('a screen reader hears the name once', async ({ page }) => {

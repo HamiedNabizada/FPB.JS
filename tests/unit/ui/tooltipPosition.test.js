@@ -22,6 +22,12 @@ describe('tooltipPosition', () => {
     expect(tooltipPosition(anchor(40, 100), size, viewport)).toEqual({ left: 40 + 40 + 8, top: 108, placement: 'right' });
   });
 
+  // 016g E3
+  it('right of the anchor the tooltip stays in the window', () => {
+    expect(tooltipPosition(anchor(5, 100, 30, 30), { width: 280, height: 20 }, { width: 300, height: 600 }))
+      .toEqual({ left: 12, top: 105, placement: 'right' });
+  });
+
   it('keeps the name within the window at the bottom and at the top', () => {
     expect(tooltipPosition(anchor(1300, 846, 40, 14), size, viewport).top).toBe(860 - 8 - 24);
     expect(tooltipPosition(anchor(1300, -30), size, viewport).top).toBe(8);

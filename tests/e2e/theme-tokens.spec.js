@@ -21,6 +21,8 @@ const PAIRS = [
   ['--fpb-text-muted', '--fpb-surface'],
   ['--fpb-text-subtle', '--fpb-surface-muted'],
   ['--fpb-accent', '--fpb-surface'],
+  // a pressed toolbar button (016g, gap of E1)
+  ['--fpb-accent', '--fpb-accent-surface'],
   ['--fpb-warning-text', '--fpb-warning-surface'],
   ['--fpb-error-text', '--fpb-error-surface'],
   ['--fpb-info-text', '--fpb-info-surface'],

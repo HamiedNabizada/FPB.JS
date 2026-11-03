@@ -259,8 +259,11 @@ function LayersContent(props) {
 
 function ViewGroup(props) {
   const { modeler, translate } = props;
-  const theme = modeler.get('fpbTheme');
-  const themeState = useModelerState(modeler, 'theme.changed', () => ({ current: theme.get(), host: theme.isHostControlled() }));
+  // a host may leave the theme module out (options.modules): no button (016g E1)
+  const theme = modeler.get('fpbTheme', false);
+  const themeState = useModelerState(modeler, 'theme.changed', () => (
+    theme ? { current: theme.get(), host: theme.isHostControlled() } : { current: 'light', host: true }
+  ));
   const colors = modeler.get('colorSchemeService');
   const scheme = useModelerState(modeler, 'colorScheme.changed', () => colors.get());
 

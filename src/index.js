@@ -126,10 +126,13 @@ export async function createFpbModeler(options = {}) {
     });
   }
 
-  // a theme the host sets reaches the panels as well (016c T5)
-  const theme = modeler.get('fpbTheme');
-  theme.addContainer(propertiesContainer);
-  theme.addContainer(layerContainer);
+  // a theme the host sets reaches the panels as well (016c T5); a host may
+  // leave the theme module out (016g E1)
+  const theme = modeler.get('fpbTheme', false);
+  if (theme) {
+    theme.addContainer(propertiesContainer);
+    theme.addContainer(layerContainer);
+  }
 
   // Get DI services for facade methods
   const eventBus = modeler.get('eventBus');
@@ -350,7 +353,9 @@ export async function createFpbModeler(options = {}) {
      * then on. Fires 'theme.changed' with { theme, mode }.
      */
     setTheme(themeName) {
-      theme.set(themeName);
+      if (theme) {
+        theme.set(themeName);
+      }
     },
 
     // --- DI Access ---

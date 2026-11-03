@@ -141,7 +141,7 @@ test.describe('Library bundle', () => {
     const fs = require('fs');
     const path = require('path');
     const lib = path.join(__dirname, '..', '..', 'dist');
-    for (const file of ['fpbjs.js', 'fpbjs.esm.js', 'fpbjs-aml.js']) {
+    for (const file of ['fpbjs.js', 'fpbjs.esm.js', 'fpbjs-aml.js', 'fpbjs-aml.esm.js']) {
       const text = fs.readFileSync(path.join(lib, file), 'utf8');
       // booleans: a failing match would print the whole bundle
       expect({
@@ -151,6 +151,31 @@ test.describe('Library bundle', () => {
         bootstrapBanner: /Bootstrap\s+v5/.test(text)
       }, file).toEqual({ reactDom: false, reactRoot: false, bootstrapButtons: false, bootstrapBanner: false });
     }
+    // the package says what it is (016g E5)
+    const description = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8')).description;
+    expect(description).not.toMatch(/React/);
+  });
+
+  // 016g E1
+  test('a host without the theme module gets a toolbar without the light and dark button', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    const result = await page.evaluate(async () => {
+      const { FpbModeler } = await window.FpbJS.getClasses();
+      const modules = FpbModeler.prototype._modules.filter((module) => !module.fpbTheme);
+      const layers = document.getElementById('layers');
+      try {
+        window.fpb = await window.FpbJS.createFpbModeler({ container: document.getElementById('modeler'), layerContainer: layers, modules });
+      } catch (error) {
+        return { error: error.message };
+      }
+      return {
+        error: null,
+        toolbar: !!layers.querySelector('.fpb-toolbar #exportButton'),
+        themeButton: !!layers.querySelector('[aria-label="Switch to Dark Mode"], [aria-label="Switch to Light Mode"]')
+      };
+    });
+    expect(result).toEqual({ error: null, toolbar: true, themeButton: false });
+    expect(errors).toEqual([]);
   });
 
   test('the library leaves the styles of the host page alone', async ({ page }) => {

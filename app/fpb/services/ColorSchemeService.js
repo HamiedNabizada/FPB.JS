@@ -10,16 +10,32 @@ const DOCUMENT_ATTRIBUTE = 'data-colors';
  * like the theme) and never travels with the model. Besides the canvas it sets
  * `data-colors` on the document, which the icons of the palette and of the
  * menus follow, since those are style sheets and not drawn by the renderer.
+ *
+ * The scheme holds for the whole page: another modeler on it that switches
+ * changes `data-colors`, and this one redraws and tells its toolbar
+ * (016g E4).
  */
 export default function ColorSchemeService(eventBus, elementRegistry) {
   this._eventBus = eventBus;
   this._elementRegistry = elementRegistry;
+  // the scheme this modeler shows now
+  this._shown = getScheme();
 
   const self = this;
 
   eventBus.on('diagram.init', function () {
     self.set(read(), { silent: true });
   });
+
+  if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined' && document.documentElement) {
+    const observer = new MutationObserver(function () {
+      self._follow();
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: [DOCUMENT_ATTRIBUTE] });
+    eventBus.on('diagram.destroy', function () {
+      observer.disconnect();
+    });
+  }
 }
 
 ColorSchemeService.$inject = ['eventBus', 'elementRegistry'];
@@ -48,11 +64,22 @@ ColorSchemeService.prototype.set = function (name, options) {
     store(scheme);
   }
 
-  if (changed) {
+  if (changed || scheme !== this._shown) {
+    this._shown = scheme;
     this._redraw();
     this._eventBus.fire('colorScheme.changed', { scheme: scheme });
   }
   return scheme;
+};
+
+/** Another modeler on the page switched the scheme: show it here as well */
+ColorSchemeService.prototype._follow = function () {
+  const scheme = getScheme();
+  if (scheme !== this._shown) {
+    this._shown = scheme;
+    this._redraw();
+    this._eventBus.fire('colorScheme.changed', { scheme: scheme });
+  }
 };
 
 ColorSchemeService.prototype._redraw = function () {

@@ -33,6 +33,12 @@ export function ToolbarButton(props) {
 
   // a button that goes away (AML file, layers) takes its tooltip with it
   useEffect(() => () => tooltips && tooltips.hide(ref.current), [tooltips]);
+  // a name that changes while its tooltip shows (016g E2)
+  useEffect(() => {
+    if (tooltips) {
+      tooltips.update(ref.current, text);
+    }
+  }, [tooltips, text]);
 
   return (
     <button
