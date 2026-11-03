@@ -411,6 +411,26 @@ test.describe('createFpbModeler', () => {
 
     await page.addStyleTag({ content: '#properties { width: auto !important; max-width: 320px; padding: 5px; box-sizing: border-box; }' });
     expect(await fits()).toBe(true);
+
+    // with a characteristic open nothing is cut off: the body hides what
+    // runs over at the side (016g, gap of B3)
+    expect(await importModel(page, clone())).toBe(true);
+    await page.evaluate(() => {
+      const state = window.fpb.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Rohstoff' && e.type !== 'label')[0];
+      window.fpb.get('selection').select(state);
+    });
+    await page.locator('.fpb-characteristic-row').first().click();
+    await expect(page.locator('.fpb-characteristic-tabs')).toBeVisible();
+    const clipped = await page.evaluate(() => {
+      const body = document.querySelector('.fpb-properties-body');
+      const right = body.getBoundingClientRect().right;
+      const controls = Array.from(body.querySelectorAll('input, button, select, textarea')).filter((e) => e.offsetParent);
+      return {
+        fits: body.scrollWidth <= body.clientWidth,
+        outside: controls.filter((e) => e.getBoundingClientRect().right > right + 1).map((e) => e.id || e.className)
+      };
+    });
+    expect(clipped).toEqual({ fits: true, outside: [] });
   });
 
   // Review Focus 4 (B3)

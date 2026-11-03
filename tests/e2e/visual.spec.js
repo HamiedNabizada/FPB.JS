@@ -47,6 +47,11 @@ const look = (page, selector) => page.evaluate((selector) => {
   return { background: style.backgroundColor, surface, radius: parseFloat(style.borderTopLeftRadius) };
 }, selector);
 
+// The reference pictures were made on Windows; fonts and anti-aliasing
+// differ elsewhere. In a CI under Linux the first try wrote a Linux picture
+// and the retry passed against it, so the guard did nothing (016g H2).
+test.skip(process.platform !== 'win32', 'the reference pictures were made on Windows');
+
 for (const scheme of ['light', 'dark']) {
   test.describe(`Canvas look (${scheme})`, () => {
 
