@@ -266,6 +266,13 @@ export function LayersTree(props) {
         aria-label={translate('Search layers')}
         value={term}
         onInput={(event) => setTerm(event.target.value)}
+        onKeyDown={(event) => {
+          // Escape empties the search first; the sheet around it stays (016g G1)
+          if (event.key === 'Escape' && term) {
+            event.preventDefault();
+            setTerm('');
+          }
+        }}
       />
       <ul role="tree" aria-label={translate('Layers')} ref={listRef} onKeyDown={onKeyDown}>
         {tree.map((node) => renderNode(node, 1))}

@@ -6,11 +6,11 @@
   flex-direction: column;
   height: 100%;
   box-sizing: border-box;
-  border-radius: 16px 16px 0 0;
+  border-radius: var(--fpb-radius-sheet) var(--fpb-radius-sheet) 0 0;
   background: var(--fpb-surface);
   color: var(--fpb-text);
   font-family: var(--fpb-font);
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--fpb-shadow-sheet);
   overflow: hidden;
 }
 

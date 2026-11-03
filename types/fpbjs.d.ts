@@ -139,6 +139,12 @@ export interface FpbEventMap {
   'readOnly.changed': { readOnly: boolean };
   /** The AML file kept for the AML export changed (import, export, New model) */
   'aml.sourceChanged': { source: AmlSource | null };
+  /** A sheet opened or closed, or sheets began or ended (option sheets) */
+  'sheets.changed': { active: boolean; current: string | null; body: HTMLElement | null };
+  /** The message stack changed */
+  'notifications.changed': { notes: Array<NotificationOptions & { id: string }> };
+  /** The floating list of the model check opened or closed; its sheet says so with sheets.changed */
+  'fpbValidation.panelChanged': { open: boolean };
 }
 
 /** The AML file kept since importAML, written back by toAML */
@@ -392,8 +398,12 @@ export interface FpbNotifications {
   /** Returns the id: the key if given */
   show(options: NotificationOptions): string;
   dismiss(id: string): void;
-  /** As the cross does: onDismiss of the message, then dismiss */
-  close(id: string): void;
+  /**
+   * As the cross does: onDismiss of the message, then dismiss; with
+   * `restoreFocus` the focus goes to the message now in its place, else to
+   * the canvas (the cross used with the keyboard)
+   */
+  close(id: string, options?: { restoreFocus?: boolean }): void;
   clear(): void;
   list(): Array<NotificationOptions & { id: string }>;
 }
@@ -477,9 +487,9 @@ export interface FpbSheets {
   /** 'properties' | 'layers' | 'check' or another name, null when none is open */
   current(): string | null;
   /** Opens a sheet; an open other one closes first. Does nothing while not active */
-  open(name: string, options: { title: string }): void;
+  open(name: string, options?: { title?: string }): void;
   close(): void;
-  toggle(name: string, options: { title: string }): void;
+  toggle(name: string, options?: { title?: string }): void;
   /** The body of the open sheet, where its part shows itself */
   body(): HTMLElement | null;
 }

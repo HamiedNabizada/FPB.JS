@@ -158,6 +158,45 @@ for (const [label, device] of [['phone', devices['Pixel 5']], ['tablet', devices
       await expect(page.locator('.fpb-sheet')).toHaveCount(0);
     });
 
+    // 016g G1
+    test('Escape in the search of the layers tree clears it and the sheet stays; Escape on the button that opened a sheet closes it', async ({ page }) => {
+      await load(page);
+      const button = page.locator('#openLayerButton');
+      await button.focus();
+      await page.keyboard.press('Enter');
+      const sheet = page.locator('.fpb-sheet[data-sheet="layers"]');
+      await expect(sheet).toBeVisible();
+      await expect(button).toBeFocused();
+
+      const search = sheet.getByPlaceholder('Search processes...');
+      await search.fill('erh');
+      await search.press('Escape');
+      await expect(search).toHaveValue('');
+      await expect(sheet).toBeVisible();
+
+      await button.focus();
+      await page.keyboard.press('Escape');
+      await expect(sheet).toHaveCount(0);
+    });
+
+    // 016g G4
+    test('letting go of the head without dragging leaves the sheet open', async ({ page, browserName }) => {
+      test.skip(browserName === 'firefox', 'Firefox under touch emulation sends no pointer events for the mouse');
+      await load(page);
+      await openSheet(page);
+      await page.locator('.fpb-sheet-grip').focus();
+      for (let i = 0; i < 4; i++) {
+        await page.keyboard.press('ArrowDown');
+      }
+      const size = await pageSize(page);
+      await page.setViewportSize({ width: size.width, height: Math.round(size.height * 1.5) });
+      await page.waitForTimeout(300);
+      const title = await box(page, '.fpb-sheet-title');
+      await page.mouse.click(title.left + 5, title.top + title.height / 2);
+      await page.waitForTimeout(200);
+      await expect(page.locator('.fpb-sheet')).toHaveCount(1);
+    });
+
     // V11, plan decision 7
     test('Properties in the toolbar opens the panel as a sheet', async ({ page }) => {
       const errors = await load(page);
@@ -285,7 +324,30 @@ for (const [label, device] of [['phone', devices['Pixel 5']], ['tablet', devices
       await item.tap();
       await expect(propertiesSheet(page)).toBeVisible();
       await expect(propertiesSheet(page).locator('.fpb-panel-header-name')).toHaveText('Prüfen');
-      await expect(propertiesSheet(page).locator('[data-group-id="group-findings"]')).toBeVisible();
+      // in the visible part of the sheet, not only somewhere in it (016g, gap of E2)
+      await expect(propertiesSheet(page).locator('[data-group-id="group-findings"]')).toBeInViewport();
+    });
+
+    // 016g, gap of E2: diagram-js keeps the selection in view (KeepSelectionVisible)
+    test('the selected element stays in view when the properties sheet opens', async ({ page }) => {
+      await load(page);
+      // the lowest named element of the layer, in view after the import
+      const name = await page.evaluate(() => {
+        const root = window.fpbjs.get('canvas').getRootElement();
+        const shapes = window.fpbjs.get('elementRegistry').filter((e) => e !== root && !e.waypoints && e.type !== 'label' && e.businessObject && e.businessObject.name);
+        shapes.sort((a, b) => (b.y + b.height) - (a.y + a.height));
+        return shapes[0].businessObject.name;
+      });
+      await select(page, name);
+      await page.waitForTimeout(400);
+      await page.locator('#propertiesSheetButton').tap();
+      await expect(propertiesSheet(page)).toBeVisible();
+      await expect.poll(() => page.evaluate((name) => {
+        const element = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === name && e.type !== 'label')[0];
+        const shape = document.querySelector('[data-element-id="' + element.id + '"]').getBoundingClientRect();
+        const canvas = window.fpbjs.get('canvas').getContainer().getBoundingClientRect();
+        return shape.top >= canvas.top - 1 && shape.bottom <= canvas.bottom + 1;
+      }, name)).toBe(true);
     });
 
     test('a lower page keeps the sheet inside it', async ({ page }) => {
@@ -357,6 +419,87 @@ test.describe('Sheets and the rest of the modeler', () => {
     expect(colours.background).toBe(colours.surface);
     expect(colours.dark).toBe(true);
     expect(colours.ratio).toBeGreaterThanOrEqual(4.5);
+    await context.close();
+  });
+
+  // 016g G3: radius and shadow from the design values; in the dark a line
+  // marks the edge
+  test('the sheet takes radius and shadow from the design values, with a line in dark', async ({ browser }) => {
+    for (const colorScheme of ['light', 'dark']) {
+      const context = await browser.newContext({ ...phone, colorScheme });
+      const page = await context.newPage();
+      await keepScreenUpright(page);
+      await load(page, false);
+      await openSheet(page);
+      const look = await page.evaluate(() => {
+        const sheet = document.querySelector('.fpb-sheet');
+        const probe = document.createElement('div');
+        probe.style.boxShadow = 'var(--fpb-shadow-sheet)';
+        probe.style.borderTopLeftRadius = 'var(--fpb-radius-sheet)';
+        const line = document.createElement('span');
+        line.style.color = 'var(--fpb-line)';
+        sheet.appendChild(probe);
+        sheet.appendChild(line);
+        const result = {
+          radius: getComputedStyle(sheet).borderTopLeftRadius,
+          shadow: getComputedStyle(sheet).boxShadow,
+          tokenRadius: getComputedStyle(probe).borderTopLeftRadius,
+          tokenShadow: getComputedStyle(probe).boxShadow,
+          line: getComputedStyle(line).color
+        };
+        probe.remove();
+        line.remove();
+        return result;
+      });
+      expect(look.tokenRadius, colorScheme).not.toBe('0px');
+      expect(look.radius, colorScheme).toBe(look.tokenRadius);
+      expect(look.shadow, colorScheme).toBe(look.tokenShadow);
+      if (colorScheme === 'dark') {
+        expect(look.shadow).toContain(look.line);
+      }
+      await context.close();
+    }
+  });
+
+  // 016g, gap of E2: the grip is a control, 3:1 against the sheet
+  test('the grip stands out from the sheet by 3:1 in light and dark', async ({ browser }) => {
+    for (const colorScheme of ['light', 'dark']) {
+      const context = await browser.newContext({ ...phone, colorScheme });
+      const page = await context.newPage();
+      await keepScreenUpright(page);
+      await load(page, false);
+      await openSheet(page);
+      const ratio = await page.evaluate(() => {
+        const channels = (value) => value.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number);
+        const luminance = ([r, g, b]) => {
+          const c = (v) => {
+            const s = v / 255;
+            return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+          };
+          return 0.2126 * c(r) + 0.7152 * c(g) + 0.0722 * c(b);
+        };
+        const a = luminance(channels(getComputedStyle(document.querySelector('.fpb-sheet-grip')).backgroundColor));
+        const b = luminance(channels(getComputedStyle(document.querySelector('.fpb-sheet')).backgroundColor));
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      });
+      expect(ratio, colorScheme).toBeGreaterThanOrEqual(3);
+      await context.close();
+    }
+  });
+
+  // 016g G2
+  test('when sheets end with the focus in a sheet, the focus goes to the canvas', async ({ browser }) => {
+    const context = await browser.newContext(tablet);
+    const page = await context.newPage();
+    await keepScreenUpright(page);
+    await load(page);
+    await page.locator('#propertiesSheetButton').tap();
+    const field = propertiesSheet(page).locator('input').first();
+    await field.focus();
+    await expect(field).toBeFocused();
+    await page.setViewportSize({ width: 1080, height: 810 });
+    await expect(page.locator('.fpb-sheet')).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => window.fpbjs.get('canvas').isFocused())).toBe(true);
     await context.close();
   });
 

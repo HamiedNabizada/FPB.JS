@@ -6,6 +6,8 @@ const TOP_GAP = 56;
 const START = 0.5;
 const CLOSE_BELOW = 0.25;
 const STEP = 0.1;
+// a press on the head that moves less is a tap, not a drag (016g G4)
+const DRAG_FROM = 3;
 
 const CLOSE_ICON = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">' +
   '<path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -34,6 +36,15 @@ export default function Sheets(eventBus, config, translate, injector) {
   this._frame = null;
   this._height = 0;
   this._opener = null;
+  this._injector = injector;
+
+  // Escape on the button that opened the sheet closes it (016g G1)
+  this._onOpenerKey = function (event) {
+    if (event.key === 'Escape' && !event.defaultPrevented && self._current &&
+        self._opener && document.activeElement === self._opener) {
+      self.close();
+    }
+  };
 
   this._query = this._container && typeof window !== 'undefined' && window.matchMedia
     ? window.matchMedia(options.media || MEDIA)
@@ -72,6 +83,7 @@ export default function Sheets(eventBus, config, translate, injector) {
   const unbindKeys = files ? files.bindKeys(this._container) : function () {};
 
   eventBus.on('diagram.destroy', function () {
+    document.removeEventListener('keydown', self._onOpenerKey);
     unlisten(self._query, onMedia);
     window.removeEventListener('resize', onResize);
     window.removeEventListener('orientationchange', onMedia);
@@ -119,22 +131,31 @@ Sheets.prototype.open = function (name, options) {
   this._current = name;
   this._height = Math.round(window.innerHeight * START);
   this._mount(name, title);
+  document.addEventListener('keydown', this._onOpenerKey);
   this._fit();
   this._changed();
 };
 
-Sheets.prototype.close = function () {
+/**
+ * Closes the open sheet. Was the focus in it, the keyboard goes on where it
+ * was before the sheet opened; with `toCanvas` (the sheets end, the opener
+ * goes with them) on the canvas (016g G2).
+ */
+Sheets.prototype.close = function (options) {
   if (!this._current) {
     return;
   }
   const hadFocus = this._frame && this._frame.contains(document.activeElement);
+  document.removeEventListener('keydown', this._onOpenerKey);
   this._unmount();
   this._current = null;
   this._changed();
   if (hadFocus) {
-    // the keyboard goes on where it was before the sheet opened
     const opener = this._opener;
-    if (opener && opener.isConnected && typeof opener.focus === 'function') {
+    const canvas = this._injector.get('canvas', false);
+    if (options && options.toCanvas && canvas) {
+      canvas.focus();
+    } else if (opener && opener.isConnected && typeof opener.focus === 'function') {
       opener.focus();
     }
   }
@@ -163,7 +184,7 @@ Sheets.prototype._setActive = function (active) {
   }
   this._active = active;
   if (!active && this._current) {
-    this.close();
+    this.close({ toCanvas: true });
     return;
   }
   this._changed();
@@ -190,8 +211,9 @@ Sheets.prototype._mount = function (name, title) {
   close.addEventListener('click', function () {
     self.close();
   });
+  // a field that uses Escape itself (the search of the tree) keeps it
   frame.addEventListener('keydown', function (event) {
-    if (event.key === 'Escape') {
+    if (event.key === 'Escape' && !event.defaultPrevented) {
       self.close();
     }
   });
@@ -228,7 +250,7 @@ Sheets.prototype._grip = function (head) {
       return;
     }
     const top = self._frame.getBoundingClientRect().top;
-    drag = { id: event.pointerId, offset: event.clientY - top };
+    drag = { id: event.pointerId, offset: event.clientY - top, from: event.clientY, moved: false };
     try {
       head.setPointerCapture(event.pointerId);
     } catch (error) {
@@ -240,6 +262,10 @@ Sheets.prototype._grip = function (head) {
     if (!drag || event.pointerId !== drag.id) {
       return;
     }
+    if (!drag.moved && Math.abs(event.clientY - drag.from) < DRAG_FROM) {
+      return;
+    }
+    drag.moved = true;
     const bottom = self._container.getBoundingClientRect().bottom;
     self._height = Math.max(0, Math.round(bottom - (event.clientY - drag.offset)));
     self._fit();
@@ -248,8 +274,9 @@ Sheets.prototype._grip = function (head) {
     if (!drag || event.pointerId !== drag.id) {
       return;
     }
+    const moved = drag.moved;
     drag = null;
-    if (self._height < window.innerHeight * CLOSE_BELOW) {
+    if (moved && self._height < window.innerHeight * CLOSE_BELOW) {
       self.close();
     }
   };

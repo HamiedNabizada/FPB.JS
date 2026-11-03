@@ -20,6 +20,9 @@
        without an open sheet it is empty */
     .fpb-wrapper {
       height: 100vh;
+      /* the visible part of the page: on the iPhone the bar of Safari does
+         not cover the bottom of a sheet (016g G5) */
+      height: 100dvh;
       width: 100vw;
       display: grid;
       grid-template-rows: minmax(0, 1fr) auto;

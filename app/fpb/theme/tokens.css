@@ -50,6 +50,9 @@
   --fpb-radius-control: 6px;
   --fpb-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px var(--fpb-line);
   --fpb-shadow-float: 0 10px 30px rgba(16, 24, 40, 0.16);
+  /* the sheet from the bottom on narrow touch screens (016f E2, 016g G3) */
+  --fpb-radius-sheet: 16px;
+  --fpb-shadow-sheet: 0 -4px 16px rgba(0, 0, 0, 0.12);
 
   --fpb-font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --fpb-font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
@@ -89,6 +92,8 @@
 
   --fpb-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--fpb-line);
   --fpb-shadow-float: 0 10px 30px rgba(0, 0, 0, 0.5);
+  /* a shadow is hardly seen in the dark: a line marks the edge */
+  --fpb-shadow-sheet: 0 -6px 20px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--fpb-line);
 }
 
 /* Properties panel library and the diagram-js package style sheet: they set
