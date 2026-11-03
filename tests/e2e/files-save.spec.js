@@ -23,6 +23,8 @@ const MODEL = JSON.stringify(basis);
 const NAME = 'FPBJS_Project';
 const XML = fs.readFileSync(path.join(__dirname, 'fixtures', 'import', 'handgeschrieben.xml'), 'utf8');
 const MIXED = fs.readFileSync(path.join(__dirname, '..', 'unit', 'aml', 'oracle', 'inputs', 'generated', 'mixed.aml'), 'utf8');
+// one process view: it opens without the dialog
+const SINGLE = fs.readFileSync(path.join(__dirname, '..', 'unit', 'aml', 'oracle', 'expected', 'convert', 'fpbjs-temperieren.aml'), 'utf8');
 
 async function start(page, { files = {}, fileSystemAccess = true, model = true } = {}) {
   const errors = [];
@@ -383,6 +385,112 @@ test.describe('Save', () => {
     await page.waitForTimeout(500);
     expect((await fileSystem(page)).pickers).toEqual([]);
     await expect(page.locator('dialog.fpb-export-dialog[open]')).toBeVisible();
+  });
+
+  // 016g A1, review focus 1: the file has the model as it was when the
+  // content was built; what changes while it is written is not in it
+  for (const [kind, name, content] of [['JSON', 'a.json', MODEL], ['AML', 'Anlage.aml', MIXED]]) {
+    test(`changes made while ${kind === 'AML' ? 'an AML file' : 'the file'} is being written stay unsaved`, async ({ page }) => {
+      await start(page, { files: { [name]: content }, model: false });
+      expect(await openFromDisk(page, name)).toBe('import.done');
+      await page.evaluate(() => window.__fs.hold());
+      await pressSave(page);
+      await expect.poll(() => page.evaluate(() => window.__fs.waiting)).toBe(1);
+      await page.evaluate(() => {
+        const operator = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+        window.fpbjs.get('modeling').updateLabel(operator, 'Waehrend des Speicherns');
+      });
+      await page.evaluate(() => window.__fs.release());
+      await waitForWrites(page, 1);
+      await expect(noteById(page, 'files.saved')).toContainText('Saved to ' + name);
+      expect((await writes(page))[0].text).not.toContain('Waehrend des Speicherns');
+      expect(await page.evaluate(() => window.fpbjs.get('fpbFiles')._hasUnsavedChanges())).toBe(true);
+    });
+  }
+
+  // 016g A3
+  test('an exception of an import listener keeps the file of the model on screen', async ({ page }) => {
+    await start(page, { files: { 'a.json': MODEL }, model: false });
+    expect(await openFromDisk(page, 'a.json')).toBe('import.done');
+    const opened = await page.evaluate(async (text) => {
+      const bus = window.fpbjs.get('eventBus');
+      const fail = () => {
+        throw new Error('a listener of the host');
+      };
+      bus.on('FPBJS.import', 1500, fail);
+      try {
+        return await window.fpbjs.get('fpbFiles').openFile(new File([text], 'b.json'));
+      } finally {
+        bus.off('FPBJS.import', fail);
+      }
+    }, MODEL);
+    expect(opened).toBe(false);
+
+    await pressSave(page);
+    await waitForWrites(page, 1);
+    expect((await writes(page)).map((w) => w.name)).toEqual(['a.json']);
+  });
+
+  // 016g A4
+  test('a host import while an AML file is loading does not get that file', async ({ page }) => {
+    await start(page);
+    await page.evaluate((text) => {
+      const aml = window.fpbjs.get('amlSupport');
+      const importAml = aml.importAml.bind(aml);
+      aml.importAml = (...args) => new Promise((resolve) => {
+        window.__releaseAml = resolve;
+      }).then(() => importAml(...args));
+      window.__amlOpened = window.fpbjs.get('fpbFiles').openFile(new File([text], 'Anlage.aml'));
+    }, SINGLE);
+    await expect.poll(() => page.evaluate(() => typeof window.__releaseAml)).toBe('function');
+
+    const target = () => page.evaluate(() => {
+      const file = window.fpbjs.get('fpbFiles')._target;
+      return file ? file.name : null;
+    });
+    const hostImport = page.evaluate((data) => new Promise((resolve) => {
+      const bus = window.fpbjs.get('eventBus');
+      bus.once('import.done', () => resolve(true));
+      bus.fire('FPBJS.import', { data });
+    }), clone());
+    expect(await hostImport).toBe(true);
+    expect(await target()).toBe(null);
+
+    const amlDone = page.evaluate(() => new Promise((resolve) => {
+      window.fpbjs.get('eventBus').once('import.done', () => resolve(true));
+      window.__releaseAml();
+    }));
+    expect(await amlDone).toBe(true);
+    expect(await target()).toBe('Anlage.aml');
+  });
+
+  // 016g A5
+  test('a refused picker leaves writing into a chosen file on', async ({ page }) => {
+    await start(page, { files: { 'a.json': MODEL }, model: false });
+    expect(await openFromDisk(page, 'a.json')).toBe('import.done');
+    await pressSave(page);
+    await waitForWrites(page, 1);
+
+    await nextPick(page, 'deny');
+    const download = page.waitForEvent('download');
+    await pressSave(page, true);
+    await download;
+
+    await pressSave(page);
+    await waitForWrites(page, 2);
+    expect((await writes(page)).map((w) => w.name)).toEqual(['a.json', 'a.json']);
+  });
+
+  // 016g A6
+  test('the warning after a refused write names the newly chosen file', async ({ page }) => {
+    await start(page, { files: { 'a.json': MODEL }, model: false });
+    expect(await openFromDisk(page, 'a.json')).toBe('import.done');
+    await page.evaluate(() => {
+      window.__fs.readOnly['b.json'] = true;
+    });
+    await nextPick(page, 'b.json');
+    await pressSave(page, true);
+    await expect(noteById(page, 'files.error')).toContainText('FPB.js may not write to b.json');
   });
 
   test('Save in the toolbar saves, also in read-only mode', async ({ page }) => {

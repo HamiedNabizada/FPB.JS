@@ -3,6 +3,7 @@ import { h } from '@bpmn-io/properties-panel/preact';
 import { useRef, useState } from '@bpmn-io/properties-panel/preact/hooks';
 
 import DialogFrame from '../dialogs/DialogFrame';
+import { droppedHandle } from './fileAccess';
 
 /**
  * The dialog "Open" (016e V8): a drop area with "Choose file", the choice
@@ -111,12 +112,18 @@ export default function OpenDialog(props) {
       setDragging(false);
     }
   };
+  // in Chrome and Edge the dropped file is the one Ctrl+S saves into, as on
+  // the canvas (016g A2)
   const onDrop = (event) => {
     event.preventDefault();
     setDragging(false);
     const dropped = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
-    if (dropped) {
-      choose(dropped);
+    if (!dropped) {
+      return;
+    }
+    droppedHandle(event.dataTransfer).then((handle) => choose(dropped, handle));
+    if (event.dataTransfer.files.length > 1) {
+      files._onlyFirstOpened(dropped.name);
     }
   };
 

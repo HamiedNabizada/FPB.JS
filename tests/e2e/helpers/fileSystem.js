@@ -11,6 +11,9 @@
  * - next: the answer of the next picker, a file name or 'abort'
  * - permission: what requestPermission answers ('granted' or 'denied')
  * - asked: how often a page asked for permission
+ * - readOnly: name → true for files whose writing is refused
+ * - hold() and release(): writes wait in between, to change the model meanwhile
+ * - next = 'deny': the next picker is refused by the browser
  *
  * A file chosen in the save picker may be written at once, one chosen in the
  * open picker or dropped asks first, as in Chrome.
@@ -27,10 +30,23 @@ export async function installFakeFileSystem(page, { files = {} } = {}) {
       granted: {},
       // a time per file, as the disk keeps it: changed by every write
       modified: {},
-      clock: 1000
+      clock: 1000,
+      // files no permission lets FPB.js write
+      readOnly: {},
+      // while set, every write waits for release() before it ends
+      gate: null,
+      waiting: 0
     };
     fs.touch = (name) => {
       fs.modified[name] = ++fs.clock;
+    };
+    fs.hold = () => {
+      fs.gate = new Promise((resolve) => {
+        fs.release = () => {
+          fs.gate = null;
+          resolve();
+        };
+      });
     };
     Object.keys(fs.files).forEach(fs.touch);
 
@@ -51,7 +67,7 @@ export async function installFakeFileSystem(page, { files = {} } = {}) {
         return fs.permission;
       },
       async createWritable() {
-        if (!fs.granted[name]) {
+        if (!fs.granted[name] || fs.readOnly[name]) {
           throw new DOMException('Permission denied', 'NotAllowedError');
         }
         const parts = [];
@@ -60,6 +76,11 @@ export async function installFakeFileSystem(page, { files = {} } = {}) {
             parts.push(data);
           },
           async close() {
+            if (fs.gate) {
+              fs.waiting++;
+              await fs.gate;
+              fs.waiting--;
+            }
             const text = await new Blob(parts).text();
             fs.files[name] = text;
             fs.touch(name);
@@ -80,6 +101,10 @@ export async function installFakeFileSystem(page, { files = {} } = {}) {
       fs.next = null;
       if (!next || next === 'abort') {
         return Promise.reject(new DOMException('The user aborted a request.', 'AbortError'));
+      }
+      // the browser refuses its picker (a frame, a policy)
+      if (next === 'deny') {
+        return Promise.reject(new DOMException('The picker is not allowed here.', 'SecurityError'));
       }
       if (kind === 'save') {
         fs.granted[next] = true;

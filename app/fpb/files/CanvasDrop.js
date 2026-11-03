@@ -1,3 +1,5 @@
+import { droppedHandle } from './fileAccess';
+
 /**
  * A file dragged onto the canvas opens (016e V8), as through "Open". While it
  * is dragged over, the canvas shows where it can go. In read-only mode the
@@ -78,13 +80,12 @@ export default function CanvasDrop(canvas, fpbFiles, injector, translate, eventB
       fpbFiles._notInReadOnly();
       return;
     }
-    const item = event.dataTransfer.items && event.dataTransfer.items[0];
-    const asking = item && item.kind === 'file' && typeof item.getAsFileSystemHandle === 'function'
-      ? item.getAsFileSystemHandle()
-      : null;
-    Promise.resolve(asking).catch(() => null).then((handle) => {
-      fpbFiles.openFile(file, handle && handle.kind === 'file' ? handle : null);
+    droppedHandle(event.dataTransfer).then((handle) => {
+      fpbFiles.openFile(file, handle);
     });
+    if (event.dataTransfer.files.length > 1) {
+      fpbFiles._onlyFirstOpened(file.name);
+    }
   };
 
   container.addEventListener('dragenter', over);

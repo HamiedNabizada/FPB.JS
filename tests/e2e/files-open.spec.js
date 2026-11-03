@@ -267,6 +267,66 @@ test.describe('Open with the keyboard and by dropping on the canvas', () => {
     expect(await projectName(page)).toBe('Zweites Projekt');
   });
 
+  // 016g A7
+  test('dropping several files opens the first and says so', async ({ page }) => {
+    await start(page);
+    const done = imported(page);
+    await page.evaluate(({ selector, first, second }) => {
+      const target = document.querySelector(selector);
+      const transfer = new DataTransfer();
+      transfer.items.add(new File([first], 'first.json', { type: 'application/json' }));
+      transfer.items.add(new File([second], 'second.json', { type: 'application/json' }));
+      const options = { bubbles: true, cancelable: true, dataTransfer: transfer };
+      target.dispatchEvent(new DragEvent('dragover', options));
+      target.dispatchEvent(new DragEvent('drop', options));
+    }, { selector: CANVAS + ' > svg', first: other(), second: JSON.stringify(basis) });
+    expect(await done).toBe(true);
+    expect(await projectName(page)).toBe('Zweites Projekt');
+    await expect(noteById(page, 'files.onlyFirst')).toContainText('Only first.json was opened. FPB.js opens one file at a time.');
+  });
+
+  test('dropping several files on the dialog Open takes the first and says so', async ({ page }) => {
+    await start(page);
+    await openImportDialog(page);
+    await page.evaluate(({ first, second }) => {
+      const title = document.querySelector('dialog.fpb-open-dialog[open] .fpb-dialog-title');
+      const transfer = new DataTransfer();
+      transfer.items.add(new File([first], 'first.json', { type: 'application/json' }));
+      transfer.items.add(new File([second], 'second.json', { type: 'application/json' }));
+      const options = { bubbles: true, cancelable: true, dataTransfer: transfer };
+      title.dispatchEvent(new DragEvent('dragover', options));
+      title.dispatchEvent(new DragEvent('drop', options));
+    }, { first: other(), second: JSON.stringify(basis) });
+    await expect(page.locator(`${OPEN} .fpb-drop-zone-text`)).toHaveText('first.json');
+    await expect(noteById(page, 'files.onlyFirst')).toContainText('Only first.json was opened. FPB.js opens one file at a time.');
+  });
+
+  // 016g A2
+  test('a file dropped on the dialog Open is the one Ctrl+S saves into', async ({ page }) => {
+    await installFakeFileSystem(page);
+    await start(page);
+    await openImportDialog(page);
+    await page.evaluate((text) => {
+      const title = document.querySelector('dialog.fpb-open-dialog[open] .fpb-dialog-title');
+      const transfer = new DataTransfer();
+      transfer.items.add(new File([text], 'abgelegt.json', { type: 'application/json' }));
+      const options = { bubbles: true, cancelable: true, dataTransfer: transfer };
+      title.dispatchEvent(new DragEvent('dragover', options));
+      title.dispatchEvent(new DragEvent('drop', options));
+    }, other());
+    await expect(page.locator(`${OPEN} .fpb-drop-zone-text`)).toHaveText('abgelegt.json');
+    const done = imported(page);
+    await importButton(page).click();
+    expect(await done).toBe(true);
+
+    await page.evaluate(() => window.fpbjs.get('canvas').focus());
+    await page.keyboard.press('Control+s');
+    await expect.poll(async () => (await fileSystem(page)).writes.length).toBe(1);
+    const disk = await fileSystem(page);
+    expect(disk.writes[0].name).toBe('abgelegt.json');
+    expect(disk.pickers).toEqual([]);
+  });
+
   test('a file dropped on the canvas in Chrome is saved back into it', async ({ page }) => {
     await installFakeFileSystem(page);
     await start(page);

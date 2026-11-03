@@ -47,8 +47,11 @@ export default function Files(eventBus, injector, fpbjs, translate, config) {
   this._incoming = null;
   // the file before the running import, put back if the import fails
   this._before = undefined;
+  // the running import has replaced the model (the importer said so)
+  this._replaced = false;
   this._saving = false;
-  // the browser refused its pickers once: downloads from then on
+  // the browser refused its pickers once: a new place is a download from
+  // then on, a chosen file is still written (016g A5)
   this._noPickers = false;
 
   const self = this;
@@ -61,10 +64,23 @@ export default function Files(eventBus, injector, fpbjs, translate, config) {
   });
 
   // before the importer, which may refuse the content at once
-  eventBus.on('FPBJS.import', 2000, function () {
+  eventBus.on('FPBJS.import', 2000, function (event) {
+    const incoming = self._incoming;
     self._before = self._target;
-    self._target = self._incoming;
+    self._replaced = false;
+    // an AML file waits for the import of amlSupport, which brings its
+    // source; another import meanwhile (a host's) comes from no file (016g A4)
+    if (incoming && incoming.format === 'aml' && !(event && event.amlSource)) {
+      self._target = null;
+      return;
+    }
+    self._target = incoming;
     self._incoming = null;
+  });
+
+  // the importer has put the new model in place of the old one
+  eventBus.on('dataStore.addedProjectDefinition', function () {
+    self._replaced = true;
   });
 
   eventBus.on('import.done', function () {
@@ -87,9 +103,10 @@ export default function Files(eventBus, injector, fpbjs, translate, config) {
     self._baseline = self._serialize();
   });
 
-  // saved by fpbFiles or by an export of the whole model
-  eventBus.on('model.downloaded', function () {
-    self._baseline = self._serialize();
+  // saved by fpbFiles (with the model as it was written) or by an export of
+  // the whole model
+  eventBus.on('model.downloaded', function (event) {
+    self._baseline = event && event.baseline ? event.baseline : self._serialize();
   });
 }
 
@@ -323,6 +340,14 @@ Files.prototype._importParsed = function (parsed, options = {}) {
   }
   try {
     this._eventBus.fire('FPBJS.import', { data: parsed.data });
+  } catch (exception) {
+    // a listener threw before the importer put the new model in place: the
+    // model on screen keeps its file (016g A3)
+    if (!this._replaced && this._before !== undefined) {
+      this._target = this._before;
+      this._before = undefined;
+    }
+    throw exception;
   } finally {
     // not taken when a listener before ours threw
     this._incoming = null;
@@ -363,11 +388,16 @@ Files.prototype._save = function (asNew) {
 
   const target = this._target || this._defaultTarget();
   this._saving = true;
+  // the file the model goes to, named when writing is refused (016g A6)
+  let attempted = target;
 
   // the picker first: it needs the key press or click that asked for it,
   // and building the content takes time
   let chosen;
-  if (this.canWriteFiles() && (asNew || !target.handle)) {
+  if (canWriteFiles() && !asNew && target.handle) {
+    // a chosen file, also after the browser refused a picker (016g A5)
+    chosen = Promise.resolve(target);
+  } else if (this.canWriteFiles()) {
     chosen = pickFileToSave(target.name, this._saveTypes(target.format)).then((handle) => (
       handle ? { name: handle.name, format: this._formatOf(handle.name), handle } : null
     ), () => {
@@ -376,22 +406,26 @@ Files.prototype._save = function (asNew) {
       return Object.assign({}, target, { handle: null });
     });
   } else {
-    chosen = Promise.resolve(this.canWriteFiles() ? target : Object.assign({}, target, { handle: null }));
+    chosen = Promise.resolve(Object.assign({}, target, { handle: null }));
   }
 
   return chosen.then((file) => {
     if (!file) {
       return false;
     }
+    attempted = file;
     // the permission while the key press still counts, then the content
     return (file.handle ? this._readyToWrite(file) : Promise.resolve(true)).then((ready) => {
       if (!ready) {
         return false;
       }
-      return this._saveContent(file.format).then((content) => this._write(file, content));
+      // the model as it goes into the file: what changes while it is built
+      // and written stays unsaved (016g A1)
+      const baseline = this._serialize();
+      return this._saveContent(file.format).then((content) => this._write(file, content, baseline));
     });
   }).catch((error) => {
-    this._saveFailed(error, target);
+    this._saveFailed(error, attempted);
     return false;
   }).then((result) => {
     this._saving = false;
@@ -426,18 +460,18 @@ Files.prototype._readyToWrite = function (file) {
   });
 };
 
-Files.prototype._write = function (file, content) {
+Files.prototype._write = function (file, content, baseline) {
   const translate = this._translate;
   return Promise.resolve().then(() => {
     if (file.handle) {
       return writeFile(file.handle, content.data).then(() => lastModifiedOf(file.handle)).then((lastModified) => {
         this._target = Object.assign({}, file, { lastModified });
-        this._saved(file, translate('Saved to {name}', { name: file.name }));
+        this._saved(file, translate('Saved to {name}', { name: file.name }), baseline);
         return true;
       });
     }
     downloadFile(content.data, file.name, content.mime);
-    this._saved(file, translate('Downloaded {name}', { name: file.name }));
+    this._saved(file, translate('Downloaded {name}', { name: file.name }), baseline);
     return true;
   });
 };
@@ -480,10 +514,19 @@ Files.prototype._saveContent = function (format) {
   return Promise.resolve({ data: serializeModel(this._fpbjs.getProcesses()), mime: 'application/json' });
 };
 
-Files.prototype._saved = function (file, title) {
+Files.prototype._saved = function (file, title, baseline) {
   this._notify({ key: 'files.saved', type: 'success', title });
-  // the browser backup counts the model as saved
-  this._eventBus.fire('model.downloaded', { format: file.format, fileName: file.name });
+  // the browser backup counts the model as saved, as it went into the file
+  this._eventBus.fire('model.downloaded', { format: file.format, fileName: file.name, baseline });
+};
+
+/** Only the first of several dropped files opens: say so (016g A7) */
+Files.prototype._onlyFirstOpened = function (name) {
+  this._notify({
+    key: 'files.onlyFirst',
+    type: 'info',
+    title: this._translate('Only {name} was opened. FPB.js opens one file at a time.', { name })
+  });
 };
 
 Files.prototype._saveFailed = function (error, target) {

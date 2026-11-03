@@ -18,6 +18,22 @@ export function canWriteFiles(win = window) {
   }
 }
 
+/**
+ * The handle of the first dropped file, to save into it later (Chrome and
+ * Edge); null elsewhere. Call it in the drop handler itself: the browser
+ * hands the handle out only during the drop.
+ *
+ * @param {DataTransfer} dataTransfer
+ * @return {Promise<FileSystemFileHandle|null>}
+ */
+export function droppedHandle(dataTransfer) {
+  const item = dataTransfer && dataTransfer.items && dataTransfer.items[0];
+  const asking = item && item.kind === 'file' && typeof item.getAsFileSystemHandle === 'function'
+    ? item.getAsFileSystemHandle()
+    : null;
+  return Promise.resolve(asking).catch(() => null).then((handle) => (handle && handle.kind === 'file' ? handle : null));
+}
+
 /** A file to open, chosen by the user; null when the user cancels */
 export function pickFileToOpen(types) {
   return window.showOpenFilePicker({ types, multiple: false }).then(

@@ -49,14 +49,14 @@
 }
 
 /* choices: the process views of an AML file, the options of the export */
-.fpb-dialog fieldset {
+dialog.fpb-dialog fieldset {
   min-width: 0;
   margin: 14px 0 0;
   padding: 0;
   border: 0;
 }
 
-.fpb-dialog legend {
+dialog.fpb-dialog legend {
   margin-bottom: 6px;
   padding: 0;
   font-size: 13px;

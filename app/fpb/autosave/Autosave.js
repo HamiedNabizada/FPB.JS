@@ -105,8 +105,10 @@ export default function Autosave(eventBus, fpbjs, config, injector) {
     self.flush();
   });
 
-  eventBus.on('model.downloaded', function () {
-    self._baseline = self._serialize();
+  // a save of fpbFiles says what went into the file: changes made while it
+  // was written stay unsaved (016g A1)
+  eventBus.on('model.downloaded', function (event) {
+    self._baseline = event && event.baseline ? event.baseline : self._serialize();
     self.flush();
   });
 
