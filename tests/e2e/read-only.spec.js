@@ -179,6 +179,27 @@ test.describe('Read-only mode', () => {
     expect(fehler).toEqual([]);
   });
 
+  // 016f E1: held before the toolbar left React
+  test('read-only disables New model and Open at once and enables them again', async ({ page }) => {
+    const { fehler } = await laden(page);
+    const neu = page.locator('#newModelButton');
+    const oeffnen = page.locator('#openFileButton');
+    await expect(neu).toHaveAttribute('aria-label', 'New model');
+    await expect(oeffnen).toHaveAttribute('aria-label', /^Open \((Ctrl|⌘)\+O\)$/);
+
+    await lesemodus(page, true);
+    await expect(neu).toBeDisabled();
+    await expect(neu).toHaveAttribute('aria-label', 'New model (not in read-only mode)');
+    await expect(oeffnen).toBeDisabled();
+    await expect(oeffnen).toHaveAttribute('aria-label', 'Open (not in read-only mode)');
+
+    await lesemodus(page, false);
+    await expect(neu).toBeEnabled();
+    await expect(oeffnen).toBeEnabled();
+    await expect(oeffnen).toHaveAttribute('aria-label', /^Open \((Ctrl|⌘)\+O\)$/);
+    expect(fehler).toEqual([]);
+  });
+
   test('looking around stays: zoom keys, the process tree, the search', async ({ page }) => {
     const { fehler } = await laden(page);
     await lesemodus(page, true);

@@ -33,6 +33,34 @@ test.describe('Toolbar', () => {
     expect(await ids()).toEqual(['newModelButton', 'openFileButton', 'saveFileButton', 'exportButton', 'amlOverviewButton']);
   });
 
+  // 016f E1: held before the toolbar left React, so the new one keeps it
+  test('AML file appears when an AML file is opened and goes with New model', async ({ page }) => {
+    await open(page);
+    const button = group(page, 'file').locator('#amlOverviewButton');
+    await expect(button).toHaveCount(0);
+    const aml = fs.readFileSync(path.join(__dirname, '..', 'unit', 'aml', 'oracle', 'inputs', 'generated', 'mixed.aml'), 'utf8');
+    await page.evaluate((text) => window.fpbjs.get('amlSupport').importAml(text, { fileName: 'Anlage.aml' }), aml);
+    await expect(button).toBeVisible({ timeout: 15000 });
+    await expect(button).toHaveAttribute('aria-label', 'AML file');
+    await page.evaluate(() => window.fpbjs.newModel());
+    await expect(button).toHaveCount(0);
+  });
+
+  test('the check counter follows the model check', async ({ page }) => {
+    await open(page);
+    const counter = page.locator('#openValidationButton .fpb-validation-count');
+    await expect(counter).toHaveCount(0);
+    await expect(page.locator('#openValidationButton')).toHaveAttribute('aria-label', /^Model check \(VDI 3682\): /);
+    await page.evaluate(() => {
+      const operator = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Prüfen')[0];
+      window.fpbjs.get('modeling').moveElements([operator], { x: 900, y: 0 });
+    });
+    await expect(counter).toHaveText('1');
+    await expect(counter).toHaveClass(/has-errors/);
+    await page.evaluate(() => window.fpbjs.get('commandStack').undo());
+    await expect(counter).toHaveCount(0);
+  });
+
   test('the toolbar shows three groups and no options menu', async ({ page }) => {
     await open(page);
     await expect(page.getByRole('button', { name: /Show Options|Hide Options/ })).toHaveCount(0);
