@@ -75,7 +75,7 @@ test.describe('Toolbar', () => {
   test('hovering a button shows its name beside it', async ({ page }) => {
     await open(page);
     const button = page.locator('#openSearchButton');
-    const tip = page.locator('.fpb-tooltip:visible');
+    const tip = page.locator('.fpb-toolbar-tip:visible');
     await button.hover();
     await expect(tip).toHaveText(/^Search all layers \((Ctrl|⌘)\+F\)$/, { timeout: 1000 });
     const tipBox = await tip.boundingBox();
@@ -95,7 +95,7 @@ test.describe('Toolbar', () => {
     await page.locator('#saveFileButton').focus();
     await page.keyboard.press('Tab');
     await expect(page.locator('#exportButton')).toBeFocused();
-    const tip = page.locator('.fpb-tooltip:visible');
+    const tip = page.locator('.fpb-toolbar-tip:visible');
     await expect(tip).toHaveText('Export', { timeout: 200 });
     await page.keyboard.press('Escape');
     await expect(tip).toHaveCount(0);
@@ -106,9 +106,9 @@ test.describe('Toolbar', () => {
   test('a screen reader hears the name once', async ({ page }) => {
     await open(page);
     await page.locator('#exportButton').hover();
-    await expect(page.locator('.fpb-tooltip:visible')).toHaveText('Export');
+    await expect(page.locator('.fpb-toolbar-tip:visible')).toHaveText('Export');
     await expect(page.getByRole('button', { name: 'Export', exact: true })).toHaveCount(1);
-    await expect(page.locator('.fpb-tooltip')).toHaveAttribute('aria-hidden', 'true');
+    await expect(page.locator('.fpb-toolbar-tip')).toHaveAttribute('aria-hidden', 'true');
     // the accessibility tree has the button and no text of the tooltip
     const tree = await page.locator('body').ariaSnapshot();
     expect(tree).toMatch(/button "Export"/);

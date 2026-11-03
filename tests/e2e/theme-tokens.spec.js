@@ -92,13 +92,58 @@ test.describe('Design values', () => {
     expect(bootstrap).toBe(false);
   });
 
+  // final review 016f E1, I2: values of the reboot of Bootstrap the web app relied on
+  test('a tap leaves no grey box and iOS keeps the text size', async ({ page, browserName }) => {
+    // mobile values: desktop Firefox and WebKit do not compute them at all
+    test.skip(browserName !== 'chromium', 'only Chromium computes these on the desktop');
+    await open(page);
+    const style = await page.evaluate(() => {
+      const read = (element) => {
+        const s = getComputedStyle(element);
+        return { tap: s.webkitTapHighlightColor, adjust: s.webkitTextSizeAdjust || s.textSizeAdjust };
+      };
+      return { body: read(document.body), button: read(document.getElementById('exportButton')) };
+    });
+    expect(style).toEqual({
+      body: { tap: 'rgba(0, 0, 0, 0)', adjust: '100%' },
+      button: { tap: 'rgba(0, 0, 0, 0)', adjust: '100%' }
+    });
+  });
+
+  for (const theme of ['light', 'dark']) {
+    test(`the key of "Open a file" is a filled chip as before 2.0 (${theme})`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: theme });
+      const importer = new ImportPage(page);
+      await page.setViewportSize({ width: 1500, height: 900 });
+      await importer.goto();
+      const chip = page.locator('.fpb-start-open kbd');
+      await expect(chip).toBeVisible();
+      const colours = await chip.evaluate((kbd) => {
+        const resolve = (variable) => {
+          const probe = document.createElement('span');
+          probe.style.color = 'var(' + variable + ')';
+          kbd.parentElement.appendChild(probe);
+          const value = getComputedStyle(probe).color;
+          probe.remove();
+          return value;
+        };
+        const style = getComputedStyle(kbd);
+        return {
+          background: style.backgroundColor === resolve('--fpb-text'),
+          text: style.color === resolve('--fpb-surface')
+        };
+      });
+      expect(colours).toEqual({ background: true, text: true });
+    });
+  }
+
   // 016f E1, review focus 5
   for (const theme of ['light', 'dark']) {
     test(`the name beside a toolbar button reaches 4.5:1 (${theme})`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: theme });
       await open(page);
       await page.locator('#exportButton').hover();
-      const tip = page.locator('.fpb-tooltip:visible');
+      const tip = page.locator('.fpb-toolbar-tip:visible');
       await expect(tip).toHaveText('Export');
       const ratio = await tip.evaluate((e) => {
         const channels = (value) => value.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number);

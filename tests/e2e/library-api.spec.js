@@ -342,6 +342,27 @@ test.describe('createFpbModeler', () => {
     expect(errors).toEqual([]);
   });
 
+  // final review 016f E1, I3: a toolbar the host builds itself follows the theme too
+  test('a toolbar built through getClasses() follows the theme of its modeler', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    const state = await page.evaluate(async () => {
+      const c = await window.FpbJS.getClasses();
+      const layers = document.getElementById('layers');
+      const modeler = new c.FpbModeler({ container: document.getElementById('modeler'), configFile: c.defaultConfig, theme: 'dark' });
+      const toolbar = new c.LayerOverview({ container: layers, modeler });
+      const out = {
+        ui: layers.classList.contains('fpb-ui'),
+        theme: layers.getAttribute('data-theme'),
+        lineHeight: getComputedStyle(layers.querySelector('.fpb-toolbar')).lineHeight
+      };
+      toolbar.destroy();
+      modeler.destroy();
+      return out;
+    });
+    expect(state).toEqual({ ui: true, theme: 'dark', lineHeight: '24px' });
+    expect(errors).toEqual([]);
+  });
+
   // final review of B3: a panel the host builds itself follows the theme like the facade's
   test('a panel built through getClasses() follows a dark host page', async ({ page }) => {
     const { errors } = await openLibraryPage(page);
@@ -1754,7 +1775,7 @@ test.describe('destroy', () => {
     await createModeler(page, { panels: true });
     const button = page.locator('#layers #openValidationButton');
     await button.hover();
-    const tip = page.locator('.fpb-tooltip:visible');
+    const tip = page.locator('.fpb-toolbar-tip:visible');
     await expect(tip).toContainText('Model check (VDI 3682)');
     const box = await tip.boundingBox();
     const buttonBox = await button.boundingBox();
@@ -1774,7 +1795,7 @@ test.describe('destroy', () => {
 
     await page.evaluate(() => window.fpb.destroy());
     expect(await page.evaluate(() => document.getElementById('layers').children.length)).toBe(0);
-    await expect(page.locator('body > .fpb-tooltips')).toHaveCount(0);
+    await expect(page.locator('body > .fpb-toolbar-tips')).toHaveCount(0);
 
     await createModeler(page, { panels: true });
     expect(await importModel(page, clone())).toBe(true);

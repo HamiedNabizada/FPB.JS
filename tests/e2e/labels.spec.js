@@ -121,6 +121,26 @@ test.describe('Labels inside shapes', () => {
     expect(await page.locator('.fpb-tooltip').count()).toBe(0);
   });
 
+  // final review 016f E1, I1: the name of a toolbar button has a class of its own
+  test('a toolbar tooltip shown before leaves the tooltip of a cut name alone', async ({ page }) => {
+    await laden(page);
+    const id = await idVon(page, 'Erhitzen');
+    await umbenennen(page, 'Erhitzen', LANG);
+    await page.locator('#exportButton').hover();
+    await expect(page.getByText('Export', { exact: true })).toBeVisible();
+
+    expect(await tooltipBeiHover(page, id)).toBe(LANG);
+    // the canvas tooltip keeps the line height of the page (1.5), as before 2.0
+    const ratio = await page.evaluate(() => {
+      const style = getComputedStyle(document.querySelector('.fpb-tooltip'));
+      return parseFloat(style.lineHeight) / parseFloat(style.fontSize);
+    });
+    expect(ratio).toBeCloseTo(1.5, 2);
+    await page.mouse.move(1450, 900);
+    await page.waitForTimeout(150);
+    expect(await page.locator('.fpb-tooltip').count()).toBe(0);
+  });
+
   test('a short name is not cut and has no tooltip', async ({ page }) => {
     await laden(page);
     const id = await idVon(page, 'Prüfen');

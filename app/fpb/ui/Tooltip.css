@@ -1,6 +1,7 @@
 /* The names of the toolbar buttons (016f E1, V2): the look of the hover
-   tooltips of diagram-js in the palette, the same in light and dark. */
-.fpb-tooltip {
+   tooltips of diagram-js in the palette, the same in light and dark. Not
+   .fpb-tooltip: that is the full name of a cut label (FpbRenderer). */
+.fpb-toolbar-tip {
   position: fixed;
   z-index: 1000;
   padding: 6px 10px;
@@ -15,6 +16,6 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
-.fpb-tooltip[hidden] {
+.fpb-toolbar-tip[hidden] {
   display: none;
 }

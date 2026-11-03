@@ -24,9 +24,9 @@ export function createTooltips(theme) {
   function element() {
     if (!host) {
       host = document.createElement('div');
-      host.className = 'fpb-tooltips';
+      host.className = 'fpb-toolbar-tips';
       tip = document.createElement('div');
-      tip.className = 'fpb-tooltip';
+      tip.className = 'fpb-toolbar-tip';
       tip.setAttribute('aria-hidden', 'true');
       tip.hidden = true;
       host.appendChild(tip);
@@ -44,14 +44,14 @@ export function createTooltips(theme) {
     }
     const tooltip = element();
     tooltip.textContent = text;
-    tooltip.className = 'fpb-tooltip';
+    tooltip.className = 'fpb-toolbar-tip';
     tooltip.hidden = false;
     const position = tooltipPosition(
       target.getBoundingClientRect(),
       { width: tooltip.offsetWidth, height: tooltip.offsetHeight },
       { width: window.innerWidth, height: window.innerHeight }
     );
-    tooltip.classList.add('fpb-tooltip--' + position.placement);
+    tooltip.classList.add('fpb-toolbar-tip--' + position.placement);
     tooltip.style.left = position.left + 'px';
     tooltip.style.top = position.top + 'px';
     document.addEventListener('keydown', onKeyDown);

@@ -19,11 +19,17 @@ export default class Toolbar {
       showNewModel = false
     } = options;
     this._container = container;
+    // light, dark and the base values also when a host builds the toolbar
+    // itself (getClasses().LayerOverview), as the properties panel does
+    const theme = modeler.get('fpbTheme', false);
+    if (theme) {
+      theme.addContainer(container);
+    }
     // The import waits for this panel instead of waiting a fixed time
     modeler.get('eventBus').fire('ui.componentRegistered', { component: 'layerPanel' });
     // Ctrl+S on a button of the toolbar saves the model, not the page
     this._unbindKeys = modeler.get('fpbFiles').bindKeys(container);
-    this._tooltips = createTooltips(modeler.get('fpbTheme', false));
+    this._tooltips = createTooltips(theme);
     render(<ToolbarRoot modeler={modeler} showNewModel={showNewModel} tooltips={this._tooltips} />, container);
   }
 
