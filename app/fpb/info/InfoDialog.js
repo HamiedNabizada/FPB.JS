@@ -1,6 +1,6 @@
 /** @jsx h */
 import { h } from '@bpmn-io/properties-panel/preact';
-import { useRef, useState } from '@bpmn-io/properties-panel/preact/hooks';
+import { useEffect, useRef, useState } from '@bpmn-io/properties-panel/preact/hooks';
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons/faCircleInfo';
 import { faKeyboard } from '@fortawesome/free-solid-svg-icons/faKeyboard';
 import { faCircleQuestion } from '@fortawesome/free-solid-svg-icons/faCircleQuestion';
@@ -62,14 +62,16 @@ function Notation(props) {
     <dl key="l" class="fpb-notation">
       {NOTATION.map((entry) => (
         <div key={entry.id} class="fpb-notation-entry" data-id={entry.id}>
-          <NotationSymbol symbol={entry.symbol} />
-          <dt>{translate(entry.name)}</dt>
+          <dt>
+            <NotationSymbol symbol={entry.symbol} />
+            <span class="fpb-notation-name">{translate(entry.name)}</span>
+          </dt>
           <dd>{translate(entry.text)}</dd>
         </div>
       ))}
     </dl>,
     <p key="f" class="fpb-notation-flows">{translate(NOTATION_FLOWS)}</p>,
-    <p key="s" class="fpb-info-muted fpb-notation-source">{translate('Source: VDI 3682 Blatt 1 (2015), section 4.')}</p>
+    <p key="s" class="fpb-info-muted fpb-notation-source">{translate('Source: VDI/VDE 3682 Part 1 (2015), section 4.')}</p>
   ];
 }
 
@@ -117,6 +119,24 @@ function Help(props) {
 
 const PANELS = { about: About, notation: Notation, shortcuts: Shortcuts, help: Help };
 
+// below this width the tabs stand side by side (Info.css)
+const NARROW = '(max-width: 640px)';
+
+/** Is the screen narrow, so the tabs stand side by side? */
+function useNarrow() {
+  const query = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(NARROW) : null;
+  const [narrow, setNarrow] = useState(!!(query && query.matches));
+  useEffect(() => {
+    if (!query || !query.addEventListener) {
+      return undefined;
+    }
+    const changed = () => setNarrow(query.matches);
+    query.addEventListener('change', changed);
+    return () => query.removeEventListener('change', changed);
+  }, []);
+  return narrow;
+}
+
 /**
  * About, notation, keyboard shortcuts and help (016e V6, V14): tabs on the left after the
  * WAI-ARIA tabs pattern, the arrow keys move between them and select.
@@ -124,6 +144,7 @@ const PANELS = { about: About, notation: Notation, shortcuts: Shortcuts, help: H
 export default function InfoDialog(props) {
   const { close, titleId, translate, initialTab, onTab } = props;
   const [tab, setTab] = useState(initialTab);
+  const narrow = useNarrow();
   const tabRefs = useRef({});
   const id = (kind, tabId) => `${titleId}-${kind}-${tabId}`;
 
@@ -135,11 +156,15 @@ export default function InfoDialog(props) {
     }
   };
 
+  // the tabs stand side by side on a narrow screen (Info.css): all four
+  // arrows move, and the list says how it lies (016g D5)
   const onKeyDown = (event) => {
     const index = TABS.findIndex((t) => t.id === tab);
     const next = {
       ArrowDown: (index + 1) % TABS.length,
+      ArrowRight: (index + 1) % TABS.length,
       ArrowUp: (index - 1 + TABS.length) % TABS.length,
+      ArrowLeft: (index - 1 + TABS.length) % TABS.length,
       Home: 0,
       End: TABS.length - 1
     }[event.key];
@@ -153,7 +178,7 @@ export default function InfoDialog(props) {
   return (
     <DialogFrame title={translate('FPB.js Information')} titleId={titleId} onClose={() => close()} closeLabel={translate('Close information')}>
       <div class="fpb-info">
-        <div class="fpb-info-tabs" role="tablist" aria-orientation="vertical" onKeyDown={onKeyDown}>
+        <div class="fpb-info-tabs" role="tablist" aria-orientation={narrow ? 'horizontal' : 'vertical'} onKeyDown={onKeyDown}>
           {TABS.map((t) => (
             <button
               key={t.id}

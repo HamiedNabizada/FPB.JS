@@ -32,7 +32,11 @@ test.describe('Notation', () => {
     await expect(dialog(page).locator('.fpb-notation-entry[data-id="processOperator"] dd'))
       .toHaveText('Converts products, energies and information into new ones; only process operators can be decomposed.');
     await expect(dialog(page).locator('.fpb-notation-flows')).toContainText('parallel flows share part of their way');
-    await expect(dialog(page)).toContainText('VDI 3682 Blatt 1 (2015), section 4');
+    // the guideline in full in a source, in English (016g F6)
+    await expect(dialog(page).locator('.fpb-notation-source')).toHaveText('Source: VDI/VDE 3682 Part 1 (2015), section 4.');
+    // dl holds div with dt and dd only (016g F7)
+    const children = await dialog(page).locator('dl.fpb-notation > div').evaluateAll((divs) => divs.map((d) => Array.from(d.children).map((c) => c.tagName).join(',')));
+    expect([...new Set(children)]).toEqual(['DT,DD']);
 
     // every symbol is drawn
     const sizes = await entries.locator('.fpb-notation-symbol').evaluateAll((symbols) => symbols.map((s) => {
@@ -46,6 +50,21 @@ test.describe('Notation', () => {
     await page.evaluate(() => window.fpbjs.get('fpbInfo').open('notation'));
     await expect(dialog(page).getByRole('tab', { name: 'Notation' })).toHaveAttribute('aria-selected', 'true');
     expect(errors).toEqual([]);
+  });
+
+  // 016g D5
+  test('on a narrow screen the tabs of Information move with left and right', async ({ page }) => {
+    await start(page);
+    await page.setViewportSize({ width: 500, height: 800 });
+    await page.evaluate(() => window.fpbjs.get('fpbInfo').open('about'));
+    const tabs = dialog(page).getByRole('tablist');
+    await expect(tabs).toHaveAttribute('aria-orientation', 'horizontal');
+    await dialog(page).getByRole('tab', { name: 'About' }).focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(dialog(page).getByRole('tab', { name: 'Notation' })).toHaveAttribute('aria-selected', 'true');
+    await expect(dialog(page).getByRole('tab', { name: 'Notation' })).toBeFocused();
+    await page.keyboard.press('ArrowLeft');
+    await expect(dialog(page).getByRole('tab', { name: 'About' })).toHaveAttribute('aria-selected', 'true');
   });
 
   test('the symbols of the notation follow the accessible colour scheme', async ({ page }) => {

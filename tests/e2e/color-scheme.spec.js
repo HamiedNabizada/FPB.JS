@@ -84,6 +84,36 @@ test.describe('Farbschema', () => {
     expect(new Set(Object.values(farben).map((f) => f.palette)).size).toBe(3);
   });
 
+  // 016g F5: the size of a symbol comes from where it stands, the scheme
+  // gives only its picture, whatever the order of the style sheets
+  test('the accessible colours change the picture of a symbol, not its size', async ({ page }) => {
+    await laden(page);
+    const sizing = await page.evaluate(() => {
+      const found = [];
+      Array.from(document.styleSheets).forEach((sheet) => {
+        let rules = [];
+        try {
+          rules = Array.from(sheet.cssRules);
+        } catch (e) {
+          return;
+        }
+        rules.forEach((rule) => {
+          if (rule.selectorText && rule.selectorText.includes('[data-colors="accessible"]') && rule.selectorText.includes('icon-fpb') && rule.style.backgroundSize) {
+            found.push(rule.selectorText);
+          }
+        });
+      });
+      return found;
+    });
+    expect(sizing).toEqual([]);
+    await page.evaluate(() => window.fpbjs.get('fpbInfo').open('notation'));
+    const symbol = page.locator('dialog.fpb-info-dialog[open] .fpb-notation-entry[data-id="product"] .fpb-notation-symbol');
+    const size = () => symbol.evaluate((s) => getComputedStyle(s).backgroundSize);
+    const before = await size();
+    await umschalten(page, 'accessible');
+    expect(await size()).toBe(before);
+  });
+
   test('der Knopf steht unter dem für den Dunkelmodus, nicht daneben', async ({ page }) => {
     await laden(page);
 

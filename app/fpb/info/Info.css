@@ -153,6 +153,9 @@
 }
 
 .fpb-notation dt {
+  /* the symbol stands in the term (valid HTML, 016g F7); the grid of the
+     entry places symbol and name as before */
+  display: contents;
   font-weight: 600;
 }
 
