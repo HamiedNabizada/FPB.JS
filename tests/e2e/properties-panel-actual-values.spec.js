@@ -77,6 +77,27 @@ test.describe('New properties panel, actual values', () => {
     expect(await actuals(page)).toEqual([{ value: 0, unit: '' }]);
   });
 
+  // final review 016g, I2: Backspace or the undo of the field, not only the
+  // undo of the canvas
+  test('emptying an added row with the keyboard takes it out of the model and keeps the row', async ({ page }) => {
+    await openTemperatur(page);
+    await page.getByRole('button', { name: 'Add actual value' }).click();
+    const value = field(page, 'characteristic-0-actual-1-value');
+    await value.fill('7');
+    await expect.poll(() => actuals(page)).toEqual([{ value: 0, unit: '' }, { value: 7, unit: '' }]);
+    await value.press('Backspace');
+    await expect.poll(() => actuals(page)).toEqual([{ value: 0, unit: '' }]);
+    await expect(value).toBeVisible();
+    await expect(value).toBeFocused();
+    await expect(page.locator('.fpb-characteristic-row-summary').first()).not.toContainText('(+1)');
+
+    await value.fill('8');
+    await expect.poll(() => actuals(page)).toEqual([{ value: 0, unit: '' }, { value: 8, unit: '' }]);
+    await value.press('Control+z');
+    await expect(value).toHaveValue('');
+    await expect.poll(() => actuals(page)).toEqual([{ value: 0, unit: '' }]);
+  });
+
   // review focus 2
   test('undo after the first input removes row and value in one step', async ({ page }) => {
     await openTemperatur(page);

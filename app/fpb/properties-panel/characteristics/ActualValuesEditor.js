@@ -60,7 +60,9 @@ function ActualValueRow(props) {
  * with it, in one undo step (withField creates what is missing), and a row
  * left empty leaves nothing in the file (016g B1). The row is the last of the
  * same list, so it keeps its fields and focus when it becomes a value; it
- * goes with another element or characteristic.
+ * goes with another element or characteristic. Emptied again with the
+ * keyboard (Backspace, the undo of the field), the last value leaves the
+ * model and its row stays as the row of "Add" (final review of 016g, I2).
  */
 export function ActualValuesEditor(props) {
   const { element, characteristic, index, setField, onRemove } = props;
@@ -78,12 +80,27 @@ export function ActualValuesEditor(props) {
     }
   }, [values.length, draftAt]);
 
-  const rows = draftAt !== null && !readOnly ? values.length + 1 : values.length;
+  // read in the drawing itself: one frame with the row and its new value
+  // would show an empty row too many
+  const showDraft = draftAt !== null && !readOnly && values.length <= draftAt;
+  const rows = showDraft ? values.length + 1 : values.length;
+  const blank = (v) => v === undefined || v === null || v === '';
   // a value at `n`; in the row of "Add" only a text that says something
   const write = (n, key, text, value) => {
-    if (n < values.length || text) {
-      setField(['descriptiveElement', 'actualValues', n, key], value);
+    if (n >= values.length) {
+      if (text) {
+        setField(['descriptiveElement', 'actualValues', n, key], value);
+      }
+      return;
     }
+    const current = values[n] || {};
+    const other = key === 'value' ? current.unit : current.value;
+    if (!text && blank(other) && n === values.length - 1) {
+      setDraftAt(n);
+      onRemove(n);
+      return;
+    }
+    setField(['descriptiveElement', 'actualValues', n, key], value);
   };
 
   return (
