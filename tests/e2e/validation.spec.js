@@ -139,6 +139,18 @@ test.describe('Modellprüfung', () => {
       await expect(filterButton(page, 'warning')).toHaveText('Warnings 1');
     });
 
+    // 016g B4
+    test('a filter without findings says so', async ({ page }) => {
+      await vorbereiten(page);
+      await looseState(page);
+      await openList(page);
+      await filterButton(page, 'error').click();
+      await expect(page.locator('.fpb-validation-panel .fpb-validation-empty')).toHaveText('No findings of this kind.');
+      await expect(cards(page)).toHaveCount(0);
+      await filterButton(page, 'all').click();
+      await expect(page.locator('.fpb-validation-panel .fpb-validation-empty')).toHaveCount(0);
+    });
+
     test('the filter works in read-only mode', async ({ page }) => {
       await vorbereiten(page);
       await looseState(page);
@@ -149,5 +161,29 @@ test.describe('Modellprüfung', () => {
         await expect(card).toHaveClass(/fpb-validation-info/);
       }
     });
+  });
+
+  // 016g B2: E5 of the rule catalog
+  test('reversed limits show as E5 in the list', async ({ page }) => {
+    await vorbereiten(page);
+    const toggle = page.locator('#propertiesPanelToggle');
+    if ((await toggle.getAttribute('aria-expanded')) !== 'true') {
+      await toggle.click();
+    }
+    await page.evaluate(() => {
+      const state = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Rohstoff' && e.type !== 'label')[0];
+      window.fpbjs.get('selection').select(state);
+    });
+    await page.locator('.fpb-characteristic-row').first().click();
+    await page.locator('#bio-properties-panel-characteristic-0-acceptance-from').fill('80');
+    await page.locator('#bio-properties-panel-characteristic-0-acceptance-to').fill('20');
+    await page.evaluate(() => {
+      window.fpbjs.get('fpbValidation').run();
+      window.fpbjs.get('fpbValidation').openPanel();
+    });
+    const item = page.locator('.fpb-validation-panel .fpb-validation-item[data-rule="E5"]');
+    await expect(item).toHaveCount(1);
+    await expect(item).toContainText('Lower limit not above upper limit');
+    await expect(item).toContainText('acceptance region');
   });
 });

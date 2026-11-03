@@ -151,6 +151,8 @@ function WorkGroup(props) {
   const layerCount = useModelerState(modeler, 'layers.changed', () => layers.count());
   const validation = modeler.get('fpbValidation');
   const counts = useModelerState(modeler, 'fpbValidation.changed', () => validation.getCounts());
+  // pressed while the list or its sheet is open (016g B5)
+  const checkOpen = useModelerState(modeler, ['fpbValidation.panelChanged', 'sheets.changed'], () => validation.isPanelOpen());
   const [layersOpen, setLayersOpen] = useState(false);
   // narrow touch screens: properties, layers and the check as sheets (016f E2)
   const sheets = modeler.get('fpbSheets', false);
@@ -197,7 +199,7 @@ function WorkGroup(props) {
         </div>,
         sheet.body
       )}
-      <ToolbarButton id="openValidationButton" label={checkLabel} icon={faListCheck} onClick={() => validation.togglePanel()}>
+      <ToolbarButton id="openValidationButton" label={checkLabel} icon={faListCheck} pressed={checkOpen} onClick={() => validation.togglePanel()}>
         {shownFindings > 0 && (
           <span class={counts.error ? 'fpb-validation-count has-errors' : 'fpb-validation-count'}>{shownFindings}</span>
         )}

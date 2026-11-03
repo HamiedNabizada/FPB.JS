@@ -309,6 +309,8 @@
 .fpb-validation-toggle { display: flex; gap: 8px; align-items: center; padding: 2px 6px 0; font-size: 12px; color: var(--fpb-text-muted); }
 .fpb-validation-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
 .fpb-validation-item { padding: 10px 12px; border-radius: 8px; background: var(--fpb-surface); box-shadow: var(--fpb-shadow-card); cursor: pointer; }
+/* a filter that finds nothing (016g B4) */
+.fpb-validation-empty { padding: 10px 12px; color: var(--fpb-text-muted); }
 .fpb-validation-item:hover { box-shadow: 0 0 0 1px var(--fpb-control-border); }
 .fpb-validation-item-head { margin-bottom: 2px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 .fpb-validation-item.fpb-validation-error .fpb-validation-item-head { color: var(--fpb-error-text); }

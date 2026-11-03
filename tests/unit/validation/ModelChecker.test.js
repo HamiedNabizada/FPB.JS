@@ -245,4 +245,50 @@ describe('ModelChecker', () => {
       expect(b6.map((i) => [i.elementId, i.process.id])).toEqual([['out', 'c']]);
     });
   });
+
+  // 016g B2: E5 of the rule catalog, Blatt 2 Abschn. 5.2 (validity limits)
+  describe('E5 validity limits', () => {
+    const withLimits = (limits) => [{
+      $type: 'fpbch:Characteristics',
+      category: { shortName: 'C_1' },
+      descriptiveElement: { validityLimits: limits }
+    }];
+
+    it('E5: a lower limit above the upper limit is an error, reported once for all copies of a state', () => {
+      const m = validModel();
+      m.input.businessObject.characteristics = withLimits([{ limitType: 'acceptance region', from: 80, to: 20 }]);
+      const below = shape('in', 'fpb:Product', at(275, 75), { name: 'Input', characteristics: m.input.businessObject.characteristics });
+      const child = process('c', [below, shape('out', 'fpb:Product', at(275, 475), { name: 'Output' })], [], {
+        isDecomposedProcessOperator: m.op.businessObject, parent: m.process
+      });
+      m.op.businessObject.decomposedView = child;
+
+      const e5 = checkModel([m.process, child]).filter((i) => i.rule === 'E5');
+      expect(e5).toHaveLength(1);
+      expect(e5[0].severity).toBe('error');
+      expect(e5[0].elementId).toBe('in');
+      expect(e5[0].process).toBe(m.process);
+      expect(e5[0].message).toContain('acceptance region');
+      expect(e5[0].message).toContain('80');
+      expect(e5[0].message).toContain('20');
+      expect(RULES.E5).toEqual({ severity: 'error', title: 'Lower limit not above upper limit' });
+    });
+
+    // review focus 3
+    it('E5: limits stored as text compare as numbers', () => {
+      const m = validModel();
+      m.op.businessObject.characteristics = withLimits([{ limitType: 'permitted rejection region', from: '80', to: '20' }]);
+      expect(checkModel([m.process]).filter((i) => i.rule === 'E5').map((i) => i.elementId)).toEqual(['op']);
+    });
+
+    it('E5: words and a single limit are not compared', () => {
+      const m = validModel();
+      m.input.businessObject.characteristics = withLimits([
+        { limitType: 'acceptance region', from: 'low', to: 'high' },
+        { limitType: 'permitted rejection region', from: 5 },
+        { limitType: 'acceptance region', from: 10, to: 10 }
+      ]);
+      expect(checkModel([m.process]).filter((i) => i.rule === 'E5')).toEqual([]);
+    });
+  });
 });

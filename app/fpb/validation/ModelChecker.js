@@ -25,6 +25,8 @@ export const RULES = {
   D3: { severity: SEVERITY.INFO, title: 'Process operator has a name' },
   D4: { severity: SEVERITY.INFO, title: 'State has a name' },
   D5: { severity: SEVERITY.INFO, title: 'Technical resource has a name' },
+  // Blatt 2 Abschn. 5.2: a setpoint with its validity limits (016g B2)
+  E5: { severity: SEVERITY.ERROR, title: 'Lower limit not above upper limit' },
   F5: { severity: SEVERITY.WARNING, title: 'Decomposition contains every input and output' },
   F8: { severity: SEVERITY.WARNING, title: 'Branching type matches the decomposition' },
   // a note, as E6 of the catalog: the model stays valid, and every older file
@@ -57,7 +59,55 @@ export function checkModel(processShapes) {
     checkProcess(process, issues);
   });
   checkCopies(byId, issues);
+  checkLimits(byId, issues);
   return issues;
+}
+
+const list = (value) => (Array.isArray(value) ? value : (value ? [value] : []));
+
+/** A limit as a number: a number, or a text that is wholly one (older files) */
+function limitNumber(value) {
+  if (typeof value === 'number') {
+    return isFinite(value) ? value : null;
+  }
+  if (typeof value !== 'string' || !value.trim()) {
+    return null;
+  }
+  const number = Number(value.trim().replace(',', '.'));
+  return isFinite(number) ? number : null;
+}
+
+/**
+ * E5: in every validity limit the lower one is not above the upper one;
+ * compared only where both are numbers. That the permitted rejection region
+ * holds the acceptance region is not checked: Blatt 2 does not say so in as
+ * many words (016g). Copies of a boundary state are one object: reported
+ * once, at the copy on the uppermost layer.
+ */
+function checkLimits(processes, issues) {
+  const seen = new Set();
+  processes.forEach(function (process) {
+    const layer = layerContents(process);
+    layer.states.concat(layer.operators, layer.resources).forEach(function (element) {
+      if (seen.has(element.id)) {
+        return;
+      }
+      seen.add(element.id);
+      list(element.businessObject.characteristics).forEach(function (characteristic, n) {
+        const category = (characteristic && characteristic.category) || {};
+        const name = text(category.shortName) || text(category.longName) || String(n + 1);
+        list(((characteristic && characteristic.descriptiveElement) || {}).validityLimits).forEach(function (limit) {
+          const from = limitNumber(limit && limit.from);
+          const to = limitNumber(limit && limit.to);
+          if (from === null || to === null || from <= to) {
+            return;
+          }
+          report(issues, 'E5', element, process, 'Characteristic ' + name + ' of ' + label(element) + ', ' +
+            (text(limit.limitType) || 'validity limit') + ': lower limit ' + from + ' is above upper limit ' + to + '.');
+        });
+      });
+    });
+  });
 }
 
 const text = (value) => (value === undefined || value === null ? '' : String(value).trim());

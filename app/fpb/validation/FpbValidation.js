@@ -76,9 +76,10 @@ export default function FpbValidation(eventBus, canvas, overlays, elementRegistr
     } else if (self._panel.parentNode !== canvasContainer) {
       self._panel.classList.remove('open');
       canvasContainer.appendChild(self._panel);
-    } else if (event.active) {
+    } else if (event.active && self._panel.classList.contains('open')) {
       // turned upright with the floating list open: the list is a sheet now
       self._panel.classList.remove('open');
+      self._panelChanged();
     }
   });
   // a chosen finding marks its other elements until the next selection
@@ -223,8 +224,12 @@ FpbValidation.prototype.openPanel = function () {
     sheets.open('check', { title: this._injector.get('translate')('Model check (VDI 3682)') });
     return;
   }
+  const opening = !this._panel.classList.contains('open');
   this._panel.classList.add('open');
   this._renderPanel();
+  if (opening) {
+    this._panelChanged();
+  }
 };
 
 FpbValidation.prototype.closePanel = function () {
@@ -233,7 +238,18 @@ FpbValidation.prototype.closePanel = function () {
     sheets.close();
     return;
   }
-  this._panel.classList.remove('open');
+  if (this._panel.classList.contains('open')) {
+    this._panel.classList.remove('open');
+    this._panelChanged();
+  }
+};
+
+/**
+ * The floating list opened or closed (016g B5); a sheet of the list says so
+ * with sheets.changed
+ */
+FpbValidation.prototype._panelChanged = function () {
+  this._eventBus.fire('fpbValidation.panelChanged', { open: this._panel.classList.contains('open') });
 };
 
 FpbValidation.prototype.togglePanel = function () {
@@ -320,6 +336,13 @@ FpbValidation.prototype._renderPanel = function () {
     }
     list.appendChild(item);
   });
+  // a filter that finds nothing says so, instead of an empty list (016g B4)
+  if (this._issues.length && !list.children.length) {
+    const empty = document.createElement('li');
+    empty.className = 'fpb-validation-empty';
+    empty.textContent = this._injector.get('translate')('No findings of this kind.');
+    list.appendChild(empty);
+  }
 };
 
 FpbValidation.prototype._clearInvolved = function () {

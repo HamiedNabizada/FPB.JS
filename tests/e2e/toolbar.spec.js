@@ -128,6 +128,18 @@ test.describe('Toolbar', () => {
     await expect(button).toHaveCount(0);
   });
 
+  // 016g B5
+  test('the model check button is pressed while its list is open', async ({ page }) => {
+    await open(page);
+    const button = page.locator('#openValidationButton');
+    await expect(button).toHaveAttribute('aria-pressed', 'false');
+    await button.click();
+    await expect(page.locator('.fpb-validation-panel.open')).toBeVisible();
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('.fpb-validation-panel .fpb-validation-close').click();
+    await expect(button).toHaveAttribute('aria-pressed', 'false');
+  });
+
   test('the check counter follows the model check', async ({ page }) => {
     await open(page);
     const counter = page.locator('#openValidationButton .fpb-validation-count');

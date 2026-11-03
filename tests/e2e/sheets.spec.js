@@ -263,6 +263,18 @@ for (const [label, device] of [['phone', devices['Pixel 5']], ['tablet', devices
       await expect(sheet).toBeVisible();
     });
 
+    // 016g B5
+    test('the model check button is pressed while its sheet is open', async ({ page }) => {
+      await load(page);
+      const button = page.locator('#openValidationButton');
+      await expect(button).toHaveAttribute('aria-pressed', 'false');
+      await button.tap();
+      await expect(page.locator('.fpb-sheet[data-sheet="check"]')).toBeVisible();
+      await expect(button).toHaveAttribute('aria-pressed', 'true');
+      await page.locator('.fpb-sheet-close').tap();
+      await expect(button).toHaveAttribute('aria-pressed', 'false');
+    });
+
     // review focus 3
     test('a finding in the sheet opens the properties at its findings', async ({ page }) => {
       await load(page);
