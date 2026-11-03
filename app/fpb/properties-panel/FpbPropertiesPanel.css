@@ -1,5 +1,6 @@
-/* Properties panel (Preact). Fixed width, so the canvas does not jump with
-   the content; closed it leaves only the toggle. */
+/* Properties panel (Preact). At the side 320 px wide, so the canvas does
+   not jump with the content; closed it leaves only the toggle. In a sheet
+   of a narrow touch screen the whole width (016f E2). */
 
 .fpb-properties {
   display: flex;

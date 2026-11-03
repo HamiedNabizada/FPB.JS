@@ -63,6 +63,13 @@ const fpb = await createFpbModeler({ container, additionalModules: [AmlModule] }
 
 With script tags, load `dist/fpbjs-aml.js` after `dist/fpbjs.js` and pass `FpbJSAml.AmlModule`. The web app has it on.
 
+Light and dark follow the user's choice, else light. A host decides with the option `theme` (`'light'`, `'dark'` or `'system'` for the setting of the system) or later with `setTheme`; with `'light'` or `'dark'` the toggle in the toolbar is hidden. Only the containers of the modeler change, the page of the host keeps its look:
+
+```js
+const fpb = await createFpbModeler({ container, theme: 'dark' });
+fpb.setTheme('system');
+```
+
 ## Citation
 
 If you use FPB.JS in your research, please cite:

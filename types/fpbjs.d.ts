@@ -580,11 +580,15 @@ export interface CreateFpbModelerOptions {
   config?: Record<string, any>;
   /**
    * Show the "New model" button in the toolbar also without the browser
-   * backup (autosave). Default false. Replaces `propertiesConfig.layerPanel.
-   * showNewModel` of 1.x; `propertiesConfig` itself is gone in 2.0 and only
-   * answered with a console warning.
+   * backup (autosave). Default false. New in 2.0.
    */
   showNewModel?: boolean;
+  /**
+   * @deprecated Gone in 2.0: the properties panel takes no configuration,
+   * and the option is only answered with a console warning. For the button
+   * "New model" use `showNewModel`.
+   */
+  propertiesConfig?: unknown;
   /**
    * Backup of the model in the browser (localStorage) and a warning before
    * leaving the page with changes that are in no file. Off by default; the
