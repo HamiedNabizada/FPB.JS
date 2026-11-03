@@ -44,6 +44,12 @@ const select = (page, name) => page.evaluate((name) => {
 
 const propertiesSheet = (page) => page.locator('.fpb-sheet[data-sheet="properties"]');
 
+/** A finding of the model check: Prüfen leaves its system limit (B2, an error) */
+const makeFinding = (page) => page.evaluate(() => {
+  const operator = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Prüfen')[0];
+  window.fpbjs.get('modeling').moveElements([operator], { x: 900, y: 0 });
+});
+
 /** Drag the head of the sheet with the mouse: pointer events, as a finger gives them */
 async function dragHead(page, toY) {
   const head = await box(page, '.fpb-sheet-head');
@@ -105,7 +111,10 @@ for (const [label, device] of [['phone', devices['Pixel 5']], ['tablet', devices
       groups.forEach((bottom) => expect(bottom).toBeLessThanOrEqual(top + 1));
     });
 
-    test('dragging the head makes the sheet taller up to just below the top, dragging it down closes it', async ({ page }) => {
+    test('dragging the head makes the sheet taller up to just below the top, dragging it down closes it', async ({ page, browserName }) => {
+      // Playwright's Firefox with touch emulation sends no pointer events for
+      // the mouse (only mousedown and mousemove); Firefox on Android does
+      test.skip(browserName === 'firefox', 'no pointer events from the mouse under touch emulation');
       await load(page);
       await openSheet(page);
       await expect(page.locator('.fpb-sheet')).toBeVisible();
@@ -186,6 +195,68 @@ for (const [label, device] of [['phone', devices['Pixel 5']], ['tablet', devices
       await expect(name).toBeFocused();
     });
 
+    // V9: the layers as a sheet
+    test('Layers opens the tree as a sheet and a tap switches the layer', async ({ page }) => {
+      await load(page);
+      const button = page.locator('#openLayerButton');
+      await button.tap();
+      await expect(button).toHaveAttribute('aria-pressed', 'true');
+      const sheet = page.locator('.fpb-sheet[data-sheet="layers"]');
+      await expect(sheet.locator('.fpb-sheet-title')).toHaveText('Layers');
+      await expect(sheet.locator('.fpb-layers-tree')).toBeVisible();
+      await expect(sheet.locator('.fpb-layers-project')).toContainText('FPBJS_Project');
+      // no card in the toolbar
+      await expect(page.locator('#layer-container .fpb-layers')).toHaveCount(0);
+      await sheet.getByRole('treeitem', { name: 'Erhitzen', exact: true }).locator(':scope > .fpb-layers-node').tap();
+      await expect(page.locator('.fpb-breadcrumbs')).toContainText('Erhitzen');
+      await button.tap();
+      await expect(sheet).toHaveCount(0);
+    });
+
+    test('only one sheet is open at a time', async ({ page }) => {
+      await load(page);
+      await page.locator('#propertiesSheetButton').tap();
+      await expect(page.locator('.fpb-sheet')).toHaveCount(1);
+      await page.locator('#openLayerButton').tap();
+      await expect(page.locator('.fpb-sheet')).toHaveCount(1);
+      await expect(page.locator('.fpb-sheet-title')).toHaveText('Layers');
+      await expect(page.locator('#propertiesSheetButton')).toHaveAttribute('aria-pressed', 'false');
+      await page.locator('#openValidationButton').tap();
+      await expect(page.locator('.fpb-sheet')).toHaveCount(1);
+      await expect(page.locator('.fpb-sheet-title')).toHaveText('Model check (VDI 3682)');
+      await expect(page.locator('#openLayerButton')).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    test('the model check opens as a sheet, also from Show findings', async ({ page }) => {
+      await load(page);
+      await makeFinding(page);
+      await page.locator('#openValidationButton').tap();
+      const sheet = page.locator('.fpb-sheet[data-sheet="check"]');
+      await expect(sheet.locator('.fpb-sheet-title')).toHaveText('Model check (VDI 3682)');
+      await expect(sheet.locator('.fpb-validation-list li').first()).toBeVisible();
+      // the list brings no second head into the sheet
+      await expect(sheet.locator('.fpb-validation-header')).toBeHidden();
+      await page.locator('#openValidationButton').tap();
+      await expect(sheet).toHaveCount(0);
+      await expect(page.locator('.fpb-validation-panel.open')).toHaveCount(0);
+      // the button "Show findings" of an import message calls openPanel
+      await page.evaluate(() => window.fpbjs.get('fpbValidation').openPanel());
+      await expect(sheet).toBeVisible();
+    });
+
+    // review focus 3
+    test('a finding in the sheet opens the properties at its findings', async ({ page }) => {
+      await load(page);
+      await makeFinding(page);
+      await page.locator('#openValidationButton').tap();
+      const item = page.locator('.fpb-sheet[data-sheet="check"] .fpb-validation-list li').first();
+      await expect(item).toBeVisible();
+      await item.tap();
+      await expect(propertiesSheet(page)).toBeVisible();
+      await expect(propertiesSheet(page).locator('.fpb-panel-header-name')).toHaveText('Prüfen');
+      await expect(propertiesSheet(page).locator('[data-group-id="group-findings"]')).toBeVisible();
+    });
+
     test('a lower page keeps the sheet inside it', async ({ page }) => {
       await load(page);
       await openSheet(page);
@@ -213,6 +284,46 @@ test.describe('Sheets and the rest of the modeler', () => {
     await select(page, 'Erhitzen');
     await page.locator('#propertiesSheetButton').tap();
     await expect(propertiesSheet(page).locator('#bio-properties-panel-longName')).toHaveAttribute('readonly', '');
+    await context.close();
+  });
+
+  // review focus 5
+  test('the sheet follows light and dark', async ({ browser }) => {
+    const context = await browser.newContext({ ...phone, colorScheme: 'dark' });
+    const page = await context.newPage();
+    await load(page);
+    await page.locator('#propertiesSheetButton').tap();
+    const colours = await page.evaluate(() => {
+      const sheet = document.querySelector('.fpb-sheet');
+      const title = document.querySelector('.fpb-sheet-title');
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--fpb-surface)';
+      sheet.appendChild(probe);
+      const surface = getComputedStyle(probe).color;
+      probe.remove();
+      const channels = (value) => value.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number);
+      const luminance = ([r, g, b]) => {
+        const c = (v) => {
+          const s = v / 255;
+          return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+        };
+        return 0.2126 * c(r) + 0.7152 * c(g) + 0.0722 * c(b);
+      };
+      const background = getComputedStyle(sheet).backgroundColor;
+      const a = luminance(channels(getComputedStyle(title).color));
+      const b = luminance(channels(background));
+      return {
+        theme: document.documentElement.getAttribute('data-theme'),
+        background,
+        surface,
+        dark: luminance(channels(background)) < 0.2,
+        ratio: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+      };
+    });
+    expect(colours.theme).toBe('dark');
+    expect(colours.background).toBe(colours.surface);
+    expect(colours.dark).toBe(true);
+    expect(colours.ratio).toBeGreaterThanOrEqual(4.5);
     await context.close();
   });
 

@@ -65,6 +65,19 @@ export default function FpbValidation(eventBus, canvas, overlays, elementRegistr
       self._renderPanel();
     }
   });
+  // on narrow touch screens the list is a sheet (016f E2): it goes into the
+  // body of its sheet and back to the canvas when the sheet closes
+  eventBus.on('sheets.changed', function (event) {
+    const canvasContainer = self._canvas.getContainer();
+    if (event.current === 'check' && event.body) {
+      event.body.appendChild(self._panel);
+      self._panel.classList.add('open');
+      self._renderPanel();
+    } else if (self._panel.parentNode !== canvasContainer) {
+      self._panel.classList.remove('open');
+      canvasContainer.appendChild(self._panel);
+    }
+  });
   // a chosen finding marks its other elements until the next selection
   eventBus.on('selection.changed', function () {
     if (!self._choosing) {
@@ -189,17 +202,36 @@ FpbValidation.prototype._buildPanel = function () {
   });
 };
 
+/** The sheets while they are in use (016f E2), else null */
+FpbValidation.prototype._sheets = function () {
+  const sheets = this._injector.get('fpbSheets', false);
+  return sheets && sheets.isActive() ? sheets : null;
+};
+
 FpbValidation.prototype.isPanelOpen = function () {
-  return this._panel.classList.contains('open');
+  const sheets = this._sheets();
+  return sheets ? sheets.current() === 'check' : this._panel.classList.contains('open');
 };
 
 FpbValidation.prototype.openPanel = function () {
   this.run();
+  const sheets = this._sheets();
+  if (sheets) {
+    sheets.open('check', { title: this._injector.get('translate')('Model check (VDI 3682)') });
+    return;
+  }
   this._panel.classList.add('open');
   this._renderPanel();
 };
 
 FpbValidation.prototype.closePanel = function () {
+  const sheets = this._sheets();
+  if (sheets) {
+    if (sheets.current() === 'check') {
+      sheets.close();
+    }
+    return;
+  }
   this._panel.classList.remove('open');
 };
 

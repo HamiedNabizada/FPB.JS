@@ -74,6 +74,35 @@
   color: var(--fpb-text);
 }
 
+/* the parts in a sheet: their own heads and frames give way to the sheet */
+.fpb-sheet .fpb-validation-panel {
+  position: static;
+  width: auto;
+  max-height: none;
+  padding: 4px 12px 12px;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.fpb-sheet .fpb-validation-header {
+  display: none;
+}
+
+.fpb-sheet .fpb-validation-list {
+  overflow: visible;
+}
+
+.fpb-sheet .fpb-layers--sheet {
+  width: auto;
+  max-width: none;
+  margin: 0;
+  padding: 4px 12px 12px;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+
 .fpb-sheet-body {
   flex: 1 1 auto;
   min-height: 0;

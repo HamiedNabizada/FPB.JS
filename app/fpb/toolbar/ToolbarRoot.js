@@ -1,6 +1,7 @@
 /** @jsx h */
 import { h } from '@bpmn-io/properties-panel/preact';
 import { useEffect, useErrorBoundary, useState } from '@bpmn-io/properties-panel/preact/hooks';
+import { createPortal } from '@bpmn-io/properties-panel/preact/compat';
 import { faFileCirclePlus } from '@fortawesome/free-solid-svg-icons/faFileCirclePlus';
 import { faFileImport } from '@fortawesome/free-solid-svg-icons/faFileImport';
 import { faFloppyDisk } from '@fortawesome/free-solid-svg-icons/faFloppyDisk';
@@ -155,8 +156,13 @@ function WorkGroup(props) {
   const sheets = modeler.get('fpbSheets', false);
   const sheet = useModelerState(modeler, 'sheets.changed', () => ({
     active: !!(sheets && sheets.isActive()),
-    current: sheets ? sheets.current() : null
+    current: sheets ? sheets.current() : null,
+    body: sheets ? sheets.body() : null
   }));
+  const layersShown = sheet.active ? sheet.current === 'layers' : layersOpen;
+  const toggleLayers = () => (sheet.active
+    ? sheets.toggle('layers', { title: translate('Layers') })
+    : setLayersOpen(!layersOpen));
 
   const shownFindings = counts.error + counts.warning;
   const checkLabel = translate('Model check (VDI 3682): {counts}', { counts: describeCounts(counts) });
@@ -176,14 +182,20 @@ function WorkGroup(props) {
         <div class="fpb-toolbar-layers">
           <ToolbarButton
             id="openLayerButton"
-            label={layersOpen ? translate('Hide layers') : translate('Show layers')}
-            icon={layersOpen ? faFolderOpen : faFolder}
-            pressed={layersOpen}
-            expanded={layersOpen}
-            onClick={() => setLayersOpen(!layersOpen)}
+            label={layersShown ? translate('Hide layers') : translate('Show layers')}
+            icon={layersShown ? faFolderOpen : faFolder}
+            pressed={layersShown}
+            expanded={layersShown}
+            onClick={toggleLayers}
           />
-          <LayersCard modeler={modeler} translate={translate} open={layersOpen} />
+          {!sheet.active && <LayersCard modeler={modeler} translate={translate} open={layersOpen} />}
         </div>
+      )}
+      {sheet.active && sheet.current === 'layers' && sheet.body && createPortal(
+        <div class="fpb-layers fpb-layers--sheet">
+          <LayersContent modeler={modeler} translate={translate} />
+        </div>,
+        sheet.body
       )}
       <ToolbarButton id="openValidationButton" label={checkLabel} icon={faListCheck} onClick={() => validation.togglePanel()}>
         {shownFindings > 0 && (
@@ -209,10 +221,6 @@ function WorkGroup(props) {
 function LayersCard(props) {
   const { modeler, translate, open } = props;
   const [shown, setShown] = useState(open);
-  const projectName = useModelerState(modeler, 'layers.changed', () => {
-    const project = modeler.getProjectDefinition && modeler.getProjectDefinition();
-    return (project && project.name) || '';
-  });
 
   useEffect(() => {
     if (open) {
@@ -226,13 +234,25 @@ function LayersCard(props) {
   return (
     <div class="fpb-layers" hidden={!open}>
       <div class="fpb-layers-title">{translate('Layers')}</div>
-      <LayersTree modeler={modeler} />
-      <div class="fpb-layers-project">
-        <span class="fpb-layers-project-label">{translate('Project')}</span>
-        <span class="fpb-layers-project-name">{projectName}</span>
-      </div>
+      <LayersContent modeler={modeler} translate={translate} />
     </div>
   );
+}
+
+/** The tree and the project, in the card or in the sheet (016f E2) */
+function LayersContent(props) {
+  const { modeler, translate } = props;
+  const projectName = useModelerState(modeler, 'layers.changed', () => {
+    const project = modeler.getProjectDefinition && modeler.getProjectDefinition();
+    return (project && project.name) || '';
+  });
+  return [
+    <LayersTree key="tree" modeler={modeler} />,
+    <div key="project" class="fpb-layers-project">
+      <span class="fpb-layers-project-label">{translate('Project')}</span>
+      <span class="fpb-layers-project-name">{projectName}</span>
+    </div>
+  ];
 }
 
 function ViewGroup(props) {

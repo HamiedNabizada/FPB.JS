@@ -28,6 +28,9 @@
     .modeler-parent {
       display: grid;
       grid-template-columns: 1fr auto;
+      /* one row as high as the parent: WebKit keeps the canvas at its old
+         height in an auto row when a sheet takes height away */
+      grid-template-rows: minmax(0, 1fr);
       position: relative;
       min-height: 0;
     }
