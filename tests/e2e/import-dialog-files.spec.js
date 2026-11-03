@@ -46,9 +46,10 @@ async function start(page) {
 }
 
 // an error about the chosen file shows in the dialog, one of the importer
-// after the dialog has closed in the message stack (016e)
-async function expectError(page, title, detail) {
-  const alert = page.locator('.fpb-open-error, .fpb-notification--error');
+// after the dialog has closed in the message stack (016e); each call names
+// where, so an error in the wrong place fails (016g)
+async function expectError(page, where, title, detail) {
+  const alert = page.locator(where === 'dialog' ? '.fpb-open-error' : '.fpb-notification--error');
   await expect(alert).toBeVisible();
   await expect(alert).toContainText(title);
   if (detail) {
@@ -91,7 +92,7 @@ test.describe('Import dialog - choosing files', () => {
 
     await pickFile(page, JSON.stringify(model('x', 'X')), 'modell.txt', 'text/plain');
 
-    await expectError(page, 'Invalid file type', 'Please select a valid JSON (.json), XML (.xml) or AutomationML (.aml) file');
+    await expectError(page, 'dialog', 'Invalid file type', 'Please select a valid JSON (.json), XML (.xml) or AutomationML (.aml) file');
     await expect(page.locator(LABEL)).toHaveText(DEFAULT_TEXT);
     await expect(importButton(page)).toBeDisabled();
   });
@@ -107,7 +108,7 @@ test.describe('Import dialog - choosing files', () => {
       target.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: transfer }));
     });
 
-    await expectError(page, 'File too large', 'Maximum file size is 50MB');
+    await expectError(page, 'dialog', 'File too large', 'Maximum file size is 50MB');
     await expect(page.locator(LABEL)).toHaveText(DEFAULT_TEXT);
     await expect(importButton(page)).toBeDisabled();
   });
@@ -119,7 +120,7 @@ test.describe('Import dialog - choosing files', () => {
 
     await dropFile(page, '{ "kaputt": ', 'kaputt.json');
 
-    await expectError(page, 'Invalid file format', 'File format not recognized');
+    await expectError(page, 'dialog', 'Invalid file format', 'File format not recognized');
     // there is nothing to open: the button stays off (016e D2)
     await expect(importButton(page)).toBeDisabled();
     await expect(page.locator(OPEN)).toHaveCount(1);
@@ -136,7 +137,7 @@ test.describe('Import dialog - choosing files', () => {
 
     expect(outcome.done).toBe(0);
     expect(outcome.errors[0]).toEqual(expect.objectContaining({ errorType: 'MISSING_PROJECT_DEFINITION' }));
-    await expectError(page, 'No project definition found');
+    await expectError(page, 'stack', 'No project definition found');
     expect((await state(page)).processes).toEqual([]);
   });
 
@@ -206,7 +207,7 @@ test.describe('Import dialog - choosing files', () => {
 
     await dropFile(page, JSON.stringify(model('new', 'Neues Projekt')), 'gesperrt.json');
 
-    await expectError(page, 'File read error', 'Unable to read the selected file');
+    await expectError(page, 'dialog', 'File read error', 'Unable to read the selected file');
     await expect(importButton(page)).toBeDisabled();
     await page.waitForTimeout(300);
     expect(await state(page)).toEqual(before);
@@ -228,7 +229,7 @@ test.describe('Import dialog - choosing files', () => {
 
     await importButton(page).click();
 
-    await expectError(page, 'Import failed', 'An error occurred during import: Host listener failed');
+    await expectError(page, 'dialog', 'Import failed', 'An error occurred during import: Host listener failed');
     await expect(page.locator(OPEN)).toHaveCount(1);
     await expect(page.locator(LABEL)).toHaveText('neu.json');
     await expect(importButton(page)).toBeEnabled();
@@ -344,7 +345,7 @@ test.describe('Import dialog - cancel and re-import', () => {
     expect(outcome.errors[0]).toEqual(expect.objectContaining({ errorType: 'MISSING_PROJECT_DEFINITION' }));
     expect(await state(page)).toEqual(before);
     expect((await canvasIds(page)).sort()).toEqual(beforeIds.sort());
-    await expectError(page, 'No project definition found');
+    await expectError(page, 'stack', 'No project definition found');
 
     // the dialog closed, opens empty and takes the next file
     await openImportDialog(page);

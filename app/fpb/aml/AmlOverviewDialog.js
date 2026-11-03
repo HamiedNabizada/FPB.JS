@@ -38,7 +38,7 @@ export default function AmlOverviewDialog(props) {
 
   return (
     <DialogFrame
-      title={source ? translate('AML file: {name}', { name: source.fileName }) : translate('AML file')}
+      title={source && source.fileName ? translate('AML file: {name}', { name: source.fileName }) : translate('AML file')}
       titleId={titleId}
       onClose={() => close()}
       closeLabel={translate('Close AML file overview')}
@@ -60,7 +60,7 @@ export default function AmlOverviewDialog(props) {
                     <td>{e.name}</td>
                     <td class="aml-overview-muted">{describeCounts(e, translate)}</td>
                     <td class="aml-overview-end">
-                      <button type="button" class="fpb-button fpb-button--small" aria-label={translate('Show {name}', { name: e.name })} onClick={() => show(e.id)}>
+                      <button type="button" class="fpb-button fpb-button--small" aria-label={translate('Show {name}', { name: e.name || e.id })} onClick={() => show(e.id)}>
                         {translate('Show')}
                       </button>
                     </td>

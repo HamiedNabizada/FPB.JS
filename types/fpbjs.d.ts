@@ -430,6 +430,11 @@ export interface FpbInfo {
   open(tab?: 'about' | 'notation' | 'shortcuts' | 'help'): { close(): void; closed: Promise<void> };
 }
 
+/** The overview of the kept AML file (only with the AML module, fpbjs/aml) */
+export interface FpbAmlOverview {
+  open(): { close(result?: unknown): void; closed: Promise<unknown> };
+}
+
 /** Open, save and export the model (016e D2) */
 export interface FpbFiles {
   /** Shows the dialog "Open"; null in read-only mode */
@@ -535,6 +540,7 @@ export interface FpbServiceMap {
   fpbFiles: FpbFiles;
   fpbStart: FpbStart;
   fpbSheets: FpbSheets;
+  amlOverview: FpbAmlOverview;
   fpbSearch: FpbSearch;
   fpbAppend: FpbAppend;
   fpbCopyPaste: FpbCopyPaste;

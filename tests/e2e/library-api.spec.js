@@ -173,6 +173,28 @@ test.describe('Library bundle', () => {
     expect(errors).toEqual([]);
   });
 
+  // 016g D2
+  test('after destroy the dialogs open nothing and add no container', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await createModeler(page);
+    const result = await page.evaluate(async () => {
+      const dialogs = window.fpb.get('fpbDialogs');
+      window.fpb.destroy();
+      const handle = dialogs.open(() => null);
+      const state = await Promise.race([
+        handle.closed.then((value) => (value === undefined ? 'closed' : 'answered')),
+        new Promise((resolve) => setTimeout(() => resolve('open'), 1000))
+      ]);
+      return {
+        state,
+        containers: document.querySelectorAll('.fpb-dialogs').length,
+        dialogs: document.querySelectorAll('dialog.fpb-dialog').length
+      };
+    });
+    expect(result).toEqual({ state: 'closed', containers: 0, dialogs: 0 });
+    expect(errors).toEqual([]);
+  });
+
   test('the ESM bundle exposes the same API and creates a working modeler', async ({ page }) => {
     const { errors } = await openLibraryPage(page);
 

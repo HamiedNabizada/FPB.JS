@@ -72,6 +72,18 @@ test.describe('Questions', () => {
   });
 
   // Review Focus 1
+  // 016g D2
+  test('a question that cannot be shown counts as Cancel', async ({ page }) => {
+    await laden(page);
+    await page.evaluate(() => {
+      window.fpbjs.get('fpbDialogs').open = () => {
+        throw new Error('no dialog');
+      };
+    });
+    await ask(page, { action: { type: 'x' }, title: 'Question', message: 'Go on?' });
+    await expect.poll(() => answers(page)).toEqual([['cancelled', 'x']]);
+  });
+
   test('two questions in a row each get their answer', async ({ page }) => {
     await laden(page);
     await ask(page, { title: 'Question A', message: 'a', action: { type: 'a' } });

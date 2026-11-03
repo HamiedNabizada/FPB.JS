@@ -20,6 +20,10 @@ import ConfirmDialog from './ConfirmDialog';
  * confirm(options, { signal }) asks one question after the other and
  * resolves true for the named answer, false otherwise; an AbortSignal
  * withdraws the question (false), whether it waits or is open.
+ *
+ * A dialog that fails to render leaves nothing behind: the error goes to
+ * the caller and `closed` gives undefined. After the modeler is destroyed
+ * nothing opens any more (016g D2).
  */
 export default function Dialogs(eventBus, injector, translate) {
   this._translate = translate;
@@ -51,6 +55,9 @@ Dialogs.prototype.open = function (Component, props = {}, options = {}) {
 };
 
 Dialogs.prototype.mount = function (mount, options = {}) {
+  if (this._destroyed) {
+    return { close: function () {}, closed: Promise.resolve(undefined) };
+  }
   const dialog = document.createElement('dialog');
   dialog.className = options.className ? 'fpb-dialog ' + options.className : 'fpb-dialog';
   const titleId = 'fpb-dialog-title-' + (++this._count);
@@ -101,8 +108,16 @@ Dialogs.prototype.mount = function (mount, options = {}) {
   });
 
   this._open.add(handle);
-  unmount = mount(dialog, { close: handle.close, titleId, descriptionId }) || null;
-  dialog.showModal();
+  try {
+    unmount = mount(dialog, { close: handle.close, titleId, descriptionId }) || null;
+    dialog.showModal();
+  } catch (error) {
+    done = true;
+    this._open.delete(handle);
+    dialog.remove();
+    resolve(undefined);
+    throw error;
+  }
   return handle;
 };
 

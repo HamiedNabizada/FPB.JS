@@ -341,6 +341,26 @@ test.describe('AutomationML import and export', () => {
     expect(selected).toEqual(['Stellventil betätigen']);
   });
 
+  // 016g D6
+  test('the AML overview names elements and the file even without a name', async ({ page }) => {
+    await start(page);
+    await importAml(page, MIXED);
+    await dismissNotifications(page);
+    const id = await page.evaluate(() => {
+      const aml = window.fpbjs.get('amlSupport');
+      const overview = aml.getOverview();
+      const source = aml.getSource();
+      const first = overview.elements[0];
+      aml.getOverview = () => Object.assign({}, overview, { elements: [Object.assign({}, first, { name: '' })].concat(overview.elements.slice(1)) });
+      aml.getSource = () => Object.assign({}, source, { fileName: '' });
+      return first.id;
+    });
+    await page.locator('#amlOverviewButton').click();
+    const modal = page.locator('.aml-overview-modal');
+    await expect(modal.locator('.fpb-dialog-title')).toHaveText('AML file');
+    await expect(modal.getByRole('button', { name: 'Show ' + id, exact: true })).toHaveCount(1);
+  });
+
   test('marks on the canvas are off by default and can be switched on in the overview', async ({ page }) => {
     await start(page);
     await importAml(page, MIXED);

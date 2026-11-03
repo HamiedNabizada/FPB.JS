@@ -12,7 +12,8 @@
  * A host that asks itself creates the modeler with `confirmations: false`.
  * One that answers anyway (confirmation.confirmed or .cancelled with the
  * same action) withdraws the question of the modeler, so the action runs
- * once (016e D1, final review).
+ * once (016e D1, final review). A question that cannot be shown counts as
+ * Cancel, so nothing waits for it (016g D2).
  */
 export default function Confirmations(eventBus, fpbDialogs, config) {
   if (config && config.confirmations === false) {
@@ -34,7 +35,10 @@ export default function Confirmations(eventBus, fpbDialogs, config) {
       confirmLabel: event.confirmLabel,
       danger: event.confirmVariant === 'danger',
       blocked: !!event.isBlocked
-    }, { signal: withdrawn.signal }).then(function (confirmed) {
+    }, { signal: withdrawn.signal }).catch(function (error) {
+      console.error('FPB.js could not show the question', error);
+      return false;
+    }).then(function (confirmed) {
       if (!action || withdrawn.signal.aborted) {
         return;
       }

@@ -112,6 +112,23 @@ test.describe('Dialogs', () => {
     expect(await remove.evaluate((b) => getComputedStyle(b).backgroundColor)).toBe(await danger(page));
   });
 
+  // 016g D2
+  test('a dialog that fails to render leaves nothing behind and the caller gets the error', async ({ page }) => {
+    await open(page);
+    const result = await page.evaluate(() => {
+      try {
+        window.fpbjs.get('fpbDialogs').open(function Broken() {
+          throw new Error('broken view');
+        });
+        return 'opened';
+      } catch (error) {
+        return error.message;
+      }
+    });
+    expect(result).toBe('broken view');
+    await expect(page.locator('dialog.fpb-dialog')).toHaveCount(0);
+  });
+
   test('a question closes with Escape and changes nothing', async ({ page }) => {
     await open(page);
     const before = await page.evaluate(() => window.fpbjs.get('elementRegistry').getAll().length);
