@@ -38,7 +38,7 @@ export const FpbModeler = FpbModelerStub;
 export const PropertiesPanel = PropertiesPanelStub;
 export const LayerOverview = LayerOverviewStub;
 
-import { collectProcessShapes, findProcessShape } from './processShapes';
+import { collectProcessShapes, findProcessShape, findLayerOf, layerHasElement } from './processShapes';
 import { RULES } from '../app/fpb/validation/ModelChecker';
 import { serializeModel } from '../app/fpb/export/serializeModel';
 
@@ -325,13 +325,25 @@ export async function createFpbModeler(options = {}) {
     },
 
     /**
-     * Select an element by id. When `options.scroll` is true and the
-     * element exists, scroll the viewport so the element is in view —
-     * useful when a finding panel jumps to an element that's currently
-     * off-screen.
-     * Returns true if the element was found and selected.
+     * Select an element by id. `options.process` names its layer and switches
+     * there first; without it the shown layer is kept when the element is on
+     * it, else the first layer that has it is shown (016f E3). When
+     * `options.scroll` is true the viewport moves to the element. The
+     * keyboard focus stays where it is. Returns true if the element was found
+     * and selected; false leaves layer and selection as they were.
      */
     select(elementId, options = {}) {
+      const project = modeler.getProjectDefinition();
+      let layer = null;
+      if (options.process !== undefined && options.process !== null) {
+        layer = project ? findProcessShape(project, options.process) : null;
+        if (!layer || !layerHasElement(layer, elementId)) return false;
+      } else if (!elementRegistry.get(elementId) && project) {
+        layer = findLayerOf(project, elementId);
+      }
+      if (layer && layer !== canvas.getRootElement()) {
+        modeling.switchProcess(layer);
+      }
       const element = elementRegistry.get(elementId);
       if (!element) return false;
       selection.select(element);
@@ -343,6 +355,13 @@ export async function createFpbModeler(options = {}) {
 
     getSelected() {
       return selection.get();
+    },
+
+    /** The id of the layer (process) on the canvas, null without a model */
+    getCurrentProcess() {
+      const project = modeler.getProjectDefinition();
+      const root = canvas.getRootElement();
+      return project && collectProcessShapes(project).indexOf(root) !== -1 ? root.id : null;
     },
 
     getProcesses() {

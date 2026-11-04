@@ -2139,3 +2139,79 @@ test.describe('Model check for hosts', () => {
     await expect(report.getByRole('button', { name: 'Show findings' })).toHaveCount(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// 016f E3: the plugin follows the selection of the AML tree across layers (T13)
+
+// Rohstoff: a boundary state on both layers; Vorwärmen and a flow only below
+const BOUNDARY = 'c50336d6-9a7f-46e3-a7f5-e6187618dd69';
+const ONLY_BELOW = 'c9dc0159-5e01-4139-a98a-141a10e4e4c4';
+const FLOW_BELOW = '1fa7453d-0d6d-4b18-813f-8e805f1af006';
+
+test.describe('Selection across layers', () => {
+
+  test('select with process switches to that layer and selects the element', async ({ page }) => {
+    await withModel(page);
+    const found = await page.evaluate((args) => window.fpb.select(args.id, { process: args.child }), { id: BOUNDARY, child: CHILD });
+    expect(found).toBe(true);
+    expect(await currentRootId(page)).toBe(CHILD);
+    expect(await page.evaluate(() => window.fpb.getSelected().map((e) => e.id))).toEqual([BOUNDARY]);
+  });
+
+  test('select without process finds an element on another layer', async ({ page }) => {
+    await withModel(page);
+    expect(await currentRootId(page)).toBe(MAIN);
+    expect(await page.evaluate((id) => window.fpb.select(id), ONLY_BELOW)).toBe(true);
+    expect(await currentRootId(page)).toBe(CHILD);
+    expect(await page.evaluate(() => window.fpb.getSelected().map((e) => e.id))).toEqual([ONLY_BELOW]);
+  });
+
+  test('select keeps the shown layer when the element is on it', async ({ page }) => {
+    await withModel(page);
+    expect(await page.evaluate((id) => window.fpb.select(id), BOUNDARY)).toBe(true);
+    expect(await currentRootId(page)).toBe(MAIN);
+    expect(await page.evaluate(() => window.fpb.getSelected().map((e) => e.id))).toEqual([BOUNDARY]);
+  });
+
+  test('select with an unknown process returns false and changes nothing', async ({ page }) => {
+    await withModel(page);
+    const state = await page.evaluate((id) => {
+      const before = window.fpb.getSelected().map((e) => e.id);
+      const found = window.fpb.select(id, { process: 'no-such-process' });
+      return { found, before, after: window.fpb.getSelected().map((e) => e.id) };
+    }, BOUNDARY);
+    expect(state.found).toBe(false);
+    expect(state.after).toEqual(state.before);
+    expect(await currentRootId(page)).toBe(MAIN);
+  });
+
+  test('select can pick a flow on another layer', async ({ page }) => {
+    await withModel(page);
+    expect(await page.evaluate((id) => window.fpb.select(id), FLOW_BELOW)).toBe(true);
+    expect(await currentRootId(page)).toBe(CHILD);
+    expect(await page.evaluate(() => window.fpb.getSelected().map((e) => e.id))).toEqual([FLOW_BELOW]);
+  });
+
+  test('select does not take the keyboard focus', async ({ page }) => {
+    await withModel(page);
+    const state = await page.evaluate((id) => {
+      const input = document.createElement('input');
+      input.id = 'host-field';
+      document.body.appendChild(input);
+      input.focus();
+      const found = window.fpb.select(id, { scroll: true });
+      return { found, active: document.activeElement && document.activeElement.id };
+    }, ONLY_BELOW);
+    expect(state).toEqual({ found: true, active: 'host-field' });
+  });
+
+  test('getCurrentProcess names the shown layer, null before an import', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page);
+    expect(await page.evaluate(() => window.fpb.getCurrentProcess())).toBe(null);
+    expect(await importModel(page, clone())).toBe(true);
+    expect(await page.evaluate(() => window.fpb.getCurrentProcess())).toBe(MAIN);
+    await page.evaluate((child) => window.fpb.switchProcess(child), CHILD);
+    expect(await page.evaluate(() => window.fpb.getCurrentProcess())).toBe(CHILD);
+  });
+});

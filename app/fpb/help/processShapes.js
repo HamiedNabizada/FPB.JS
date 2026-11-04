@@ -30,6 +30,25 @@ export function collectProcessShapes(projectDefinition) {
   return shapes;
 }
 
+/** Whether an element (shape or flow) with this id lies on the layer */
+export function layerHasElement(process, elementId) {
+  if (!process || !process.businessObject || !elementId) {
+    return false;
+  }
+  const has = (list) => (list || []).some((candidate) => candidate && candidate.id === elementId);
+  const systemLimit = getSystemLimit(process);
+  return has(process.businessObject.elementsContainer) ||
+    !!(systemLimit && has(systemLimit.businessObject.elementsContainer));
+}
+
+/**
+ * The first layer (entry point first, breadth first) with an element of this
+ * id, or null. A boundary state is found on the upper of its layers.
+ */
+export function findLayerOf(projectDefinition, elementId) {
+  return collectProcessShapes(projectDefinition).find((process) => layerHasElement(process, elementId)) || null;
+}
+
 /**
  * The copies of a state on the other layers. A boundary state shares its id
  * with the state it shows one layer up (helpUtils.createStateShapeForNewLayer),

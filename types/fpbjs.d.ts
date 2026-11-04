@@ -780,12 +780,18 @@ export interface FpbInstance {
 
   /**
    * Select an element by its ID; with `scroll: true` the view moves to it.
-   * Returns false if there is no such element (the selection stays).
+   * `process` names the layer and switches there first; without it the shown
+   * layer is kept when the element is on it, else the first layer with the
+   * element is shown (016f E3). The keyboard focus stays where it is.
+   * Returns false if there is no such element (layer and selection stay).
    */
-  select(elementId: string, options?: { scroll?: boolean }): boolean;
+  select(elementId: string, options?: { process?: string; scroll?: boolean }): boolean;
 
   /** Get currently selected elements */
   getSelected(): Element[];
+
+  /** The id of the layer (process) on the canvas, null without a model (016f E3) */
+  getCurrentProcess(): string | null;
 
   // --- Process Management ---
 
