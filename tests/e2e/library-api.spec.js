@@ -2060,3 +2060,82 @@ test.describe('theme set by the host', () => {
     expect(errors).toEqual([]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// 016f E3: the plugin shows the findings in its own list (T13)
+
+/** A model with one error: an operator outside the system limit (B2) */
+function withViolation() {
+  const model = clone();
+  const process = model.find((entry) => entry.process);
+  const operator = process.elementVisualInformation.find((v) => v.type === 'fpb:ProcessOperator');
+  operator.x += 900;
+  return model;
+}
+
+test.describe('Model check for hosts', () => {
+
+  test('with validation list false there is no model check button and no list, the markers stay', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await createModeler(page, { panels: true, options: { validation: { list: false } } });
+    expect(await importModel(page, withViolation())).toBe(true);
+
+    await expect(page.locator('.fpb-validation-marker')).toHaveCount(1);
+    await expect(page.locator('#openValidationButton')).toHaveCount(0);
+    await page.evaluate(() => window.fpb.get('fpbValidation').openPanel());
+    await expect(page.locator('.fpb-validation-panel.open')).toHaveCount(0);
+    expect(await page.evaluate(() => window.fpb.get('fpbValidation').isPanelOpen())).toBe(false);
+    expect(errors).toEqual([]);
+  });
+
+  test('getFindings returns plain findings with the layer id', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page);
+    expect(await importModel(page, withViolation())).toBe(true);
+
+    const result = await page.evaluate(() => {
+      window.fpb.get('fpbValidation').run();
+      const findings = window.fpb.getFindings();
+      return { text: JSON.stringify(findings), findings };
+    });
+    expect(result.findings.length).toBeGreaterThan(0);
+    expect(JSON.parse(result.text)).toEqual(result.findings);
+    const b2 = result.findings.find((f) => f.rule === 'B2');
+    expect(b2).toBeTruthy();
+    expect(b2.severity).toBe('error');
+    expect(typeof b2.message).toBe('string');
+    expect(typeof b2.elementId).toBe('string');
+    expect(b2.processId).toBe(MAIN);
+    result.findings.forEach((f) => expect([MAIN, CHILD, basis[1].process.id, null]).toContain(f.processId));
+  });
+
+  test('getCheckedRules lists the rules FPB.js checks', async ({ page }) => {
+    await withModel(page);
+    expect(await page.evaluate(() => window.fpb.getCheckedRules())).toEqual(
+      ['A2', 'B1', 'B2', 'B3', 'B6', 'C5', 'C9', 'D3', 'D4', 'D5', 'E5', 'F5', 'F8', 'F9', 'G1', 'G3', 'G4']
+    );
+  });
+
+  test('setValidationMarkers hides and shows the markers', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page, { options: { validation: { list: false } } });
+    expect(await importModel(page, withViolation())).toBe(true);
+    await expect(page.locator('.fpb-validation-marker')).toHaveCount(1);
+
+    await page.evaluate(() => window.fpb.setValidationMarkers(false));
+    await expect(page.locator('.fpb-validation-marker')).toHaveCount(0);
+    await page.evaluate(() => window.fpb.setValidationMarkers(true));
+    await expect(page.locator('.fpb-validation-marker')).toHaveCount(1);
+  });
+
+  test('without the list the import message offers no Show findings', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page, { panels: true, options: { validation: { list: false } } });
+    expect(await importModel(page, withViolation())).toBe(true);
+
+    const report = page.locator('[data-id="import.report"]');
+    await expect(report).toBeVisible();
+    await expect(report.locator('.fpb-notification-message')).toContainText('1 error');
+    await expect(report.getByRole('button', { name: 'Show findings' })).toHaveCount(0);
+  });
+});

@@ -39,6 +39,7 @@ export const PropertiesPanel = PropertiesPanelStub;
 export const LayerOverview = LayerOverviewStub;
 
 import { collectProcessShapes, findProcessShape } from './processShapes';
+import { RULES } from '../app/fpb/validation/ModelChecker';
 import { serializeModel } from '../app/fpb/export/serializeModel';
 
 // Automatic layout works on plain JSON, so it is available without a browser.
@@ -287,6 +288,31 @@ export async function createFpbModeler(options = {}) {
       }
     },
 
+    // --- Model check (016f E3) ---
+
+    /**
+     * The findings of the model check as plain data, for a host that lists
+     * them itself: { rule, severity, message, elementId, processId }, with
+     * the id of the layer (process) the finding belongs to.
+     */
+    getFindings() {
+      const validation = modeler.get('fpbValidation', false);
+      return validation ? validation.getIssues().map(plainFinding) : [];
+    },
+
+    /** The ids of the catalog rules the model check of FPB.js checks */
+    getCheckedRules() {
+      return Object.keys(RULES).sort();
+    },
+
+    /** Show or hide the markers of the model check on the elements */
+    setValidationMarkers(show) {
+      const validation = modeler.get('fpbValidation', false);
+      if (validation) {
+        validation.setShowMarkers(!!show);
+      }
+    },
+
     // --- Convenience Methods ---
 
     zoom(level) {
@@ -378,6 +404,17 @@ export async function createFpbModeler(options = {}) {
         modeler.destroy();
       }
     }
+  };
+}
+
+/** A finding of the model check without references to shapes */
+function plainFinding(issue) {
+  return {
+    rule: issue.rule,
+    severity: issue.severity,
+    message: issue.message,
+    elementId: issue.elementId || null,
+    processId: (issue.process && issue.process.id) || null
   };
 }
 

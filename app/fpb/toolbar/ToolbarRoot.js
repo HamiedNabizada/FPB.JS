@@ -199,11 +199,13 @@ function WorkGroup(props) {
         </div>,
         sheet.body
       )}
-      <ToolbarButton id="openValidationButton" label={checkLabel} icon={faListCheck} pressed={checkOpen} onClick={() => validation.togglePanel()}>
-        {shownFindings > 0 && (
-          <span class={counts.error ? 'fpb-validation-count has-errors' : 'fpb-validation-count'}>{shownFindings}</span>
-        )}
-      </ToolbarButton>
+      {validation.hasList() && (
+        <ToolbarButton id="openValidationButton" label={checkLabel} icon={faListCheck} pressed={checkOpen} onClick={() => validation.togglePanel()}>
+          {shownFindings > 0 && (
+            <span class={counts.error ? 'fpb-validation-count has-errors' : 'fpb-validation-count'}>{shownFindings}</span>
+          )}
+        </ToolbarButton>
+      )}
       <ToolbarButton
         id="openSearchButton"
         label={translate('Search all layers')}

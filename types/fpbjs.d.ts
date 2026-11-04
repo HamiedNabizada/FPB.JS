@@ -334,6 +334,17 @@ export interface ValidationIssue {
   process?: Shape;
 }
 
+/** A finding as plain data for hosts (getFindings, 016f E3) */
+export interface PlainFinding {
+  /** Rule id of the catalog, e.g. 'B2' */
+  rule: string;
+  severity: 'error' | 'warning' | 'info';
+  message: string;
+  elementId: string | null;
+  /** Id of the process (layer) the finding belongs to */
+  processId: string | null;
+}
+
 export interface ValidationCounts {
   error: number;
   warning: number;
@@ -346,6 +357,8 @@ export interface FpbValidation {
   getIssues(): ValidationIssue[];
   getCounts(): ValidationCounts;
   setShowMarkers(show: boolean): void;
+  /** False with the option validation: { list: false } */
+  hasList(): boolean;
   isPanelOpen(): boolean;
   openPanel(): void;
   closePanel(): void;
@@ -642,6 +655,12 @@ export interface CreateFpbModelerOptions {
    * host's own `media` query alone decides. Event 'sheets.changed'.
    */
   sheets?: { container: HTMLElement; media?: string };
+  /**
+   * The model check (016f E3). `list: false`: no button "Model check" in
+   * the toolbar and no list of findings, for a host that lists the findings
+   * itself (getFindings); the check and its markers stay. Default true.
+   */
+  validation?: { list?: boolean };
   /** Additional options passed to FpbModeler constructor */
   [key: string]: any;
 }
@@ -745,6 +764,17 @@ export interface FpbInstance {
 
   /** Get current zoom level */
   getZoom(): number;
+
+  // --- Model check (016f E3) ---
+
+  /** The findings of the model check as plain data */
+  getFindings(): PlainFinding[];
+
+  /** The ids of the catalog rules the model check of FPB.js checks */
+  getCheckedRules(): string[];
+
+  /** Show or hide the markers of the model check on the elements */
+  setValidationMarkers(show: boolean): void;
 
   // --- Selection ---
 

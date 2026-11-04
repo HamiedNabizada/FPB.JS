@@ -75,7 +75,8 @@ export default function ImportMessages(eventBus, injector, translate) {
         hint: note.hint || undefined,
         details: note.details || undefined
       })),
-      actions: findings && validation
+      // a host without the list of the modeler shows the findings itself
+      actions: findings && validation && validation.hasList()
         ? [{ label: translate('Show findings'), run: () => validation.openPanel() }]
         : undefined
     });

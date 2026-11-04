@@ -212,13 +212,30 @@ FpbValidation.prototype._sheets = function () {
   return sheets && sheets.isActive() ? sheets : null;
 };
 
+/**
+ * Whether the modeler offers the list of findings. A host with a list of its
+ * own (the AML editor plugin, 016f E3) turns it off with the option
+ * `validation: { list: false }`; the check and its markers stay.
+ */
+FpbValidation.prototype.hasList = function () {
+  const config = this._injector.get('config', false);
+  const option = config && config.validation;
+  return !(option && option.list === false);
+};
+
 FpbValidation.prototype.isPanelOpen = function () {
+  if (!this.hasList()) {
+    return false;
+  }
   const sheets = this._sheets();
   return sheets ? sheets.current() === 'check' : this._panel.classList.contains('open');
 };
 
 FpbValidation.prototype.openPanel = function () {
   this.run();
+  if (!this.hasList()) {
+    return;
+  }
   const sheets = this._sheets();
   if (sheets) {
     sheets.open('check', { title: this._injector.get('translate')('Model check (VDI 3682)') });
