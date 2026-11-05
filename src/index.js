@@ -357,6 +357,17 @@ export async function createFpbModeler(options = {}) {
       return selection.get();
     },
 
+    /**
+     * The links of the host's AML file the deletion of an element removes, per
+     * layer; the delete question names them (016f E4). null clears the list.
+     */
+    setAmlLinks(links) {
+      const amlLinks = modeler.get('fpbAmlLinks', false);
+      if (amlLinks) {
+        amlLinks.set(links);
+      }
+    },
+
     /** The id of the layer (process) on the canvas, null without a model */
     getCurrentProcess() {
       const project = modeler.getProjectDefinition();

@@ -2215,3 +2215,97 @@ test.describe('Selection across layers', () => {
     expect(await page.evaluate(() => window.fpb.getCurrentProcess())).toBe(CHILD);
   });
 });
+
+// 016f E4: a host (the plugin AMLFPB.js) hands over the links of its AML file
+// per layer and element; the delete question names those the deletion removes.
+const PRUEFEN = '9833d9a9-1b88-4bfb-91b3-7ab5e2617045';
+const GUTPRODUKT = '1a9fc4c7-3c89-4277-8965-3b186eaa2672';
+const ROHSTOFF_TO_ERHITZEN = 'c0293fb1-f400-446b-8eb5-f0a071135619';
+const CHILD_LIMIT = 'deba3596-38ca-4bca-a85e-3d0b5dfba666';
+
+const link = (processId, elementId, name, linkName) => ({ processId, elementId, name, link: linkName, owner: 'Plant' });
+
+/** Sets the links, deletes the element through the delete of the context pad and the Delete key, returns the question or null */
+function deleteWithLinks(page, links, id) {
+  return page.evaluate((args) => {
+    if (args.links !== undefined) {
+      window.fpb.setAmlLinks(args.links);
+    }
+    let asked = null;
+    const eventBus = window.fpb.get('eventBus');
+    const listener = (event) => { asked = { title: event.title, message: event.message, details: event.details }; };
+    eventBus.on('confirmation.required', listener);
+    try {
+      window.fpb.get('fpbDelete').remove([window.fpb.get('elementRegistry').get(args.id)]);
+    } finally {
+      eventBus.off('confirmation.required', listener);
+    }
+    return { asked, still: !!window.fpb.get('elementRegistry').get(args.id) };
+  }, { links, id });
+}
+
+test.describe('Links from outside for hosts', () => {
+
+  test('setAmlLinks makes the delete question name the links', async ({ page }) => {
+    await withModel(page);
+    const result = await deleteWithLinks(page, [link(MAIN, PRUEFEN, 'Prüfen', 'L1')], PRUEFEN);
+    expect(result.asked.title).toBe('Delete "Prüfen"?');
+    expect(result.asked.details).toContain('L1 (Plant) to Prüfen');
+    expect(result.asked.details).toContain('Applying the diagram to the AML file removes them.');
+    expect(result.still).toBe(true);
+  });
+
+  test('an element without links is deleted without the question', async ({ page }) => {
+    await withModel(page);
+    const result = await deleteWithLinks(page, [link(MAIN, PRUEFEN, 'Prüfen', 'L1')], GUTPRODUKT);
+    expect(result.asked).toBeNull();
+    expect(result.still).toBe(false);
+  });
+
+  test('a boundary state deleted on the lower layer names only the links of its copy', async ({ page }) => {
+    await withModel(page);
+    await page.evaluate((id) => window.fpb.switchProcess(id), CHILD);
+    const result = await deleteWithLinks(page,
+      [link(MAIN, BOUNDARY, 'Rohstoff', 'Lmain'), link(CHILD, BOUNDARY, 'Rohstoff', 'Lchild')], BOUNDARY);
+    expect(result.asked.details).toContain('Lchild (Plant) to Rohstoff');
+    expect(result.asked.details).not.toContain('Lmain');
+  });
+
+  test('a state deleted on the upper layer names the links of its copies below', async ({ page }) => {
+    await withModel(page);
+    const result = await deleteWithLinks(page,
+      [link(MAIN, BOUNDARY, 'Rohstoff', 'Lmain'), link(CHILD, BOUNDARY, 'Rohstoff', 'Lchild')], BOUNDARY);
+    expect(result.asked.details).toContain('Lmain (Plant) to Rohstoff');
+    expect(result.asked.details).toContain('Lchild (Plant) to Rohstoff');
+  });
+
+  test('removing a decomposition names the links of the layer and of its process', async ({ page }) => {
+    await withModel(page);
+    await page.evaluate((id) => window.fpb.switchProcess(id), CHILD);
+    const result = await deleteWithLinks(page,
+      [link(CHILD, ONLY_BELOW, 'Vorwärmen', 'Lop'), link(CHILD, CHILD, 'Erhitzen', 'Lproc'), link(MAIN, CHILD, 'Erhitzen', 'Lpo')],
+      CHILD_LIMIT);
+    expect(result.asked.details).toContain('Lop (Plant) to Vorwärmen');
+    expect(result.asked.details).toContain('Lproc (Plant) to Erhitzen');
+    expect(result.asked.details).not.toContain('Lpo');
+  });
+
+  test('deleting a flow to a decomposed operator names the links of the state below', async ({ page }) => {
+    await withModel(page);
+    const result = await deleteWithLinks(page,
+      [link(MAIN, BOUNDARY, 'Rohstoff', 'Lmain'), link(CHILD, BOUNDARY, 'Rohstoff', 'Lchild')], ROHSTOFF_TO_ERHITZEN);
+    expect(result.asked.details).toContain('Lchild (Plant) to Rohstoff');
+    expect(result.asked.details).not.toContain('Lmain');
+  });
+
+  test('setAmlLinks null clears the list, an import keeps it', async ({ page }) => {
+    await withModel(page);
+    await page.evaluate((links) => window.fpb.setAmlLinks(links), [link(MAIN, PRUEFEN, 'Prüfen', 'L1')]);
+    expect(await importModel(page, clone())).toBe(true);
+    const kept = await deleteWithLinks(page, undefined, PRUEFEN);
+    expect(kept.asked.details).toContain('L1 (Plant) to Prüfen');
+    const cleared = await deleteWithLinks(page, null, PRUEFEN);
+    expect(cleared.asked).toBeNull();
+    expect(cleared.still).toBe(false);
+  });
+});

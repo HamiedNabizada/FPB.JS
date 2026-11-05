@@ -335,6 +335,23 @@ export interface ValidationIssue {
 }
 
 /** A finding as plain data for hosts (getFindings, 016f E3) */
+/**
+ * An InternalLink of the host's AML file that deleting the element on the
+ * layer removes (016f E4). The delete question names it as
+ * "link (owner) to name".
+ */
+export interface AmlLink {
+  /** Id of the layer (process) the element lies on; a process element has its own id */
+  processId: string;
+  elementId: string;
+  /** Name of the element in the AML file */
+  name: string;
+  /** Name of the InternalLink */
+  link: string;
+  /** Name of the InternalElement that holds the link */
+  owner: string;
+}
+
 export interface PlainFinding {
   /** Rule id of the catalog, e.g. 'B2' */
   rule: string;
@@ -792,6 +809,13 @@ export interface FpbInstance {
 
   /** The id of the layer (process) on the canvas, null without a model (016f E3) */
   getCurrentProcess(): string | null;
+
+  /**
+   * The links of the host's AML file deleting an element removes, per layer;
+   * the delete question names them and that applying removes them. An import
+   * keeps the list; null clears it (016f E4).
+   */
+  setAmlLinks(links: AmlLink[] | null): void;
 
   // --- Process Management ---
 

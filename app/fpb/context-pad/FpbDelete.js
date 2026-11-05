@@ -13,8 +13,12 @@ export default function FpbDelete(eventBus, modeling, canvas, injector) {
   this._eventBus = eventBus;
   this._modeling = modeling;
   this._contextHelper = new ContextHelper(canvas);
-  // links from the rest of a kept AML file (feature 028)
+  // links from the rest of a kept AML file (feature 028), or those a host
+  // hands over per layer (016f E4)
   this._amlSupport = injector ? injector.get('amlSupport', false) : null;
+  this._hostLinks = injector ? injector.get('fpbAmlLinks', false) : null;
+  const translate = injector ? injector.get('translate', false) : null;
+  this._translate = translate || ((text) => text);
 
   eventBus.on('confirmation.confirmed', function (event) {
     const action = event.action;
@@ -99,10 +103,10 @@ FpbDelete.prototype.getLayerConsequences = function (element) {
  *
  * @return {Array<{ element: string, link: string, owner: string }>}
  */
-FpbDelete.prototype.getAmlLinks = function (elements) {
+FpbDelete.prototype.getAmlLinks = function (elements, options) {
   const amlSupport = this._amlSupport;
   if (!amlSupport || !amlSupport.getIndex()) {
-    return [];
+    return this._usesHostLinks() ? this._getHostLinks(elements, options) : [];
   }
   const found = [];
   const seen = new Set();
@@ -130,11 +134,81 @@ FpbDelete.prototype.getAmlLinks = function (elements) {
   return found;
 };
 
-function amlLinksText(links) {
+FpbDelete.prototype._usesHostLinks = function () {
+  return !!(this._hostLinks && this._hostLinks.isSet() && !(this._amlSupport && this._amlSupport.getIndex()));
+};
+
+/**
+ * The links of the host's list the deletion removes (016f E4, V19). Each
+ * element counts on its layer and the layers below it: FPB.js deletes the
+ * copies of a state downwards (Szenario 1 and 9), never upwards (Szenario 2).
+ * A flow between a state and a decomposed operator takes the state's copy on
+ * the operator's layer along (ConnectionUpdater._removeStateFromLayersBelow).
+ * With options.process the process element of that layer counts too
+ * (removing a decomposition).
+ */
+FpbDelete.prototype._getHostLinks = function (elements, options) {
+  const hostLinks = this._hostLinks;
+  const found = [];
+  const add = (entries) => entries.forEach((l) => {
+    if (!found.some((f) => f.element === l.name && f.link === l.link && f.owner === l.owner)) {
+      found.push({ element: l.name, link: l.link, owner: l.owner });
+    }
+  });
+  const layersFrom = (layer) => {
+    const ids = [];
+    const queue = [layer];
+    while (queue.length) {
+      const process = queue.shift();
+      if (!process || ids.indexOf(process.id) !== -1) {
+        continue;
+      }
+      ids.push(process.id);
+      ((process.businessObject && process.businessObject.consistsOfProcesses) || []).forEach((child) => queue.push(child));
+    }
+    return ids;
+  };
+  const seen = new Set();
+  const visit = (element, layer) => {
+    if (!element || seen.has(element)) {
+      return;
+    }
+    seen.add(element);
+    if (element.waypoints) {
+      const ends = [element.source, element.target];
+      const operator = ends.find((end) => is(end, ELEMENT_TYPES.PROCESS_OPERATOR) && end.businessObject.decomposedView);
+      const state = ends.find((end) => isAny(end, ELEMENT_GROUPS.STATES));
+      if (operator && state) {
+        add(hostLinks.of(state.id, layersFrom(operator.businessObject.decomposedView)));
+      }
+      return;
+    }
+    add(hostLinks.of(element.id, layersFrom(layer)));
+    (element.children || []).forEach((child) => visit(child, layer));
+    const bo = element.businessObject;
+    // layers not on the canvas have no children there: their elements are in
+    // the elementsContainer of the process and its system limit
+    ((bo && bo.elementsContainer) || []).forEach((child) => visit(child, layer));
+    if (bo && bo.decomposedView) {
+      visit(bo.decomposedView, bo.decomposedView);
+    }
+  };
+  const shown = this._contextHelper.getProcessContext().process;
+  if (options && options.process) {
+    add(hostLinks.of(options.process.id, [options.process.id]));
+  }
+  (elements || []).forEach((element) => visit(element, shown));
+  return found;
+};
+
+FpbDelete.prototype._amlLinksText = function (links) {
   const names = links.slice(0, 5).map((l) => `${l.link} (${l.owner}) to ${l.element}`);
   const more = links.length > 5 ? `, and ${links.length - 5} more` : '';
-  return `Links: ${names.join(', ')}${more}. Exporting as AML removes them with the deleted elements.`;
-}
+  const closing = this._usesHostLinks()
+    ? this._translate('Applying the diagram to the AML file removes them.')
+    : 'Exporting as AML removes them with the deleted elements.';
+  return `Links: ${names.join(', ')}${more}. ${closing}`;
+};
 
 /**
  * Removes the elements. With consequences for other layers the user confirms
@@ -156,13 +230,13 @@ FpbDelete.prototype.remove = function (elements) {
   if (decomposition) {
     if (elements.length === 1) {
       const consequences = this.getLayerConsequences(decomposition);
-      const amlLinks = this.getAmlLinks([decomposition]);
+      const amlLinks = this.getAmlLinks([decomposition], { process });
       this._eventBus.fire('confirmation.required', {
         title: 'Remove the decomposition of "' + (decomposition.businessObject.name || 'unnamed operator') + '"?',
         confirmLabel: 'Remove',
         confirmVariant: 'danger',
         message: consequences.message + (amlLinks.length ? ' Other parts of the AutomationML file link to elements of this layer.' : ''),
-        details: consequences.details + (amlLinks.length ? ' ' + amlLinksText(amlLinks) : ''),
+        details: consequences.details + (amlLinks.length ? ' ' + this._amlLinksText(amlLinks) : ''),
         isBlocked: false,
         action: {
           type: 'remove_decomposition',
@@ -190,7 +264,7 @@ FpbDelete.prototype.remove = function (elements) {
   const aml = amlLinks.length ? {
     message: 'Other parts of the AutomationML file link to ' +
       (amlLinks.length === 1 ? 'an element' : 'elements') + ' you are deleting.',
-    details: amlLinksText(amlLinks)
+    details: this._amlLinksText(amlLinks)
   } : null;
 
   let message = layer ? layer.message : aml.message;
