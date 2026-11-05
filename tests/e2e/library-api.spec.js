@@ -2290,6 +2290,18 @@ test.describe('Links from outside for hosts', () => {
     expect(result.asked.details).not.toContain('Lpo');
   });
 
+  test('removing a decomposition names the links of a technical resource on that layer', async ({ page }) => {
+    await withModel(page);
+    await page.evaluate((id) => window.fpb.switchProcess(id), CHILD);
+    const resource = await page.evaluate(() => {
+      const shape = window.fpb.get('elementFactory').createShape({ type: 'fpb:TechnicalResource' });
+      window.fpb.get('modeling').createShape(shape, { x: 60, y: 60 }, window.fpb.get('canvas').getRootElement());
+      return shape.id;
+    });
+    const result = await deleteWithLinks(page, [link(CHILD, resource, 'Heizung', 'Ltr')], CHILD_LIMIT);
+    expect(result.asked.details).toContain('Ltr (Plant) to Heizung');
+  });
+
   test('deleting a flow to a decomposed operator names the links of the state below', async ({ page }) => {
     await withModel(page);
     const result = await deleteWithLinks(page,

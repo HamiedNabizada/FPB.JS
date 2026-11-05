@@ -144,8 +144,9 @@ FpbDelete.prototype._usesHostLinks = function () {
  * copies of a state downwards (Szenario 1 and 9), never upwards (Szenario 2).
  * A flow between a state and a decomposed operator takes the state's copy on
  * the operator's layer along (ConnectionUpdater._removeStateFromLayersBelow).
- * With options.process the process element of that layer counts too
- * (removing a decomposition).
+ * With options.process the whole layer counts (removing a decomposition):
+ * its process element, the system limit with its contents and what lies
+ * beside it, such as technical resources.
  */
 FpbDelete.prototype._getHostLinks = function (elements, options) {
   const hostLinks = this._hostLinks;
@@ -195,7 +196,7 @@ FpbDelete.prototype._getHostLinks = function (elements, options) {
   };
   const shown = this._contextHelper.getProcessContext().process;
   if (options && options.process) {
-    add(hostLinks.of(options.process.id, [options.process.id]));
+    visit(options.process, options.process);
   }
   (elements || []).forEach((element) => visit(element, shown));
   return found;
