@@ -275,7 +275,7 @@ function ViewGroup(props) {
   const scheme = useModelerState(modeler, 'colorScheme.changed', () => colors.get());
   // the language: a button only when the host leaves the choice to the user (016h V2)
   const i18n = modeler.get('fpbI18n', false);
-  const language = useModelerState(modeler, 'i18n.changed', () => ({
+  const language = useModelerState(modeler, ['i18n.changed', 'i18n.modeChanged'], () => ({
     current: i18n ? i18n.get() : 'en',
     user: !!(i18n && i18n.isUserChoice())
   }));

@@ -208,11 +208,13 @@ FpbDelete.prototype._getHostLinks = function (elements, options) {
 FpbDelete.prototype._amlLinksText = function (links) {
   const translate = this._translate;
   const names = links.slice(0, 5).map((l) => translate('{link} ({owner}) to {element}', { link: l.link, owner: l.owner, element: l.element }));
-  const more = links.length > 5 ? translate(', and {count} more', { count: links.length - 5 }) : '';
+  // the rest as a part of the list, never an empty value (a translate in the
+  // style of diagram-js keeps {more} for '')
+  const more = links.length > 5 ? translate(', and {count} more', { count: String(links.length - 5) }) : '';
   const closing = this._usesHostLinks()
     ? translate('Applying the diagram to the AML file removes them.')
     : translate('Exporting as AML removes them with the deleted elements.');
-  return translate('Links: {names}{more}. {closing}', { names: names.join(', '), more, closing });
+  return translate('Links: {names}. {closing}', { names: names.join(', ') + more, closing });
 };
 
 /**

@@ -90,8 +90,14 @@ I18n.prototype.isUserChoice = function () {
 
 /** The host sets the language; from now on the host decides */
 I18n.prototype.set = function (language) {
+  const wasUser = this._mode === 'user';
   this._mode = 'host';
-  return this._switch(resolve(language));
+  const result = this._switch(resolve(language));
+  // the button goes also when the language stays (fires after i18n.changed)
+  if (wasUser) {
+    this._eventBus.fire('i18n.modeChanged', { userChoice: false });
+  }
+  return result;
 };
 
 /** The user chooses with the button; kept for the next start in user mode */

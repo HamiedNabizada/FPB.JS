@@ -105,7 +105,7 @@ test.describe('Language of the web app', () => {
     await page.setViewportSize({ width: 1400, height: 900 });
     await new ImportPage(page).goto();
     await german(page);
-    await expect(page.locator('.fpb-start-example-description').first()).toHaveText('Aufheizen mit Prüfung, eine Dekomposition');
+    await expect(page.locator('.fpb-start-example-description').first()).toHaveText('Erwärmen mit Prüfung, eine Dekomposition');
   });
 
   test('terms of VDI 3682', async ({ page }) => {
@@ -132,11 +132,24 @@ test.describe('Language of the web app', () => {
 const OVERFLOW = 'button, label, h1, h2, h3, h4, .bio-properties-panel-label, .fpb-characteristic-tab, .fpb-sheet-title';
 
 async function overflowing(page) {
-  return page.evaluate((selector) => [...document.querySelectorAll(selector)]
-    .filter((element) => element.getClientRects().length > 0)
-    .filter((element) => getComputedStyle(element).overflowX !== 'visible' || element.tagName === 'BUTTON')
-    .filter((element) => element.scrollWidth > element.clientWidth + 1)
-    .map((element) => (element.id || element.className || element.tagName) + ': ' + element.textContent.trim().slice(0, 60)), OVERFLOW);
+  return page.evaluate((selector) => {
+    const name = (element) => (element.id || element.className || element.tagName) + ': ' + element.textContent.trim().slice(0, 60);
+    const own = [...document.querySelectorAll(selector)]
+      .filter((element) => element.getClientRects().length > 0)
+      .filter((element) => getComputedStyle(element).overflowX !== 'visible' || element.tagName === 'BUTTON')
+      .filter((element) => element.scrollWidth > element.clientWidth + 1)
+      .map(name);
+    // a button of an open dialog stays inside the dialog and the screen
+    const outside = [...document.querySelectorAll('dialog[open] button')]
+      .filter((button) => button.getClientRects().length > 0)
+      .filter((button) => {
+        const box = button.getBoundingClientRect();
+        const frame = button.closest('dialog').getBoundingClientRect();
+        return box.left < frame.left - 1 || box.right > frame.right + 1 || box.right > window.innerWidth + 1;
+      })
+      .map((button) => 'outside the dialog | ' + name(button));
+    return own.concat(outside);
+  }, OVERFLOW);
 }
 
 async function surfaces(page, shot, phone) {
@@ -168,6 +181,24 @@ async function surfaces(page, shot, phone) {
   await look('information');
   await page.keyboard.press('Escape');
 
+  // the questions with the longest pairs of buttons (final review, Important 5)
+  const question = async (name, ask) => {
+    await page.evaluate(ask);
+    await page.locator('dialog.fpb-dialog[open]').waitFor();
+    await look(name);
+    await page.locator('dialog.fpb-dialog[open] [data-answer=cancel]').click();
+  };
+  await question('question-delete', () => {
+    const registry = window.fpbjs.get('elementRegistry');
+    window.fpbjs.get('fpbDelete').remove([registry.get('9ca400c0-a373-48c0-9f13-37ce196cee29')]);
+  });
+  await question('question-boundary', () => {
+    const updater = window.fpbjs.get('shapeUpdater');
+    const element = window.fpbjs.get('elementRegistry').get('c50336d6-9a7f-46e3-a7f5-e6187618dd69');
+    updater._queueBoundary('stateMovedOnBoundary', { element, oldPosition: { x: element.x, y: element.y }, borderPosition: 'onUpperBorder' }, window.fpbjs.get('canvas').getRootElement());
+    updater._askForBoundary();
+  });
+
   await page.evaluate(() => window.fpbjs.get('fpbValidation').openPanel());
   await look('model-check');
   return found;
@@ -179,6 +210,18 @@ test.describe('Lengths in German', () => {
     await open(page);
     await german(page);
     expect(await surfaces(page, 'desktop', false)).toEqual([]);
+  });
+
+  // the narrowest phone the plan names: 375 px (final review, Important 5)
+  test.describe('on a narrow phone', () => {
+    const { defaultBrowserType, ...phone } = devices['iPhone SE'];
+    test.use(Object.assign({}, phone, { viewport: { width: 375, height: 812 } }));
+
+    test('nothing overflows on a phone 375 px wide', async ({ page }) => {
+      await open(page, null);
+      await german(page);
+      expect(await surfaces(page, 'phone-375', true)).toEqual([]);
+    });
   });
 
   test.describe('on a phone', () => {

@@ -2219,6 +2219,8 @@ test.describe('Selection across layers', () => {
 // 016f E4: a host (the plugin AMLFPB.js) hands over the links of its AML file
 // per layer and element; the delete question names those the deletion removes.
 const PRUEFEN = '9833d9a9-1b88-4bfb-91b3-7ab5e2617045';
+// the product with a characteristic, top layer
+const ROHSTOFF = 'c50336d6-9a7f-46e3-a7f5-e6187618dd69';
 const GUTPRODUKT = '1a9fc4c7-3c89-4277-8965-3b186eaa2672';
 const ROHSTOFF_TO_ERHITZEN = 'c0293fb1-f400-446b-8eb5-f0a071135619';
 const CHILD_LIMIT = 'deba3596-38ca-4bca-a85e-3d0b5dfba666';
@@ -2406,6 +2408,67 @@ test.describe('Language', () => {
     expect(await title()).toBe('Übersicht öffnen');
     await page.evaluate(() => window.fpb.setLanguage('en'));
     expect(await title()).toBe('Open minimap');
+  });
+
+  // final review, Important 1: a translate of the host as diagram-js shows it
+  // fills with `replacements[key] || '{key}'`; 0 and '' must not stay placeholders
+  test('a host translate in the style of diagram-js leaves no placeholder', async ({ page }) => {
+    await openLibraryPage(page);
+    await page.evaluate(async () => {
+      const translate = (template, replacements) => {
+        const values = replacements || {};
+        return template.replace(/{([^}]+)}/g, (whole, key) => values[key] || '{' + key + '}');
+      };
+      window.fpb = await window.FpbJS.createFpbModeler({
+        container: document.getElementById('modeler'),
+        propertiesContainer: document.getElementById('properties'),
+        layerContainer: document.getElementById('layers'),
+        additionalModules: [{ translate: ['value', translate] }]
+      });
+    });
+    const json = clone();
+    const product = json[1].elementDataInformation.find((e) => e.id === ROHSTOFF);
+    product.characteristics[0].descriptiveElement.validityLimits.push({ $type: 'fpbch:ValidityLimits', limitType: 'tolerance', to: 20 });
+    expect(await importModel(page, json)).toBe(true);
+
+    const label = await page.locator('#openValidationButton').getAttribute('aria-label');
+    expect(label).not.toContain('{');
+
+    const asked = await deleteWithLinks(page, [link(MAIN, PRUEFEN, 'Prüfen', 'L1'), link(MAIN, PRUEFEN, 'Prüfen', 'L2')], PRUEFEN);
+    expect(asked.asked.details).not.toContain('{');
+    // the question stays open: answer it before the panel
+    const open = page.locator('dialog.fpb-dialog[open] [data-answer=cancel]');
+    if (await open.count()) {
+      await open.click();
+    }
+
+    await page.evaluate((id) => {
+      window.fpb.fire('propertiesPanel.open');
+      window.fpb.select(id);
+    }, ROHSTOFF);
+    await page.locator('#properties .fpb-characteristic-row-name').first().click();
+    await expect(page.locator('#properties .fpb-other-limit')).toBeVisible();
+    expect(await page.locator('#properties').innerText()).not.toContain('{');
+  });
+
+  // final review, Important 3: the host takes the choice also with the language in effect
+  test('setLanguage with the language in effect still hides the language button', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page, { panels: true, options: { language: 'user' } });
+    await expect(page.locator('#languageButton')).toHaveCount(1);
+    await page.evaluate(() => window.fpb.setLanguage('en'));
+    await expect(page.locator('#languageButton')).toHaveCount(0);
+  });
+
+  // final review, Important 4: the fixed texts of the message stack follow a switch
+  test('the message stack names itself and its buttons in the new language', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page, { panels: true });
+    await page.evaluate(() => window.fpb.get('fpbNotifications').show({ key: 'test', type: 'error', title: 'T', message: 'M', details: 'D' }));
+    await page.evaluate(() => window.fpb.setLanguage('de'));
+    await expect(page.locator('.fpb-notifications')).toHaveAttribute('aria-label', 'Meldungen');
+    await expect(page.locator('.fpb-notifications .fpb-notification-details summary')).toHaveText('Technische Einzelheiten');
+    await expect(page.locator('.fpb-notifications [aria-label="Schließen"]')).toHaveCount(1);
   });
 
   test('without an option the modeler speaks English', async ({ page }) => {

@@ -1,3 +1,4 @@
+import { regionOf } from '../properties-panel/characteristics/limits';
 import { markText } from '../i18n/markText';
 import { fill, translateMessage } from '../i18n/language';
 import { is, isAny } from '../help/utils';
@@ -110,7 +111,7 @@ function checkLimits(processes, issues) {
             return;
           }
           report(issues, 'E5', element, process, msg('Characteristic {name} of {element}, {limit}: lower limit {from} is above upper limit {to}.', {
-            name, element: label(element), limit: text(limit.limitType) || msg('validity limit'), from, to
+            name, element: label(element), limit: limitWord(limit.limitType), from: String(from), to: String(to)
           }));
         });
       });
@@ -119,6 +120,18 @@ function checkLimits(processes, issues) {
 }
 
 const text = (value) => (value === undefined || value === null ? '' : String(value).trim());
+
+// the regions of Blatt 2 Abschn. 5.2 as words of the interface; other types are data (E5)
+const REGION_WORDS = { acceptance: markText('acceptance region'), permitted: markText('permitted rejection region') };
+
+/** The limit type of a finding: a known region in the language of translate, else as stored */
+function limitWord(limitType) {
+  const region = regionOf(limitType);
+  if (region && REGION_WORDS[region]) {
+    return msg(REGION_WORDS[region]);
+  }
+  return text(limitType) || msg('validity limit');
+}
 const identificationOf = (state) => state.businessObject.identification || {};
 
 /** What the copies of a boundary state must agree in (F9) */

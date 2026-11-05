@@ -66,8 +66,10 @@ export function LimitsEditor(props) {
           <span>
             {translate('{type}: {from} to {to}', {
               type: other.limitType || translate('Limit'),
-              from: formatValue(other.from),
-              to: formatValue(other.to)
+              // a missing bound as "…", never empty (a translate in the style of
+              // diagram-js keeps {from} for '')
+              from: formatValue(other.from) || '…',
+              to: formatValue(other.to) || '…'
             })}
           </span>
           {!readOnly && (

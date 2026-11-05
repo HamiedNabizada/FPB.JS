@@ -244,7 +244,7 @@ export function LayersTree(props) {
           <span class="fpb-layers-node-name" title={name}>{layerName(node.process, NAME_LENGTH, translate)}</span>
           {count !== null && (
             <span class="fpb-layers-node-count">
-              {count === 1 ? translate('1 operator') : translate('{count} operators', { count })}
+              {count === 1 ? translate('1 operator') : translate('{count} operators', { count: String(count) })}
             </span>
           )}
         </div>

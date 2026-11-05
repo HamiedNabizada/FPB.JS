@@ -96,7 +96,7 @@ export default function AmlOverviewDialog(props) {
                     : hierarchy.fpd ? translate('process view') : translate('other content')}
                 </td>
                 <td class="aml-overview-muted aml-overview-end">
-                  {hierarchy.elements === 1 ? translate('1 element') : translate('{count} elements', { count: hierarchy.elements })}
+                  {hierarchy.elements === 1 ? translate('1 element') : translate('{count} elements', { count: String(hierarchy.elements) })}
                 </td>
               </tr>
             ))}

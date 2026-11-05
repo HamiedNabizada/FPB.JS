@@ -283,6 +283,28 @@ describe('ModelChecker', () => {
       expect(RULES.E5).toEqual({ severity: 'error', title: 'Lower limit not above upper limit' });
     });
 
+    // final review, Important 2: the region is a word of the interface, not data
+    it('E5: a known region reads in the language of translate, other types stay as stored', () => {
+      const m = validModel();
+      m.input.businessObject.characteristics = withLimits([
+        { limitType: 'acceptance region', from: 80, to: 20 },
+        { limitType: 'Gutbereich', from: 9, to: 1 },
+        { limitType: 'tolerance', from: 7, to: 3 }
+      ]);
+      const de = {
+        'Characteristic {name} of {element}, {limit}: lower limit {from} is above upper limit {to}.': 'Merkmal {name} von {element}, {limit}: Untergrenze {from} liegt über Obergrenze {to}.',
+        'acceptance region': 'Gutbereich'
+      };
+      const t = (s, r) => fill(de[s] || s, r);
+      const e5 = checkModel([m.process]).filter((i) => i.rule === 'E5');
+      expect(e5.map((i) => translateMessage(t, i))).toEqual([
+        'Merkmal C_1 von "Input", Gutbereich: Untergrenze 80 liegt über Obergrenze 20.',
+        'Merkmal C_1 von "Input", Gutbereich: Untergrenze 9 liegt über Obergrenze 1.',
+        'Merkmal C_1 von "Input", tolerance: Untergrenze 7 liegt über Obergrenze 3.'
+      ]);
+      expect(e5[0].message).toBe('Characteristic C_1 of "Input", acceptance region: lower limit 80 is above upper limit 20.');
+    });
+
     // review focus 3
     it('E5: limits stored as text compare as numbers', () => {
       const m = validModel();

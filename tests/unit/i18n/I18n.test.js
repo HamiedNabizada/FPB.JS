@@ -123,6 +123,18 @@ describe('I18n', () => {
     expect(window.localStorage.getItem(STORAGE_KEY)).toBe(null);
   });
 
+  // final review, Important 3: the button goes also when the language stays
+  it('set fires i18n.modeChanged when it ends the choice of the user, also with the same language', () => {
+    const { i18n, eventBus } = create({ language: 'user' });
+    const modes = [];
+    eventBus.on('i18n.modeChanged', (event) => {
+      modes.push(event.userChoice);
+    });
+    i18n.set('en');
+    i18n.set('en');
+    expect(modes).toEqual([false]);
+  });
+
   it('choose outside user mode changes the language without storing it', () => {
     const { i18n } = create();
     i18n.choose('de');

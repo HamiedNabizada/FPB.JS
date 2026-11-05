@@ -25,14 +25,16 @@ const FILTERS = [
 /** Errors and warnings as words ('2 errors, 1 warning'), for export and import */
 export function describeErrorsAndWarnings(counts, translate) {
   const words = translate || fill;
-  const part = function (n, one, many) { return words(n === 1 ? one : many, { count: n }); };
+  // the count as text: a translate in the style of diagram-js leaves {count} for 0
+  const part = function (n, one, many) { return words(n === 1 ? one : many, { count: String(n) }); };
   return part(counts.error, markText('{count} error'), markText('{count} errors')) + ', ' +
     part(counts.warning, markText('{count} warning'), markText('{count} warnings'));
 }
 
 export function describeCounts(counts, translate) {
   const words = translate || fill;
-  const part = function (n, one, many) { return words(n === 1 ? one : many, { count: n }); };
+  // the count as text: a translate in the style of diagram-js leaves {count} for 0
+  const part = function (n, one, many) { return words(n === 1 ? one : many, { count: String(n) }); };
   return part(counts.error, markText('{count} error'), markText('{count} errors')) + ', ' +
     part(counts.warning, markText('{count} warning'), markText('{count} warnings')) + ', ' +
     part(counts.info, markText('{count} note'), markText('{count} notes'));

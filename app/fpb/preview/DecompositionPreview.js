@@ -88,7 +88,7 @@ DecompositionPreview.prototype.show = function (element) {
   heading.className = 'fpb-decomposition-preview-title';
   heading.textContent = translate('{name}: {count} elements', {
     name: element.businessObject.name || translate('Decomposition'),
-    count: geometry.shapes.filter(function (s) { return s.kind !== 'systemLimit'; }).length
+    count: String(geometry.shapes.filter(function (s) { return s.kind !== 'systemLimit'; }).length)
   });
 
   node.appendChild(heading);

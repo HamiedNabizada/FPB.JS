@@ -52,6 +52,14 @@ export default function Notifications(eventBus, canvas, translate) {
     this._observer.observe(container);
   }
   eventBus.on('canvas.resized', layout);
+
+  // its own texts (name, Dismiss, Technical details) in the new language;
+  // the messages keep the language they came in (016h V3)
+  const stack = this;
+  eventBus.on('i18n.changed', function () {
+    section.setAttribute('aria-label', translate('Messages'));
+    stack._render();
+  });
   layout();
 
   const self = this;
