@@ -1,15 +1,16 @@
 import { is, isAny } from '../help/utils';
 import { layerName } from '../layers/tree';
+import { markText } from '../i18n/markText';
 
 const SEARCHABLE = ['fpb:State', 'fpb:ProcessOperator', 'fpb:TechnicalResource', 'fpb:SystemLimit'];
 
 const TYPE_LABELS = {
-  'fpb:Product': 'Product',
-  'fpb:Energy': 'Energy',
-  'fpb:Information': 'Information',
-  'fpb:ProcessOperator': 'Process operator',
-  'fpb:TechnicalResource': 'Technical resource',
-  'fpb:SystemLimit': 'System limit'
+  'fpb:Product': markText('Product'),
+  'fpb:Energy': markText('Energy'),
+  'fpb:Information': markText('Information'),
+  'fpb:ProcessOperator': markText('Process operator'),
+  'fpb:TechnicalResource': markText('Technical resource'),
+  'fpb:SystemLimit': markText('System limit')
 };
 
 /**

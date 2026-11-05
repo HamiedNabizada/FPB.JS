@@ -1,13 +1,15 @@
 import { is, isAny } from '../../help/utils';
 import { checkIfOnSystemBorder } from '../../help/helpUtils';
+import { markText } from '../../i18n/markText';
+import { typeName } from '../../i18n/typeNames';
 
 
-const STATE_NOT_IN_SYSTEMLIMIT = 'Product, energy and information must be on or within the system limit';
-const PO_NOT_IN_SYSTEMLIMIT = 'Process operators must be within the system limits.';
-const TR_IN_SYSTEMLIMIT = 'Technical resources must be outside the system limits.';
-const BOUNDARY_STATE_LOCKED = 'This state represents an input/output of the decomposed process operator and must remain on the system boundary.';
+const STATE_NOT_IN_SYSTEMLIMIT = markText('Product, energy and information must be on or within the system limit');
+const PO_NOT_IN_SYSTEMLIMIT = markText('Process operators must be within the system limits.');
+const TR_IN_SYSTEMLIMIT = markText('Technical resources must be outside the system limits.');
+const BOUNDARY_STATE_LOCKED = markText('This state represents an input/output of the decomposed process operator and must remain on the system boundary.');
 
-const SWITCHINGPROCESS = 'Switching between processes is purely for navigation purposes. The decomposition and composition functionalities are used to transfer changes to higher and lower process levels.'
+const SWITCHINGPROCESS = markText('Switching between processes is purely for navigation purposes. The decomposition and composition functionalities are used to transfer changes to higher and lower process levels.');
 
 
 // Messages carry names from the model, which may come from files made by
@@ -20,8 +22,17 @@ function textNode(message) {
 
 export default function ModelingFeedback(eventBus, tooltips, translate, canvas, fpbNotifications) {
 
+    // a hint on the canvas goes when the language changes (016h V3)
+    let shown = [];
+    eventBus.on('i18n.changed', function () {
+        shown.forEach(function (id) {
+            tooltips.remove(id);
+        });
+        shown = [];
+    });
+
     function showError(position, message, timeout) {
-        tooltips.add({
+        shown.push(tooltips.add({
             position: {
                 x: position.x + 5,
                 y: position.y + 5
@@ -29,7 +40,7 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas, 
             type: 'error',
             timeout: timeout || 2000,
             html: textNode(message)
-        });
+        }));
     }
     // hints that belong to no element go to the message stack (016e V3);
     // the stack shows them as text, never as HTML
@@ -38,14 +49,14 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas, 
     }
     // 
     eventBus.on(['illegalMove'], function (event) {
-        let source = event.movedElement.type.replace('fpb:', '');
-        let target = event.targetElement.type.replace('fpb:', '');
+        let source = typeName(event.movedElement.type, translate);
+        let target = typeName(event.targetElement.type, translate);
         let msg = translate('You are not allowed to move {src} on {target}', { src: source, target: target });
         showError(event.position, msg)
     });
     eventBus.on(['illegalCreate'], function (event) {
-        let source = event.movedElement.type.replace('fpb:', '');
-        let target = event.targetElement.type.replace('fpb:', '');
+        let source = typeName(event.movedElement.type, translate);
+        let target = typeName(event.targetElement.type, translate);
         let msg = translate('You are not allowed to place a {src} on a {target}', { src: source, target: target });
         showError(event.position, msg)
     });
@@ -57,7 +68,7 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas, 
 
     // Scenario 14/12: Feedback after decomposition removal
     eventBus.on(['toolTips.decompositionRemoved'], function (event) {
-        let poName = event.processOperator?.name || 'ProcessOperator';
+        let poName = event.processOperator?.name || typeName('fpb:ProcessOperator', translate);
         showHint('decompositionRemoved', translate('The decomposition of "{po}" has been removed.', { po: poName }));
     });
     eventBus.on(['toolTips.decomposedProcessOperator'], function (event) {

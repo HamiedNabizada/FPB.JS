@@ -17,7 +17,13 @@ import de from '../../../app/fpb/i18n/de.js';
 const ROOT = path.resolve(__dirname, '../../..');
 
 // the parts translated so far; the last task of F1 replaces it by ALL
-const COVERED = ['app/fpb/toolbar', 'app/fpb/ui', 'app/fpb/i18n'];
+const COVERED = [
+  'app/fpb/toolbar', 'app/fpb/ui', 'app/fpb/i18n',
+  // Task 3: the canvas
+  'app/fpb/palette', 'app/fpb/context-pad', 'app/fpb/replace', 'app/fpb/append',
+  'app/fpb/modeling/behavior/ModelingFeedback.js', 'app/fpb/preview', 'app/fpb/a11y',
+  'app/fpb/search', 'app/fpb/info/keyboardShortcuts.js'
+];
 const ALL = ['app/fpb', 'src', 'app/app.js'];
 const EXCLUDED = ['app/fpb/aml/mapper'];
 const NAMES = ['translate', '_translate', 'markText'];

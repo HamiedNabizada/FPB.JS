@@ -1,8 +1,8 @@
+import { typeName } from '../i18n/typeNames';
 import { is, isAny } from '../help/utils';
 import { ELEMENT_GROUPS } from '../rules/RuleConstants';
 import { getBusinessObjectFromElementsContainer, noOfUsageConnections, checkIfOnSystemBorder } from '../help/helpUtils';
 import { assign } from 'min-dash';
-import translate from 'diagram-js/lib/i18n/translate/translate';
 
 // Import our new constants and utilities
 import { 
@@ -51,6 +51,16 @@ export default function FpbContextPadProvider(
   this._fpbDelete = injector.get('fpbDelete');
   this._popupMenu = injector.get('popupMenu', false);
   this._fpbAppend = injector.get('fpbAppend', false);
+
+  // the pad and its menus close when the language changes; opened again
+  // they speak the new one (016h V3)
+  const self = this;
+  eventBus.on('i18n.changed', function () {
+    contextPad.close();
+    if (self._popupMenu) {
+      self._popupMenu.close();
+    }
+  });
 }
 FpbContextPadProvider.$inject = [
   'config.contextPad',
@@ -70,6 +80,8 @@ FpbContextPadProvider.$inject = [
 
 
 FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
+  // the service, so the entries speak the language in effect (016h)
+  const translate = this._translate;
   const connect = this._connect;
   const modeling = this._modeling;
   const eventBus = this._eventBus;
@@ -109,7 +121,7 @@ FpbContextPadProvider.prototype.getContextPadEntries = function (element) {
   const pad = {};
   
   // Get clean element type for tooltips using utility
-  const elementType = ElementTypeUtils.getCleanElementType(element);
+  const elementType = typeName(element.type, translate);
   
   // No ContextPad for labels
   if (element.type === ELEMENT_TYPES.LABEL) {

@@ -1,3 +1,5 @@
+import { markText } from '../i18n/markText';
+
 /**
  * Palette Constants
  * 
@@ -59,18 +61,18 @@ export const PALETTE_ENTRY_IDS = {
 // Translation Keys
 export const TOOLTIP_KEYS = {
   // FPB Elements
-  ADD_SYSTEM_LIMIT: 'Add System Limit',
-  ADD_PRODUCT: 'Add Product',
-  ADD_ENERGY: 'Add Energy',
-  ADD_INFORMATION: 'Add Information',
-  ADD_PROCESS_OPERATOR: 'Add Process Operator',
-  ADD_TECHNICAL_RESOURCE: 'Add Technical Resource',
+  ADD_SYSTEM_LIMIT: markText('Add System Limit'),
+  ADD_PRODUCT: markText('Add Product'),
+  ADD_ENERGY: markText('Add Energy'),
+  ADD_INFORMATION: markText('Add Information'),
+  ADD_PROCESS_OPERATOR: markText('Add Process Operator'),
+  ADD_TECHNICAL_RESOURCE: markText('Add Technical Resource'),
   
   // Tools
-  ACTIVATE_SELECT: 'Activate Select Tool',
-  ACTIVATE_LASSO: 'Activate Lasso Tool',
-  ACTIVATE_SPACE: 'Activate the create/remove space tool',
-  ACTIVATE_HAND: 'Activate the hand tool'
+  ACTIVATE_SELECT: markText('Activate Select Tool'),
+  ACTIVATE_LASSO: markText('Activate Lasso Tool'),
+  ACTIVATE_SPACE: markText('Activate the create/remove space tool'),
+  ACTIVATE_HAND: markText('Activate the hand tool')
 };
 
 // FPB Element Configuration

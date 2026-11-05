@@ -13,8 +13,9 @@ const MAX_RESULTS = 50;
  * switch of FPB.JS. This search reads all layers, shows the layer of each hit
  * and switches there on selection. It reuses the search pad's markup and styles.
  */
-export default function FpbSearch(eventBus, canvas, keyboard, selection, elementRegistry, modeling, fpbjs) {
+export default function FpbSearch(eventBus, canvas, keyboard, selection, elementRegistry, modeling, fpbjs, translate) {
   this._eventBus = eventBus;
+  this._translate = translate;
   this._canvas = canvas;
   this._selection = selection;
   this._elementRegistry = elementRegistry;
@@ -27,6 +28,12 @@ export default function FpbSearch(eventBus, canvas, keyboard, selection, element
 
   this._build();
 
+  // the search closes when the language changes and opens in the new one
+  eventBus.on('i18n.changed', function () {
+    self.close();
+    self._label();
+  });
+
   keyboard.addListener(function (context) {
     const event = context.keyEvent;
     if (isCmd(event) && isKey(['f', 'F'], event)) {
@@ -36,15 +43,16 @@ export default function FpbSearch(eventBus, canvas, keyboard, selection, element
   });
 }
 
-FpbSearch.$inject = ['eventBus', 'canvas', 'keyboard', 'selection', 'elementRegistry', 'modeling', 'fpbjs'];
+FpbSearch.$inject = ['eventBus', 'canvas', 'keyboard', 'selection', 'elementRegistry', 'modeling', 'fpbjs', 'translate'];
 
 FpbSearch.prototype._build = function () {
   const container = this._container = document.createElement('div');
   container.className = 'djs-search-container fpb-search';
   container.innerHTML =
-    '<div class="djs-search-input"><input type="text" placeholder="Search all layers" aria-label="Search all layers" /></div>' +
+    '<div class="djs-search-input"><input type="text" /></div>' +
     '<div class="djs-search-results" role="listbox"></div>';
   this._input = container.querySelector('input');
+  this._label();
   this._resultsNode = container.querySelector('.djs-search-results');
   this._canvas.getContainer().appendChild(container);
 
@@ -77,6 +85,13 @@ FpbSearch.prototype._build = function () {
   this._input.addEventListener('blur', function () {
     self.close();
   });
+};
+
+/** Placeholder and name of the field in the language in effect */
+FpbSearch.prototype._label = function () {
+  const label = this._translate('Search all layers');
+  this._input.setAttribute('placeholder', label);
+  this._input.setAttribute('aria-label', label);
 };
 
 FpbSearch.prototype.isOpen = function () {
@@ -130,7 +145,7 @@ FpbSearch.prototype._render = function () {
   if (this._pattern && this._pattern.trim() && !this._results.length) {
     const empty = document.createElement('div');
     empty.className = 'djs-search-result fpb-search-empty';
-    empty.textContent = 'No element found';
+    empty.textContent = this._translate('No element found');
     this._resultsNode.appendChild(empty);
     return;
   }
@@ -146,7 +161,7 @@ FpbSearch.prototype._render = function () {
 
     const secondary = document.createElement('div');
     secondary.className = 'djs-search-result-secondary fpb-search-meta';
-    secondary.textContent = entry.type + ' in ' + entry.layer;
+    secondary.textContent = self._translate('{type} in {layer}', { type: self._translate(entry.type), layer: entry.layer });
 
     node.appendChild(primary);
     node.appendChild(secondary);

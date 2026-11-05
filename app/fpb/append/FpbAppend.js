@@ -1,5 +1,6 @@
 import { is, isAny } from '../help/utils';
 import { getSystemLimit } from '../help/helpUtils';
+import { markText } from '../i18n/markText';
 
 const GAP = 70;
 const STEP = 70;
@@ -9,9 +10,9 @@ const MAX_TRIES = 12;
 export const APPEND_MENU = 'fpb-append';
 
 export const APPEND_STATE_TYPES = [
-  { type: 'fpb:Product', label: 'Product' },
-  { type: 'fpb:Energy', label: 'Energy' },
-  { type: 'fpb:Information', label: 'Information' }
+  { type: 'fpb:Product', label: markText('Product') },
+  { type: 'fpb:Energy', label: markText('Energy') },
+  { type: 'fpb:Information', label: markText('Information') }
 ];
 
 /**
@@ -35,7 +36,7 @@ FpbAppend.$inject = ['canvas', 'elementFactory', 'commandStack', 'selection', 'i
 /** What can be appended to the element: a state type list, an operator, or nothing. */
 FpbAppend.prototype.getOptions = function (element) {
   if (is(element, 'fpb:State')) {
-    return [{ type: 'fpb:ProcessOperator', label: 'Process operator' }];
+    return [{ type: 'fpb:ProcessOperator', label: markText('Process operator') }];
   }
   if (is(element, 'fpb:ProcessOperator')) {
     return APPEND_STATE_TYPES.slice();

@@ -1,3 +1,5 @@
+import { markText } from '../i18n/markText';
+
 /**
  * Context Pad Constants
  * 
@@ -61,20 +63,20 @@ export const ENTRY_IDS = {
 
 // Translation Keys for Tooltips
 export const TOOLTIP_KEYS = {
-  REMOVE: 'Remove {type}',
-  CONNECT_WITH_PROCESS_OPERATOR: 'Connect {type} with ProcessOperator',
-  PARALLEL_USED: 'Parallel used {type}',
-  ALTERNATIVE_PROCESS: 'Alternative Process',
-  CONNECT_WITH_STATES: 'Connect {type} with Product, Energy or Information',
-  PARALLEL_PROCESS: 'Parallel Process',
-  CONNECT_PROCESS_OPERATOR_WITH_TR: 'Connect Process Operator with a Technical Resource',
-  DECOMPOSE_PROCESS_OPERATOR: 'Decompose this ProcessOperator',
-  CONNECT_TR_WITH_PROCESS_OPERATOR: 'Connect Technical Resource with a Process Operator',
-  SWITCH_TO_PARENT: 'Switch to parent process',
-  COMPOSE_SYSTEM_LIMIT: 'Compose SystemLimit',
-  ALTERNATIVE_FLOW: 'Alternative Flow',
-  CHANGE_TYPE: 'Change type',
-  APPEND: 'Append a connected element below'
+  REMOVE: markText('Remove {type}'),
+  CONNECT_WITH_PROCESS_OPERATOR: markText('Connect {type} with ProcessOperator'),
+  PARALLEL_USED: markText('Parallel used {type}'),
+  ALTERNATIVE_PROCESS: markText('Alternative Process'),
+  CONNECT_WITH_STATES: markText('Connect {type} with Product, Energy or Information'),
+  PARALLEL_PROCESS: markText('Parallel Process'),
+  CONNECT_PROCESS_OPERATOR_WITH_TR: markText('Connect Process Operator with a Technical Resource'),
+  DECOMPOSE_PROCESS_OPERATOR: markText('Decompose this ProcessOperator'),
+  CONNECT_TR_WITH_PROCESS_OPERATOR: markText('Connect Technical Resource with a Process Operator'),
+  SWITCH_TO_PARENT: markText('Switch to parent process'),
+  COMPOSE_SYSTEM_LIMIT: markText('Compose SystemLimit'),
+  ALTERNATIVE_FLOW: markText('Alternative Flow'),
+  CHANGE_TYPE: markText('Change type'),
+  APPEND: markText('Append a connected element below')
 };
 
 // Layout Constants

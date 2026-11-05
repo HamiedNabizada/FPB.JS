@@ -1,7 +1,7 @@
 // tests/e2e/german.spec.js
 import { test, expect } from './support/test';
 import { libraryBuilt } from './library/libPage';
-import { SURFACES, prepare, unmarked, texts, modelData, clone, settle } from './helpers/language';
+import { SURFACES, IDS, prepare, unmarked, texts, modelData, clone, settle } from './helpers/language';
 
 /**
  * German in FPB.js (016h F1, Tests), against the library bundle:
@@ -74,4 +74,23 @@ test.describe('Switching equals starting in German', () => {
       expect(switched).toEqual(started);
     });
   }
+});
+
+test.describe('Switching', () => {
+
+  test('switching closes an open context pad and menu, undo stays', async ({ page }) => {
+    await prepare(page, { name: 'switching' }, { language: 'en' });
+    await page.evaluate((id) => {
+      const registry = window.fpb.get('elementRegistry');
+      window.fpb.get('modeling').moveElements([registry.get(id)], { x: 10, y: 0 });
+    }, IDS.operator);
+    await page.evaluate((id) => window.fpb.select(id), IDS.product);
+    await page.locator('.djs-context-pad [data-action="change_type"]').click();
+    await expect(page.locator('.djs-popup')).toBeVisible();
+    await page.evaluate(() => window.fpb.setLanguage('de'));
+    await settle(page);
+    await expect(page.locator('.djs-popup')).toHaveCount(0);
+    await expect(page.locator('.djs-context-pad.open')).toHaveCount(0);
+    expect(await page.evaluate(() => window.fpb.get('commandStack').canUndo())).toBe(true);
+  });
 });

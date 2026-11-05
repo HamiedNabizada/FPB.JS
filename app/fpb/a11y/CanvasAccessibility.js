@@ -1,3 +1,7 @@
+import { markText } from '../i18n/markText';
+import { typeName } from '../i18n/typeNames';
+
+
 /**
  * Makes the drawing area usable without a mouse and understandable to a screen
  * reader (feature 022, WCAG 2.1 Level A).
@@ -13,11 +17,12 @@
  * The palette keeps its mouse behaviour untouched; keyboard activation goes
  * through the same `triggerEntry` the click handler uses.
  */
-const CANVAS_LABEL = 'Process diagram, editable drawing area';
+const CANVAS_LABEL = markText('Process diagram, editable drawing area');
 
-export default function CanvasAccessibility(canvas, palette, eventBus) {
+export default function CanvasAccessibility(canvas, palette, eventBus, translate, elementRegistry) {
   this._canvas = canvas;
   this._palette = palette;
+  this._translate = translate;
 
   const self = this;
 
@@ -45,9 +50,21 @@ export default function CanvasAccessibility(canvas, palette, eventBus) {
   eventBus.on(['render.shape', 'render.connection'], 2500, function (event) {
     self._describeElement(event.element, event.gfx);
   });
+
+  // the canvas and every element say it again in the new language (016h V3)
+  eventBus.on('i18n.changed', function () {
+    self._describeCanvas();
+    // the label sits on the visual of an element, as render.* hands it over
+    elementRegistry.forEach(function (element, gfx) {
+      const visual = gfx && gfx.querySelector('.djs-visual');
+      if (visual) {
+        self._describeElement(element, visual);
+      }
+    });
+  });
 }
 
-CanvasAccessibility.$inject = ['canvas', 'palette', 'eventBus'];
+CanvasAccessibility.$inject = ['canvas', 'palette', 'eventBus', 'translate', 'elementRegistry'];
 
 CanvasAccessibility.prototype._describeCanvas = function () {
   const container = this._canvas.getContainer();
@@ -58,7 +75,7 @@ CanvasAccessibility.prototype._describeCanvas = function () {
   // "application" tells assistive technology that arrow keys and shortcuts
   // belong to this widget instead of the reading cursor.
   container.setAttribute('role', 'application');
-  container.setAttribute('aria-label', CANVAS_LABEL);
+  container.setAttribute('aria-label', this._translate(CANVAS_LABEL));
   container.setAttribute('tabindex', '0');
 };
 
@@ -101,7 +118,7 @@ CanvasAccessibility.prototype._describeElement = function (element, gfx) {
     return;
   }
 
-  const type = (element.type || '').replace('fpb:', '');
+  const type = typeName(element.type, this._translate);
   const name = element.businessObject.name;
 
   gfx.setAttribute('role', 'img');

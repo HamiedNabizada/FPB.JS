@@ -25,8 +25,9 @@ const fills = () => ({
  * elements, so it also works for a layer that is not on the canvas. A click on
  * the preview switches to that layer.
  */
-export default function DecompositionPreview(eventBus, overlays, canvas, modeling) {
+export default function DecompositionPreview(eventBus, overlays, canvas, modeling, translate) {
   this._overlays = overlays;
+  this._translate = translate;
   this._canvas = canvas;
   this._modeling = modeling;
   this._timer = null;
@@ -48,12 +49,12 @@ export default function DecompositionPreview(eventBus, overlays, canvas, modelin
   });
 
   // not while dragging, creating or switching layers
-  eventBus.on(['drag.init', 'create.init', 'connect.init', 'root.set', 'canvas.destroy'], function () {
+  eventBus.on(['drag.init', 'create.init', 'connect.init', 'root.set', 'canvas.destroy', 'i18n.changed'], function () {
     self.hide();
   });
 }
 
-DecompositionPreview.$inject = ['eventBus', 'overlays', 'canvas', 'modeling'];
+DecompositionPreview.$inject = ['eventBus', 'overlays', 'canvas', 'modeling', 'translate'];
 
 DecompositionPreview.prototype._scheduleFor = function (element) {
   const child = decompositionOf(element);
@@ -80,12 +81,15 @@ DecompositionPreview.prototype.show = function (element) {
 
   const node = document.createElement('div');
   node.className = 'fpb-decomposition-preview';
-  node.title = 'Click to open this layer';
+  const translate = this._translate;
+  node.title = translate('Click to open this layer');
 
   const heading = document.createElement('div');
   heading.className = 'fpb-decomposition-preview-title';
-  heading.textContent = (element.businessObject.name || 'Decomposition') + ': '
-    + geometry.shapes.filter(function (s) { return s.kind !== 'systemLimit'; }).length + ' elements';
+  heading.textContent = translate('{name}: {count} elements', {
+    name: element.businessObject.name || translate('Decomposition'),
+    count: geometry.shapes.filter(function (s) { return s.kind !== 'systemLimit'; }).length
+  });
 
   node.appendChild(heading);
   node.appendChild(draw(geometry));

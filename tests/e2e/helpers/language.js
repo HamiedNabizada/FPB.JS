@@ -23,7 +23,10 @@ export function modelData(json) {
   const walk = (value) => {
     if (typeof value === 'string') {
       if (value.trim()) {
+        // as written, with its line breaks as spaces, and line by line
         found.add(value.trim());
+        found.add(value.replace(/\s+/g, ' ').trim());
+        value.split(/\n/).map((line) => line.trim()).filter(Boolean).forEach((line) => found.add(line));
       }
     } else if (Array.isArray(value)) {
       value.forEach(walk);
@@ -118,7 +121,10 @@ export async function prepare(page, surface, { marked = false, language = 'en' }
  */
 export function unmarked(page, data, scope) {
   return page.evaluate(({ data, open, close, scope }) => {
-    const roots = scope ? scope.flatMap((selector) => [...document.querySelectorAll(selector)]) : [document.body];
+    // 'self:<selector>': only the attributes of the element itself
+    const all = (selector) => [...document.querySelectorAll(selector)];
+    const roots = scope ? scope.filter((s) => !s.startsWith('self:')).flatMap(all) : [document.body];
+    const selves = scope ? scope.filter((s) => s.startsWith('self:')).flatMap((s) => all(s.slice(5))) : [];
     const strip = (text) => {
       let rest = text;
       let before;
@@ -144,7 +150,7 @@ export function unmarked(page, data, scope) {
 
     const visible = (element) => element.getClientRects().length > 0;
     const withAttributes = (root) => [root].concat([...root.querySelectorAll('[title], [aria-label], [placeholder], [alt]')]);
-    roots.flatMap(withAttributes).forEach((element) => {
+    roots.flatMap(withAttributes).concat(selves).forEach((element) => {
       if (!visible(element)) {
         return;
       }
@@ -167,7 +173,10 @@ export function unmarked(page, data, scope) {
  */
 export function texts(page, scope) {
   return page.evaluate((scope) => {
-    const roots = scope ? scope.flatMap((selector) => [...document.querySelectorAll(selector)]) : [document.body];
+    // 'self:<selector>': only the attributes of the element itself
+    const all = (selector) => [...document.querySelectorAll(selector)];
+    const roots = scope ? scope.filter((s) => !s.startsWith('self:')).flatMap(all) : [document.body];
+    const selves = scope ? scope.filter((s) => s.startsWith('self:')).flatMap((s) => all(s.slice(5))) : [];
     const stack = document.querySelector('.fpb-notifications');
     const hidden = stack ? stack.style.display : null;
     if (stack) {
@@ -180,7 +189,7 @@ export function texts(page, scope) {
     }
     const attributes = [];
     const withAttributes = (root) => [root].concat([...root.querySelectorAll('[title], [aria-label], [placeholder], [alt]')]);
-    roots.flatMap(withAttributes).forEach((element) => {
+    roots.flatMap(withAttributes).concat(selves).forEach((element) => {
       if (element.getClientRects().length === 0 || (stack && stack.contains(element))) {
         return;
       }
@@ -208,6 +217,63 @@ async function eachToolbarTip(page, check) {
   }
 }
 
+// elements of the fixture (temperieren.json), top layer
+export const IDS = {
+  product: 'c50336d6-9a7f-46e3-a7f5-e6187618dd69',
+  energy: '6d5ba42c-ba5f-4348-abc3-3f7395b8ce2d',
+  operator: '9833d9a9-1b88-4bfb-91b3-7ab5e2617045',
+  decomposed: '9ca400c0-a373-48c0-9f13-37ce196cee29',
+  resource: '9fe05bdc-4f2b-4ec5-8128-51dbc597eee2',
+  systemLimit: '1557c2cf-1aeb-4ef2-93ad-6bd66bf0a6a7',
+  flow: 'd5dc692d-61ac-4b4b-aea5-3d3044345aa7',
+  parallelFlow: 'c0293fb1-f400-446b-8eb5-f0a071135619',
+  alternativeFlow: '6551201a-9b9a-43fa-ad15-dc59a37933f7',
+  usage: '0059ef37-ea80-4414-8e8d-8985a35e59bf'
+};
+
+/** Select an element; the context pad of diagram-js opens for it */
+async function contextPad(page, id) {
+  await page.evaluate((id) => {
+    window.fpb.get('selection').select(null);
+    window.fpb.select(id);
+  }, id);
+  await page.locator('.djs-context-pad.open').waitFor({ state: 'visible', timeout: 3000 });
+}
+
+/** Open the popup menu behind an entry of the context pad */
+async function padMenu(page, id, action) {
+  await contextPad(page, id);
+  await page.locator('.djs-context-pad [data-action="' + action + '"]').click();
+  await page.locator('.djs-popup').waitFor({ state: 'visible', timeout: 3000 });
+}
+
+/** Search all layers for `pattern` */
+async function search(page, pattern) {
+  await page.evaluate(() => window.fpb.get('fpbSearch').open());
+  await page.locator('.fpb-search input').fill(pattern);
+}
+
+/** The hints of ModelingFeedback when a move or create is refused */
+async function dragHints(page, ids) {
+  await page.evaluate((ids) => {
+    const registry = window.fpb.get('elementRegistry');
+    const root = window.fpb.get('canvas').getRootElement();
+    const at = { x: 200, y: 200 };
+    window.fpb.fire('shape.move.rejected', Object.assign({ context: { shape: registry.get(ids.operator), target: root } }, at));
+    window.fpb.fire('shape.move.rejected', Object.assign({ context: { shape: registry.get(ids.product), target: root } }, { x: 200, y: 260 }));
+    window.fpb.fire('shape.move.rejected', Object.assign({ context: { shape: registry.get(ids.resource), target: registry.get(ids.systemLimit) } }, { x: 200, y: 320 }));
+    window.fpb.fire('illegalMove', { movedElement: registry.get(ids.resource), targetElement: registry.get(ids.product), position: { x: 200, y: 380 } });
+    window.fpb.fire('illegalCreate', { movedElement: registry.get(ids.operator), targetElement: registry.get(ids.resource), position: { x: 200, y: 440 } });
+  }, ids);
+}
+
+const contextPadSurface = (kind) => ({
+  name: 'context pad ' + kind,
+  scope: ['.djs-context-pad'],
+  closesOnSwitch: true,
+  open: (page) => contextPad(page, IDS[kind])
+});
+
 /**
  * The surfaces of the interface (016h V5). Each task of F1 adds the ones
  * it translates. `scope` lists the selectors of what the surface shows
@@ -227,6 +293,60 @@ export const SURFACES = [
     scope: ['.fpb-toolbar-tips'],
     open: async () => {},
     each: eachToolbarTip
+  },
+  // the canvas: palette, the label of the drawing area, and each element
+  // described for screen readers (Task 3)
+  {
+    name: 'canvas and palette',
+    scope: ['self:.djs-container', '.djs-palette', '.djs-container > svg'],
+    open: async () => {}
+  },
+  ...['product', 'energy', 'operator', 'decomposed', 'resource', 'systemLimit', 'flow', 'parallelFlow', 'usage'].map(contextPadSurface),
+  {
+    name: 'change type menu of a state',
+    scope: ['.djs-popup'],
+    closesOnSwitch: true,
+    open: (page) => padMenu(page, IDS.product, 'change_type')
+  },
+  {
+    name: 'change type menu of a branching',
+    scope: ['.djs-popup'],
+    closesOnSwitch: true,
+    open: (page) => padMenu(page, IDS.parallelFlow, 'change_type')
+  },
+  {
+    name: 'append menu',
+    scope: ['.djs-popup'],
+    closesOnSwitch: true,
+    open: (page) => padMenu(page, IDS.operator, 'append')
+  },
+  {
+    name: 'search with results',
+    scope: ['.fpb-search'],
+    closesOnSwitch: true,
+    open: (page) => search(page, 'r')
+  },
+  {
+    name: 'search without results',
+    scope: ['.fpb-search'],
+    closesOnSwitch: true,
+    open: (page) => search(page, 'zzzz')
+  },
+  {
+    name: 'decomposition preview',
+    scope: ['.fpb-decomposition-preview'],
+    closesOnSwitch: true,
+    open: async (page) => {
+      await page.mouse.move(5, 5);
+      await page.hover('[data-element-id="' + IDS.decomposed + '"]');
+      await page.locator('.fpb-decomposition-preview').waitFor({ state: 'visible', timeout: 3000 });
+    }
+  },
+  {
+    name: 'drag hints',
+    scope: ['.djs-tooltip-container'],
+    closesOnSwitch: true,
+    open: (page) => dragHints(page, IDS)
   }
 ];
 
