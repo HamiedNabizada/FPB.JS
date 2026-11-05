@@ -1,7 +1,7 @@
 // tests/e2e/german.spec.js
-import { test, expect } from './support/test';
+import { test, expect, devices } from './support/test';
 import { libraryBuilt } from './library/libPage';
-import { SURFACES, IDS, prepare, unmarked, texts, modelData, clone, settle, without } from './helpers/language';
+import { SURFACES, PHONE_SURFACES, IDS, prepare, unmarked, texts, modelData, clone, settle, without } from './helpers/language';
 
 /**
  * German in FPB.js (016h F1, Tests), against the library bundle:
@@ -19,61 +19,78 @@ test.beforeAll(() => {
 
 const dataOf = (surface) => modelData(Array.isArray(surface.model) ? surface.model : clone());
 
+/** With the marking translate, the surface shows nothing unmarked but data */
+async function checkUnmarked(page, surface) {
+  const { errors } = await prepare(page, surface, { marked: true });
+  await surface.open(page);
+  await settle(page);
+  const data = dataOf(surface).concat(surface.data || [], surface.pageData ? await surface.pageData(page) : [])
+    .sort((a, b) => b.length - a.length);
+  const found = [];
+  const check = async () => {
+    found.push(...await without(page, surface.exclude, () => unmarked(page, data, surface.scope)));
+  };
+  if (surface.each) {
+    await surface.each(page, check);
+  } else {
+    await check();
+  }
+  expect(found).toEqual([]);
+  expect(errors).toEqual([]);
+}
+
+/** The texts after switching to German equal those after starting in German */
+async function checkSwitch(page, surface) {
+  const collect = async () => {
+    const all = [];
+    if (surface.each) {
+      await surface.each(page, async () => {
+        all.push(...await without(page, surface.exclude, () => texts(page, surface.scope)));
+      });
+    } else {
+      all.push(...await without(page, surface.exclude, () => texts(page, surface.scope)));
+    }
+    return all;
+  };
+
+  await prepare(page, surface, { language: 'en' });
+  await surface.open(page);
+  await page.evaluate(() => window.fpb.setLanguage('de'));
+  await settle(page);
+  if (surface.closesOnSwitch) {
+    await surface.open(page);
+    await settle(page);
+  }
+  const switched = await collect();
+
+  await prepare(page, surface, { language: 'de' });
+  await surface.open(page);
+  await settle(page);
+  const started = await collect();
+
+  expect(switched).toEqual(started);
+}
+
 test.describe('Nothing hard-coded in English', () => {
   for (const surface of SURFACES) {
-    test(surface.name, async ({ page }) => {
-      const { errors } = await prepare(page, surface, { marked: true });
-      await surface.open(page);
-      await settle(page);
-      const data = dataOf(surface).concat(surface.data || [], surface.pageData ? await surface.pageData(page) : [])
-        .sort((a, b) => b.length - a.length);
-      const found = [];
-      const check = async () => {
-        found.push(...await without(page, surface.exclude, () => unmarked(page, data, surface.scope)));
-      };
-      if (surface.each) {
-        await surface.each(page, check);
-      } else {
-        await check();
-      }
-      expect(found).toEqual([]);
-      expect(errors).toEqual([]);
-    });
+    test(surface.name, ({ page }) => checkUnmarked(page, surface));
   }
 });
 
 test.describe('Switching equals starting in German', () => {
   for (const surface of SURFACES.filter((s) => !s.noSwitch)) {
-    test(surface.name, async ({ page }) => {
-      const collect = async () => {
-        const all = [];
-        if (surface.each) {
-          await surface.each(page, async () => {
-            all.push(...await without(page, surface.exclude, () => texts(page, surface.scope)));
-          });
-        } else {
-          all.push(...await without(page, surface.exclude, () => texts(page, surface.scope)));
-        }
-        return all;
-      };
+    test(surface.name, ({ page }) => checkSwitch(page, surface));
+  }
+});
 
-      await prepare(page, surface, { language: 'en' });
-      await surface.open(page);
-      await page.evaluate(() => window.fpb.setLanguage('de'));
-      await settle(page);
-      if (surface.closesOnSwitch) {
-        await surface.open(page);
-        await settle(page);
-      }
-      const switched = await collect();
+test.describe('On a phone', () => {
+  // narrow and touch: the panels are sheets (016f E2)
+  const { defaultBrowserType, ...phone } = devices['Pixel 5'];
+  test.use(phone);
 
-      await prepare(page, surface, { language: 'de' });
-      await surface.open(page);
-      await settle(page);
-      const started = await collect();
-
-      expect(switched).toEqual(started);
-    });
+  for (const surface of PHONE_SURFACES) {
+    test('nothing hard-coded: ' + surface.name, ({ page }) => checkUnmarked(page, surface));
+    test('switching equals starting: ' + surface.name, ({ page }) => checkSwitch(page, surface));
   }
 });
 

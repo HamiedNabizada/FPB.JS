@@ -1,3 +1,5 @@
+import { markText } from '../i18n/markText';
+import { fill, translateMessage } from '../i18n/language';
 import { is, isAny } from '../help/utils';
 import { checkIfOnSystemBorder } from '../help/helpUtils';
 import { content } from '../help/modelContent';
@@ -8,33 +10,36 @@ import { content } from '../help/modelContent';
  * severities are those of the catalog. Works on the process root shapes of all
  * layers; shapes of layers not on the canvas are read from elementsContainer.
  *
- * Result: [{ rule, severity: 'error'|'warning'|'info', message, elementId, process, involved }],
+ * Result: [{ rule, severity: 'error'|'warning'|'info', message, template, args, elementId, process, involved }],
+ * `message` in English; `template` and `args` give it in any language with
+ * translateMessage (016h T15). Values in args are data (names in quotes,
+ * numbers) or messages of their own ({ template }) or lists of both.
  * `involved` = [{ id, process }] of every element the finding is about
  */
 
 export const SEVERITY = { ERROR: 'error', WARNING: 'warning', INFO: 'info' };
 
 export const RULES = {
-  A2: { severity: SEVERITY.ERROR, title: 'Exactly one system limit per process' },
-  B1: { severity: SEVERITY.ERROR, title: 'State inside the system limit or on its border' },
-  B2: { severity: SEVERITY.ERROR, title: 'Process operator inside the system limit' },
-  B3: { severity: SEVERITY.ERROR, title: 'Technical resource outside the system limit' },
-  B6: { severity: SEVERITY.ERROR, title: 'Boundary state on the border of the system limit' },
-  C5: { severity: SEVERITY.WARNING, title: 'No duplicate connections' },
-  C9: { severity: SEVERITY.WARNING, title: 'Parallel or alternative flows not mixed with a normal flow' },
-  D3: { severity: SEVERITY.INFO, title: 'Process operator has a name' },
-  D4: { severity: SEVERITY.INFO, title: 'State has a name' },
-  D5: { severity: SEVERITY.INFO, title: 'Technical resource has a name' },
+  A2: { severity: SEVERITY.ERROR, title: markText('Exactly one system limit per process') },
+  B1: { severity: SEVERITY.ERROR, title: markText('State inside the system limit or on its border') },
+  B2: { severity: SEVERITY.ERROR, title: markText('Process operator inside the system limit') },
+  B3: { severity: SEVERITY.ERROR, title: markText('Technical resource outside the system limit') },
+  B6: { severity: SEVERITY.ERROR, title: markText('Boundary state on the border of the system limit') },
+  C5: { severity: SEVERITY.WARNING, title: markText('No duplicate connections') },
+  C9: { severity: SEVERITY.WARNING, title: markText('Parallel or alternative flows not mixed with a normal flow') },
+  D3: { severity: SEVERITY.INFO, title: markText('Process operator has a name') },
+  D4: { severity: SEVERITY.INFO, title: markText('State has a name') },
+  D5: { severity: SEVERITY.INFO, title: markText('Technical resource has a name') },
   // Blatt 2 Abschn. 5.2: a setpoint with its validity limits (016g B2)
-  E5: { severity: SEVERITY.ERROR, title: 'Lower limit not above upper limit' },
-  F5: { severity: SEVERITY.WARNING, title: 'Decomposition contains every input and output' },
-  F8: { severity: SEVERITY.WARNING, title: 'Branching type matches the decomposition' },
+  E5: { severity: SEVERITY.ERROR, title: markText('Lower limit not above upper limit') },
+  F5: { severity: SEVERITY.WARNING, title: markText('Decomposition contains every input and output') },
+  F8: { severity: SEVERITY.WARNING, title: markText('Branching type matches the decomposition') },
   // a note, as E6 of the catalog: the model stays valid, and every older file
   // whose layers were saved one by one would report it after the import
-  F9: { severity: SEVERITY.INFO, title: 'Copies of a boundary state agree' },
-  G1: { severity: SEVERITY.WARNING, title: 'Process operator has an input and an output' },
-  G3: { severity: SEVERITY.ERROR, title: 'Flow has different source and target' },
-  G4: { severity: SEVERITY.WARNING, title: 'Element is connected' }
+  F9: { severity: SEVERITY.INFO, title: markText('Copies of a boundary state agree') },
+  G1: { severity: SEVERITY.WARNING, title: markText('Process operator has an input and an output') },
+  G3: { severity: SEVERITY.ERROR, title: markText('Flow has different source and target') },
+  G4: { severity: SEVERITY.WARNING, title: markText('Element is connected') }
 };
 
 const FLOW_TYPES = ['fpb:Flow', 'fpb:ParallelFlow', 'fpb:AlternativeFlow'];
@@ -44,6 +49,8 @@ function isFlow(connection) {
   return isAny(connection, FLOW_TYPES) && !is(connection, 'fpb:Usage');
 }
 const BRANCH_TYPES = ['fpb:ParallelFlow', 'fpb:AlternativeFlow'];
+// the kinds of a branching as words of a finding (F8)
+const KIND = { alternative: markText('alternative'), parallel: markText('parallel') };
 const TOLERANCE = 1;
 
 export function checkModel(processShapes) {
@@ -102,8 +109,9 @@ function checkLimits(processes, issues) {
           if (from === null || to === null || from <= to) {
             return;
           }
-          report(issues, 'E5', element, process, 'Characteristic ' + name + ' of ' + label(element) + ', ' +
-            (text(limit.limitType) || 'validity limit') + ': lower limit ' + from + ' is above upper limit ' + to + '.');
+          report(issues, 'E5', element, process, msg('Characteristic {name} of {element}, {limit}: lower limit {from} is above upper limit {to}.', {
+            name, element: label(element), limit: text(limit.limitType) || msg('validity limit'), from, to
+          }));
         });
       });
     });
@@ -115,12 +123,12 @@ const identificationOf = (state) => state.businessObject.identification || {};
 
 /** What the copies of a boundary state must agree in (F9) */
 const ASPECTS = [
-  { label: 'name', read: (state) => text(state.businessObject.name) },
-  { label: 'short name', read: (state) => text(identificationOf(state).shortName) },
-  { label: 'long name', read: (state) => text(identificationOf(state).longName) },
-  { label: 'version', read: (state) => text(identificationOf(state).versionNumber) },
-  { label: 'revision', read: (state) => text(identificationOf(state).revisionNumber) },
-  { label: 'characteristics', read: (state) => JSON.stringify(content(state.businessObject.characteristics)) }
+  { label: markText('name'), read: (state) => text(state.businessObject.name) },
+  { label: markText('short name'), read: (state) => text(identificationOf(state).shortName) },
+  { label: markText('long name'), read: (state) => text(identificationOf(state).longName) },
+  { label: markText('version'), read: (state) => text(identificationOf(state).versionNumber) },
+  { label: markText('revision'), read: (state) => text(identificationOf(state).revisionNumber) },
+  { label: markText('characteristics'), read: (state) => JSON.stringify(content(state.businessObject.characteristics)) }
 ];
 
 /**
@@ -161,8 +169,10 @@ function checkCopies(processes, issues) {
         variants.push({ id: copy.state.id, process: copy.process });
       }
     });
-    report(issues, 'F9', first.state, first.process, 'The copies of ' + label(first.state) +
-      ' on the layers differ in ' + differs.map(function (aspect) { return aspect.label; }).join(', ') + '.',
+    report(issues, 'F9', first.state, first.process, msg('The copies of {element} on the layers differ in {aspects}.', {
+      element: label(first.state),
+      aspects: differs.map(function (aspect) { return msg(aspect.label); })
+    }),
       copies.map(function (copy) { return { id: copy.state.id, process: copy.process }; }));
     issues[issues.length - 1].variants = variants;
   });
@@ -173,13 +183,20 @@ function checkCopies(processes, issues) {
  * its own element (024 point 6, 016b V8). Elements on other layers carry
  * their layer, so the list can open it.
  */
+/** A message for report(): its template and its values */
+function msg(template, args) {
+  return { template: template, args: args || {} };
+}
+
 function report(issues, rule, element, process, message, involved) {
   const own = element ? [{ id: element.id, process: process }] : [];
   const others = (involved || []).filter(function (x) { return x && x.id && !(element && x.id === element.id && x.process === process); });
   issues.push({
     rule: rule,
     severity: RULES[rule].severity,
-    message: message,
+    message: translateMessage(fill, message),
+    template: message.template,
+    args: message.args,
     elementId: element ? element.id : null,
     process: process,
     involved: own.concat(others)
@@ -241,7 +258,9 @@ function checkProcess(process, issues) {
   // A2
   if (layer.systemLimits.length !== 1 && (layer.states.length || layer.operators.length || layer.systemLimits.length)) {
     report(issues, 'A2', layer.systemLimits[1] || null, process,
-      layer.systemLimits.length ? 'The process has ' + layer.systemLimits.length + ' system limits.' : 'The process has no system limit.');
+      layer.systemLimits.length
+        ? msg('The process has {count} system limits.', { count: layer.systemLimits.length })
+        : msg('The process has no system limit.'));
   }
 
   if (sl && hasBounds(sl)) {
@@ -253,19 +272,19 @@ function checkProcess(process, issues) {
       const inside = cx >= sl.x - state.width / 2 - TOLERANCE && cx <= sl.x + sl.width + state.width / 2 + TOLERANCE
         && cy >= sl.y - state.height / 2 - TOLERANCE && cy <= sl.y + sl.height + state.height / 2 + TOLERANCE;
       if (!inside) {
-        report(issues, 'B1', state, process, 'State ' + label(state) + ' lies outside the system limit.');
+        report(issues, 'B1', state, process, msg('State {element} lies outside the system limit.', { element: label(state) }));
       }
     });
     // B2
     layer.operators.forEach(function (operator) {
       if (hasBounds(operator) && !contains(sl, operator)) {
-        report(issues, 'B2', operator, process, 'Process operator ' + label(operator) + ' is not inside the system limit.');
+        report(issues, 'B2', operator, process, msg('Process operator {element} is not inside the system limit.', { element: label(operator) }));
       }
     });
     // B3
     layer.resources.forEach(function (resource) {
       if (hasBounds(resource) && intersects(sl, resource)) {
-        report(issues, 'B3', resource, process, 'Technical resource ' + label(resource) + ' overlaps the system limit.');
+        report(issues, 'B3', resource, process, msg('Technical resource {element} overlaps the system limit.', { element: label(resource) }));
       }
     });
     // B6: in a decomposition, the inputs and outputs of the parent operator
@@ -274,7 +293,7 @@ function checkProcess(process, issues) {
       const boundaryIds = parentBoundaryIds(process);
       layer.states.forEach(function (state) {
         if (boundaryIds.has(state.id) && hasBounds(state) && !checkIfOnSystemBorder(sl, state)) {
-          report(issues, 'B6', state, process, 'Boundary state ' + label(state) + ' is not on the upper or lower border of the system limit.');
+          report(issues, 'B6', state, process, msg('Boundary state {element} is not on the upper or lower border of the system limit.', { element: label(state) }));
         }
       });
     }
@@ -287,11 +306,11 @@ function checkProcess(process, issues) {
     const target = connection.target;
     if (!source || !target) return;
     if (source === target) {
-      report(issues, 'G3', connection, process, 'A flow connects ' + label(source) + ' with itself.');
+      report(issues, 'G3', connection, process, msg('A flow connects {element} with itself.', { element: label(source) }));
     }
     const key = source.id + '>' + target.id + '>' + connection.type;
     if (seen.has(key)) {
-      report(issues, 'C5', connection, process, 'Duplicate connection from ' + label(source) + ' to ' + label(target) + '.',
+      report(issues, 'C5', connection, process, msg('Duplicate connection from {source} to {target}.', { source: label(source), target: label(target) }),
         [{ id: seen.get(key).id, process: process }]);
     }
     seen.set(key, connection);
@@ -303,30 +322,31 @@ function checkProcess(process, issues) {
     const branch = outgoing.some(function (c) { return isAny(c, BRANCH_TYPES); });
     const plain = outgoing.some(function (c) { return c.type === 'fpb:Flow'; });
     if (branch && plain) {
-      report(issues, 'C9', element, process, label(element) + ' mixes a normal flow with parallel or alternative flows.',
+      report(issues, 'C9', element, process, msg('{element} mixes a normal flow with parallel or alternative flows.', { element: label(element) }),
         outgoing.map(function (c) { return { id: c.id, process: process }; }));
     }
   });
 
   // D3 to D5
-  layer.operators.forEach(function (e) { if (!nameOf(e)) report(issues, 'D3', e, process, 'A process operator has no name.'); });
-  layer.states.forEach(function (e) { if (!nameOf(e)) report(issues, 'D4', e, process, 'A state has no name.'); });
-  layer.resources.forEach(function (e) { if (!nameOf(e)) report(issues, 'D5', e, process, 'A technical resource has no name.'); });
+  layer.operators.forEach(function (e) { if (!nameOf(e)) report(issues, 'D3', e, process, msg('A process operator has no name.')); });
+  layer.states.forEach(function (e) { if (!nameOf(e)) report(issues, 'D4', e, process, msg('A state has no name.')); });
+  layer.resources.forEach(function (e) { if (!nameOf(e)) report(issues, 'D5', e, process, msg('A technical resource has no name.')); });
 
   // G1
   layer.operators.forEach(function (operator) {
     const inputs = flowsOf(operator, 'incoming').length;
     const outputs = flowsOf(operator, 'outgoing').length;
     if (!inputs || !outputs) {
-      report(issues, 'G1', operator, process, 'Process operator ' + label(operator) + ' has no ' +
-        (!inputs && !outputs ? 'input and no output' : (!inputs ? 'input' : 'output')) + '.');
+      report(issues, 'G1', operator, process, msg(!inputs && !outputs
+        ? 'Process operator {element} has no input and no output.'
+        : (!inputs ? 'Process operator {element} has no input.' : 'Process operator {element} has no output.'), { element: label(operator) }));
     }
   });
 
   // G4
   layer.states.concat(layer.operators, layer.resources).forEach(function (element) {
     if (!(element.incoming || []).length && !(element.outgoing || []).length) {
-      report(issues, 'G4', element, process, label(element) + ' is not connected.');
+      report(issues, 'G4', element, process, msg('{element} is not connected.', { element: label(element) }));
     }
   });
 
@@ -340,8 +360,8 @@ function checkProcess(process, issues) {
     layerContents(child).states.forEach(function (state) { childStates[state.id] = state; });
 
     [
-      { direction: 'outgoing', childDirection: 'incoming', label: 'outputs', verb: 'produces' },
-      { direction: 'incoming', childDirection: 'outgoing', label: 'inputs', verb: 'uses' }
+      { direction: 'outgoing', childDirection: 'incoming', text: markText('The outputs of {element} are {parent}, but its decomposition produces them {child}.') },
+      { direction: 'incoming', childDirection: 'outgoing', text: markText('The inputs of {element} are {parent}, but its decomposition uses them {child}.') }
     ].forEach(function (side) {
       const flows = flowsOf(operator, side.direction);
       const parentKind = branchKind(flows);
@@ -356,8 +376,7 @@ function checkProcess(process, issues) {
 
       const childKind = branchKind(childFlows);
       if (childKind && childKind !== parentKind) {
-        report(issues, 'F8', operator, process, 'The ' + side.label + ' of ' + label(operator) + ' are '
-          + parentKind + ', but its decomposition ' + side.verb + ' them ' + childKind + '.',
+        report(issues, 'F8', operator, process, msg(side.text, { element: label(operator), parent: msg(KIND[parentKind]), child: msg(KIND[childKind]) }),
           flows.map(function (f) { return { id: f.id, process: process }; })
             .concat(childFlows.map(function (f) { return { id: f.id, process: child }; })));
       }
@@ -373,8 +392,9 @@ function checkProcess(process, issues) {
       .concat(flowsOf(operator, 'outgoing').map(function (c) { return c.target; }))
       .filter(function (state) { return state && !childStates.has(state.id); });
     if (missing.length) {
-      report(issues, 'F5', operator, process, 'The decomposition of ' + label(operator) + ' lacks ' +
-        missing.map(label).join(', ') + '.', missing.map(function (s) { return { id: s.id, process: process }; }));
+      report(issues, 'F5', operator, process, msg('The decomposition of {element} lacks {missing}.', {
+        element: label(operator), missing: missing.map(label)
+      }), missing.map(function (s) { return { id: s.id, process: process }; }));
     }
   });
 }

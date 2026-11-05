@@ -202,7 +202,7 @@ export function LayersTree(props) {
     if (!shown(node)) {
       return null;
     }
-    const name = layerName(node.process);
+    const name = layerName(node.process, Infinity, translate);
     const hasChildren = childrenOf(node).length > 0;
     const expanded = hasChildren && isOpen(node);
     const isCurrent = node.id === currentId;
@@ -241,7 +241,7 @@ export function LayersTree(props) {
           >
             {hasChildren ? (expanded ? '−' : '+') : ''}
           </span>
-          <span class="fpb-layers-node-name" title={name}>{layerName(node.process, NAME_LENGTH)}</span>
+          <span class="fpb-layers-node-name" title={name}>{layerName(node.process, NAME_LENGTH, translate)}</span>
           {count !== null && (
             <span class="fpb-layers-node-count">
               {count === 1 ? translate('1 operator') : translate('{count} operators', { count })}

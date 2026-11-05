@@ -58,10 +58,14 @@ export function translateMessage(translate, message) {
   if (typeof message.template !== 'string') {
     return message.message === undefined ? '' : String(message.message);
   }
+  const one = function (value) {
+    return value && typeof value === 'object' ? translateMessage(translate, value) : value;
+  };
   const args = {};
   Object.keys(message.args || {}).forEach(function (key) {
     const value = message.args[key];
-    args[key] = value && typeof value === 'object' ? translateMessage(translate, value) : value;
+    // a list (aspects, missing states) reads as its parts joined with commas
+    args[key] = Array.isArray(value) ? value.map(one).join(', ') : one(value);
   });
   return translate(message.template, args);
 }

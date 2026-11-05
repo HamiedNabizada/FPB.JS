@@ -1,5 +1,6 @@
 /** @jsx h */
 import { markText } from '../../i18n/markText';
+import { translateMessage } from '../../i18n/language';
 
 import { h } from '@bpmn-io/properties-panel/preact';
 import { useShowEntryEvent } from '@bpmn-io/properties-panel';
@@ -25,7 +26,7 @@ function Findings(props) {
         {findings.map((issue) => (
           <li class={'fpb-finding fpb-finding-' + issue.severity}>
             <div class="fpb-finding-head">{translate(SEVERITY_LABEL[issue.severity]) + ' · ' + issue.rule + ' ' + translate(RULES[issue.rule].title)}</div>
-            <div class="fpb-finding-text">{issue.message}</div>
+            <div class="fpb-finding-text">{translateMessage(translate, issue)}</div>
           </li>
         ))}
       </ul>

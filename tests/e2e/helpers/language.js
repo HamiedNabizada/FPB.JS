@@ -1,7 +1,7 @@
 // tests/e2e/helpers/language.js
 import fs from 'fs';
 import path from 'path';
-import { openLibraryPage, createModeler, importModel } from '../library/libPage';
+import { openLibraryPage, importModel } from '../library/libPage';
 import basis from '../fixtures/temperieren.json';
 
 /**
@@ -46,8 +46,16 @@ export function modelData(json) {
  * Like createModeler, with a translate of the host in additionalModules that
  * marks every text (a host may replace translate, 016h V9).
  */
-export async function createMarkedModeler(page, { options = {}, aml = false } = {}) {
-  await page.evaluate(async ({ options, aml }) => {
+export async function createMarkedModeler(page, { options = {}, aml = false, sheets = false } = {}) {
+  await createIn(page, { options, aml, sheets, marked: true });
+}
+
+/**
+ * Create the modeler in the test page, with the panels; `marked` adds the
+ * marking translate, `sheets` a container for the sheets of a phone.
+ */
+async function createIn(page, { options = {}, aml = false, sheets = false, marked = false } = {}) {
+  await page.evaluate(async ({ options, aml, sheets, marked }) => {
     // only the fixed parts of a template are marked; the values put in stay
     // outside, so an English value from the code is found as well
     const mark = (text) => (text ? '⟦' + text + '⟧' : '');
@@ -62,7 +70,7 @@ export async function createMarkedModeler(page, { options = {}, aml = false } = 
       });
       return out + mark(template.slice(last));
     };
-    const marked = {
+    const markedModule = {
       translate: ['value', (template, replacements) => (typeof template === 'string'
         ? markTemplate(template, replacements)
         : template)]
@@ -72,9 +80,25 @@ export async function createMarkedModeler(page, { options = {}, aml = false } = 
       propertiesContainer: document.getElementById('properties'),
       layerContainer: document.getElementById('layers')
     }, options);
-    opts.additionalModules = [].concat(aml ? [window.FpbJSAml.AmlModule] : [], [marked]);
+    if (sheets) {
+      const holder = document.createElement('div');
+      holder.id = 'sheets';
+      // the test page has no viewport of its own; a phone would lay it out 980 px wide
+      const meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, initial-scale=1';
+      document.head.appendChild(meta);
+      // a phone: canvas above, the row of the sheets below, the toolbar on the right
+      holder.style.cssText = 'position:absolute;left:0;bottom:0;width:100%;height:45%;';
+      document.getElementById('modeler').style.cssText = 'position:absolute;left:0;top:0;width:100%;height:55%;';
+      document.getElementById('properties').style.cssText = 'position:absolute;left:0;top:0;width:0;height:0;overflow:hidden;';
+      document.getElementById('layers').style.cssText = 'position:absolute;right:0;top:0;width:60px;height:55%;overflow:visible;z-index:5;';
+      document.body.appendChild(holder);
+      opts.sheets = { container: holder };
+    }
+    opts.additionalModules = [].concat(aml ? [window.FpbJSAml.AmlModule] : [], marked ? [markedModule] : []);
     window.fpb = await window.FpbJS.createFpbModeler(opts);
-  }, { options, aml });
+  }, { options, aml, sheets, marked });
 }
 
 /** Wait until Preact and the event handlers have drawn */
@@ -99,12 +123,10 @@ export async function prepare(page, surface, { marked = false, language = 'en' }
     await surface.before(page);
   }
   const options = Object.assign({}, surface.options || {});
-  if (marked) {
-    await createMarkedModeler(page, { options, aml: Boolean(surface.aml) });
-  } else {
+  if (!marked) {
     options.language = language;
-    await createModeler(page, { panels: true, options, aml: Boolean(surface.aml) });
   }
+  await createIn(page, { options, aml: Boolean(surface.aml), sheets: Boolean(surface.sheets), marked });
   const model = surface.model === undefined ? clone() : surface.model;
   if (model !== 'empty') {
     if (typeof model === 'function') {
@@ -418,11 +440,45 @@ const questionSurface = (name, open, more = {}) => Object.assign({
   open
 }, more);
 
+/**
+ * The fixture with findings of all kinds: an energy without a name (note),
+ * moved out of the system limit (error), and an operator without its
+ * output (warning)
+ */
+function findingsModel() {
+  const json = clone();
+  const top = json[1];
+  top.elementDataInformation.find((e) => e.id === IDS.energy).name = '';
+  const shape = top.elementVisualInformation.find((e) => e.id === IDS.energy);
+  shape.x = -400;
+  shape.y = -400;
+  return json;
+}
+
+/** The fixture with what the JSON import reports: a missing sub-process, an element twice */
+function brokenModel() {
+  const json = clone();
+  const top = json[1];
+  top.process.consistsOfProcesses = (top.process.consistsOfProcesses || []).concat(['nowhere']);
+  const product = top.elementDataInformation.find((e) => e.id === IDS.product);
+  top.elementDataInformation.push(Object.assign({}, product, { id: 'ghost' }));
+  return json;
+}
+
+/** Each filter of the list of the model check in turn */
+async function eachFilter(page, check) {
+  const filters = page.locator('.fpb-validation-filter button');
+  const count = await filters.count();
+  for (let i = 0; i < count; i++) {
+    await filters.nth(i).click();
+    await settle(page);
+    await check(page);
+  }
+}
+
 const panelSurface = (name, ids, more = {}) => Object.assign({
   name: 'panel ' + name,
   scope: ['#properties'],
-  // the texts of findings come from the model check (Task 6)
-  exclude: ['.fpb-finding-text'],
   open: (page) => panelOf(page, ids)
 }, more);
 
@@ -604,8 +660,6 @@ export const SURFACES = [
   {
     name: 'messages of an AML import',
     scope: ['.fpb-notifications'],
-    // the notes of the JSON import among them come from the importer (Task 6)
-    exclude: ['.fpb-notification-items'],
     aml: true,
     noSwitch: true,
     model: amlModel('Showcase-A-WaermetauscherMitRegelung.aml'),
@@ -633,6 +687,54 @@ export const SURFACES = [
     await page.evaluate(({ main, id }) => window.fpb.setAmlLinks([{ processId: main, elementId: id, name: 'Prüfen', link: 'L1', owner: 'Plant' }]), { main: MAIN, id: IDS.operator });
     await askDelete(page, [IDS.operator]);
   }, { data: ['L1', 'Plant'] }),
+  // model check, layers, read-only, import messages (Task 6)
+  {
+    name: 'model check list',
+    scope: ['.fpb-validation-panel'],
+    model: findingsModel(),
+    open: async (page) => {
+      await page.evaluate(() => window.fpb.get('fpbValidation').openPanel());
+      await page.locator('.fpb-validation-panel.open').waitFor({ timeout: 3000 });
+    },
+    each: eachFilter
+  },
+  {
+    name: 'model check markers',
+    scope: ['.fpb-validation-marker'],
+    model: findingsModel(),
+    open: (page) => page.locator('.fpb-validation-marker').first().waitFor({ timeout: 3000 })
+  },
+  panelSurface('element outside the system limit', [IDS.energy], { model: findingsModel() }),
+  {
+    name: 'breadcrumbs',
+    scope: ['.fpb-breadcrumbs'],
+    open: async (page) => {
+      await page.evaluate((layer) => window.fpb.switchProcess(layer), CHILD);
+      await page.locator('.fpb-breadcrumbs:not([hidden])').waitFor({ timeout: 3000 });
+    }
+  },
+  {
+    name: 'layers card',
+    scope: ['#layers'],
+    open: async (page) => {
+      await page.locator('#openLayerButton').click();
+      await page.locator('#layers .fpb-layers:not([hidden])').waitFor({ timeout: 3000 });
+    }
+  },
+  {
+    name: 'toolbar and panel in read-only mode',
+    scope: ['#layers', '#properties'],
+    options: { readOnly: true },
+    open: (page) => panelOf(page, [IDS.product])
+  },
+  {
+    name: 'messages of a JSON import',
+    scope: ['.fpb-notifications'],
+    noSwitch: true,
+    model: brokenModel(),
+    data: ['ghost', 'twice', 'nowhere'],
+    open: (page) => page.locator('.fpb-notifications .fpb-notification-title').first().waitFor({ timeout: 3000 })
+  },
   questionSurface('state on the boundary', async (page) => {
     await page.evaluate(({ layer, id }) => {
       window.fpb.switchProcess(layer);
@@ -643,6 +745,45 @@ export const SURFACES = [
     }, { layer: CHILD, id: IDS.product });
     await dialogOpen(page);
   })
+];
+
+/**
+ * Surfaces of a phone (016f E2): the sheets. german.spec runs them with the
+ * device of a phone.
+ */
+export const PHONE_SURFACES = [
+  {
+    name: 'sheet of the properties',
+    scope: ['#sheets'],
+    sheets: true,
+    viewport: { width: 393, height: 727 },
+    open: async (page) => {
+      await page.evaluate((id) => window.fpb.select(id), IDS.product);
+      await page.locator('#propertiesSheetButton').click();
+      await page.locator('#sheets .fpb-sheet').waitFor({ timeout: 3000 });
+    }
+  },
+  {
+    name: 'sheet of the layers',
+    scope: ['#sheets'],
+    sheets: true,
+    viewport: { width: 393, height: 727 },
+    open: async (page) => {
+      await page.locator('#openLayerButton').click();
+      await page.locator('#sheets .fpb-sheet').waitFor({ timeout: 3000 });
+    }
+  },
+  {
+    name: 'sheet of the model check',
+    scope: ['#sheets'],
+    sheets: true,
+    viewport: { width: 393, height: 727 },
+    model: findingsModel(),
+    open: async (page) => {
+      await page.locator('#openValidationButton').click();
+      await page.locator('#sheets .fpb-sheet').waitFor({ timeout: 3000 });
+    }
+  }
 ];
 
 /** The surface with this name */

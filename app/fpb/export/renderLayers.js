@@ -25,7 +25,7 @@ export async function renderLayers(modeler, processShapes, renderCurrent) {
     try {
       for (const processShape of processShapes) {
         modeling.switchProcess(processShape, transient);
-        layers.push({ name: layerName(processShape), image: await renderCurrent() });
+        layers.push({ name: layerName(processShape, Infinity, modeler.get('translate', false) || undefined), image: await renderCurrent() });
       }
     } finally {
       // Back to the starting layer, even if one layer failed

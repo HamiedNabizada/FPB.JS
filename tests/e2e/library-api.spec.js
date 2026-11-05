@@ -2378,6 +2378,16 @@ test.describe('Language', () => {
     expect(english).toContain('/Subject (VDI 3682 Formalized Process Description)');
   });
 
+  test('getFindings gives the messages in the language in effect', async ({ page }) => {
+    await withModel(page);
+    const english = await page.evaluate(() => window.fpb.getFindings());
+    await page.evaluate(() => window.fpb.setLanguage('de'));
+    const german = await page.evaluate(() => window.fpb.getFindings());
+    expect(english.length).toBeGreaterThan(0);
+    expect(german.map((f) => f.rule)).toEqual(english.map((f) => f.rule));
+    german.forEach((finding, i) => expect(finding.message).not.toBe(english[i].message));
+  });
+
   test('without an option the modeler speaks English', async ({ page }) => {
     await openLibraryPage(page);
     await createModeler(page, { panels: true });

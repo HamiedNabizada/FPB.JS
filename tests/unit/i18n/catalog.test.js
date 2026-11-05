@@ -29,11 +29,35 @@ const COVERED = [
   'app/fpb/dialogs', 'app/fpb/info', 'app/fpb/files', 'app/fpb/start', 'app/fpb/notifications',
   'app/fpb/autosave', 'app/fpb/export', 'app/fpb/modeling/updater',
   'app/fpb/aml/AmlMarkers.js', 'app/fpb/aml/AmlOverviewDialog.js', 'app/fpb/aml/AmlOverviewService.js',
-  'app/fpb/aml/AmlSupport.js', 'app/fpb/aml/amlIndex.js', 'app/fpb/aml/index.js'
+  'app/fpb/aml/AmlSupport.js', 'app/fpb/aml/amlIndex.js', 'app/fpb/aml/index.js',
+  // Task 6: model check, layers, sheets, import
+  'app/fpb/validation', 'app/fpb/layers', 'app/fpb/sheets', 'app/fpb/importer', 'app/fpb/read-only'
 ];
 const ALL = ['app/fpb', 'src', 'app/app.js'];
 const EXCLUDED = ['app/fpb/aml/mapper'];
-const NAMES = ['translate', '_translate', 'markText'];
+// calls whose first argument is a key: translate, markText, and msg, the
+// helper of the model check and the importer for { template, args }
+const NAMES = ['translate', '_translate', 'markText', 'msg'];
+// calls of the importer whose every argument is a key (message, details, hint)
+const ALL_ARGS = ['logWarning', 'handleDataStructureError', 'handleProjectDefinitionError',
+  'handleVisualInformationError', 'handleDependencyError'];
+
+/** The keys an argument names: a text, or both sides of `a ? 'x' : 'y'` */
+function literals(node) {
+  if (!node) {
+    return [];
+  }
+  if (node.type === 'StringLiteral') {
+    return [node.value];
+  }
+  if (node.type === 'TemplateLiteral' && node.expressions.length === 0) {
+    return [node.quasis[0].value.cooked];
+  }
+  if (node.type === 'ConditionalExpression') {
+    return literals(node.consequent).concat(literals(node.alternate));
+  }
+  return [];
+}
 
 const relative = (file) => path.relative(ROOT, file).split(path.sep).join('/');
 const excluded = (file) => EXCLUDED.some((part) => relative(file) === part || relative(file).startsWith(part + '/'));
@@ -81,11 +105,10 @@ function keysOf(file) {
         keys.push(context.value + ': ' + text.value);
       }
       if (NAMES.indexOf(name) !== -1 && first) {
-        if (first.type === 'StringLiteral') {
-          keys.push(first.value);
-        } else if (first.type === 'TemplateLiteral' && first.expressions.length === 0) {
-          keys.push(first.quasis[0].value.cooked);
-        }
+        keys.push(...literals(first));
+      }
+      if (ALL_ARGS.indexOf(name) !== -1) {
+        node.arguments.forEach((argument) => keys.push(...literals(argument)));
       }
     }
     Object.keys(node).forEach((key) => {

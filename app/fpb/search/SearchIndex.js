@@ -18,13 +18,13 @@ const TYPE_LABELS = {
  * on the canvas, so they are read from the processes' elementsContainer. A
  * boundary state appears once per layer it sits in.
  */
-export function collectEntries(processShapes) {
+export function collectEntries(processShapes, translate) {
   const entries = [];
   (processShapes || []).forEach(function (process) {
     if (!process || !process.businessObject) {
       return;
     }
-    const layer = layerName(process, 40);
+    const layer = layerName(process, 40, translate);
     const add = function (element) {
       if (!element || !element.businessObject || !isAny(element, SEARCHABLE)) {
         return;

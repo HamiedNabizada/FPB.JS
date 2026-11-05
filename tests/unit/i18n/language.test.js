@@ -51,6 +51,11 @@ describe('translateMessage', () => {
     expect(translateMessage(t, { template: 'Delete {what}', args: { what: 'Erhitzen' } })).toBe('Lösche Erhitzen');
   });
 
+  it('translates a list of values and joins it with commas', () => {
+    const list = { template: 'Delete {what}', args: { what: [{ template: 'the state' }, 'Erhitzen'] } };
+    expect(translateMessage(t, list)).toBe('Lösche den Zustand, Erhitzen');
+  });
+
   it('gives a message without template as it is', () => {
     expect(translateMessage(t, { message: 'plain' })).toBe('plain');
     expect(translateMessage(t, 'the state')).toBe('the state');

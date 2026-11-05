@@ -37,6 +37,12 @@ export default function Sheets(eventBus, config, translate, injector) {
   this._height = 0;
   this._opener = null;
   this._injector = injector;
+  this._titleKey = '';
+
+  // an open sheet speaks the new language at once (016h V3)
+  eventBus.on('i18n.changed', function () {
+    self._label();
+  });
 
   // Escape on the button that opened the sheet closes it (016g G1)
   this._onOpenerKey = function (event) {
@@ -118,15 +124,18 @@ Sheets.prototype.body = function () {
   return this._frame ? this._frame.querySelector('.fpb-sheet-body') : null;
 };
 
-/** Open the sheet `name` with `title`; an open other sheet closes first */
+/**
+ * Open the sheet `name` with `title` (an English text of the catalog, shown
+ * in the language in effect, 016h); an open other sheet closes first
+ */
 Sheets.prototype.open = function (name, options) {
   if (!this._active) {
     return;
   }
-  const title = (options && options.title) || '';
+  this._titleKey = (options && options.title) || '';
+  const title = this._titleKey ? this._translate(this._titleKey) : '';
   if (this._current === name) {
-    this._frame.setAttribute('aria-label', title);
-    this._frame.querySelector('.fpb-sheet-title').textContent = title;
+    this._label();
     return;
   }
   if (this._current) {
@@ -193,6 +202,19 @@ Sheets.prototype._setActive = function (active) {
     return;
   }
   this._changed();
+};
+
+/** Title, grip and close of the open sheet in the language in effect */
+Sheets.prototype._label = function () {
+  if (!this._frame) {
+    return;
+  }
+  const translate = this._translate;
+  const title = this._titleKey ? translate(this._titleKey) : '';
+  this._frame.setAttribute('aria-label', title);
+  this._frame.querySelector('.fpb-sheet-title').textContent = title;
+  this._frame.querySelector('.fpb-sheet-grip').setAttribute('aria-label', translate('Height of the sheet'));
+  this._frame.querySelector('.fpb-sheet-close').setAttribute('aria-label', translate('Close'));
 };
 
 Sheets.prototype._mount = function (name, title) {

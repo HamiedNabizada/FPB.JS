@@ -1,5 +1,6 @@
 /** @jsx h */
 
+import { markText } from '../i18n/markText';
 import { h, render } from '@bpmn-io/properties-panel/preact';
 import { useEffect, useRef, useState } from '@bpmn-io/properties-panel/preact/hooks';
 import { createPortal } from '@bpmn-io/properties-panel/preact/compat';
@@ -59,7 +60,7 @@ function Shell(props) {
       const sheets = modeler.get('fpbSheets', false);
       if (sheets && sheets.isActive()) {
         // one sheet at a time: the properties take the place of the list
-        sheets.open('properties', { title: modeler.get('translate')('Properties') });
+        sheets.open('properties', { title: markText('Properties') });
         return;
       }
       setOpen(true);

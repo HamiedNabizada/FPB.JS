@@ -1,3 +1,4 @@
+import { markText } from '../i18n/markText';
 import { is } from '../help/utils';
 
 /**
@@ -16,7 +17,8 @@ export function isRootProcess(process) {
  * for the top layer, the name of the decomposed operator below, cut after
  * `maxLength` characters.
  */
-export function layerName(process, maxLength = Infinity) {
+/** Name of a layer; a layer without a name in the language of `translate` */
+export function layerName(process, maxLength = Infinity, translate = (text) => text) {
   const bo = process.businessObject;
   if (isRootProcess(process)) {
     return bo.parent.name;
@@ -24,11 +26,11 @@ export function layerName(process, maxLength = Infinity) {
   if (bo.isDecomposedProcessOperator != null) {
     const name = bo.isDecomposedProcessOperator.name;
     if (!name) {
-      return 'unnamed';
+      return translate(markText('unnamed'));
     }
     return name.length > maxLength ? name.substring(0, maxLength) + '...' : name;
   }
-  return 'Process';
+  return translate(markText('Process'));
 }
 
 /** `{ id, process, children }` from the top layers down */

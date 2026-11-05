@@ -41,6 +41,7 @@ export const LayerOverview = LayerOverviewStub;
 import { collectProcessShapes, findProcessShape, findLayerOf, layerHasElement } from './processShapes';
 import { RULES } from '../app/fpb/validation/ModelChecker';
 import { serializeModel } from '../app/fpb/export/serializeModel';
+import { translateMessage } from '../app/fpb/i18n/language';
 
 // Automatic layout works on plain JSON, so it is available without a browser.
 export { layoutImportData, needsLayout } from '../app/fpb/layout/AutoLayout';
@@ -310,7 +311,9 @@ export async function createFpbModeler(options = {}) {
      */
     getFindings() {
       const validation = modeler.get('fpbValidation', false);
-      return validation ? validation.getIssues().map(plainFinding) : [];
+      // the message in the language in effect (016h T15)
+      const translate = modeler.get('translate');
+      return validation ? validation.getIssues().map((issue) => plainFinding(issue, translate)) : [];
     },
 
     /** The ids of the catalog rules the model check of FPB.js checks */
@@ -466,11 +469,11 @@ export async function createFpbModeler(options = {}) {
 }
 
 /** A finding of the model check without references to shapes */
-function plainFinding(issue) {
+function plainFinding(issue, translate) {
   return {
     rule: issue.rule,
     severity: issue.severity,
-    message: issue.message,
+    message: translate ? translateMessage(translate, issue) : issue.message,
     elementId: issue.elementId || null,
     processId: (issue.process && issue.process.id) || null
   };

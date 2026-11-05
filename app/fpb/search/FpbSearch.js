@@ -102,7 +102,7 @@ FpbSearch.prototype.open = function () {
   if (!this._container) {
     return;
   }
-  this._entries = collectEntries(collectProcessShapes(this._fpbjs.getProjectDefinition()));
+  this._entries = collectEntries(collectProcessShapes(this._fpbjs.getProjectDefinition()), this._translate);
   this._container.classList.add('open');
   this._input.value = '';
   this._search('');

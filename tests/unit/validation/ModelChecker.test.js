@@ -1,7 +1,16 @@
 // tests/unit/validation/ModelChecker.test.js
 import { describe, it, expect } from 'vitest';
 
-import { checkModel, RULES } from '../../../app/fpb/validation/ModelChecker.js';
+import { checkModel as runCheck, RULES } from '../../../app/fpb/validation/ModelChecker.js';
+import { fill, translateMessage } from '../../../app/fpb/i18n/language.js';
+
+// every finding of this file, for the last test (016h T15)
+const seen = [];
+const checkModel = (...args) => {
+  const issues = runCheck(...args);
+  seen.push(...issues);
+  return issues;
+};
 
 // Type hierarchy as in fpb-moddle (Usage extends Flow there)
 const SUPER = {
@@ -290,5 +299,15 @@ describe('ModelChecker', () => {
       ]);
       expect(checkModel([m.process]).filter((i) => i.rule === 'E5')).toEqual([]);
     });
+  });
+});
+
+describe('ModelChecker messages (016h T15)', () => {
+
+  it('every finding carries a template whose English fill is its message', () => {
+    expect(seen.length).toBeGreaterThan(10);
+    const broken = seen.filter((issue) => typeof issue.template !== 'string'
+      || translateMessage(fill, issue) !== issue.message);
+    expect(broken.map((issue) => issue.rule + ': ' + issue.message)).toEqual([]);
   });
 });

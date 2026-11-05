@@ -1,4 +1,5 @@
 /** @jsx h */
+import { markText } from '../i18n/markText';
 import { h } from '@bpmn-io/properties-panel/preact';
 import { useEffect, useErrorBoundary, useState } from '@bpmn-io/properties-panel/preact/hooks';
 import { createPortal } from '@bpmn-io/properties-panel/preact/compat';
@@ -166,7 +167,7 @@ function WorkGroup(props) {
   }));
   const layersShown = sheet.active ? sheet.current === 'layers' : layersOpen;
   const toggleLayers = () => (sheet.active
-    ? sheets.toggle('layers', { title: translate('Layers') })
+    ? sheets.toggle('layers', { title: markText('Layers') })
     : setLayersOpen(!layersOpen));
 
   const shownFindings = counts.error + counts.warning;
@@ -180,7 +181,7 @@ function WorkGroup(props) {
           label={translate('Properties')}
           icon={faSliders}
           pressed={sheet.current === 'properties'}
-          onClick={() => sheets.toggle('properties', { title: translate('Properties') })}
+          onClick={() => sheets.toggle('properties', { title: markText('Properties') })}
         />
       )}
       {layerCount > 1 && (

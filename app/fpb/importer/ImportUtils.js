@@ -3,6 +3,7 @@
  * 
  * Helper functions for FPB JSON import operations
  */
+import { markText } from '../i18n/markText';
 import { FPB_TYPES, FALLBACK_VALUES } from './ImportConstants';
 
 /**
@@ -192,14 +193,14 @@ export class ValidationUtils {
     if (!data || !Array.isArray(data)) {
       return {
         isValid: false,
-        error: 'Invalid data structure - expected array'
+        error: markText('Invalid data structure - expected array')
       };
     }
 
     if (data.length === 0) {
       return {
         isValid: false,
-        error: 'Empty data array'
+        error: markText('Empty data array')
       };
     }
 
@@ -215,14 +216,14 @@ export class ValidationUtils {
     if (!project) {
       return {
         isValid: false,
-        error: 'No project definition found'
+        error: markText('No project definition found')
       };
     }
 
     if (!project.name || !project.targetNamespace) {
       return {
         isValid: false,
-        error: 'Project definition missing required fields (name, targetNamespace)'
+        error: markText('Project definition missing required fields (name, targetNamespace)')
       };
     }
 
@@ -236,21 +237,21 @@ export class ValidationUtils {
     if (!processData.process) {
       return {
         isValid: false,
-        error: 'Missing process definition'
+        error: markText('Missing process definition')
       };
     }
 
     if (!processData.elementVisualInformation) {
       return {
         isValid: false,
-        error: 'Missing visual information'
+        error: markText('Missing visual information')
       };
     }
 
     if (!processData.elementDataInformation) {
       return {
         isValid: false,
-        error: 'Missing data information'
+        error: markText('Missing data information')
       };
     }
 

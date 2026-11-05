@@ -2,7 +2,7 @@ import { checkModel, RULES, SEVERITY } from './ModelChecker';
 import { collectProcessShapes } from '../help/processShapes';
 import { goToElement } from '../help/navigation';
 import { isReadOnly } from '../read-only/ReadOnly';
-import { fill } from '../i18n/language';
+import { fill, translateMessage } from '../i18n/language';
 import { markText } from '../i18n/markText';
 
 const OVERLAY_TYPE = 'fpb-validation';
@@ -13,26 +13,26 @@ const RANK = { error: 0, warning: 1, info: 2 };
 // Error and warning used to share the '!', so only their colour told them
 // apart. Colour alone is no distinction for everyone (see core/colorScheme).
 const SYMBOL = { error: '✕', warning: '!', info: 'i' };
-const SEVERITY_LABEL = { error: 'Error', warning: 'Warning', info: 'Note' };
+const SEVERITY_LABEL = { error: markText('Error'), warning: markText('Warning'), info: markText('Note') };
 const FILTERS = [
-  { id: 'all', label: 'All' },
-  { id: 'error', label: 'Errors' },
-  { id: 'warning', label: 'Warnings' },
-  { id: 'info', label: 'Notes' }
+  { id: 'all', label: markText('All') },
+  { id: 'error', label: markText('Errors') },
+  { id: 'warning', label: markText('Warnings') },
+  { id: 'info', label: markText('Notes') }
 ];
 
 /** "1 error, 2 warnings, 0 notes" */
 /** Errors and warnings as words ('2 errors, 1 warning'), for export and import */
 export function describeErrorsAndWarnings(counts, translate) {
-  const t = translate || fill;
-  const part = function (n, one, many) { return t(n === 1 ? one : many, { count: n }); };
+  const words = translate || fill;
+  const part = function (n, one, many) { return words(n === 1 ? one : many, { count: n }); };
   return part(counts.error, markText('{count} error'), markText('{count} errors')) + ', ' +
     part(counts.warning, markText('{count} warning'), markText('{count} warnings'));
 }
 
 export function describeCounts(counts, translate) {
-  const t = translate || fill;
-  const part = function (n, one, many) { return t(n === 1 ? one : many, { count: n }); };
+  const words = translate || fill;
+  const part = function (n, one, many) { return words(n === 1 ? one : many, { count: n }); };
   return part(counts.error, markText('{count} error'), markText('{count} errors')) + ', ' +
     part(counts.warning, markText('{count} warning'), markText('{count} warnings')) + ', ' +
     part(counts.info, markText('{count} note'), markText('{count} notes'));
@@ -62,6 +62,15 @@ export default function FpbValidation(eventBus, canvas, overlays, elementRegistr
 
   const self = this;
   this._buildPanel();
+
+  // list, markers and their texts in the new language (016h V3)
+  eventBus.on('i18n.changed', function () {
+    self._labelPanel();
+    if (self.isPanelOpen()) {
+      self._renderPanel();
+    }
+    self._renderMarkers();
+  });
 
   eventBus.on('elements.changed', function () {
     self._schedule();
@@ -169,7 +178,7 @@ FpbValidation.prototype._renderMarkers = function () {
     const marker = document.createElement('div');
     marker.className = 'fpb-validation-marker fpb-validation-' + severity;
     marker.textContent = SYMBOL[severity];
-    marker.title = issues.map(function (i) { return i.rule + ': ' + i.message; }).join('\n');
+    marker.title = issues.map(function (i) { return i.rule + ': ' + translateMessage(self._t(), i); }).join('\n');
     marker.setAttribute('data-rules', issues.map(function (i) { return i.rule; }).join(' '));
     const position = element.waypoints ? { top: -8, left: -8 } : { top: -8, right: 8 };
     self._overlays.add(element, OVERLAY_TYPE, { position: position, html: marker });
@@ -183,19 +192,20 @@ FpbValidation.prototype._buildPanel = function () {
   panel.className = 'fpb-validation-panel';
   panel.innerHTML =
     '<div class="fpb-validation-header">' +
-      '<span class="fpb-validation-title">Model check (VDI 3682)</span>' +
-      '<button type="button" class="fpb-validation-close" title="Close" aria-label="Close">&times;</button>' +
+      '<span class="fpb-validation-title"></span>' +
+      '<button type="button" class="fpb-validation-close">&times;</button>' +
     '</div>' +
     '<div class="fpb-validation-summary"></div>' +
     // filter by severity, only for the list; the markers have their switch (016c T11)
-    '<div class="fpb-validation-filter" role="group" aria-label="Show findings">' +
+    '<div class="fpb-validation-filter" role="group">' +
       FILTERS.map(function (f) {
         return '<button type="button" data-filter="' + f.id + '" aria-pressed="' + (f.id === 'all') + '"></button>';
       }).join('') +
     '</div>' +
     '<ul class="fpb-validation-list" role="list"></ul>' +
-    '<label class="fpb-validation-toggle"><input type="checkbox" checked /> Show markers on the elements</label>';
+    '<label class="fpb-validation-toggle"><input type="checkbox" checked /> <span class="fpb-validation-toggle-text"></span></label>';
   this._canvas.getContainer().appendChild(panel);
+  this._labelPanel();
 
   const self = this;
   panel.querySelector('.fpb-validation-close').addEventListener('click', function () {
@@ -251,7 +261,7 @@ FpbValidation.prototype.openPanel = function () {
   }
   const sheets = this._sheets();
   if (sheets) {
-    sheets.open('check', { title: this._injector.get('translate')('Model check (VDI 3682)') });
+    sheets.open('check', { title: markText('Model check (VDI 3682)') });
     return;
   }
   const opening = !this._panel.classList.contains('open');
@@ -292,14 +302,15 @@ FpbValidation.prototype.togglePanel = function () {
 
 FpbValidation.prototype._renderPanel = function () {
   const counts = this.getCounts();
+  const translate = this._t();
   this._panel.querySelector('.fpb-validation-summary').textContent = this._issues.length
-    ? describeCounts(counts)
-    : 'No findings.';
+    ? describeCounts(counts, translate)
+    : translate('No findings.');
 
   const filter = this._filter || 'all';
   this._panel.querySelectorAll('.fpb-validation-filter button').forEach(function (button) {
     const f = FILTERS.find(function (x) { return x.id === button.getAttribute('data-filter'); });
-    button.textContent = f.label + ' ' + (f.id === 'all' ? counts.error + counts.warning + counts.info : counts[f.id]);
+    button.textContent = translate(f.label) + ' ' + (f.id === 'all' ? counts.error + counts.warning + counts.info : counts[f.id]);
     button.setAttribute('aria-pressed', String(f.id === filter));
   });
 
@@ -319,10 +330,10 @@ FpbValidation.prototype._renderPanel = function () {
     const head = document.createElement('div');
     head.className = 'fpb-validation-item-head';
     // The severity in words, not only as the colour of the left border
-    head.textContent = SEVERITY_LABEL[issue.severity] + ' · ' + issue.rule + ' ' + RULES[issue.rule].title;
+    head.textContent = translate(SEVERITY_LABEL[issue.severity]) + ' · ' + issue.rule + ' ' + translate(RULES[issue.rule].title);
     const text = document.createElement('div');
     text.className = 'fpb-validation-item-text';
-    text.textContent = issue.message + (issue.process !== root ? ' (in ' + self._layerName(issue.process) + ')' : '');
+    text.textContent = translateMessage(translate, issue) + (issue.process !== root ? ' ' + translate('(in {layer})', { layer: self._layerName(issue.process) }) : '');
 
     item.appendChild(head);
     item.appendChild(text);
@@ -338,7 +349,7 @@ FpbValidation.prototype._renderPanel = function () {
       const link = document.createElement('button');
       link.type = 'button';
       link.className = 'fpb-validation-elsewhere';
-      link.textContent = 'Also in ' + self._layerName(process);
+      link.textContent = translate('Also in {layer}', { layer: self._layerName(process) });
       // the list's own click handler would go to the element of the finding
       link.addEventListener('click', function (event) {
         event.stopPropagation();
@@ -355,7 +366,7 @@ FpbValidation.prototype._renderPanel = function () {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'fpb-validation-choice';
-        button.textContent = 'Use the values of the ' + self._layerName(variant.process);
+        button.textContent = translate('Use the values of the {layer}', { layer: self._layerName(variant.process) });
         button.addEventListener('click', function (event) {
           event.stopPropagation();
           self._modeling.alignStateCopies(variant.id, variant.process);
@@ -370,7 +381,7 @@ FpbValidation.prototype._renderPanel = function () {
   if (this._issues.length && !list.children.length) {
     const empty = document.createElement('li');
     empty.className = 'fpb-validation-empty';
-    empty.textContent = this._injector.get('translate')('No findings of this kind.');
+    empty.textContent = translate('No findings of this kind.');
     list.appendChild(empty);
   }
 };
@@ -388,11 +399,29 @@ FpbValidation.prototype._clearInvolved = function () {
 };
 
 FpbValidation.prototype._layerName = function (process) {
+  const translate = this._t();
   const bo = process && process.businessObject;
   if (bo && bo.isDecomposedProcessOperator) {
-    return 'decomposition of ' + (bo.isDecomposedProcessOperator.name || 'unnamed operator');
+    return translate('decomposition of {name}', { name: bo.isDecomposedProcessOperator.name || translate('unnamed operator') });
   }
-  return 'top level';
+  return translate('top level');
+};
+
+/** The translate of the modeler */
+FpbValidation.prototype._t = function () {
+  return this._injector.get('translate');
+};
+
+/** The fixed texts of the list in the language in effect */
+FpbValidation.prototype._labelPanel = function () {
+  const translate = this._t();
+  const panel = this._panel;
+  panel.querySelector('.fpb-validation-title').textContent = translate('Model check (VDI 3682)');
+  const close = panel.querySelector('.fpb-validation-close');
+  close.setAttribute('title', translate('Close'));
+  close.setAttribute('aria-label', translate('Close'));
+  panel.querySelector('.fpb-validation-filter').setAttribute('aria-label', translate('Show findings'));
+  panel.querySelector('.fpb-validation-toggle-text').textContent = translate('Show markers on the elements');
 };
 
 FpbValidation.prototype._goTo = function (issue, process) {

@@ -8,11 +8,11 @@ import './Breadcrumbs.css';
 const GAP = 12;
 
 function Crumbs(props) {
-  const { path, open } = props;
+  const { path, open, translate } = props;
   return (
     <ol>
       {path.map((process, index) => {
-        const name = layerName(process);
+        const name = layerName(process, Infinity, translate);
         const last = index === path.length - 1;
         return (
           <li key={process.id}>
@@ -58,11 +58,16 @@ export default function Breadcrumbs(eventBus, canvas, fpbLayers, translate) {
   const update = function () {
     const show = fpbLayers.count() > 1 && !!fpbLayers.getCurrent();
     nav.hidden = !show;
-    render(show ? <Crumbs path={fpbLayers.getPath()} open={open} /> : null, nav);
+    render(show ? <Crumbs path={fpbLayers.getPath()} open={open} translate={translate} /> : null, nav);
     place();
   };
 
   eventBus.on('layers.changed', update);
+  // the path and its name in the new language (016h V3)
+  eventBus.on('i18n.changed', function () {
+    nav.setAttribute('aria-label', translate('Layer path'));
+    update();
+  });
   eventBus.on('palette.changed', place);
   eventBus.on('diagram.destroy', function () {
     render(null, nav);

@@ -1,3 +1,4 @@
+import { markText } from '../i18n/markText';
 import { fitToViewport } from '../help/viewport';
 import { is } from '../help/utils';
 import { cloneModelData } from '../help/cloneModelData';
@@ -19,7 +20,7 @@ import {
 import { ErrorHandler } from './ImportErrors';
 import { needsLayout, layoutImportData } from '../layout/AutoLayout';
 
-export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFactory, elementFactory, uiReadiness) {
+export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFactory, elementFactory, uiReadiness, translate) {
     this._eventBus = eventBus;
     this._canvas = canvas;
     this._modeling = modeling;
@@ -30,7 +31,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
     this._processes = [];
     
     // Initialize error handler with improved error handling
-    this._errorHandler = new ErrorHandler(eventBus);
+    this._errorHandler = new ErrorHandler(eventBus, translate);
     
     // Deprecated: Keep for backward compatibility but use ErrorHandler instead
     this._showError = (message, details = null) => {
@@ -64,9 +65,9 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                 layout.report.filter((item) => item.mode !== 'unchanged').forEach((item) => {
                     const label = item.name ? `"${item.name}"` : item.process;
                     this._errorHandler.logWarning(
-                        item.mode === 'full'
-                            ? `Process ${label} carried no layout - all ${item.placed} elements were arranged automatically`
-                            : `Process ${label} carried an incomplete layout - ${item.placed} elements were placed automatically`,
+                        msg(item.mode === 'full'
+                            ? 'Process {process} carried no layout - all {count} elements were arranged automatically'
+                            : 'Process {process} carried an incomplete layout - {count} elements were placed automatically', { process: label, count: item.placed }),
                         null,
                         'Move elements as needed and download the file again to keep the layout.'
                     );
@@ -111,7 +112,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                         const found = processByInnerId.get(e);
                         if (!found) {
                             this._errorHandler.logWarning(
-                                `Process ${pr.process.id} lists missing sub-process ${e} - dropped`,
+                                msg('Process {process} lists missing sub-process {id} - dropped', { process: pr.process.id, id: e }),
                                 null,
                                 'Add the sub-process to the file or remove its id from consistsOfProcesses.'
                             );
@@ -182,7 +183,7 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                     // in the report instead of announcing a clean import.
                     this._errorHandler.logWarning(
                         'The entry layer could not be opened after the import',
-                        error && error.message ? error.message : String(error),
+                        { message: error && error.message ? error.message : String(error) },
                         'Open a layer in the layer panel. If that fails too, reload the page and import the file again.'
                     );
                 }
@@ -212,8 +213,18 @@ function describeEnd(ref) {
 function describeConnection(element) {
     const bo = element.businessObject;
     const type = (bo.$type || 'Connection').replace('fpb:', '');
-    return `${type} from ${describeEnd(bo.sourceRef)} to ${describeEnd(bo.targetRef)}`;
+    return msg('{type} from {source} to {target}', { type: msg(type), source: describeEnd(bo.sourceRef), target: describeEnd(bo.targetRef) });
 }
+
+/** A message of the import report: a key of the catalog and its values */
+function msg(template, args) {
+    return { template, args: args || {} };
+}
+
+// words the report puts into its messages
+markText('source');
+markText('target');
+markText('Connection');
 
 /**
  * Swap a reference id for its object at the same position, so resolving keeps
@@ -239,7 +250,8 @@ JSONImporter.$inject = [
     'fpbjs',
     'fpbFactory',
     'elementFactory',
-    'uiReadiness'
+    'uiReadiness',
+    'translate'
 ];
 
 
@@ -283,8 +295,8 @@ JSONImporter.prototype.constructProjectDefinition = function (data) {
         const top = processes.find((entry) => !entry.process.isDecomposedProcessOperator) || processes[0];
         this._errorHandler.logWarning(
             entryPoint
-                ? `The entry point ${entryPoint} names no process - opened ${top.process.id} instead`
-                : `The project names no entry point - opened ${top.process.id} instead`,
+                ? msg('The entry point {entry} names no process - opened {process} instead', { entry: entryPoint, process: top.process.id })
+                : msg('The project names no entry point - opened {process} instead', { process: top.process.id }),
             null,
             'Set entryPoint in the project definition to the id of the top process and download the file again.'
         );
@@ -312,7 +324,7 @@ JSONImporter.prototype.buildProcesses = function (data, projectDefinition) {
         if (!processValidation.isValid) {
             this._errorHandler.handleVisualInformationError(
                 'Incomplete data: Visual information missing',
-                `Process "${process.process.id}" is missing ${processValidation.error}. The file may be corrupted or incomplete.`
+                msg('Process "{process}" is missing {missing}. The file may be corrupted or incomplete.', { process: process.process.id, missing: msg(processValidation.error) })
             );
             return false;
         }
@@ -374,7 +386,7 @@ JSONImporter.prototype.filterElements = function (id, eVI, eDI, process, parent,
         // A second entry with the same id was built as a second shape, and
         // opening the layer then failed on "element already exists".
         this._errorHandler.logWarning(
-            `Element ${id} is listed twice in this process - the second entry was skipped`,
+            msg('Element {id} is listed twice in this process - the second entry was skipped', { id }),
             null,
             'Give every element its own id.'
         );
@@ -384,7 +396,7 @@ JSONImporter.prototype.filterElements = function (id, eVI, eDI, process, parent,
         // An ID without data (typo, element dropped by an external generator)
         // used to abort the whole import. Skip it and keep the rest of the model.
         this._errorHandler.logWarning(
-            `Element ${id} is listed in a container but has no data - skipped`,
+            msg('Element {id} is listed in a container but has no data - skipped', { id }),
             null,
             'Add the element to elementDataInformation or remove its id from the container.'
         );
@@ -407,7 +419,7 @@ JSONImporter.prototype.filterElements = function (id, eVI, eDI, process, parent,
         type = visualInformation.type;
         dataInformation.$type = type;
         this._errorHandler.logWarning(
-            `Element ${id} has no $type - its type ${type} was taken from its layout`,
+            msg('Element {id} has no $type - its type {type} was taken from its layout', { id, type }),
             null,
             'Add $type to the element in elementDataInformation.'
         );
@@ -416,8 +428,8 @@ JSONImporter.prototype.filterElements = function (id, eVI, eDI, process, parent,
         // Unknown types ended in buildTRandUsage and vanished without a word
         this._errorHandler.logWarning(
             type
-                ? `Element ${id} has an unknown type (${type}) - skipped`
-                : `Element ${id} has no type - skipped`,
+                ? msg('Element {id} has an unknown type ({type}) - skipped', { id, type })
+                : msg('Element {id} has no type - skipped', { id }),
             null,
             'Use one of the VDI 3682 types, e.g. fpb:Product, fpb:ProcessOperator or fpb:Flow.'
         );
@@ -457,7 +469,7 @@ JSONImporter.prototype.buildSystemLimit = function (vI, dI, process, eVI, eDI, n
 JSONImporter.prototype.buildSystemLimitShapes = function (vI, dI, process, systemLimit, no) {
     if (!vI) {
         this._errorHandler.logWarning(
-            `Missing visual information for element ${dI?.id || 'unknown'} - using fallback position`
+            msg('Missing visual information for element {id} - using fallback position', { id: dI?.id || 'unknown' })
         );
         vI = VisualUtils.createFallbackVisualInfo(
             dI?.id || 'unknown', 
@@ -506,7 +518,7 @@ JSONImporter.prototype.buildSystemLimitFlow = function (vI, dI, systemLimit, no)
     if (!vI) {
         // Waypoints are synthesized in completeConnectionWaypoints once source
         // and target are resolved.
-        this._errorHandler.logWarning(`Missing visual information for connection ${dI.id} - drawing a straight line`);
+        this._errorHandler.logWarning(msg('Missing visual information for connection {id} - drawing a straight line', { id: dI.id }));
     }
     let connection = this._elementFactory.create('connection', {
         type: vI ? vI.type : dI.$type,
@@ -545,7 +557,7 @@ JSONImporter.prototype.buildTRandUsage = function (vI, dI, process, no) {
     }
     if (elementType === 'fpb:Usage') {
         if (!vI) {
-            this._errorHandler.logWarning(`Missing visual information for connection ${dI.id} - drawing a straight line`);
+            this._errorHandler.logWarning(msg('Missing visual information for connection {id} - drawing a straight line', { id: dI.id }));
         }
         element = this._elementFactory.create('connection', {
             type: elementType,
@@ -594,9 +606,9 @@ JSONImporter.prototype.removeUnconnectedConnections = function (process) {
         const missingEnd = !element.source ? 'source' : 'target';
         const missingId = describeEnd(!element.source ? bo.sourceRef : bo.targetRef);
         this._errorHandler.logWarning(
-            `${describeConnection(element)} references a missing ${missingEnd} (${missingId}) - removed`,
+            msg('{connection} references a missing {end} ({id}) - removed', { connection: describeConnection(element), end: msg(missingEnd), id: missingId }),
             null,
-            `Add the ${missingEnd} element with this id to the process or delete the connection from the file.`
+            msg('Add the {end} element with this id to the process or delete the connection from the file.', { end: msg(missingEnd) })
         );
         collectionRemove(container, element);
         removedIds.push(element.id);
@@ -783,7 +795,7 @@ JSONImporter.prototype.updateDepedencies = function (container, element) {
                 const partner = container.find((el) => el && el.id === tandemFlow);
                 if (!partner || !partner.businessObject) {
                     this._errorHandler.logWarning(
-                        `${describeConnection(element)} lists a missing tandem partner (${tandemFlow}) - dropped`,
+                        msg('{connection} lists a missing tandem partner ({id}) - dropped', { connection: describeConnection(element), id: tandemFlow }),
                         null,
                         'Remove the id from inTandemWith or add the partner flow to the file.'
                     );
@@ -839,7 +851,7 @@ JSONImporter.prototype.updateDepedencies = function (container, element) {
                     // .businessObject.elementsContainer off it) — degrade to a
                     // non-decomposed PO instead.
                     this._errorHandler.logWarning(
-                        `ProcessOperator "${element.businessObject.name || element.id}" references a missing sub-process (${element.businessObject.decomposedView}) - decomposition link cleared`,
+                        msg('ProcessOperator "{name}" references a missing sub-process ({id}) - decomposition link cleared', { name: element.businessObject.name || element.id, id: element.businessObject.decomposedView }),
                         null,
                         'Add the sub-process to the file or remove decomposedView from the operator.'
                     );
