@@ -2321,3 +2321,47 @@ test.describe('Links from outside for hosts', () => {
     expect(cleared.still).toBe(false);
   });
 });
+
+test.describe('Language', () => {
+
+  /** lang of the three containers of the test page */
+  const langs = (page) => page.evaluate(() => ['modeler', 'properties', 'layers']
+    .map((id) => document.getElementById(id).getAttribute('lang')));
+
+  test('language: de starts in German and marks the containers', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await createModeler(page, { panels: true, options: { language: 'de' } });
+    expect(await page.evaluate(() => window.fpb.getLanguage())).toBe('de');
+    expect(await langs(page)).toEqual(['de', 'de', 'de']);
+    expect(errors).toEqual([]);
+  });
+
+  test('setLanguage switches and the containers follow', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page, { panels: true, options: { language: 'de' } });
+    expect(await page.evaluate(() => window.fpb.setLanguage('en'))).toBe('en');
+    expect(await page.evaluate(() => window.fpb.getLanguage())).toBe('en');
+    expect(await langs(page)).toEqual(['en', 'en', 'en']);
+  });
+
+  test('an unknown language gives English and no error', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    const warnings = [];
+    page.on('console', (message) => {
+      if (message.type() === 'warning') {
+        warnings.push(message.text());
+      }
+    });
+    await createModeler(page, { panels: true, options: { language: 'fr' } });
+    expect(await page.evaluate(() => window.fpb.getLanguage())).toBe('en');
+    expect(warnings).toContain('FPB.js: language "fr" is not available, using English.');
+    expect(errors).toEqual([]);
+  });
+
+  test('without an option the modeler speaks English', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page, { panels: true });
+    expect(await page.evaluate(() => window.fpb.getLanguage())).toBe('en');
+    expect(await langs(page)).toEqual(['en', 'en', 'en']);
+  });
+});

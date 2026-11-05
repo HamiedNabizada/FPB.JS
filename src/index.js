@@ -134,6 +134,13 @@ export async function createFpbModeler(options = {}) {
     theme.addContainer(propertiesContainer);
     theme.addContainer(layerContainer);
   }
+  // lang on the panels as on the canvas (016h T8); a host's own translate
+  // may leave the language module out
+  const i18n = modeler.get('fpbI18n', false);
+  if (i18n) {
+    i18n.addContainer(propertiesContainer);
+    i18n.addContainer(layerContainer);
+  }
 
   // Get DI services for facade methods
   const eventBus = modeler.get('eventBus');
@@ -412,6 +419,21 @@ export async function createFpbModeler(options = {}) {
       if (theme) {
         theme.set(themeName);
       }
+    },
+
+    /** The language in effect: 'en' or 'de' (016h V9) */
+    getLanguage() {
+      return i18n ? i18n.get() : 'en';
+    },
+
+    /**
+     * English or German ('en', 'de', also 'de-DE' and the like; anything else
+     * gives English and a warning). From then on the host decides and the
+     * language button is hidden. The interface switches at once; fires
+     * 'i18n.changed' with { language }. Returns the language in effect.
+     */
+    setLanguage(language) {
+      return i18n ? i18n.set(language) : 'en';
     },
 
     // --- DI Access ---

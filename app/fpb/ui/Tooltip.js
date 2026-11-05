@@ -9,7 +9,7 @@ import './Tooltip.css';
  * tooltip is hidden from them. Escape hides it and goes on to whoever else
  * listens.
  */
-export function createTooltips(theme) {
+export function createTooltips(theme, i18n) {
   let host = null;
   let tip = null;
   let anchor = null;
@@ -35,6 +35,9 @@ export function createTooltips(theme) {
       document.body.appendChild(host);
       if (theme) {
         theme.addContainer(host);
+      }
+      if (i18n) {
+        i18n.addContainer(host);
       }
     }
     return tip;

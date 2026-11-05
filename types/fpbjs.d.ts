@@ -636,6 +636,16 @@ export interface CreateFpbModelerOptions {
    */
   theme?: 'light' | 'dark' | 'system';
   /**
+   * The language of the interface (016h). 'en' or 'de' (also 'de-DE' and the
+   * like): set by the host, no language button. 'user': the user chooses
+   * with the button in the toolbar, the choice is kept in the browser
+   * (fpbjs.language), without one English. Without the option: English, no
+   * button. Anything else gives English and a warning. See setLanguage().
+   * Another language: pass a `translate` service of your own in
+   * additionalModules, as in diagram-js.
+   */
+  language?: 'en' | 'de' | 'user' | string;
+  /**
    * false: the modeler asks no questions itself (016e); the host answers
    * confirmation.required with confirmation.confirmed or .cancelled and the
    * same action. Default true.
@@ -870,6 +880,18 @@ export interface FpbInstance {
    * { theme: 'light' | 'dark', mode: 'host' | 'system' | 'default' }.
    */
   setTheme(theme: 'light' | 'dark' | 'system'): void;
+
+  /** The language of the interface in effect */
+  getLanguage(): 'en' | 'de';
+
+  /**
+   * English or German ('en', 'de', also 'de-DE' and the like; anything else
+   * gives English and a warning). From then on the host decides and the
+   * language button is hidden. The interface switches at once, the model,
+   * the layer and undo stay. Fires 'i18n.changed' with { language }.
+   * Returns the language in effect.
+   */
+  setLanguage(language: string): 'en' | 'de';
 
   // --- DI Service Access ---
 

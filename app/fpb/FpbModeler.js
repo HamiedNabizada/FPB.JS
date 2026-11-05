@@ -33,7 +33,8 @@ import BendpointsModule from 'diagram-js/lib/features/bendpoints';
 import KeyboardMoveSelectionModule from 'diagram-js/lib/features/keyboard-move-selection';
 import MoveModule from 'diagram-js/lib/features/move';
 import ResizeModule from 'diagram-js/lib/features/resize';
-import TranslateModule from 'diagram-js/lib/i18n/translate';
+// English and German instead of diagram-js' i18n/translate (016h T1)
+import I18nModule from './i18n';
 import SelectionModule from 'diagram-js/lib/features/selection';
 import OverlaysModule from 'diagram-js/lib/features/overlays';
 // import AutoResize from 'diagram-js/lib/features/auto-resize'; // Disabled - allows free SystemLimit resize
@@ -145,7 +146,7 @@ FpbModeler.prototype._modules = [
     KeyboardMoveSelectionModule,
     MoveModule,
     ResizeModule,
-    TranslateModule,
+    I18nModule,
     SelectionModule,
     OverlaysModule,
     GridModule,

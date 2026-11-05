@@ -28,6 +28,7 @@ import ConfirmDialog from './ConfirmDialog';
 export default function Dialogs(eventBus, injector, translate) {
   this._translate = translate;
   this._theme = injector.get('fpbTheme', false);
+  this._i18n = injector.get('fpbI18n', false);
   this._canvas = injector.get('canvas', false);
   this._host = null;
   this._open = new Set();
@@ -155,6 +156,10 @@ Dialogs.prototype._hostElement = function () {
     document.body.appendChild(host);
     if (this._theme) {
       this._theme.addContainer(host);
+    }
+    // lang for screen readers (016h T8)
+    if (this._i18n) {
+      this._i18n.addContainer(host);
     }
   }
   return this._host;

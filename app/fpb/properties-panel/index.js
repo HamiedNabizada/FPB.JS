@@ -140,6 +140,11 @@ export default class FpbPropertiesPanel {
     if (theme) {
       theme.addContainer(container);
     }
+    // lang for screen readers (016h T8)
+    const i18n = modeler.get('fpbI18n', false);
+    if (i18n) {
+      i18n.addContainer(container);
+    }
 
     // Ctrl+S in a field saves the model, not the page (016e D2); the field
     // hands over what was typed before the key reaches the container

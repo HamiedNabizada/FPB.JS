@@ -79,6 +79,11 @@ export default function Sheets(eventBus, config, translate, injector) {
   if (theme) {
     theme.addContainer(this._container);
   }
+  // lang for screen readers (016h T8)
+  const i18n = injector.get('fpbI18n', false);
+  if (i18n) {
+    i18n.addContainer(this._container);
+  }
   const files = injector.get('fpbFiles', false);
   const unbindKeys = files ? files.bindKeys(this._container) : function () {};
 

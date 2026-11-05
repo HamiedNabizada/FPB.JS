@@ -25,11 +25,16 @@ export default class Toolbar {
     if (theme) {
       theme.addContainer(container);
     }
+    // lang for screen readers (016h T8)
+    const i18n = modeler.get('fpbI18n', false);
+    if (i18n) {
+      i18n.addContainer(container);
+    }
     // The import waits for this panel instead of waiting a fixed time
     modeler.get('eventBus').fire('ui.componentRegistered', { component: 'layerPanel' });
     // Ctrl+S on a button of the toolbar saves the model, not the page
     this._unbindKeys = modeler.get('fpbFiles').bindKeys(container);
-    this._tooltips = createTooltips(theme);
+    this._tooltips = createTooltips(theme, i18n);
     render(<ToolbarRoot modeler={modeler} showNewModel={showNewModel} tooltips={this._tooltips} />, container);
   }
 
