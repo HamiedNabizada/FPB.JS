@@ -17,6 +17,7 @@ import { faSun } from '@fortawesome/free-solid-svg-icons/faSun';
 import { faEye } from '@fortawesome/free-solid-svg-icons/faEye';
 import { faEyeLowVision } from '@fortawesome/free-solid-svg-icons/faEyeLowVision';
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons/faCircleInfo';
+import { faLanguage } from '@fortawesome/free-solid-svg-icons/faLanguage';
 import { faSliders } from '@fortawesome/free-solid-svg-icons/faSliders';
 
 import { ToolbarButton, TooltipContext } from './ToolbarButton';
@@ -272,6 +273,12 @@ function ViewGroup(props) {
   ));
   const colors = modeler.get('colorSchemeService');
   const scheme = useModelerState(modeler, 'colorScheme.changed', () => colors.get());
+  // the language: a button only when the host leaves the choice to the user (016h V2)
+  const i18n = modeler.get('fpbI18n', false);
+  const language = useModelerState(modeler, 'i18n.changed', () => ({
+    current: i18n ? i18n.get() : 'en',
+    user: !!(i18n && i18n.isUserChoice())
+  }));
 
   const dark = themeState.current === 'dark';
   const accessible = scheme === 'accessible';
@@ -292,6 +299,15 @@ function ViewGroup(props) {
         pressed={accessible}
         onClick={() => colors.set(accessible ? 'standard' : 'accessible')}
       />
+      {language.user && (
+        <ToolbarButton
+          id="languageButton"
+          // the other language in its own words, so it is found without English
+          label={language.current === 'de' ? 'English' : 'Deutsch'}
+          icon={faLanguage}
+          onClick={() => i18n.choose(language.current === 'de' ? 'en' : 'de')}
+        />
+      )}
       <ToolbarButton
         label={translate('Show information and help')}
         icon={faCircleInfo}

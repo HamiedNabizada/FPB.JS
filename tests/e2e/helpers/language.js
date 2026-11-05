@@ -513,7 +513,7 @@ export const SURFACES = [
   // described for screen readers (Task 3)
   {
     name: 'canvas and palette',
-    scope: ['self:.djs-container', '.djs-palette', '.djs-container > svg'],
+    scope: ['self:.djs-container', '.djs-palette', '.djs-container > svg', '.djs-minimap'],
     open: async () => {}
   },
   ...['product', 'energy', 'operator', 'decomposed', 'resource', 'systemLimit', 'flow', 'parallelFlow', 'usage'].map(contextPadSurface),

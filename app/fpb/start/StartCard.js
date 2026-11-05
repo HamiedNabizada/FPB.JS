@@ -33,8 +33,8 @@ export default function StartCard(props) {
               aria-busy={loading === example ? 'true' : undefined}
               onClick={() => onExample(example)}
             >
-              <span class="fpb-start-example-title">{example.title}</span>
-              {example.description && <span class="fpb-start-example-description">{example.description}</span>}
+              <span class="fpb-start-example-title">{translate(example.title)}</span>
+              {example.description && <span class="fpb-start-example-description">{translate(example.description)}</span>}
             </button>
           ))}
         </div>

@@ -1,6 +1,7 @@
 import TranslateModule from 'diagram-js/lib/i18n/translate';
 
 import I18n from './I18n';
+import LibraryLabels from './LibraryLabels';
 
 /**
  * English and German for FPB.js (016h T1). Replaces diagram-js'
@@ -15,8 +16,9 @@ import I18n from './I18n';
  */
 export default {
   __depends__: [TranslateModule],
-  __init__: ['fpbI18n'],
+  __init__: ['fpbI18n', 'fpbLibraryLabels'],
   fpbI18n: ['type', I18n],
+  fpbLibraryLabels: ['type', LibraryLabels],
   translate: ['factory', ['fpbI18n', function (fpbI18n) {
     return function translate(template, replacements) {
       return fpbI18n.translate(template, replacements);

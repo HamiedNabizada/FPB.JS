@@ -2388,6 +2388,26 @@ test.describe('Language', () => {
     german.forEach((finding, i) => expect(finding.message).not.toBe(english[i].message));
   });
 
+  test('only language: user shows the language button', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page, { panels: true, options: { language: 'de' } });
+    await expect(page.locator('#languageButton')).toHaveCount(0);
+    await openLibraryPage(page);
+    await createModeler(page, { panels: true, options: { language: 'user' } });
+    await expect(page.locator('#languageButton')).toHaveAttribute('aria-label', 'Deutsch');
+    await page.evaluate(() => window.fpb.setLanguage('de'));
+    await expect(page.locator('#languageButton')).toHaveCount(0);
+  });
+
+  test('the minimap names its button in the language in effect', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page, { panels: true, options: { language: 'de' } });
+    const title = () => page.evaluate(() => document.querySelector('.djs-minimap .toggle').getAttribute('title'));
+    expect(await title()).toBe('Übersicht öffnen');
+    await page.evaluate(() => window.fpb.setLanguage('en'));
+    expect(await title()).toBe('Open minimap');
+  });
+
   test('without an option the modeler speaks English', async ({ page }) => {
     await openLibraryPage(page);
     await createModeler(page, { panels: true });

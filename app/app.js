@@ -4,6 +4,7 @@ import FpbPropertiesPanel from './fpb/properties-panel';
 import Toolbar from './fpb/toolbar';
 
 import configFile from './config';
+import { markText } from './fpb/i18n/markText';
 import AmlModule from './fpb/aml';
 
 
@@ -31,17 +32,27 @@ var modeler = new FpbModeler({
   // the page is the web app's own, so the attribute goes on the document
   theme: 'system',
   themeScope: 'page',
+  // English or German, as the user chooses with the button in the toolbar;
+  // the choice is kept in the browser (016h V2, V4)
+  language: 'user',
   // the example models of the start card (016e D3), files of the web app
   examples: [
-    { title: 'Temperieren', description: 'Heating with inspection, one decomposition', url: 'examples/temperieren.json' },
-    { title: 'Showcase A: heat exchanger', description: 'Temperature control over four layers, with a plant hierarchy', url: 'examples/Showcase-A-WaermetauscherMitRegelung.aml' },
-    { title: 'Showcase B: pharma batch', description: 'Batch production and cleaning, two process views', url: 'examples/Showcase-B-PharmaChargeUndReinigung.aml' },
-    { title: 'Showcase C: assembly', description: 'CNC machining and robot assembly, two process views', url: 'examples/Showcase-C-CncRobotikMontage.aml' }
+    // titles and descriptions are keys of the catalog: the start card shows them translated
+    { title: markText('Temperieren'), description: markText('Heating with inspection, one decomposition'), url: 'examples/temperieren.json' },
+    { title: markText('Showcase A: heat exchanger'), description: markText('Temperature control over four layers, with a plant hierarchy'), url: 'examples/Showcase-A-WaermetauscherMitRegelung.aml' },
+    { title: markText('Showcase B: pharma batch'), description: markText('Batch production and cleaning, two process views'), url: 'examples/Showcase-B-PharmaChargeUndReinigung.aml' },
+    { title: markText('Showcase C: assembly'), description: markText('CNC machining and robot assembly, two process views'), url: 'examples/Showcase-C-CncRobotikMontage.aml' }
   ]
 });
 
 
 modeler.get('canvas').zoom('fit-viewport');
+
+// the page is FPB.js's own: its language is the one of the modeler (016h T8)
+document.documentElement.lang = modeler.get('fpbI18n').get();
+modeler.get('eventBus').on('i18n.changed', function (event) {
+  document.documentElement.lang = event.language;
+});
 try {
   // the properties panel (Preact, 016b); the React panel and ?panel=next are gone (B3)
   new FpbPropertiesPanel({ container: propertiesContainer, modeler });
