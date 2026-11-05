@@ -1,7 +1,7 @@
 // tests/e2e/german.spec.js
 import { test, expect, devices } from './support/test';
 import { libraryBuilt } from './library/libPage';
-import { SURFACES, PHONE_SURFACES, IDS, prepare, unmarked, texts, modelData, clone, settle, without } from './helpers/language';
+import { SURFACES, PHONE_SURFACES, IDS, prepare, unmarked, texts, modelData, clone, settle, without, missing } from './helpers/language';
 
 /**
  * German in FPB.js (016h F1, Tests), against the library bundle:
@@ -69,6 +69,19 @@ async function checkSwitch(page, surface) {
   const started = await collect();
 
   expect(switched).toEqual(started);
+  // every text the surface asked for has its German (016h T14)
+  expect(await missing(page)).toEqual([]);
+}
+
+/** In German the surface asks for no text without a German entry */
+async function checkMissing(page, surface) {
+  await prepare(page, surface, { language: 'de' });
+  await surface.open(page);
+  await settle(page);
+  if (surface.each) {
+    await surface.each(page, async () => {});
+  }
+  expect(await missing(page)).toEqual([]);
 }
 
 test.describe('Nothing hard-coded in English', () => {
@@ -80,6 +93,13 @@ test.describe('Nothing hard-coded in English', () => {
 test.describe('Switching equals starting in German', () => {
   for (const surface of SURFACES.filter((s) => !s.noSwitch)) {
     test(surface.name, ({ page }) => checkSwitch(page, surface));
+  }
+});
+
+// the surfaces the switch leaves out (questions, messages) are checked here
+test.describe('No German text missing', () => {
+  for (const surface of SURFACES.filter((s) => s.noSwitch)) {
+    test(surface.name, ({ page }) => checkMissing(page, surface));
   }
 });
 

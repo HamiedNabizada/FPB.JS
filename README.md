@@ -70,6 +70,13 @@ const fpb = await createFpbModeler({ container, theme: 'dark' });
 fpb.setTheme('system');
 ```
 
+The interface speaks English or German. A host chooses with the option `language` (`'en'`, `'de'`) or later with `setLanguage`; `'user'` shows a language button in the toolbar and keeps the choice in the browser, as the web app does. The terms follow VDI/VDE 3682 Blatt 1 and 2:
+
+```js
+const fpb = await createFpbModeler({ container, language: 'de' });
+fpb.setLanguage('en');
+```
+
 ## Citation
 
 If you use FPB.JS in your research, please cite:

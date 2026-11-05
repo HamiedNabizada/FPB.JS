@@ -16,24 +16,9 @@ import de from '../../../app/fpb/i18n/de.js';
 
 const ROOT = path.resolve(__dirname, '../../..');
 
-// the parts translated so far; the last task of F1 replaces it by ALL
-const COVERED = [
-  'app/fpb/toolbar', 'app/fpb/ui', 'app/fpb/i18n',
-  // Task 3: the canvas
-  'app/fpb/palette', 'app/fpb/context-pad', 'app/fpb/replace', 'app/fpb/append',
-  'app/fpb/modeling/behavior/ModelingFeedback.js', 'app/fpb/preview', 'app/fpb/a11y',
-  'app/fpb/search', 'app/fpb/info/keyboardShortcuts.js',
-  // Task 4: the properties panel
-  'app/fpb/properties-panel',
-  // Task 5: dialogs, questions, files, messages, AML display
-  'app/fpb/dialogs', 'app/fpb/info', 'app/fpb/files', 'app/fpb/start', 'app/fpb/notifications',
-  'app/fpb/autosave', 'app/fpb/export', 'app/fpb/modeling/updater',
-  'app/fpb/aml/AmlMarkers.js', 'app/fpb/aml/AmlOverviewDialog.js', 'app/fpb/aml/AmlOverviewService.js',
-  'app/fpb/aml/AmlSupport.js', 'app/fpb/aml/amlIndex.js', 'app/fpb/aml/index.js',
-  // Task 6: model check, layers, sheets, import
-  'app/fpb/validation', 'app/fpb/layers', 'app/fpb/sheets', 'app/fpb/importer', 'app/fpb/read-only'
-];
+// every file but the converter of the AML module (016h V6)
 const ALL = ['app/fpb', 'src', 'app/app.js'];
+const COVERED = ALL;
 const EXCLUDED = ['app/fpb/aml/mapper'];
 // calls whose first argument is a key: translate, markText, and msg, the
 // helper of the model check and the importer for { template, args }

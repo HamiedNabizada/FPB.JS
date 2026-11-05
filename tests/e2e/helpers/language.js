@@ -27,9 +27,11 @@ export function modelData(json) {
   const walk = (value) => {
     if (typeof value === 'string') {
       if (value.trim()) {
-        // as written, with its line breaks as spaces, and line by line
+        // as written, with its line breaks as spaces or as nothing (a drawing
+        // joins the lines of a label), and line by line
         found.add(value.trim());
         found.add(value.replace(/\s+/g, ' ').trim());
+        found.add(value.replace(/\s+/g, ''));
         value.split(/\n/).map((line) => line.trim()).filter(Boolean).forEach((line) => found.add(line));
       }
     } else if (Array.isArray(value)) {
@@ -169,9 +171,23 @@ export function unmarked(page, data, scope) {
     const found = [];
 
     // a drawing joins its labels in innerText: one line per text element there
-    const linesOf = (root) => (root instanceof SVGElement
-      ? [...root.querySelectorAll('text')].map((text) => text.textContent)
-      : (root.innerText || root.textContent || '').split('\n'));
+    // a drawing inside a part (the whole page) is read the same way: the
+    // part without its drawings, then each drawing by its text elements
+    const linesOf = (root) => {
+      if (root instanceof SVGElement) {
+        return [...root.querySelectorAll('text')].map((text) => text.textContent);
+      }
+      const drawings = [...root.querySelectorAll('svg')].filter((svg) => !svg.parentElement.closest('svg'));
+      const shown = drawings.map((svg) => svg.style.display);
+      drawings.forEach((svg) => {
+        svg.style.display = 'none';
+      });
+      const lines = (root.innerText || root.textContent || '').split('\n');
+      drawings.forEach((svg, i) => {
+        svg.style.display = shown[i];
+      });
+      return lines.concat(...drawings.map((svg) => [...svg.querySelectorAll('text')].map((text) => text.textContent)));
+    };
     roots.forEach((root) => {
       linesOf(root).map(strip).forEach((line) => {
         if (letters.test(line)) {
@@ -596,6 +612,18 @@ export const SURFACES = [
     data: amlData(amlFile('Showcase-A-WaermetauscherMitRegelung.aml')),
     open: panelOfAmlElement
   }),
+  // the whole page with all panels: what no other surface names (Task 8)
+  {
+    name: 'whole page',
+    open: async () => {}
+  },
+  {
+    name: 'whole page on a lower layer with the layers card',
+    open: async (page) => {
+      await page.evaluate((layer) => window.fpb.switchProcess(layer), CHILD);
+      await page.locator('#openLayerButton').click();
+    }
+  },
   // dialogs, questions, files, messages, AML file (Task 5)
   {
     name: 'information',
@@ -785,6 +813,9 @@ export const PHONE_SURFACES = [
     }
   }
 ];
+
+/** The keys asked for in German without an entry (016h T14) */
+export const missing = (page) => page.evaluate(() => window.fpb.get('fpbI18n').getMissing());
 
 /** The surface with this name */
 export const surface = (name) => {
