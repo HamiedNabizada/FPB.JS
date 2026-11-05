@@ -58,6 +58,14 @@
       "warnings": []
     },
     {
+      "kind": "links",
+      "id": "Showcase-A-WaermetauscherMitRegelung__0",
+      "aml": "inputs/aml/Showcase-A-WaermetauscherMitRegelung.aml",
+      "hierarchy": 0,
+      "expected": "expected/links/Showcase-A-WaermetauscherMitRegelung__0.json",
+      "warnings": []
+    },
+    {
       "kind": "update",
       "id": "Showcase-A-WaermetauscherMitRegelung__0__same",
       "aml": "inputs/aml/Showcase-A-WaermetauscherMitRegelung.aml",
@@ -91,6 +99,17 @@
       ]
     },
     {
+      "kind": "update",
+      "id": "Showcase-A-WaermetauscherMitRegelung__0__delete-flow",
+      "aml": "inputs/aml/Showcase-A-WaermetauscherMitRegelung.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/Showcase-A-WaermetauscherMitRegelung__0__delete-flow.json",
+      "expected": "expected/update/Showcase-A-WaermetauscherMitRegelung__0__delete-flow.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=24, added=0, connection-waypoints-updated=15, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=1, unmatched-skipped=0."
+      ]
+    },
+    {
       "kind": "find",
       "id": "Showcase-B-PharmaChargeUndReinigung",
       "aml": "inputs/aml/Showcase-B-PharmaChargeUndReinigung.aml",
@@ -112,6 +131,14 @@
       "aml": "inputs/aml/Showcase-B-PharmaChargeUndReinigung.aml",
       "hierarchy": 0,
       "expected": "expected/tojson/Showcase-B-PharmaChargeUndReinigung__0.json",
+      "warnings": []
+    },
+    {
+      "kind": "links",
+      "id": "Showcase-B-PharmaChargeUndReinigung__0",
+      "aml": "inputs/aml/Showcase-B-PharmaChargeUndReinigung.aml",
+      "hierarchy": 0,
+      "expected": "expected/links/Showcase-B-PharmaChargeUndReinigung__0.json",
       "warnings": []
     },
     {
@@ -156,6 +183,14 @@
       "warnings": []
     },
     {
+      "kind": "links",
+      "id": "Showcase-B-PharmaChargeUndReinigung__1",
+      "aml": "inputs/aml/Showcase-B-PharmaChargeUndReinigung.aml",
+      "hierarchy": 1,
+      "expected": "expected/links/Showcase-B-PharmaChargeUndReinigung__1.json",
+      "warnings": []
+    },
+    {
       "kind": "update",
       "id": "Showcase-B-PharmaChargeUndReinigung__1__same",
       "aml": "inputs/aml/Showcase-B-PharmaChargeUndReinigung.aml",
@@ -190,6 +225,14 @@
       "aml": "inputs/aml/Showcase-C-CncRobotikMontage.aml",
       "hierarchy": 0,
       "expected": "expected/tojson/Showcase-C-CncRobotikMontage__0.json",
+      "warnings": []
+    },
+    {
+      "kind": "links",
+      "id": "Showcase-C-CncRobotikMontage__0",
+      "aml": "inputs/aml/Showcase-C-CncRobotikMontage.aml",
+      "hierarchy": 0,
+      "expected": "expected/links/Showcase-C-CncRobotikMontage__0.json",
       "warnings": []
     },
     {
@@ -231,6 +274,14 @@
       "aml": "inputs/aml/Showcase-C-CncRobotikMontage.aml",
       "hierarchy": 1,
       "expected": "expected/tojson/Showcase-C-CncRobotikMontage__1.json",
+      "warnings": []
+    },
+    {
+      "kind": "links",
+      "id": "Showcase-C-CncRobotikMontage__1",
+      "aml": "inputs/aml/Showcase-C-CncRobotikMontage.aml",
+      "hierarchy": 1,
+      "expected": "expected/links/Showcase-C-CncRobotikMontage__1.json",
       "warnings": []
     },
     {
@@ -669,6 +720,17 @@
       "warnings": [
         "Removed link \u0027B1_Prozess\u0027 in \u0027Behaelter_B1\u0027: it pointed to \u0027Abgek\u00FChltes Medium\u0027, which was deleted.",
         "UpdateInPlace summary: updated=22, added=0, connection-waypoints-updated=14, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=2, removed-connection-orphans=2, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "update",
+      "id": "mixed__0__delete-flow",
+      "aml": "inputs/generated/mixed.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/mixed__0__delete-flow.json",
+      "expected": "expected/update/mixed__0__delete-flow.aml",
+      "warnings": [
+        "UpdateInPlace summary: updated=24, added=0, connection-waypoints-updated=15, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=1, unmatched-skipped=0."
       ]
     },
     {

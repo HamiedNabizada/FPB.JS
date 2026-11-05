@@ -82,6 +82,16 @@ foreach (var file in amlInputs)
         Write(outFile, json);
         cases.Add(Case("tojson", $"{name}__{i}", new() { ["aml"] = Rel(file), ["hierarchy"] = i, ["expected"] = Rel(outFile) }, warnings));
 
+        // Links from outside per FPB element (016f E4), for the web app's index (amlIndex.js)
+        if (name.StartsWith("Showcase-", StringComparison.Ordinal))
+        {
+            var linkDoc = CAEXDocument.LoadFromString(text);
+            var linkIh = CaexToFpbJson.FindFpdInstanceHierarchies(linkDoc)[i];
+            var linksFile = Path.Combine(expected, "links", $"{name}__{i}.json");
+            Write(linksFile, LinksByFpbId(linkIh, ForeignLinks.Find(linkDoc, linkIh)).ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+            cases.Add(Case("links", $"{name}__{i}", new() { ["aml"] = Rel(file), ["hierarchy"] = i, ["expected"] = Rel(linksFile) }, []));
+        }
+
         foreach (var (edit, apply) in edits)
         {
             var edited = apply(json);
@@ -263,6 +273,15 @@ static (string, Func<string, string?>)[] EditList() =>
         }
         return false;
     })),
+    // a flow whose port a link from outside shares (Showcase A: VentilToPressureCtl
+    // uses the port of this flow, 016f E4, V29): the port stays
+    ("delete-flow", json => EditTop(json, (root, entry, data, visual) =>
+    {
+        const string flowId = "ee2b711a-2f74-786f-d912-819b2c61bd8f";
+        if (!AllEntries(root).Any(e => Data(e).Any(x => string.Equals((string?)x!["id"], flowId, StringComparison.OrdinalIgnoreCase)))) return false;
+        foreach (var e in AllEntries(root)) RemoveWithFlows(e, flowId);
+        return true;
+    })),
     ("add", json => EditTop(json, (root, entry, data, visual) =>
     {
         var po = data.FirstOrDefault(e => (string?)e!["$type"] == "fpb:ProcessOperator");
@@ -295,6 +314,34 @@ static (string, Func<string, string?>)[] EditList() =>
         return true;
     })),
 ];
+
+// Keyed like amlIndex.js: a state by the id its refObj names (the copies of a
+// boundary state count for their state), every other element by its own id;
+// processes are left out, as amlIndex.js leaves them out.
+static JsonObject LinksByFpbId(InstanceHierarchyType ih, IReadOnlyList<ElementLinks> found)
+{
+    var states = new HashSet<string> { FpbTypes.Product, FpbTypes.Energy, FpbTypes.Information };
+    var byId = new Dictionary<string, InternalElementType>(StringComparer.OrdinalIgnoreCase);
+    foreach (var ie in Walk(ih.InternalElement))
+        if (!string.IsNullOrEmpty(ie.ID)) byId[ie.ID.Trim('{', '}')] = ie;
+    var grouped = new SortedDictionary<string, List<(string Link, string Owner)>>(StringComparer.Ordinal);
+    foreach (var entry in found)
+    {
+        if (!byId.TryGetValue(entry.ElementId, out var ie)) continue;
+        if (!FpbMappings.SucToElement.TryGetValue(FpbMappings.StripAlias(ie.RefBaseSystemUnitPath), out var type) || type == FpbTypes.Process) continue;
+        var shared = states.Contains(type) ? ie.GetRefObjOrDerived() : null;
+        var id = (string.IsNullOrEmpty(shared) ? ie.ID! : shared).Trim('{', '}');
+        if (!grouped.TryGetValue(id, out var list)) grouped[id] = list = new();
+        foreach (var l in entry.Links)
+            if (!list.Contains((l.Link, l.Owner))) list.Add((l.Link, l.Owner));
+    }
+    var result = new JsonObject();
+    foreach (var (id, list) in grouped)
+        result[id] = new JsonArray(list
+            .OrderBy(l => l.Link, StringComparer.Ordinal).ThenBy(l => l.Owner, StringComparer.Ordinal)
+            .Select(l => (JsonNode)new JsonObject { ["link"] = l.Link, ["owner"] = l.Owner }).ToArray());
+    return result;
+}
 
 static bool IsState(JsonNode? e) => (string?)e?["$type"] is "fpb:Product" or "fpb:Energy" or "fpb:Information";
 

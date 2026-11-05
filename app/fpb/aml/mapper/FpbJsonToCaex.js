@@ -325,7 +325,7 @@ export function updateInPlace(existing, json, targetIh = null, options = null) {
   MapperTrace.result(options, 'RemoveOrphans', `removed ${removedCount} element(s)`);
 
   MapperTrace.attempt(options, 'RemoveOrphans', 'InternalLinks not in incoming snapshot');
-  const connectionsRemoved = removeOrphanedConnections(linkIndex, incomingIds);
+  const connectionsRemoved = removeOrphanedConnections(linkIndex, incomingIds, existing);
   MapperTrace.result(options, 'RemoveOrphans', `removed ${connectionsRemoved} link(s)`);
 
   // Compose: a sub-process whose parent PO no longer comes as a decomposed
@@ -1008,9 +1008,11 @@ function addConnection(procAml, flowData, elementIndex, visualMap, warnings, ifa
 /**
  * RemoveOrphanedConnections: InternalLinks whose ID is not in the payload.
  * Links have no FPD class, so a missing ID is the only signal; FPB.js owns the
- * link lifecycle.
+ * link lifecycle. A port goes with its link only while no other link of the
+ * document uses it: a link from outside (a plant hierarchy, a link the user
+ * drew) may share the port of a flow (016f E4, V29).
  */
-function removeOrphanedConnections(linkIndex, incomingIds) {
+function removeOrphanedConnections(linkIndex, incomingIds, doc) {
   const removedKeys = new IgnoreCaseSet();
   for (const key of linkIndex.keys()) {
     if (!incomingIds.has(key)) {
@@ -1047,6 +1049,36 @@ function removeOrphanedConnections(linkIndex, incomingIds) {
     }
   }
 
+  // Every other link of the document that stays, in both forms of the
+  // partner side: an interface id, or "element id:interface name"
+  const survivingNamed = new IgnoreCaseSet();
+  const keep = (side) => {
+    if (!side) {
+      return;
+    }
+    survivingIfaceIds.add(stripBraces(side));
+    const colon = side.lastIndexOf(':');
+    if (colon > 0) {
+      survivingNamed.add(stripBraces(side.substring(0, colon)) + ':' + side.substring(colon + 1));
+    }
+  };
+  walkDocumentInternalElements(doc, (ie) => {
+    for (const other of ie.internalLink) {
+      if (removedKeys.has(stripBraces(other.id ?? ''))) {
+        continue;
+      }
+      keep(other.refPartnerSideA);
+      keep(other.refPartnerSideB);
+    }
+  });
+  const used = (iface) => {
+    if (survivingIfaceIds.has(stripBraces(iface.id ?? ''))) {
+      return true;
+    }
+    const owner = asInternalElement(iface.caexParent);
+    return owner != null && survivingNamed.has(stripBraces(owner.id ?? '') + ':' + iface.name);
+  };
+
   for (const key of removedKeys) {
     const link = linkIndex.get(key);
     // Resolve the interfaces BEFORE the link disappears; left behind they
@@ -1054,10 +1086,10 @@ function removeOrphanedConnections(linkIndex, incomingIds) {
     const aIface = link.aInterface;
     const bIface = link.bInterface;
     link.remove();
-    if (aIface != null && !survivingIfaceIds.has(stripBraces(aIface.id ?? ''))) {
+    if (aIface != null && !used(aIface)) {
       aIface.remove();
     }
-    if (bIface != null && !survivingIfaceIds.has(stripBraces(bIface.id ?? ''))) {
+    if (bIface != null && !used(bIface)) {
       bIface.remove();
     }
   }

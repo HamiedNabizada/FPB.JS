@@ -14,6 +14,7 @@ import { fixedEnvironment } from '../../../app/fpb/aml/mapper/environment.js';
 import { findFpdInstanceHierarchies, convertCaexToFpbJson } from '../../../app/fpb/aml/mapper/CaexToFpbJson.js';
 import { convertFpbJsonToCaex, updateInPlace } from '../../../app/fpb/aml/mapper/FpbJsonToCaex.js';
 import { guidsIn, maskRandomGuids, maskWritingTime } from './oracleMask.js';
+import { buildAmlIndex } from '../../../app/fpb/aml/amlIndex.js';
 
 const base = path.join(__dirname, 'oracle');
 const manifest = JSON.parse(fs.readFileSync(path.join(base, 'cases.json'), 'utf8'));
@@ -96,6 +97,29 @@ describe('FpbMapper port against the C# mapper', () => {
         expectSameAml(result.value.saveToStream(true), c, [aml, json]);
         expectSameWarnings(result.warnings, c, [aml, json]);
       });
+    });
+  });
+});
+
+// 016f E4: the links from outside the web app asks about (amlIndex.js) against
+// those the C# mapper removes when an element is deleted (ForeignLinks), per
+// FPB element. The plugin asks with the C# list.
+describe('Links from outside (buildAmlIndex against ForeignLinks)', () => {
+  const order = (a, b) => (a.link < b.link ? -1 : a.link > b.link ? 1 : a.owner < b.owner ? -1 : a.owner > b.owner ? 1 : 0);
+  byKind('links').forEach((c) => {
+    it(c.id, () => {
+      const doc = CAEXDocument.loadFromString(read(c.aml));
+      const index = buildAmlIndex(doc, hierarchy(doc, c.hierarchy));
+      const actual = {};
+      [...index.keys()].sort().forEach((id) => {
+        const links = index.get(id).links.map(({ link, owner }) => ({ link, owner }));
+        if (links.length) {
+          actual[id] = links.sort(order);
+        }
+      });
+      const expected = JSON.parse(read(c.expected));
+      Object.keys(expected).forEach((id) => expected[id].sort(order));
+      expect(actual).toEqual(expected);
     });
   });
 });
