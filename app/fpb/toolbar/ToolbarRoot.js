@@ -22,7 +22,8 @@ import { ToolbarButton, TooltipContext } from './ToolbarButton';
 import { useModelerState } from '../ui/useModelerState';
 import { LayersTree } from '../layers/LayersTree';
 import { describeCounts } from '../validation/FpbValidation';
-import { getCtrlKey } from '../info/keyboardShortcuts';
+import { getCtrlKey, keyLabel } from '../info/keyboardShortcuts';
+import { useLanguage } from '../ui/useLanguage';
 import { isReadOnly } from '../read-only/ReadOnly';
 
 /**
@@ -34,6 +35,8 @@ export default function ToolbarRoot(props) {
   const { modeler, showNewModel, tooltips } = props;
   const translate = modeler.get('translate');
   const [failure] = useErrorBoundary((error) => console.error('[FPB.JS] toolbar', error));
+  // draws again in the new language (016h V3)
+  useLanguage(modeler);
 
   // mounted: whoever waits for the interface (the import) can go on
   useEffect(() => {
@@ -87,7 +90,7 @@ function FileGroup(props) {
       {files && (
         <ToolbarButton
           id="openFileButton"
-          label={readOnly ? translate('Open (not in read-only mode)') : translate('Open ({key}+O)', { key: getCtrlKey() })}
+          label={readOnly ? translate('Open (not in read-only mode)') : translate('Open ({key}+O)', { key: keyLabel(getCtrlKey(), translate) })}
           icon={faFileImport}
           disabled={readOnly}
           onClick={() => fpbFiles.open()}
@@ -96,7 +99,7 @@ function FileGroup(props) {
       {files && (
         <ToolbarButton
           id="saveFileButton"
-          label={translate('Save ({key}+S)', { key: getCtrlKey() })}
+          label={translate('Save ({key}+S)', { key: keyLabel(getCtrlKey(), translate) })}
           icon={faFloppyDisk}
           onClick={() => fpbFiles.save()}
         />
@@ -167,7 +170,7 @@ function WorkGroup(props) {
     : setLayersOpen(!layersOpen));
 
   const shownFindings = counts.error + counts.warning;
-  const checkLabel = translate('Model check (VDI 3682): {counts}', { counts: describeCounts(counts) });
+  const checkLabel = translate('Model check (VDI 3682): {counts}', { counts: describeCounts(counts, translate) });
 
   return (
     <div class="fpb-toolbar-group" data-group="work">
@@ -209,7 +212,7 @@ function WorkGroup(props) {
       <ToolbarButton
         id="openSearchButton"
         label={translate('Search all layers')}
-        tip={translate('Search all layers ({key}+F)', { key: getCtrlKey() })}
+        tip={translate('Search all layers ({key}+F)', { key: keyLabel(getCtrlKey(), translate) })}
         icon={faMagnifyingGlass}
         onClick={() => modeler.get('fpbSearch').open()}
       />

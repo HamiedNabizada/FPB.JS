@@ -2,6 +2,8 @@ import { checkModel, RULES, SEVERITY } from './ModelChecker';
 import { collectProcessShapes } from '../help/processShapes';
 import { goToElement } from '../help/navigation';
 import { isReadOnly } from '../read-only/ReadOnly';
+import { fill } from '../i18n/language';
+import { markText } from '../i18n/markText';
 
 const OVERLAY_TYPE = 'fpb-validation';
 // the other elements a chosen finding is about (016b V8)
@@ -20,9 +22,12 @@ const FILTERS = [
 ];
 
 /** "1 error, 2 warnings, 0 notes" */
-export function describeCounts(counts) {
-  const part = function (n, one, many) { return n + ' ' + (n === 1 ? one : many); };
-  return part(counts.error, 'error', 'errors') + ', ' + part(counts.warning, 'warning', 'warnings') + ', ' + part(counts.info, 'note', 'notes');
+export function describeCounts(counts, translate) {
+  const t = translate || fill;
+  const part = function (n, one, many) { return t(n === 1 ? one : many, { count: n }); };
+  return part(counts.error, markText('{count} error'), markText('{count} errors')) + ', ' +
+    part(counts.warning, markText('{count} warning'), markText('{count} warnings')) + ', ' +
+    part(counts.info, markText('{count} note'), markText('{count} notes'));
 }
 
 /**

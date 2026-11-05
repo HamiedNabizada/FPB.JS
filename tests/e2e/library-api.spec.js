@@ -2358,6 +2358,15 @@ test.describe('Language', () => {
     expect(errors).toEqual([]);
   });
 
+  test('the translate service of the modeler is the one with the language', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page, { panels: true, options: { language: 'de' } });
+    expect(await page.evaluate(() => window.fpb.get('translate')('Export'))).toBe('Exportieren');
+    expect(await page.evaluate(() => window.fpb.get('translate')('{count} errors', { count: 0 }))).toBe('0 Fehler');
+    await page.evaluate(() => window.fpb.setLanguage('en'));
+    expect(await page.evaluate(() => window.fpb.get('translate')('Export'))).toBe('Export');
+  });
+
   test('without an option the modeler speaks English', async ({ page }) => {
     await openLibraryPage(page);
     await createModeler(page, { panels: true });

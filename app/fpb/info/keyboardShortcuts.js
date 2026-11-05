@@ -1,3 +1,5 @@
+import { markText } from '../i18n/markText';
+
 /**
  * Keyboard shortcuts listed in the dialog "FPB.js Information" (info/)
  */
@@ -82,3 +84,38 @@ export const keyboardShortcuts = [
 ];
 
 export const getCtrlKey = () => ctrlKey;
+
+// the keys that have a name of their own in German (016h V8); their keys in
+// the catalog carry "key: " so that "Delete" the key and "Delete" the button
+// can read differently
+const KEY_NAMES = {
+  'Ctrl': markText('key: Ctrl'),
+  'Shift': markText('key: Shift'),
+  'Alt': markText('key: Alt'),
+  'Delete': markText('key: Delete'),
+  'Backspace': markText('key: Backspace'),
+  'Escape': markText('key: Escape'),
+  'Space': markText('key: Space'),
+  'Mouse': markText('key: Mouse'),
+  'Arrow Keys': markText('key: Arrow Keys')
+};
+
+/**
+ * A key or a combination ('Ctrl+Shift+L', 'Space + Mouse') in the language of
+ * `translate` (016h V8): each named key on its own, letters, symbols (⌘, ↓)
+ * and the separators as they are. A name without an entry stays English;
+ * without translate the keys are unchanged.
+ */
+export function keyLabel(keys, translate) {
+  if (!translate) {
+    return keys;
+  }
+  return keys.split(/(\s*\+\s*)/).map(function (part) {
+    const key = Object.prototype.hasOwnProperty.call(KEY_NAMES, part) ? KEY_NAMES[part] : null;
+    if (!key) {
+      return part;
+    }
+    const text = translate(key);
+    return text === key ? part : text;
+  }).join('');
+}
