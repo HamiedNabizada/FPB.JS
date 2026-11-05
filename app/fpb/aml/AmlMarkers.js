@@ -1,3 +1,5 @@
+import { markText } from '../i18n/markText';
+
 /**
  * Optional marks on the canvas for elements that carry more from the kept AML
  * file than FPD (feature 028). Off by default, so the diagram looks as the FPB
@@ -8,8 +10,9 @@
 const OVERLAY_TYPE = 'fpb-aml-marker';
 const STORAGE_KEY = 'fpbjs.amlMarkers';
 
-export default function AmlMarkers(eventBus, overlays, elementRegistry, amlSupport) {
+export default function AmlMarkers(eventBus, overlays, elementRegistry, amlSupport, translate) {
   this._eventBus = eventBus;
+  this._translate = translate;
   this._overlays = overlays;
   this._elementRegistry = elementRegistry;
   this._amlSupport = amlSupport;
@@ -17,12 +20,12 @@ export default function AmlMarkers(eventBus, overlays, elementRegistry, amlSuppo
 
   const self = this;
   // after a layer switch: root.set comes before the shapes of the layer are added
-  eventBus.on(['aml.indexChanged', 'aml.sourceChanged', 'import.done', 'layerPanel.processSwitched'], function () {
+  eventBus.on(['aml.indexChanged', 'aml.sourceChanged', 'import.done', 'layerPanel.processSwitched', 'i18n.changed'], function () {
     self._render();
   });
 }
 
-AmlMarkers.$inject = ['eventBus', 'overlays', 'elementRegistry', 'amlSupport'];
+AmlMarkers.$inject = ['eventBus', 'overlays', 'elementRegistry', 'amlSupport', 'translate'];
 
 AmlMarkers.prototype.isEnabled = function () {
   return this._enabled;
@@ -46,6 +49,7 @@ AmlMarkers.prototype._render = function () {
     return;
   }
   const overlays = this._overlays;
+  const translate = this._translate;
   this._elementRegistry.forEach(function (element) {
     const entry = !element.labelTarget && !element.waypoints && index.get(element.id);
     if (!entry || !(entry.attributes.length || entry.interfaces.length || entry.links.length)) {
@@ -54,24 +58,32 @@ AmlMarkers.prototype._render = function () {
     const marker = document.createElement('div');
     marker.className = 'fpb-aml-marker';
     marker.textContent = 'AML';
-    marker.title = describe(entry);
+    marker.title = describe(entry, translate);
     // bottom right, out of the way of labels above and of the model check marks top right
     overlays.add(element, OVERLAY_TYPE, { position: { bottom: 4, right: 4 }, html: marker });
   });
 };
 
-function describe(entry) {
+/** Attributes, interfaces and links as words ('2 attributes, 1 link') */
+export function describeAmlCounts(attributes, interfaces, links, translate) {
+  const part = (n, one, many) => (n === 1 ? translate(one) : translate(many, { count: n }));
   const parts = [];
-  if (entry.attributes.length) {
-    parts.push(entry.attributes.length + (entry.attributes.length === 1 ? ' attribute' : ' attributes'));
+  if (attributes) {
+    parts.push(part(attributes, markText('1 attribute'), markText('{count} attributes')));
   }
-  if (entry.interfaces.length) {
-    parts.push(entry.interfaces.length + (entry.interfaces.length === 1 ? ' interface' : ' interfaces'));
+  if (interfaces) {
+    parts.push(part(interfaces, markText('1 interface'), markText('{count} interfaces')));
   }
-  if (entry.links.length) {
-    parts.push(entry.links.length + (entry.links.length === 1 ? ' link' : ' links'));
+  if (links) {
+    parts.push(part(links, markText('1 link'), markText('{count} links')));
   }
-  return 'More from the AML file: ' + parts.join(', ') + '. See "AML (read only)" in the properties panel.';
+  return parts.join(', ');
+}
+
+function describe(entry, translate) {
+  return translate('More from the AML file: {parts}. See "AML (read only)" in the properties panel.', {
+    parts: describeAmlCounts(entry.attributes.length, entry.interfaces.length, entry.links.length, translate)
+  });
 }
 
 function readStored() {

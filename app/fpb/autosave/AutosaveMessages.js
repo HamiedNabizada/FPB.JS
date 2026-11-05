@@ -1,3 +1,5 @@
+import { UNTITLED } from './Autosave';
+
 /**
  * The browser backup in the message stack (016e V3): the backups of tabs
  * that are gone (closed, reloaded, crashed) are offered, nothing is loaded
@@ -24,6 +26,8 @@ export default function AutosaveMessages(eventBus, autosave, injector, translate
       return;
     }
     const one = pending.length === 1;
+    // a backup without a name was stored as "Untitled model"
+    const titleOf = (backup) => (backup.title === UNTITLED ? translate(UNTITLED) : backup.title);
     notifications.show({
       key: 'autosave.pending',
       type: 'info',
@@ -37,24 +41,24 @@ export default function AutosaveMessages(eventBus, autosave, injector, translate
         ? translate('This browser still holds a model that was not downloaded.')
         : translate('This browser still holds models that were not downloaded.'),
       items: pending.map((backup) => ({
-        message: backup.title,
+        message: titleOf(backup),
         hint: backup.savedAt ? new Date(backup.savedAt).toLocaleString() : undefined,
         actions: [
           {
             label: translate('Discard'),
-            ariaLabel: translate('Discard {title}', { title: backup.title }),
+            ariaLabel: translate('Discard {title}', { title: titleOf(backup) }),
             run: () => autosave.discard(backup.id)
           },
           dirty
             ? {
               label: translate('Open in new tab'),
-              ariaLabel: translate('Open {title} in a new tab', { title: backup.title }),
+              ariaLabel: translate('Open {title} in a new tab', { title: titleOf(backup) }),
               primary: true,
               run: () => autosave.openInNewTab(backup.id)
             }
             : {
               label: translate('Restore'),
-              ariaLabel: translate('Restore {title}', { title: backup.title }),
+              ariaLabel: translate('Restore {title}', { title: titleOf(backup) }),
               primary: true,
               run: () => autosave.restore(backup.id)
             }

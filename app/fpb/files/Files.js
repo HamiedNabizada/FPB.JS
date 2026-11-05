@@ -697,10 +697,9 @@ Files.prototype._reportRemovedLinks = function (removed) {
   this._injector.get('fpbNotifications').show({
     key: 'export.report',
     type: 'warning',
-    title: translate('AML export: {count} {links} removed', {
-      count: String(removed.length),
-      links: removed.length === 1 ? translate('link') : translate('links')
-    }),
+    title: removed.length === 1
+      ? translate('AML export: 1 link removed')
+      : translate('AML export: {count} links removed', { count: removed.length }),
     items: removed.map((message) => ({
       message,
       hint: translate('The element was deleted in FPB.js; the link pointed to it.')

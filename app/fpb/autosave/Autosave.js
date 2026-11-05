@@ -1,3 +1,4 @@
+import { markText } from '../i18n/markText';
 import { serializeModel } from '../export/serializeModel.js';
 import { createBackupStore } from './BackupStore.js';
 import { createTabPresence } from './TabPresence.js';
@@ -473,6 +474,9 @@ function hasContent(fpbjs) {
 }
 
 /** Name for the list of backups: the system limit of the top layer */
+/** The title of a backup without a name; stored in English, shown translated */
+export const UNTITLED = markText('Untitled model');
+
 function titleOf(fpbjs) {
   try {
     // entries are { process, elementDataInformation, ... }; the process is
@@ -481,9 +485,9 @@ function titleOf(fpbjs) {
       .find((entry) => entry.process && !entry.process.isDecomposedProcessOperator);
     const limit = top && (top.elementDataInformation || [])
       .find((element) => element && element.$type === 'fpb:SystemLimit');
-    return (limit && limit.name) || 'Untitled model';
+    return (limit && limit.name) || UNTITLED;
   } catch (error) {
-    return 'Untitled model';
+    return UNTITLED;
   }
 }
 

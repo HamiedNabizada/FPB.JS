@@ -30,7 +30,7 @@ export function exportPDF(pngDataUrl, options = {}) {
   pdf.setProperties({
     title,
     creator: 'FPB.JS',
-    subject: 'VDI 3682 Formalized Process Description'
+    subject: options.subject || 'VDI 3682 Formalized Process Description'
   });
 
   addImagePage(pdf, pngDataUrl, title);
@@ -60,7 +60,7 @@ export function exportMultiLayerPDF(layers, options = {}) {
   pdf.setProperties({
     title,
     creator: 'FPB.JS',
-    subject: 'VDI 3682 Formalized Process Description'
+    subject: options.subject || 'VDI 3682 Formalized Process Description'
   });
 
   layers.forEach((layer, index) => {

@@ -1,3 +1,4 @@
+import { fill } from '../i18n/language';
 import XMLMapper from '../xml/XMLMapper.js';
 import { serializeModel } from '../export/serializeModel.js';
 import { exportPNG } from '../export/PngExporter.js';
@@ -44,9 +45,11 @@ export async function exportContent(fpbjs, { format, scope = 'model', layout = t
     const shapes = collectProcessShapes(fpbjs.getProjectDefinition());
     const rendered = await renderLayers(fpbjs, shapes, async () => exportPNG(await currentSvg(fpbjs), { scale: 2 }));
     const layers = rendered.map((layer) => ({ name: layer.name, pngDataUrl: layer.image }));
+    const translate = fpbjs.get('translate', false) || fill;
+    const subject = translate('VDI 3682 Formalized Process Description');
     const blob = layers.length === 1
-      ? exportPDF(layers[0].pngDataUrl, { title: layers[0].name })
-      : exportMultiLayerPDF(layers);
+      ? exportPDF(layers[0].pngDataUrl, { title: layers[0].name || translate('FPB Diagram'), subject })
+      : exportMultiLayerPDF(layers, { title: translate('FPB Diagram'), subject });
     return { data: blob, extension: 'pdf', mime: 'application/pdf', wholeModel: false };
   }
   throw new Error(`Unsupported export format: ${format}`);

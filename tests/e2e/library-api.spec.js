@@ -2367,6 +2367,17 @@ test.describe('Language', () => {
     expect(await page.evaluate(() => window.fpb.get('translate')('Export'))).toBe('Export');
   });
 
+  test('a PDF names title and subject in the language in effect', async ({ page }) => {
+    await withModel(page, { options: { language: 'de' } });
+    const text = await page.evaluate(async () => (await window.fpb.toPDF()).text());
+    expect(text).toContain('/Title (FPB-Diagramm)');
+    expect(text).toContain('/Subject (Formalisierte Prozessbeschreibung nach VDI 3682)');
+    await page.evaluate(() => window.fpb.setLanguage('en'));
+    const english = await page.evaluate(async () => (await window.fpb.toPDF({ title: 'Mine' })).text());
+    expect(english).toContain('/Title (Mine)');
+    expect(english).toContain('/Subject (VDI 3682 Formalized Process Description)');
+  });
+
   test('without an option the modeler speaks English', async ({ page }) => {
     await openLibraryPage(page);
     await createModeler(page, { panels: true });

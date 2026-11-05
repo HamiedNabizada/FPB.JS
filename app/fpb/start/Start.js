@@ -3,7 +3,7 @@ import { h, render } from '@bpmn-io/properties-panel/preact';
 
 import StartCard from './StartCard';
 import { exampleName, isAmlUrl } from './exampleName';
-import { getCtrlKey } from '../info/keyboardShortcuts';
+import { getCtrlKey, keyLabel } from '../info/keyboardShortcuts';
 
 /**
  * How to begin on an empty canvas (016e V12): while the model has no
@@ -57,7 +57,7 @@ export default function Start(eventBus, canvas, injector, fpbjs, translate, conf
     self._importing = false;
   });
 
-  eventBus.on(['import.done', 'import.error', 'model.new', 'commandStack.changed', 'readOnly.changed'], update);
+  eventBus.on(['import.done', 'import.error', 'model.new', 'commandStack.changed', 'readOnly.changed', 'i18n.changed'], update);
 
   // a card cut off on a small canvas takes the wheel
   eventBus.on('canvas.resized', function () {
@@ -169,7 +169,6 @@ Start.prototype._show = function () {
   if (!this._element) {
     const element = this._element = document.createElement('section');
     element.className = 'fpb-start';
-    element.setAttribute('aria-label', this._translate('Start a model'));
     // diagram-js takes the wheel on its container: over the card it scrolls
     // the card, as over the message stack
     element.addEventListener('wheel', function (event) {
@@ -177,12 +176,13 @@ Start.prototype._show = function () {
     });
     this._canvas.getContainer().appendChild(element);
   }
+  this._element.setAttribute('aria-label', this._translate('Start a model'));
   const injector = this._injector;
   render(
     <StartCard
       translate={this._translate}
       canOpen={this._config.files !== false && !!injector.get('fpbFiles', false)}
-      ctrlKey={getCtrlKey()}
+      ctrlKey={keyLabel(getCtrlKey(), this._translate)}
       onOpen={() => injector.get('fpbFiles').open()}
       onNotation={() => injector.get('fpbInfo').open('notation')}
       examples={this.examples()}

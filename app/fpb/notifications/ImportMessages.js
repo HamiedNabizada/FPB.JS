@@ -1,3 +1,5 @@
+import { describeErrorsAndWarnings } from '../validation/FpbValidation';
+
 /**
  * The importer's messages in the stack (016e V3, T4): an error, and after an
  * import that went through the report of what was skipped or arranged, with
@@ -64,10 +66,9 @@ export default function ImportMessages(eventBus, injector, translate) {
       key: 'import.report',
       type: 'warning',
       title: notes.length
-        ? translate('Import completed with {count} {notes}', {
-          count: String(notes.length),
-          notes: notes.length === 1 ? translate('note') : translate('notes')
-        })
+        ? (notes.length === 1
+          ? translate('Import completed with 1 note')
+          : translate('Import completed with {count} notes', { count: notes.length }))
         : translate('Import completed'),
       message: findings ? describeCheck(check, translate) : undefined,
       items: notes.map((note) => ({
@@ -103,10 +104,5 @@ ImportMessages.$inject = ['eventBus', 'injector', 'translate'];
 
 // numbers as text: translate() leaves a placeholder with 0 unfilled
 function describeCheck(check, translate) {
-  return translate('Model check (VDI 3682): {errors} {errorWord}, {warnings} {warningWord}', {
-    errors: String(check.error),
-    errorWord: check.error === 1 ? translate('error') : translate('errors'),
-    warnings: String(check.warning),
-    warningWord: check.warning === 1 ? translate('warning') : translate('warnings')
-  });
+  return translate('Model check (VDI 3682): {counts}', { counts: describeErrorsAndWarnings(check, translate) });
 }

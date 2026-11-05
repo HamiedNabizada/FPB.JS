@@ -21,7 +21,9 @@ export const clone = () => JSON.parse(JSON.stringify(basis));
 
 /** All strings of a model (names, ids, values): data, never translated */
 export function modelData(json) {
-  const found = new Set(['Deutsch', 'English']);
+  // names of languages, the product and file formats are no English to translate
+  const found = new Set(['Deutsch', 'English', 'FPB.js', 'JSON', 'XML', 'SVG', 'PNG', 'PDF',
+    '.json', '.xml', '.aml', '.svg', '.png', '.pdf']);
   const walk = (value) => {
     if (typeof value === 'string') {
       if (value.trim()) {
@@ -134,16 +136,22 @@ export function unmarked(page, data, scope) {
         before = rest;
         rest = rest.replace(new RegExp(open + '[^' + open + close + ']*' + close, 'g'), ' ');
       } while (rest !== before);
+      // data as whole words only: a short value ("to") must not cut English apart
       data.forEach((value) => {
-        rest = rest.split(value).join(' ');
+        const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        rest = rest.replace(new RegExp('(^|[^\\p{L}\\p{N}_])' + escaped + '(?=$|[^\\p{L}\\p{N}_])', 'gu'), '$1 ');
       });
       return rest;
     };
     const letters = /[A-Za-zÄÖÜäöüß]{2,}/;
     const found = [];
 
+    // a drawing joins its labels in innerText: one line per text element there
+    const linesOf = (root) => (root instanceof SVGElement
+      ? [...root.querySelectorAll('text')].map((text) => text.textContent)
+      : (root.innerText || root.textContent || '').split('\n'));
     roots.forEach((root) => {
-      strip(root.innerText || root.textContent || '').split('\n').forEach((line) => {
+      linesOf(root).map(strip).forEach((line) => {
         if (letters.test(line)) {
           found.push({ text: line.trim(), where: 'text' });
         }
@@ -354,6 +362,62 @@ async function panelOfAmlElement(page) {
   await panelOf(page, [id]);
 }
 
+// the layer below "Erhitzen" in the fixture
+export const CHILD = '9ca400c0-a373-48c0-9f13-37ce196cee29';
+const CHILD_LIMIT = 'deba3596-38ca-4bca-a85e-3d0b5dfba666';
+const MAIN = basis[0].entryPoint;
+
+const DIALOG = 'dialog.fpb-dialog[open]';
+
+/** Wait for an open dialog of FPB.js */
+const dialogOpen = (page) => page.locator(DIALOG).first().waitFor({ timeout: 3000 });
+
+/** Each tab of the dialog "Information" in turn */
+async function eachInfoTab(page, check) {
+  const tabs = page.locator(DIALOG + ' .fpb-info-tab');
+  const count = await tabs.count();
+  for (let i = 0; i < count; i++) {
+    await tabs.nth(i).click();
+    await settle(page);
+    await check(page);
+  }
+}
+
+/** Each format of the export dialog in turn, then a file name that is not allowed */
+async function eachExportFormat(page, check) {
+  const formats = page.locator(DIALOG + ' input[name="exportFormat"]');
+  const count = await formats.count();
+  for (let i = 0; i < count; i++) {
+    await formats.nth(i).check();
+    await settle(page);
+    await check(page);
+  }
+  await page.locator('#exportFileName').fill('con');
+  await settle(page);
+  await check(page);
+}
+
+/** Ask the question of deleting the elements, as the Delete key does */
+async function askDelete(page, ids, layer) {
+  await page.evaluate(({ ids, layer }) => {
+    if (layer) {
+      window.fpb.switchProcess(layer);
+    }
+    const registry = window.fpb.get('elementRegistry');
+    window.fpb.get('fpbDelete').remove(ids.map((id) => registry.get(id)));
+  }, { ids, layer });
+  await dialogOpen(page);
+}
+
+const questionSurface = (name, open, more = {}) => Object.assign({
+  name: 'question ' + name,
+  scope: [DIALOG],
+  // a question keeps the text it was asked with; it is modal, so the
+  // language cannot change from the interface while it is open (016h V3)
+  noSwitch: true,
+  open
+}, more);
+
 const panelSurface = (name, ids, more = {}) => Object.assign({
   name: 'panel ' + name,
   scope: ['#properties'],
@@ -475,6 +539,109 @@ export const SURFACES = [
     model: amlModel('Showcase-A-WaermetauscherMitRegelung.aml'),
     data: amlData(amlFile('Showcase-A-WaermetauscherMitRegelung.aml')),
     open: panelOfAmlElement
+  }),
+  // dialogs, questions, files, messages, AML file (Task 5)
+  {
+    name: 'information',
+    scope: [DIALOG],
+    open: async (page) => {
+      await page.evaluate(() => window.fpb.get('fpbInfo').open());
+      await dialogOpen(page);
+    },
+    each: eachInfoTab
+  },
+  {
+    name: 'export dialog',
+    scope: [DIALOG],
+    aml: true,
+    // the file name the check types
+    data: ['con'],
+    open: async (page) => {
+      await page.evaluate(() => window.fpb.get('fpbFiles').export());
+      await dialogOpen(page);
+    },
+    each: eachExportFormat
+  },
+  {
+    name: 'open dialog',
+    scope: [DIALOG],
+    aml: true,
+    open: async (page) => {
+      await page.evaluate(() => window.fpb.get('fpbFiles').open());
+      await dialogOpen(page);
+    }
+  },
+  {
+    name: 'start card',
+    scope: ['.fpb-start-card'],
+    model: 'empty',
+    open: (page) => page.locator('.fpb-start-card').waitFor({ timeout: 3000 })
+  },
+  {
+    name: 'AML file overview',
+    scope: [DIALOG],
+    aml: true,
+    model: amlModel('Showcase-A-WaermetauscherMitRegelung.aml'),
+    data: amlData(amlFile('Showcase-A-WaermetauscherMitRegelung.aml')).concat(['Showcase.aml']),
+    // names and paths as the overview reads them from the file
+    pageData: (page) => page.evaluate(() => {
+      const found = [];
+      const walk = (value) => {
+        if (typeof value === 'string') {
+          found.push(value);
+        } else if (value && typeof value === 'object') {
+          Object.keys(value).forEach((key) => walk(value[key]));
+        }
+      };
+      walk(window.fpb.get('amlSupport').getOverview());
+      return found;
+    }),
+    open: async (page) => {
+      await page.evaluate(() => window.fpb.get('amlOverview').open());
+      await dialogOpen(page);
+    }
+  },
+  {
+    name: 'messages of an AML import',
+    scope: ['.fpb-notifications'],
+    // the notes of the JSON import among them come from the importer (Task 6)
+    exclude: ['.fpb-notification-items'],
+    aml: true,
+    noSwitch: true,
+    model: amlModel('Showcase-A-WaermetauscherMitRegelung.aml'),
+    data: amlData(amlFile('Showcase-A-WaermetauscherMitRegelung.aml')),
+    open: (page) => page.locator('.fpb-notifications .fpb-notification-title').first().waitFor({ timeout: 3000 })
+  },
+  {
+    name: 'message for a wrong file',
+    scope: ['.fpb-notifications'],
+    noSwitch: true,
+    open: async (page) => {
+      await page.evaluate(() => window.fpb.get('fpbFiles').openFile(new File(['x'], 'notes.txt', { type: 'text/plain' })));
+      await page.locator('.fpb-notifications .fpb-notification-title').first().waitFor({ timeout: 3000 });
+    }
+  },
+  questionSurface('new model', async (page) => {
+    await page.locator('#newModelButton').click();
+    await dialogOpen(page);
+  }, { options: { showNewModel: true } }),
+  questionSurface('delete a decomposed operator', (page) => askDelete(page, [IDS.decomposed])),
+  questionSurface('delete two elements, one decomposed', (page) => askDelete(page, [IDS.decomposed, IDS.operator])),
+  questionSurface('delete a boundary state', (page) => askDelete(page, [IDS.product], CHILD)),
+  questionSurface('remove a decomposition', (page) => askDelete(page, [CHILD_LIMIT], CHILD)),
+  questionSurface('delete with links from outside', async (page) => {
+    await page.evaluate(({ main, id }) => window.fpb.setAmlLinks([{ processId: main, elementId: id, name: 'Prüfen', link: 'L1', owner: 'Plant' }]), { main: MAIN, id: IDS.operator });
+    await askDelete(page, [IDS.operator]);
+  }, { data: ['L1', 'Plant'] }),
+  questionSurface('state on the boundary', async (page) => {
+    await page.evaluate(({ layer, id }) => {
+      window.fpb.switchProcess(layer);
+      const updater = window.fpb.get('shapeUpdater');
+      const element = window.fpb.get('elementRegistry').get(id);
+      updater._queueBoundary('stateMovedOnBoundary', { element, oldPosition: { x: element.x, y: element.y }, borderPosition: 'onUpperBorder' }, window.fpb.get('canvas').getRootElement());
+      updater._askForBoundary();
+    }, { layer: CHILD, id: IDS.product });
+    await dialogOpen(page);
   })
 ];
 

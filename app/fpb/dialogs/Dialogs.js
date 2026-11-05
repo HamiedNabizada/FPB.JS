@@ -26,6 +26,7 @@ import ConfirmDialog from './ConfirmDialog';
  * nothing opens any more (016g D2).
  */
 export default function Dialogs(eventBus, injector, translate) {
+  this._eventBus = eventBus;
   this._translate = translate;
   this._theme = injector.get('fpbTheme', false);
   this._i18n = injector.get('fpbI18n', false);
@@ -50,9 +51,16 @@ export default function Dialogs(eventBus, injector, translate) {
 Dialogs.$inject = ['eventBus', 'injector', 'translate'];
 
 Dialogs.prototype.open = function (Component, props = {}, options = {}) {
+  const eventBus = this._eventBus;
   return this.mount(function (element, { close, titleId, descriptionId }) {
-    render(<Component {...props} close={close} titleId={titleId} descriptionId={descriptionId} />, element);
-    return () => render(null, element);
+    const draw = () => render(<Component {...props} close={close} titleId={titleId} descriptionId={descriptionId} />, element);
+    draw();
+    // an open dialog speaks the new language at once (016h V3)
+    eventBus.on('i18n.changed', draw);
+    return () => {
+      eventBus.off('i18n.changed', draw);
+      render(null, element);
+    };
   }, options);
 };
 

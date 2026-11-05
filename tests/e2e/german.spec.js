@@ -25,7 +25,8 @@ test.describe('Nothing hard-coded in English', () => {
       const { errors } = await prepare(page, surface, { marked: true });
       await surface.open(page);
       await settle(page);
-      const data = dataOf(surface).concat(surface.data || []);
+      const data = dataOf(surface).concat(surface.data || [], surface.pageData ? await surface.pageData(page) : [])
+        .sort((a, b) => b.length - a.length);
       const found = [];
       const check = async () => {
         found.push(...await without(page, surface.exclude, () => unmarked(page, data, surface.scope)));
@@ -42,7 +43,7 @@ test.describe('Nothing hard-coded in English', () => {
 });
 
 test.describe('Switching equals starting in German', () => {
-  for (const surface of SURFACES) {
+  for (const surface of SURFACES.filter((s) => !s.noSwitch)) {
     test(surface.name, async ({ page }) => {
       const collect = async () => {
         const all = [];

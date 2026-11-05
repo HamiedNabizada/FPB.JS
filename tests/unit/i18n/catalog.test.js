@@ -24,7 +24,12 @@ const COVERED = [
   'app/fpb/modeling/behavior/ModelingFeedback.js', 'app/fpb/preview', 'app/fpb/a11y',
   'app/fpb/search', 'app/fpb/info/keyboardShortcuts.js',
   // Task 4: the properties panel
-  'app/fpb/properties-panel'
+  'app/fpb/properties-panel',
+  // Task 5: dialogs, questions, files, messages, AML display
+  'app/fpb/dialogs', 'app/fpb/info', 'app/fpb/files', 'app/fpb/start', 'app/fpb/notifications',
+  'app/fpb/autosave', 'app/fpb/export', 'app/fpb/modeling/updater',
+  'app/fpb/aml/AmlMarkers.js', 'app/fpb/aml/AmlOverviewDialog.js', 'app/fpb/aml/AmlOverviewService.js',
+  'app/fpb/aml/AmlSupport.js', 'app/fpb/aml/amlIndex.js', 'app/fpb/aml/index.js'
 ];
 const ALL = ['app/fpb', 'src', 'app/app.js'];
 const EXCLUDED = ['app/fpb/aml/mapper'];

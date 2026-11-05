@@ -420,17 +420,18 @@ ShapeUpdater.prototype._askForBoundary = function () {
 
   const several = pending.items.length > 1;
   const first = pending.items[0];
+  const translate = this._injector.get('translate');
 
   this._eventBus.fire('confirmation.required', {
-    title: 'Confirm boundary placement',
-    confirmLabel: 'Place on boundary',
+    title: translate('Confirm boundary placement'),
+    confirmLabel: translate('Place on boundary'),
     confirmVariant: 'primary',
     message: several
-      ? 'These ' + pending.items.length + ' states will become inputs/outputs of the parent process operator.'
-      : 'This state will become an input/output of the parent process operator.',
+      ? translate('These {count} states will become inputs/outputs of the parent process operator.', { count: pending.items.length })
+      : translate('This state will become an input/output of the parent process operator.'),
     details: several
-      ? 'The states will be created on the parent process and connected to the process operator.'
-      : 'The state will be created on the parent process and connected to the process operator.',
+      ? translate('The states will be created on the parent process and connected to the process operator.')
+      : translate('The state will be created on the parent process and connected to the process operator.'),
     isBlocked: false,
     action: {
       type: pending.type,

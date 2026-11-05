@@ -1,3 +1,5 @@
+import { markText } from '../i18n/markText';
+
 /**
  * The notation of VDI 3682 Blatt 1 (2015), section 4.1 and figure 3, for the
  * tab "Notation" of "Information" (016e V14). The shapes use the symbols of
@@ -8,53 +10,53 @@
 export const NOTATION = [
   {
     id: 'product',
-    name: 'Product',
+    name: markText('Product'),
     symbol: 'icon-fpb-product',
-    text: 'The generic term under which streams of materials, substances and the like can also be described.'
+    text: markText('The generic term under which streams of materials, substances and the like can also be described.')
   },
   {
     id: 'energy',
-    name: 'Energy',
+    name: markText('Energy'),
     symbol: 'icon-fpb-energy',
-    text: 'Energy as part of a state that a process operator takes in or gives off.'
+    text: markText('Energy as part of a state that a process operator takes in or gives off.')
   },
   {
     id: 'information',
-    name: 'Information',
+    name: markText('Information'),
     symbol: 'icon-fpb-information',
-    text: 'Information as part of a state that a process operator takes in or gives off.'
+    text: markText('Information as part of a state that a process operator takes in or gives off.')
   },
   {
     id: 'processOperator',
-    name: 'Process operator',
+    name: markText('Process operator'),
     symbol: 'icon-fpb-processoperator',
-    text: 'Converts products, energies and information into new ones; only process operators can be decomposed.'
+    text: markText('Converts products, energies and information into new ones; only process operators can be decomposed.')
   },
   {
     id: 'technicalResource',
-    name: 'Technical resource',
+    name: markText('Technical resource'),
     symbol: 'icon-fpb-technicalresource',
-    text: 'An asset with which a process operator carries out its conversion.'
+    text: markText('An asset with which a process operator carries out its conversion.')
   },
   {
     id: 'systemLimit',
-    name: 'System limit',
+    name: markText('System limit'),
     symbol: 'icon-fpb-systemlimit',
-    text: 'Marks the limit of the process under consideration with a dashed frame.'
+    text: markText('Marks the limit of the process under consideration with a dashed frame.')
   },
   {
     id: 'flow',
-    name: 'Flow',
+    name: markText('Flow'),
     symbol: 'arrow',
-    text: 'Connects states and process operators in the direction of the process.'
+    text: markText('Connects states and process operators in the direction of the process.')
   },
   {
     id: 'usage',
-    name: 'Usage',
+    name: markText('Usage'),
     symbol: 'double-arrow',
-    text: 'Connects a technical resource with the process operator that uses it.'
+    text: markText('Connects a technical resource with the process operator that uses it.')
   }
 ];
 
 /** Section 4.2: parallel and alternative processes need no symbols of their own */
-export const NOTATION_FLOWS = 'Parallel and alternative flows have no symbols of their own: parallel flows share part of their way, alternative flows run apart.';
+export const NOTATION_FLOWS = markText('Parallel and alternative flows have no symbols of their own: parallel flows share part of their way, alternative flows run apart.');

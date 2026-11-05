@@ -1,4 +1,5 @@
 /** @jsx h */
+import { describeAmlCounts } from './AmlMarkers';
 import { h } from '@bpmn-io/properties-panel/preact';
 import { useEffect, useState } from '@bpmn-io/properties-panel/preact/hooks';
 
@@ -95,7 +96,7 @@ export default function AmlOverviewDialog(props) {
                     : hierarchy.fpd ? translate('process view') : translate('other content')}
                 </td>
                 <td class="aml-overview-muted aml-overview-end">
-                  {hierarchy.elements} {hierarchy.elements === 1 ? translate('element') : translate('elements')}
+                  {hierarchy.elements === 1 ? translate('1 element') : translate('{count} elements', { count: hierarchy.elements })}
                 </td>
               </tr>
             ))}
@@ -108,7 +109,7 @@ export default function AmlOverviewDialog(props) {
             {overview.libraries.map((library, index) => (
               <tr key={index}>
                 <td>{library.name}</td>
-                <td class="aml-overview-muted">{library.kind}{library.fpd ? ', FPD' : ''}</td>
+                <td class="aml-overview-muted">{library.fpd ? translate('{kind}, FPD', { kind: translate(library.kind) }) : translate(library.kind)}</td>
               </tr>
             ))}
           </tbody>
@@ -132,17 +133,6 @@ export default function AmlOverviewDialog(props) {
   );
 }
 
-// numbers as text: translate() leaves a placeholder with 0 unfilled
 function describeCounts(e, translate) {
-  const parts = [];
-  if (e.attributes) {
-    parts.push(e.attributes + ' ' + (e.attributes === 1 ? translate('attribute') : translate('attributes')));
-  }
-  if (e.interfaces) {
-    parts.push(e.interfaces + ' ' + (e.interfaces === 1 ? translate('interface') : translate('interfaces')));
-  }
-  if (e.links) {
-    parts.push(e.links + ' ' + (e.links === 1 ? translate('link') : translate('links')));
-  }
-  return parts.join(', ');
+  return describeAmlCounts(e.attributes, e.interfaces, e.links, translate);
 }

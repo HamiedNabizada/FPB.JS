@@ -14,15 +14,15 @@ describe('validateFileName', () => {
   });
 
   it('flags an empty name and falls back to FPB', () => {
-    expect(validateFileName('   ')).toEqual({ valid: false, error: 'Filename cannot be empty', sanitized: 'FPB' });
+    expect(validateFileName('   ')).toEqual({ valid: false, error: 'Filename cannot be empty', message: { template: 'Filename cannot be empty', args: {} }, sanitized: 'FPB' });
   });
 
   it('flags a reserved name and falls back to FPB', () => {
-    expect(validateFileName('con')).toEqual({ valid: false, error: '"con" is a reserved filename', sanitized: 'FPB' });
+    expect(validateFileName('con')).toEqual({ valid: false, error: '"con" is a reserved filename', message: { template: '"{name}" is a reserved filename', args: { name: 'con' } }, sanitized: 'FPB' });
   });
 
   it('replaces invalid characters, again and again', () => {
-    expect(validateFileName('a<b>c:d|e?f*g')).toEqual({ valid: false, error: 'Filename contains invalid characters', sanitized: 'a_b_c_d_e_f_g' });
+    expect(validateFileName('a<b>c:d|e?f*g')).toEqual({ valid: false, error: 'Filename contains invalid characters', message: { template: 'Filename contains invalid characters', args: {} }, sanitized: 'a_b_c_d_e_f_g' });
     expect(validateFileName('a/b').sanitized).toBe('a_b');
     expect(validateFileName('a\\b').sanitized).toBe('a_b');
   });

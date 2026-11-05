@@ -1,4 +1,6 @@
 /** @jsx h */
+import { describeErrorsAndWarnings } from '../validation/FpbValidation';
+import { translateMessage } from '../i18n/language';
 import { h } from '@bpmn-io/properties-panel/preact';
 import { useState } from '@bpmn-io/properties-panel/preact/hooks';
 
@@ -68,7 +70,7 @@ export default function ExportDialog(props) {
         <span>
           {translate('Based on:')}{' '}
           <a href={XML_PAPER} target="_blank" rel="noopener noreferrer">
-            Vorschlag für eine XML-Repräsentation der Formalisierten Prozessbeschreibung nach VDI/VDE 3682
+            {translate('Proposal for an XML representation of the formalised process description according to VDI/VDE 3682')}
           </a>
         </span>
       )
@@ -107,12 +109,7 @@ export default function ExportDialog(props) {
     <DialogFrame title={translate('Export')} titleId={titleId} onClose={() => close()} closeLabel={translate('Close')} footer={footer}>
       {check && (
         <p class={check.error > 0 ? 'fpb-export-check is-error' : 'fpb-export-check is-warning'} role="status">
-          {translate('Model check (VDI 3682): {errors} {errorWord}, {warnings} {warningWord}. The export runs anyway.', {
-            errors: String(check.error),
-            errorWord: check.error === 1 ? translate('error') : translate('errors'),
-            warnings: String(check.warning),
-            warningWord: check.warning === 1 ? translate('warning') : translate('warnings')
-          })}
+          {translate('Model check (VDI 3682): {counts}. The export runs anyway.', { counts: describeErrorsAndWarnings(check, translate) })}
         </p>
       )}
       <div class="fpb-export-columns">
@@ -188,7 +185,7 @@ export default function ExportDialog(props) {
                 />
                 <span class="fpb-file-extension">.{EXTENSIONS[format]}</span>
               </div>
-              {!nameCheck.valid && <p class="fpb-field-error" id="exportFileNameError">{translate(nameCheck.error)}</p>}
+              {!nameCheck.valid && <p class="fpb-field-error" id="exportFileNameError">{translateMessage(translate, nameCheck.message)}</p>}
               <p class="fpb-field-hint" id="exportFileNameHint">{translate('Avoid special characters: < > : " / \\ | ? *')}</p>
             </div>
           )}

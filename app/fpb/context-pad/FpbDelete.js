@@ -3,6 +3,8 @@ import { ELEMENT_GROUPS } from '../rules/RuleConstants';
 import { checkIfOnSystemBorder } from '../help/helpUtils';
 import { ELEMENT_TYPES } from './ContextPadConstants';
 import { ContextHelper } from './ContextPadUtils';
+import { fill } from '../i18n/language';
+import { typeName } from '../i18n/typeNames';
 
 /**
  * Deletes elements the way the context pad always did: plainly when nothing else
@@ -18,7 +20,7 @@ export default function FpbDelete(eventBus, modeling, canvas, injector) {
   this._amlSupport = injector ? injector.get('amlSupport', false) : null;
   this._hostLinks = injector ? injector.get('fpbAmlLinks', false) : null;
   const translate = injector ? injector.get('translate', false) : null;
-  this._translate = translate || ((text) => text);
+  this._translate = translate || fill;
 
   eventBus.on('confirmation.confirmed', function (event) {
     const action = event.action;
@@ -38,6 +40,7 @@ FpbDelete.$inject = ['eventBus', 'modeling', 'canvas', 'injector'];
  */
 FpbDelete.prototype.getLayerConsequences = function (element) {
   const { process, systemLimit } = this._contextHelper.getProcessContext();
+  const translate = this._translate;
 
   // ProcessOperator with a decomposed layer (decomposedView is the child process shape)
   if (is(element, ELEMENT_TYPES.PROCESS_OPERATOR)) {
@@ -45,8 +48,8 @@ FpbDelete.prototype.getLayerConsequences = function (element) {
     if (bo && bo.decomposedView) {
       return {
         type: 'decomposed_process_operator',
-        message: 'This process operator contains a decomposed layer. Deleting it will also remove all elements in the subordinate layer.',
-        details: 'The entire subordinate process will be deleted.'
+        message: translate('This process operator contains a decomposed layer. Deleting it will also remove all elements in the subordinate layer.'),
+        details: translate('The entire subordinate process will be deleted.')
       };
     }
   }
@@ -58,8 +61,8 @@ FpbDelete.prototype.getLayerConsequences = function (element) {
       if (borderCheck === 'onUpperBorder' || borderCheck === 'onBottomBorder') {
         return {
           type: 'boundary_state',
-          message: 'This state is connected to the parent layer.',
-          details: 'Deleting this boundary state will also remove the corresponding connection on the parent layer.'
+          message: translate('This state is connected to the parent layer.'),
+          details: translate('Deleting this boundary state will also remove the corresponding connection on the parent layer.')
         };
       }
     }
@@ -69,11 +72,11 @@ FpbDelete.prototype.getLayerConsequences = function (element) {
   if (is(element, ELEMENT_TYPES.SYSTEM_LIMIT)) {
     if (process && process.businessObject && process.businessObject.isDecomposedProcessOperator) {
       const parentPO = process.businessObject.isDecomposedProcessOperator;
-      const poName = parentPO.name || 'ProcessOperator';
+      const poName = parentPO.name || typeName('fpb:ProcessOperator', translate);
       return {
         type: 'remove_decomposition',
-        message: 'Deleting the system limit will remove the entire decomposition of ProcessOperator "' + poName + '".',
-        details: 'You will be redirected to the parent process. All elements in this process will be deleted.'
+        message: translate('Deleting the system limit will remove the entire decomposition of ProcessOperator "{name}".', { name: poName }),
+        details: translate('You will be redirected to the parent process. All elements in this process will be deleted.')
       };
     }
 
@@ -86,9 +89,9 @@ FpbDelete.prototype.getLayerConsequences = function (element) {
       return {
         type: 'decomposed_process_operator',
         message: decomposed.length === 1
-          ? 'The system limit contains a decomposed process operator. Deleting it will also remove the subordinate layer.'
-          : 'The system limit contains ' + decomposed.length + ' decomposed process operators. Deleting it will also remove their subordinate layers.',
-        details: 'The entire subordinate processes will be deleted.'
+          ? translate('The system limit contains a decomposed process operator. Deleting it will also remove the subordinate layer.')
+          : translate('The system limit contains {count} decomposed process operators. Deleting it will also remove their subordinate layers.', { count: decomposed.length }),
+        details: translate('The entire subordinate processes will be deleted.')
       };
     }
   }
@@ -203,12 +206,13 @@ FpbDelete.prototype._getHostLinks = function (elements, options) {
 };
 
 FpbDelete.prototype._amlLinksText = function (links) {
-  const names = links.slice(0, 5).map((l) => `${l.link} (${l.owner}) to ${l.element}`);
-  const more = links.length > 5 ? `, and ${links.length - 5} more` : '';
+  const translate = this._translate;
+  const names = links.slice(0, 5).map((l) => translate('{link} ({owner}) to {element}', { link: l.link, owner: l.owner, element: l.element }));
+  const more = links.length > 5 ? translate(', and {count} more', { count: links.length - 5 }) : '';
   const closing = this._usesHostLinks()
-    ? this._translate('Applying the diagram to the AML file removes them.')
-    : 'Exporting as AML removes them with the deleted elements.';
-  return `Links: ${names.join(', ')}${more}. ${closing}`;
+    ? translate('Applying the diagram to the AML file removes them.')
+    : translate('Exporting as AML removes them with the deleted elements.');
+  return translate('Links: {names}{more}. {closing}', { names: names.join(', '), more, closing });
 };
 
 /**
@@ -222,6 +226,7 @@ FpbDelete.prototype.remove = function (elements) {
   }
 
   const process = this._contextHelper.getProcessContext().process;
+  const translate = this._translate;
   const decomposition = elements.find((element) => {
     const consequences = this.getLayerConsequences(element);
     return consequences && consequences.type === 'remove_decomposition';
@@ -233,10 +238,10 @@ FpbDelete.prototype.remove = function (elements) {
       const consequences = this.getLayerConsequences(decomposition);
       const amlLinks = this.getAmlLinks([decomposition], { process });
       this._eventBus.fire('confirmation.required', {
-        title: 'Remove the decomposition of "' + (decomposition.businessObject.name || 'unnamed operator') + '"?',
-        confirmLabel: 'Remove',
+        title: translate('Remove the decomposition of "{name}"?', { name: decomposition.businessObject.name || translate('unnamed operator') }),
+        confirmLabel: translate('Remove'),
         confirmVariant: 'danger',
-        message: consequences.message + (amlLinks.length ? ' Other parts of the AutomationML file link to elements of this layer.' : ''),
+        message: consequences.message + (amlLinks.length ? ' ' + translate('Other parts of the AutomationML file link to elements of this layer.') : ''),
         details: consequences.details + (amlLinks.length ? ' ' + this._amlLinksText(amlLinks) : ''),
         isBlocked: false,
         action: {
@@ -263,14 +268,15 @@ FpbDelete.prototype.remove = function (elements) {
 
   const layer = withConsequences[0] || null;
   const aml = amlLinks.length ? {
-    message: 'Other parts of the AutomationML file link to ' +
-      (amlLinks.length === 1 ? 'an element' : 'elements') + ' you are deleting.',
+    message: amlLinks.length === 1
+      ? translate('Other parts of the AutomationML file link to an element you are deleting.')
+      : translate('Other parts of the AutomationML file link to elements you are deleting.'),
     details: this._amlLinksText(amlLinks)
   } : null;
 
   let message = layer ? layer.message : aml.message;
   if (layer && (withConsequences.length > 1 || elements.length > 1)) {
-    message += ' The selection contains ' + elements.length + ' elements.';
+    message += ' ' + translate('The selection contains {count} elements.', { count: elements.length });
   }
   if (layer && aml) {
     message += ' ' + aml.message;
@@ -279,9 +285,9 @@ FpbDelete.prototype.remove = function (elements) {
   this._eventBus.fire('confirmation.required', {
     // name the element (016c decision 13)
     title: elements.length === 1
-      ? 'Delete "' + ((elements[0].businessObject && elements[0].businessObject.name) || 'this element') + '"?'
-      : 'Delete ' + elements.length + ' elements?',
-    confirmLabel: 'Delete',
+      ? translate('Delete "{name}"?', { name: (elements[0].businessObject && elements[0].businessObject.name) || translate('this element') })
+      : translate('Delete {count} elements?', { count: elements.length }),
+    confirmLabel: translate('Delete'),
     confirmVariant: 'danger',
     message,
     details: [layer && layer.details, aml && aml.details].filter(Boolean).join(' '),

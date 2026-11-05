@@ -1,4 +1,5 @@
 /** @jsx h */
+import { markText } from '../i18n/markText';
 import { h } from '@bpmn-io/properties-panel/preact';
 import { useEffect, useRef, useState } from '@bpmn-io/properties-panel/preact/hooks';
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons/faCircleInfo';
@@ -8,14 +9,14 @@ import { faShapes } from '@fortawesome/free-solid-svg-icons/faShapes';
 
 import DialogFrame from '../dialogs/DialogFrame';
 import Icon from '../ui/Icon';
-import { keyboardShortcuts } from './keyboardShortcuts';
+import { keyboardShortcuts, keyLabel } from './keyboardShortcuts';
 import { NOTATION, NOTATION_FLOWS } from './notation';
 
 const TABS = [
-  { id: 'about', label: 'About', icon: faCircleInfo },
-  { id: 'notation', label: 'Notation', icon: faShapes },
-  { id: 'shortcuts', label: 'Keyboard Shortcuts', icon: faKeyboard },
-  { id: 'help', label: 'Help', icon: faCircleQuestion }
+  { id: 'about', label: markText('About'), icon: faCircleInfo },
+  { id: 'notation', label: markText('Notation'), icon: faShapes },
+  { id: 'shortcuts', label: markText('Keyboard Shortcuts'), icon: faKeyboard },
+  { id: 'help', label: markText('Help'), icon: faCircleQuestion }
 ];
 
 function About(props) {
@@ -93,7 +94,7 @@ function Shortcuts(props) {
           <tbody>
             {section.items.map((item, index) => (
               <tr key={index}>
-                <td>{item.keys.map((key) => <kbd key={key}>{key}</kbd>)}</td>
+                <td>{item.keys.map((key) => <kbd key={key}>{keyLabel(key, translate)}</kbd>)}</td>
                 <td>{translate(item.description)}</td>
               </tr>
             ))}

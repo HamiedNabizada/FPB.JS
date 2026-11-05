@@ -1,3 +1,4 @@
+import { markText } from '../i18n/markText';
 import { ElementToSuc, InterfaceToFlow, stripAlias } from './mapper/mappings.js';
 import { getRefObjOrDerived } from './mapper/references.js';
 import { walkDocumentInternalElements, walkInternalElements } from './mapper/walker.js';
@@ -219,10 +220,10 @@ function forEachInterface(owner, visit) {
 
 const LIBRARY_KINDS = [
   ['instanceHierarchy', null],
-  ['systemUnitClassLib', 'System unit classes'],
-  ['roleClassLib', 'Role classes'],
-  ['interfaceClassLib', 'Interface classes'],
-  ['attributeTypeLib', 'Attribute types']
+  ['systemUnitClassLib', markText('System unit classes')],
+  ['roleClassLib', markText('Role classes')],
+  ['interfaceClassLib', markText('Interface classes')],
+  ['attributeTypeLib', markText('Attribute types')]
 ];
 
 /** Libraries FPD brings along (FpdLibraries, OMG_DD) */

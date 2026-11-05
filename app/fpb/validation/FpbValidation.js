@@ -22,6 +22,14 @@ const FILTERS = [
 ];
 
 /** "1 error, 2 warnings, 0 notes" */
+/** Errors and warnings as words ('2 errors, 1 warning'), for export and import */
+export function describeErrorsAndWarnings(counts, translate) {
+  const t = translate || fill;
+  const part = function (n, one, many) { return t(n === 1 ? one : many, { count: n }); };
+  return part(counts.error, markText('{count} error'), markText('{count} errors')) + ', ' +
+    part(counts.warning, markText('{count} warning'), markText('{count} warnings'));
+}
+
 export function describeCounts(counts, translate) {
   const t = translate || fill;
   const part = function (n, one, many) { return t(n === 1 ? one : many, { count: n }); };

@@ -277,7 +277,13 @@ export async function createFpbModeler(options = {}) {
     async toPDF(options = {}) {
       const { exportPDF, exportMultiLayerPDF } = await import('../app/fpb/export/PdfExporter');
       const { exportPNG } = await import('../app/fpb/export/PngExporter');
-      const { allLayers = false, ...pdfOptions } = options;
+      const { allLayers = false, ...hostOptions } = options;
+      // title and subject in the language in effect, unless the host names them
+      const translate = modeler.get('translate');
+      const pdfOptions = Object.assign({
+        title: translate('FPB Diagram'),
+        subject: translate('VDI 3682 Formalized Process Description')
+      }, hostOptions);
 
       if (allLayers) {
         const { renderLayers } = await import('../app/fpb/export/renderLayers');

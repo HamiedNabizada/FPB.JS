@@ -22,7 +22,8 @@ import { isAmlText } from './detect.js';
  * and the overview of the file are known, `aml.importNotes` { notes } with the
  * notes of an AML import for the import report.
  */
-export default function AmlSupport(eventBus, fpbjs) {
+export default function AmlSupport(eventBus, fpbjs, translate) {
+  this._translate = translate;
   this._eventBus = eventBus;
   this._fpbjs = fpbjs;
   this._source = null;
@@ -70,7 +71,7 @@ export default function AmlSupport(eventBus, fpbjs) {
   });
 }
 
-AmlSupport.$inject = ['eventBus', 'fpbjs'];
+AmlSupport.$inject = ['eventBus', 'fpbjs', 'translate'];
 
 /** Loads engine and mapper once */
 AmlSupport.prototype._load = function () {
@@ -190,9 +191,9 @@ AmlSupport.prototype.importAml = function (text, options = {}) {
       this._fpbjs.newModel();
       this._eventBus.fire('import.report', {
         warnings: [{
-          message: 'The AML file contains no FPD process. FPB.js starts with an empty model.',
+          message: this._translate('The AML file contains no FPD process. FPB.js starts with an empty model.'),
           details: null,
-          hint: 'Exporting as AML adds the process to this file and keeps everything else in it.'
+          hint: this._translate('Exporting as AML adds the process to this file and keeps everything else in it.')
         }]
       });
       return { hierarchies, hierarchy: null };
@@ -209,7 +210,7 @@ AmlSupport.prototype.importAml = function (text, options = {}) {
     // the document is loaded already: index and overview now, and a note for
     // the import report where to find what the file carries beyond FPD
     this._prebuilt = { source: amlSource, ...describe(doc, ih, found, amlSource) };
-    this._eventBus.fire('aml.importNotes', { notes: importNotes(this._prebuilt.overview) });
+    this._eventBus.fire('aml.importNotes', { notes: importNotes(this._prebuilt.overview, this._translate) });
 
     this._eventBus.fire('FPBJS.import', {
       data: JSON.parse(result.value),
@@ -298,16 +299,18 @@ function describe(doc, ih, found, source) {
 }
 
 /** Notes for the import report: which elements carry more than FPD */
-function importNotes(overview) {
+function importNotes(overview, translate) {
   const elements = overview.elements;
   if (!elements.length) {
     return [];
   }
   const names = elements.slice(0, 5).map((e) => e.name).join(', ') + (elements.length > 5 ? ', …' : '');
   return [{
-    message: `${elements.length} ${elements.length === 1 ? 'element carries' : 'elements carry'} more from the AML file: ${names}.`,
+    message: elements.length === 1
+      ? translate('1 element carries more from the AML file: {names}.', { names })
+      : translate('{count} elements carry more from the AML file: {names}.', { count: elements.length, names }),
     details: null,
-    hint: 'Select one to see it under "AML (read only)" in the properties panel. "AML file" in the options lists everything the file holds.'
+    hint: translate('Select one to see it under "AML (read only)" in the properties panel. "AML file" in the options lists everything the file holds.')
   }];
 }
 

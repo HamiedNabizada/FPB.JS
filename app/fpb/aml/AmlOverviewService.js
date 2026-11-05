@@ -30,9 +30,16 @@ AmlOverviewService.prototype.open = function () {
     translate: this._translate,
     goTo: (id) => this._goTo(id)
   };
+  const eventBus = this._eventBus;
   return injector.get('fpbDialogs').mount(function (element, { close, titleId }) {
-    render(<AmlOverviewDialog {...props} close={close} titleId={titleId} />, element);
-    return () => render(null, element);
+    const draw = () => render(<AmlOverviewDialog {...props} close={close} titleId={titleId} />, element);
+    draw();
+    // the overview speaks the new language at once (016h V3)
+    eventBus.on('i18n.changed', draw);
+    return () => {
+      eventBus.off('i18n.changed', draw);
+      render(null, element);
+    };
   }, { className: 'fpb-dialog--wide aml-overview-modal' });
 };
 

@@ -1,3 +1,5 @@
+import { markText } from '../i18n/markText';
+
 import XMLMapper from '../xml/XMLMapper.js';
 import { isAmlText } from '../aml/detect.js';
 
@@ -21,16 +23,16 @@ export function checkFile(file, { aml }) {
   const extensions = aml ? ['.json', '.xml', '.aml'] : ['.json', '.xml'];
   if (!extensions.some((extension) => name.endsWith(extension))) {
     return {
-      message: 'Invalid file type',
+      message: markText('Invalid file type'),
       details: aml
-        ? 'Please select a valid JSON (.json), XML (.xml) or AutomationML (.aml) file'
-        : 'Please select a valid JSON (.json) or XML (.xml) file'
+        ? markText('Please select a valid JSON (.json), XML (.xml) or AutomationML (.aml) file')
+        : markText('Please select a valid JSON (.json) or XML (.xml) file')
     };
   }
   if (file.size > MAX_FILE_SIZE) {
     return {
-      message: 'File too large',
-      details: 'The selected file is too large. Maximum file size is 50MB.'
+      message: markText('File too large'),
+      details: markText('The selected file is too large. Maximum file size is 50MB.')
     };
   }
   return null;

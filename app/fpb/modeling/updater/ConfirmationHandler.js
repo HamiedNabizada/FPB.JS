@@ -1,3 +1,4 @@
+import { typeName } from '../../i18n/typeNames';
 import { getElementsFromElementsContainer, getElementById, createStateShapeForNewLayer } from '../../help/helpUtils';
 
 import {
@@ -12,7 +13,7 @@ import {
  * - Szenario 4 & 6: State on boundary (create/move) - confirmed/cancelled
  * - Szenario 14/12: SystemLimit deletion - request/confirm
  */
-export default function ConfirmationHandler(eventBus, modeling, elementFactory, commandStack) {
+export default function ConfirmationHandler(eventBus, modeling, elementFactory, commandStack, translate) {
 
   // Scenario 4 & 6: State created/moved on boundary - confirmation
   eventBus.on('confirmation.confirmed', function(event) {
@@ -186,15 +187,15 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory, 
     const process = event.process;
     const parentProcessOperator = process.businessObject.isDecomposedProcessOperator;
 
-    const processOperatorName = parentProcessOperator ? parentProcessOperator.name || 'ProcessOperator' : 'ProcessOperator';
+    const processOperatorName = (parentProcessOperator && parentProcessOperator.name) || typeName('fpb:ProcessOperator', translate);
 
     // Request confirmation dialog
     eventBus.fire('confirmation.required', {
-      title: 'Remove the decomposition of "' + processOperatorName + '"?',
-      confirmLabel: 'Remove',
+      title: translate('Remove the decomposition of "{name}"?', { name: processOperatorName }),
+      confirmLabel: translate('Remove'),
       confirmVariant: 'danger',
-      message: 'Deleting the system limit will remove the entire decomposition of ProcessOperator "' + processOperatorName + '".',
-      details: 'You will be redirected to the parent process. All elements in this process will be deleted.',
+      message: translate('Deleting the system limit will remove the entire decomposition of ProcessOperator "{name}".', { name: processOperatorName }),
+      details: translate('You will be redirected to the parent process. All elements in this process will be deleted.'),
       isBlocked: false,
       action: {
         type: 'remove_decomposition',
@@ -246,7 +247,7 @@ export default function ConfirmationHandler(eventBus, modeling, elementFactory, 
 ConfirmationHandler.$inject = [
   'eventBus',
   'modeling',
-  'elementFactory', 'commandStack'];
+  'elementFactory', 'commandStack', 'translate'];
 
 /** The states of a boundary question: several, or the one of older payloads */
 function boundaryItems(action) {
