@@ -1,4 +1,7 @@
 /** @jsx h */
+import { markText } from '../i18n/markText';
+import { fill } from '../i18n/language';
+
 import { h } from '@bpmn-io/properties-panel/preact';
 
 import { is } from '../help/utils';
@@ -11,17 +14,17 @@ import { colors } from '../core/colorScheme';
  */
 
 const TYPES = [
-  ['fpb:Product', 'Product'],
-  ['fpb:Energy', 'Energy'],
-  ['fpb:Information', 'Information'],
-  ['fpb:ProcessOperator', 'Process operator'],
-  ['fpb:TechnicalResource', 'Technical resource'],
-  ['fpb:SystemLimit', 'System limit'],
-  ['fpb:ParallelFlow', 'Parallel flow'],
-  ['fpb:AlternativeFlow', 'Alternative flow'],
-  ['fpb:Usage', 'Usage'],
-  ['fpb:Flow', 'Flow'],
-  ['fpb:Process', 'Process']
+  ['fpb:Product', markText('Product')],
+  ['fpb:Energy', markText('Energy')],
+  ['fpb:Information', markText('Information')],
+  ['fpb:ProcessOperator', markText('Process operator')],
+  ['fpb:TechnicalResource', markText('Technical resource')],
+  ['fpb:SystemLimit', markText('System limit')],
+  ['fpb:ParallelFlow', markText('Parallel flow')],
+  ['fpb:AlternativeFlow', markText('Alternative flow')],
+  ['fpb:Usage', markText('Usage')],
+  ['fpb:Flow', markText('Flow')],
+  ['fpb:Process', markText('Process')]
 ];
 
 export function getTypeLabel(element) {
@@ -30,7 +33,8 @@ export function getTypeLabel(element) {
   return match ? match[1] : (element && element.type) || '';
 }
 
-export function getElementLabel(element) {
+/** Name of the element; a layer is named by its operator, in the language of translate */
+export function getElementLabel(element, translate = fill) {
   const bo = element && element.businessObject;
   if (!bo) {
     return '';
@@ -38,7 +42,7 @@ export function getElementLabel(element) {
 
   if (is(element, 'fpb:Process')) {
     const operator = bo.isDecomposedProcessOperator;
-    return operator ? 'Decomposition of ' + nameOf(operator) : 'Top level';
+    return operator ? translate('Decomposition of {name}', { name: nameOf(operator) }) : translate('Top level');
   }
 
   return nameOf(bo);
@@ -121,10 +125,10 @@ export function PanelHeader(props) {
     <div class="fpb-panel-header">
       <span class="fpb-panel-header-icon"><Icon width={40} height={40} /></span>
       <div class="fpb-panel-header-text">
-        <div class="fpb-panel-header-name">{getElementLabel(element) || translate('Unnamed')}</div>
+        <div class="fpb-panel-header-name">{getElementLabel(element, translate) || translate('Unnamed')}</div>
         <div class="fpb-panel-header-meta">
           <span class="fpb-chip fpb-chip-type">{translate(getTypeLabel(element))}</span>
-          {!isProcess && root && <span class="fpb-chip fpb-chip-layer">{getElementLabel(root)}</span>}
+          {!isProcess && root && <span class="fpb-chip fpb-chip-layer">{getElementLabel(root, translate)}</span>}
         </div>
       </div>
     </div>

@@ -1,4 +1,6 @@
 /** @jsx h */
+import { markText } from '../../i18n/markText';
+
 import { h } from '@bpmn-io/properties-panel/preact';
 import { SelectEntry } from '@bpmn-io/properties-panel';
 
@@ -19,8 +21,8 @@ const isBranch = (element) => BRANCHES.some((type) => is(element, type));
 export function ConnectionEntries(element) {
   const entries = [
     { id: 'connectionType', component: isBranch(element) ? BranchType : FixedType },
-    { id: 'connectionSource', component: Reference, label: 'Source', side: 'source' },
-    { id: 'connectionTarget', component: Reference, label: 'Target', side: 'target' }
+    { id: 'connectionSource', component: Reference, label: markText('Source'), side: 'source' },
+    { id: 'connectionTarget', component: Reference, label: markText('Target'), side: 'target' }
   ];
   if (isBranch(element)) {
     entries.push({ id: 'connectionPartners', component: Partners });
@@ -68,5 +70,5 @@ function Reference(props) {
 function Partners(props) {
   const { element, id } = props;
   const partners = (element.businessObject.inTandemWith || []).filter((partner) => partner && partner.id !== element.id);
-  return <ReferenceEntry id={id} label="Branching partners" targets={partners} />;
+  return <ReferenceEntry id={id} label={markText('Branching partners')} targets={partners} />;
 }

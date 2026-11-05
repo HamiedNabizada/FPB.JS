@@ -1,11 +1,13 @@
 /** @jsx h */
+import { markText } from '../../i18n/markText';
+
 import { h } from '@bpmn-io/properties-panel/preact';
 import { useShowEntryEvent } from '@bpmn-io/properties-panel';
 
 import { RULES } from '../../validation/ModelChecker';
 import { useService } from '../context';
 
-const SEVERITY_LABEL = { error: 'Error', warning: 'Warning', info: 'Note' };
+const SEVERITY_LABEL = { error: markText('Error'), warning: markText('Warning'), info: markText('Note') };
 
 /** Findings of the shown element, worst first (016b V7) */
 export function FindingsEntries(findings) {

@@ -1,7 +1,7 @@
 // tests/e2e/german.spec.js
 import { test, expect } from './support/test';
 import { libraryBuilt } from './library/libPage';
-import { SURFACES, IDS, prepare, unmarked, texts, modelData, clone, settle } from './helpers/language';
+import { SURFACES, IDS, prepare, unmarked, texts, modelData, clone, settle, without } from './helpers/language';
 
 /**
  * German in FPB.js (016h F1, Tests), against the library bundle:
@@ -28,7 +28,7 @@ test.describe('Nothing hard-coded in English', () => {
       const data = dataOf(surface).concat(surface.data || []);
       const found = [];
       const check = async () => {
-        found.push(...await unmarked(page, data, surface.scope));
+        found.push(...await without(page, surface.exclude, () => unmarked(page, data, surface.scope)));
       };
       if (surface.each) {
         await surface.each(page, check);
@@ -48,10 +48,10 @@ test.describe('Switching equals starting in German', () => {
         const all = [];
         if (surface.each) {
           await surface.each(page, async () => {
-            all.push(...await texts(page, surface.scope));
+            all.push(...await without(page, surface.exclude, () => texts(page, surface.scope)));
           });
         } else {
-          all.push(...await texts(page, surface.scope));
+          all.push(...await without(page, surface.exclude, () => texts(page, surface.scope)));
         }
         return all;
       };

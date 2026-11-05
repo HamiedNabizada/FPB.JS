@@ -1,4 +1,6 @@
 // tests/e2e/helpers/language.js
+import fs from 'fs';
+import path from 'path';
 import { openLibraryPage, createModeler, importModel } from '../library/libPage';
 import basis from '../fixtures/temperieren.json';
 
@@ -203,6 +205,28 @@ export function texts(page, scope) {
   }, scope);
 }
 
+/**
+ * Leave parts of a surface out of a check (`exclude`): hidden while `fn`
+ * runs, shown again afterwards. For texts a later task of F1 translates.
+ */
+export async function without(page, selectors, fn) {
+  if (!selectors || !selectors.length) {
+    return fn();
+  }
+  const hide = (show) => page.evaluate(({ selectors, show }) => {
+    selectors.forEach((selector) => document.querySelectorAll(selector).forEach((element) => {
+      element.style.visibility = show ? '' : 'hidden';
+      element.style.display = show ? '' : 'none';
+    }));
+  }, { selectors, show });
+  await hide(false);
+  try {
+    return await fn();
+  } finally {
+    await hide(true);
+  }
+}
+
 /** Focus each button of the toolbar in turn and collect what its tip shows */
 async function eachToolbarTip(page, check) {
   const count = await page.locator('#layers button').count();
@@ -266,6 +290,77 @@ async function dragHints(page, ids) {
     window.fpb.fire('illegalCreate', { movedElement: registry.get(ids.operator), targetElement: registry.get(ids.resource), position: { x: 200, y: 440 } });
   }, ids);
 }
+
+/** Show an element (or nothing: the layer) in the properties panel */
+async function panelOf(page, ids) {
+  await page.evaluate((ids) => {
+    const selection = window.fpb.get('selection');
+    const registry = window.fpb.get('elementRegistry');
+    window.fpb.fire('propertiesPanel.open');
+    selection.select(ids.map((id) => registry.get(id)));
+  }, ids);
+  await page.locator('#properties .fpb-properties-body').waitFor({ timeout: 3000 });
+  await settle(page);
+}
+
+/** The first characteristic of the product, opened, one tab after the other */
+async function eachCharacteristicTab(page, check) {
+  await page.locator('#properties .fpb-characteristic-row-name').first().click();
+  const tabs = page.locator('#properties .fpb-characteristic-tab');
+  await tabs.first().waitFor({ timeout: 3000 });
+  const count = await tabs.count();
+  for (let i = 0; i < count; i++) {
+    await tabs.nth(i).click();
+    await check(page);
+  }
+}
+
+const EXAMPLES = path.join(__dirname, '..', '..', '..', 'app', 'examples');
+
+/** An AML file of the web app's examples */
+export const amlFile = (name) => fs.readFileSync(path.join(EXAMPLES, name), 'utf8');
+
+/** What an AML file holds as names and values: data, never translated */
+export function amlData(text) {
+  const found = new Set();
+  (text.match(/="[^"]*"/g) || []).forEach((m) => found.add(m.slice(2, -1)));
+  (text.match(/>[^<]+</g) || []).forEach((m) => found.add(m.slice(1, -1).trim()));
+  return [...found].filter((s) => s.trim()).sort((a, b) => b.length - a.length);
+}
+
+/** A model for prepare(): the AML file imported, its index read */
+export const amlModel = (name) => async (page) => {
+  await page.evaluate((text) => new Promise((resolve, reject) => {
+    const done = () => {
+      window.fpb.off('import.done', done);
+      resolve();
+    };
+    window.fpb.on('import.done', done);
+    window.fpb.importAML(text, { fileName: 'Showcase.aml' }).catch(reject);
+  }), amlFile(name));
+  await page.waitForFunction(() => window.fpb.get('amlSupport').getIndex());
+};
+
+/** The first element on the canvas that carries more from the AML file */
+async function panelOfAmlElement(page) {
+  const id = await page.evaluate(() => {
+    const aml = window.fpb.get('amlSupport');
+    const found = window.fpb.get('elementRegistry').filter((e) => e.businessObject && aml.getForeignContent(e.id));
+    return found.length ? found[0].id : null;
+  });
+  if (!id) {
+    throw new Error('no element with AML content on the canvas');
+  }
+  await panelOf(page, [id]);
+}
+
+const panelSurface = (name, ids, more = {}) => Object.assign({
+  name: 'panel ' + name,
+  scope: ['#properties'],
+  // the texts of findings come from the model check (Task 6)
+  exclude: ['.fpb-finding-text'],
+  open: (page) => panelOf(page, ids)
+}, more);
 
 const contextPadSurface = (kind) => ({
   name: 'context pad ' + kind,
@@ -347,7 +442,40 @@ export const SURFACES = [
     scope: ['.djs-tooltip-container'],
     closesOnSwitch: true,
     open: (page) => dragHints(page, IDS)
-  }
+  },
+  // the properties panel for each kind of element (Task 4)
+  panelSurface('layer', []),
+  panelSurface('product with a characteristic', [IDS.product], { each: eachCharacteristicTab }),
+  panelSurface('energy', [IDS.energy]),
+  panelSurface('operator', [IDS.operator]),
+  panelSurface('decomposed operator', [IDS.decomposed]),
+  panelSurface('technical resource', [IDS.resource]),
+  panelSurface('system limit', [IDS.systemLimit]),
+  panelSurface('flow', [IDS.flow]),
+  panelSurface('parallel flow', [IDS.parallelFlow]),
+  panelSurface('usage', [IDS.usage]),
+  panelSurface('several elements', [IDS.product, IDS.energy]),
+  panelSurface('element with a finding', [], {
+    // a state without a name gets a finding of the model check
+    model: (page) => page.evaluate(async (json) => {
+      json[1].elementDataInformation.find((e) => e.$type === 'fpb:Energy').name = '';
+      await new Promise((resolve) => {
+        const done = () => {
+          window.fpb.off('import.done', done);
+          resolve();
+        };
+        window.fpb.on('import.done', done);
+        window.fpb.importJSON(json);
+      });
+    }, clone()),
+    open: (page) => panelOf(page, [IDS.energy])
+  }),
+  panelSurface('AML section', [], {
+    aml: true,
+    model: amlModel('Showcase-A-WaermetauscherMitRegelung.aml'),
+    data: amlData(amlFile('Showcase-A-WaermetauscherMitRegelung.aml')),
+    open: panelOfAmlElement
+  })
 ];
 
 /** The surface with this name */

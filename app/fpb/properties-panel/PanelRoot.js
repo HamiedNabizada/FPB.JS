@@ -6,16 +6,17 @@ import { useEffect, useErrorBoundary, useMemo, useState } from '@bpmn-io/propert
 
 import { is } from '../help/utils';
 import { ServicesContext } from './context';
-import { headerProvider, PanelHeader } from './header';
+import { headerProvider, PanelHeader, getElementLabel } from './header';
 import { getGroups } from './groups';
 import { loadLayout, saveLayout } from './layout';
 import { FindingsContext } from './findingsContext';
 import { findingsFor, fieldFindings } from './findings';
 
-const placeholderProvider = {
-  getEmpty: () => ({ text: 'Select an element to edit its properties.' }),
-  getMultiple: () => ({ text: 'Multiple elements are selected. Select a single element to edit its properties.' })
-};
+/** Texts of the panel without one element, in the language of translate */
+const placeholders = (translate) => ({
+  getEmpty: () => ({ text: translate('Select an element to edit its properties.') }),
+  getMultiple: () => ({ text: translate('Multiple elements are selected. Select a single element to edit its properties.') })
+});
 
 /**
  * The element the panel shows: the selected one, the layer when nothing is
@@ -107,12 +108,14 @@ export default function PanelRoot(props) {
 
   const root = modeler.get('canvas').getRootElement();
   const findings = findingsFor(issues, element, root);
-  const groups = element && !Array.isArray(element)
-    ? getGroups(element, modeler.get('translate'), findings, { amlSupport: modeler.get('amlSupport', false) })
-    : [];
+  const translate = modeler.get('translate');
+  // the groups of @bpmn-io/properties-panel take translate as a property
+  // (Toggle section, Section contains edits)
+  const groups = (element && !Array.isArray(element)
+    ? getGroups(element, translate, findings, { amlSupport: modeler.get('amlSupport', false) })
+    : []).map((group) => Object.assign({ translate }, group));
 
   if (failure) {
-    const translate = modeler.get('translate');
     return (
       <div class="fpb-properties-failure" role="alert">
         <p>{translate('The properties panel ran into an error.')}</p>
@@ -124,12 +127,12 @@ export default function PanelRoot(props) {
   return (
     <ServicesContext.Provider value={services}>
       <FindingsContext.Provider value={fieldFindings(findings)}>
-        <PanelHeader element={element} root={root} translate={modeler.get('translate')} />
+        <PanelHeader element={element} root={root} translate={translate} />
         <PropertiesPanel
           element={element}
           groups={groups}
-          headerProvider={headerProvider}
-          placeholderProvider={placeholderProvider}
+          headerProvider={Object.assign({}, headerProvider, { getElementLabel: (e) => getElementLabel(e, translate) })}
+          placeholderProvider={placeholders(translate)}
           layoutConfig={loadLayout()}
           layoutChanged={saveLayout}
           eventBus={eventBus}

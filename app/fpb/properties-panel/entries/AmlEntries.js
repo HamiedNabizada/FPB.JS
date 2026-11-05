@@ -1,4 +1,7 @@
 /** @jsx h */
+import { markText } from '../../i18n/markText';
+import { translateIn } from '../../i18n/language';
+
 import { h, Fragment } from '@bpmn-io/properties-panel/preact';
 
 import { useService } from '../context';
@@ -10,10 +13,10 @@ import { useService } from '../context';
  * from the AML section of the React panel, which phase B3 removed.
  */
 const FLOW_LABELS = {
-  'fpb:Flow': 'Flow',
-  'fpb:ParallelFlow': 'Parallel flow',
-  'fpb:AlternativeFlow': 'Alternative flow',
-  'fpb:Usage': 'Usage'
+  'fpb:Flow': markText('Flow'),
+  'fpb:ParallelFlow': markText('Parallel flow'),
+  'fpb:AlternativeFlow': markText('Alternative flow'),
+  'fpb:Usage': markText('Usage')
 };
 
 export function AmlEntries() {
@@ -68,7 +71,7 @@ function AmlDetails(props) {
         <tbody>
           <Row label={translate('File')}>{source.fileName}</Row>
           <Row label={translate('Path')}>{entry.path.join(' › ')}</Row>
-          {entry.copies.map((copy, i) => <Row key={'c' + i} label={translate('Copy')}>{copy.join(' › ')}</Row>)}
+          {entry.copies.map((copy, i) => <Row key={'c' + i} label={translateIn(translate, 'AML', 'Copy')}>{copy.join(' › ')}</Row>)}
           <Row label={translate('ID')}>{entry.amlId}</Row>
           <Row label={translate('Class')}>{breakable(entry.systemUnitClass)}</Row>
           {entry.roles.length > 0 && (
@@ -82,7 +85,7 @@ function AmlDetails(props) {
           {entry.links.map((l, i) => (
             <Row key={'l' + i} label={translate('Link')} class="pp-aml-link">
               {'↔ ' + l.partner}
-              <div class="fpb-aml-subtle">{l.link}{l.hierarchy ? ' ' + translate('in') + ' ' + l.hierarchy : ''}</div>
+              <div class="fpb-aml-subtle">{l.hierarchy ? translate('{link} in {hierarchy}', { link: l.link, hierarchy: l.hierarchy }) : l.link}</div>
             </Row>
           ))}
           {entry.attributes.map((a, i) => (

@@ -1,4 +1,6 @@
 /** @jsx h */
+import { markText } from '../../i18n/markText';
+
 import { h } from '@bpmn-io/properties-panel/preact';
 
 import { is } from '../../help/utils';
@@ -22,11 +24,11 @@ export function layerNumbers(process) {
 }
 
 const ROWS = [
-  ['systemLimit', 'System limit'],
-  ['states', 'States'],
-  ['operators', 'Process operators'],
-  ['resources', 'Technical resources'],
-  ['decompositions', 'Decomposed operators']
+  ['systemLimit', markText('System limit')],
+  ['states', markText('States')],
+  ['operators', markText('Process operators')],
+  ['resources', markText('Technical resources')],
+  ['decompositions', markText('Decomposed operators')]
 ];
 
 export function ProcessEntries(process) {

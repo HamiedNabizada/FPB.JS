@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from '@bpmn-io/properties-panel/preact/ho
 import { createPortal } from '@bpmn-io/properties-panel/preact/compat';
 
 import { useModelerState } from '../ui/useModelerState';
+import { useLanguage } from '../ui/useLanguage';
 
 import '@bpmn-io/properties-panel/dist/assets/properties-panel.css';
 import './FpbPropertiesPanel.css';
@@ -37,6 +38,8 @@ function Shell(props) {
   const { modeler } = props;
   const [open, setOpen] = useState(initiallyOpen);
   const sheet = useModelerState(modeler, 'sheets.changed', () => readSheets(modeler));
+  // the panel draws again in a new language (016h V3)
+  useLanguage(modeler);
   const inSheet = sheet.active && sheet.current === 'properties' && sheet.body;
   // what the user sees: the sheet on narrow touch screens, else the side
   const visible = sheet.active ? !!inSheet : open;
@@ -96,7 +99,8 @@ function Shell(props) {
     ) : null;
   }
 
-  const label = open ? 'Hide properties' : 'Show properties';
+  const translate = modeler.get('translate');
+  const label = open ? translate('Hide properties') : translate('Show properties');
 
   return (
     <div class={'fpb-properties' + (open ? ' open' : '')}>

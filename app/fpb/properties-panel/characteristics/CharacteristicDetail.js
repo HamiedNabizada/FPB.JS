@@ -1,4 +1,6 @@
 /** @jsx h */
+import { markText } from '../../i18n/markText';
+
 import { h } from '@bpmn-io/properties-panel/preact';
 import { useLayoutState } from '@bpmn-io/properties-panel';
 
@@ -11,9 +13,9 @@ import { ActualValuesEditor } from './ActualValuesEditor';
 
 /** The three parts of Blatt 2 as tabs (016c decision 7) */
 const TABS = [
-  { id: 'category', label: 'Category', section: 'Category' },
-  { id: 'descriptive', label: 'Descriptive', section: 'Descriptive element' },
-  { id: 'relational', label: 'Relational', section: 'Relational element' }
+  { id: 'category', label: markText('Category'), section: 'Category' },
+  { id: 'descriptive', label: markText('Descriptive'), section: 'Descriptive element' },
+  { id: 'relational', label: markText('Relational'), section: 'Relational element' }
 ];
 
 /** "1," and 1 are the same value: the field keeps what the user types */
@@ -24,22 +26,22 @@ const read = (object, path) => path.reduce((value, key) => (value === undefined 
 /** Fields of the detail area, grouped as in VDI 3682 Blatt 2 Bild 5 to 7 */
 const SECTIONS = [
   ['Category', [
-    ['categoryShortName', 'Short name', ['category', 'shortName']],
-    ['categoryLongName', 'Long name', ['category', 'longName']],
-    ['categoryVersion', 'Version', ['category', 'versionNumber']],
-    ['categoryRevision', 'Revision', ['category', 'revisionNumber']],
-    ['categoryIdent', 'Unique ID', ['category', 'uniqueIdent'], { readOnly: true }]
+    ['categoryShortName', markText('Short name'), ['category', 'shortName']],
+    ['categoryLongName', markText('Long name'), ['category', 'longName']],
+    ['categoryVersion', markText('Version'), ['category', 'versionNumber']],
+    ['categoryRevision', markText('Revision'), ['category', 'revisionNumber']],
+    ['categoryIdent', markText('Unique ID'), ['category', 'uniqueIdent'], { readOnly: true }]
   ]],
   ['Descriptive element', [
-    ['valueDetermination', 'Value determination process', ['descriptiveElement', 'valueDeterminationProcess']],
-    ['representivity', 'Representivity', ['descriptiveElement', 'representivity']],
-    ['setpoint', 'Setpoint', ['descriptiveElement', 'setpointValue', 'value'], { value: true }],
-    ['setpointUnit', 'Setpoint unit', ['descriptiveElement', 'setpointValue', 'unit']]
+    ['valueDetermination', markText('Value determination process'), ['descriptiveElement', 'valueDeterminationProcess']],
+    ['representivity', markText('Representivity'), ['descriptiveElement', 'representivity']],
+    ['setpoint', markText('Setpoint'), ['descriptiveElement', 'setpointValue', 'value'], { value: true }],
+    ['setpointUnit', markText('Setpoint unit'), ['descriptiveElement', 'setpointValue', 'unit']]
   ]],
   ['Relational element', [
-    ['view', 'View', ['relationalElement', 'view']],
-    ['model', 'Model', ['relationalElement', 'model']],
-    ['regulations', 'Regulations for relational generation', ['relationalElement', 'regulationsForRelationalGeneration']]
+    ['view', markText('View'), ['relationalElement', 'view']],
+    ['model', markText('Model'), ['relationalElement', 'model']],
+    ['regulations', markText('Regulations for relational generation'), ['relationalElement', 'regulationsForRelationalGeneration']]
   ]]
 ];
 

@@ -1,4 +1,6 @@
 /** @jsx h */
+import { markText } from '../../i18n/markText';
+
 import { h } from '@bpmn-io/properties-panel/preact';
 
 import { useService } from '../context';
@@ -10,8 +12,8 @@ import { readLimits, withRegionBound, withoutLimit, parseLimit } from './limits'
 const sameLimit = (a, b) => parseLimit(a).value === parseLimit(b).value;
 
 const REGION_LABELS = [
-  ['acceptance', 'Acceptance region'],
-  ['permitted', 'Permitted rejection region']
+  ['acceptance', markText('Acceptance region')],
+  ['permitted', markText('Permitted rejection region')]
 ];
 
 /**
@@ -53,8 +55,8 @@ export function LimitsEditor(props) {
         <div class="fpb-limit-region" role="group" aria-label={translate(label)} key={region}>
           <div class="fpb-limit-region-title">{translate(label)}</div>
           <div class="fpb-limit-bounds">
-            {bound(region, 'from', 'Lower limit')}
-            {bound(region, 'to', 'Upper limit')}
+            {bound(region, 'from', markText('Lower limit'))}
+            {bound(region, 'to', markText('Upper limit'))}
           </div>
         </div>
       ))}
@@ -62,7 +64,11 @@ export function LimitsEditor(props) {
       {limits.others.map((other) => (
         <div class="fpb-other-limit" key={'other-' + other.index}>
           <span>
-            {(other.limitType || translate('Limit')) + ': ' + formatValue(other.from) + ' ' + translate('to') + ' ' + formatValue(other.to)}
+            {translate('{type}: {from} to {to}', {
+              type: other.limitType || translate('Limit'),
+              from: formatValue(other.from),
+              to: formatValue(other.to)
+            })}
           </span>
           {!readOnly && (
             <button type="button" class="fpb-link-button" onClick={() => update((list) => withoutLimit(list, other.index))}>

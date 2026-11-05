@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { normalizeLanguage, fill, translateMessage } from '../../../app/fpb/i18n/language.js';
+import { normalizeLanguage, fill, translateMessage, translateIn } from '../../../app/fpb/i18n/language.js';
 
 /**
  * The pure helpers of the translation (016h T1, T3, plan F1 decisions 3 and
@@ -55,5 +55,21 @@ describe('translateMessage', () => {
     expect(translateMessage(t, { message: 'plain' })).toBe('plain');
     expect(translateMessage(t, 'the state')).toBe('the state');
     expect(translateMessage(t, null)).toBe('');
+  });
+});
+
+describe('translateIn', () => {
+
+  const catalog = { 'AML: Copy': 'Kopie', 'Copy': 'Kopieren' };
+  const t = (s, r) => fill(catalog[s] || s, r);
+
+  it('takes the entry of the word in its context', () => {
+    expect(translateIn(t, 'AML', 'Copy')).toBe('Kopie');
+    expect(t('Copy')).toBe('Kopieren');
+  });
+
+  it('keeps the English word where the context has no entry', () => {
+    expect(translateIn((s, r) => fill(s, r), 'AML', 'Copy')).toBe('Copy');
+    expect(translateIn((s, r) => fill(s, r), 'AML', 'Copy {n}', { n: 2 })).toBe('Copy 2');
   });
 });

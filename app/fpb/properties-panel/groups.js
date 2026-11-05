@@ -1,4 +1,6 @@
 /** @jsx h */
+import { markText } from '../i18n/markText';
+
 import { h } from '@bpmn-io/properties-panel/preact';
 
 import { is } from '../help/utils';
@@ -42,7 +44,7 @@ export function getGroups(element, translate = (text) => text, findings = [], se
     }
     groups.push({
       id: 'characteristics',
-      label: 'Characteristics',
+      label: markText('Characteristics'),
       component: CharacteristicsGroup
     });
   }

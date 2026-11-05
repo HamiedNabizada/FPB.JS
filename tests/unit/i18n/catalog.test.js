@@ -22,7 +22,9 @@ const COVERED = [
   // Task 3: the canvas
   'app/fpb/palette', 'app/fpb/context-pad', 'app/fpb/replace', 'app/fpb/append',
   'app/fpb/modeling/behavior/ModelingFeedback.js', 'app/fpb/preview', 'app/fpb/a11y',
-  'app/fpb/search', 'app/fpb/info/keyboardShortcuts.js'
+  'app/fpb/search', 'app/fpb/info/keyboardShortcuts.js',
+  // Task 4: the properties panel
+  'app/fpb/properties-panel'
 ];
 const ALL = ['app/fpb', 'src', 'app/app.js'];
 const EXCLUDED = ['app/fpb/aml/mapper'];
@@ -68,6 +70,11 @@ function keysOf(file) {
       const name = callee.type === 'Identifier' ? callee.name
         : callee.type === 'MemberExpression' && !callee.computed ? callee.property.name : null;
       const first = node.arguments[0];
+      // translateIn(translate, 'context', 'text'): the key is "context: text"
+      const [, context, text] = node.arguments;
+      if (name === 'translateIn' && context && text && context.type === 'StringLiteral' && text.type === 'StringLiteral') {
+        keys.push(context.value + ': ' + text.value);
+      }
       if (NAMES.indexOf(name) !== -1 && first) {
         if (first.type === 'StringLiteral') {
           keys.push(first.value);
@@ -119,6 +126,12 @@ describe('German catalog', () => {
   it('every German entry is used', () => {
     const used = keysIn(ALL);
     expect(Object.keys(de).filter((key) => !used.has(key))).toEqual([]);
+  });
+
+  it('no key stands twice in the catalog', () => {
+    const source = fs.readFileSync(path.join(ROOT, 'app/fpb/i18n/de.js'), 'utf8');
+    const keys = (source.match(/^  '(?:[^'\\]|\\.)*':/gm) || []).map((line) => line.trim());
+    expect(keys.filter((key, i) => keys.indexOf(key) !== i)).toEqual([]);
   });
 
   it('every German entry keeps the placeholders of its key', () => {

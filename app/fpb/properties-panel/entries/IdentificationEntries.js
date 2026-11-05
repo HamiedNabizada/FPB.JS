@@ -1,4 +1,6 @@
 /** @jsx h */
+import { markText } from '../../i18n/markText';
+
 import { h } from '@bpmn-io/properties-panel/preact';
 
 import { cloneModdle } from '../../help/moddleClone';
@@ -17,9 +19,9 @@ import { FpbTextField, isFpbTextFieldEdited } from './FpbTextField';
 export function IdentificationEntries(element) {
   return [
     { id: 'shortName', component: ShortName, isEdited: isFpbTextFieldEdited },
-    { id: 'longName', component: IdentificationField, property: 'longName', label: 'Long name', isEdited: isFpbTextFieldEdited },
-    { id: 'versionNumber', component: IdentificationField, property: 'versionNumber', label: 'Version', isEdited: isFpbTextFieldEdited },
-    { id: 'revisionNumber', component: IdentificationField, property: 'revisionNumber', label: 'Revision', isEdited: isFpbTextFieldEdited },
+    { id: 'longName', component: IdentificationField, property: 'longName', label: markText('Long name'), isEdited: isFpbTextFieldEdited },
+    { id: 'versionNumber', component: IdentificationField, property: 'versionNumber', label: markText('Version'), isEdited: isFpbTextFieldEdited },
+    { id: 'revisionNumber', component: IdentificationField, property: 'revisionNumber', label: markText('Revision'), isEdited: isFpbTextFieldEdited },
     { id: 'uniqueIdent', component: UniqueIdent }
   ];
 }

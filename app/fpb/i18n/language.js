@@ -32,6 +32,17 @@ export function fill(template, replacements) {
 }
 
 /**
+ * A word that reads differently in another language depending on where it
+ * stands ("Copy" a row of the AML file, "Copy" a button): its key in the
+ * catalog is "<context>: <text>". Without an entry the English text stays.
+ */
+export function translateIn(translate, context, text, replacements) {
+  const key = context + ': ' + text;
+  const translated = translate(key, replacements);
+  return translated === fill(key, replacements) ? fill(text, replacements) : translated;
+}
+
+/**
  * A message in the language of `translate`: { template, args } is translated,
  * a value in args that is itself { template, args } first; strings and
  * numbers in args are data and stay. A message without template gives its

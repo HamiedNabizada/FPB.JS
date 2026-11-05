@@ -1,4 +1,6 @@
 /** @jsx h */
+import { markText } from '../../i18n/markText';
+
 import { h } from '@bpmn-io/properties-panel/preact';
 
 import { useService } from '../context';
@@ -10,8 +12,8 @@ import { FpbTextField, isFpbTextFieldEdited } from './FpbTextField';
  */
 export function ProjectEntries() {
   return [
-    { id: 'projectName', component: ProjectField, property: 'name', label: 'Name', required: 'The project needs a name.', isEdited: isFpbTextFieldEdited },
-    { id: 'projectNamespace', component: ProjectField, property: 'targetNamespace', label: 'Namespace', required: 'The project needs a namespace.', isEdited: isFpbTextFieldEdited }
+    { id: 'projectName', component: ProjectField, property: 'name', label: markText('Name'), required: markText('The project needs a name.'), isEdited: isFpbTextFieldEdited },
+    { id: 'projectNamespace', component: ProjectField, property: 'targetNamespace', label: markText('Namespace'), required: markText('The project needs a namespace.'), isEdited: isFpbTextFieldEdited }
   ];
 }
 

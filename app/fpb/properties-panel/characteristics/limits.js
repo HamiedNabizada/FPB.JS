@@ -1,3 +1,5 @@
+import { markText } from '../../i18n/markText';
+
 import { parseValue } from '../values';
 import { asList } from './model';
 
@@ -107,5 +109,5 @@ export function parseLimit(text) {
   if (typeof value === 'number') {
     return { value, error: null };
   }
-  return { value: undefined, error: 'A limit is a number.' };
+  return { value: undefined, error: markText('A limit is a number.') };
 }
