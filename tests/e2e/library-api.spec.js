@@ -2112,8 +2112,28 @@ test.describe('Model check for hosts', () => {
   test('getCheckedRules lists the rules FPB.js checks', async ({ page }) => {
     await withModel(page);
     expect(await page.evaluate(() => window.fpb.getCheckedRules())).toEqual(
-      ['A2', 'B1', 'B2', 'B3', 'B6', 'C5', 'C9', 'D3', 'D4', 'D5', 'E5', 'F5', 'F8', 'F9', 'G1', 'G3', 'G4']
+      ['A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B6', 'C1', 'C2', 'C3', 'C4', 'C5', 'C9', 'D1', 'D7', 'D8', 'E5', 'F5', 'F8', 'F9', 'G1', 'G3', 'G4']
     );
+  });
+
+  // 031 N2: a flow the guideline does not know can only come from a file; the check reports it
+  test('a file with a flow between two operators shows C3', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page);
+    const model = clone();
+    const process = model.find((entry) => entry.process && entry.process.id === MAIN);
+    // from the state before "Prüfen" to "Prüfen" becomes from "Erhitzen" to "Prüfen"
+    process.elementDataInformation.find((d) => d.id === 'd5dc692d-61ac-4b4b-aea5-3d3044345aa7').sourceRef = '9ca400c0-a373-48c0-9f13-37ce196cee29';
+    expect(await importModel(page, model)).toBe(true);
+    const c3 = (await page.evaluate(() => window.fpb.getFindings())).filter((f) => f.rule === 'C3');
+    expect(c3.map((f) => [f.severity, f.elementId])).toEqual([['error', 'd5dc692d-61ac-4b4b-aea5-3d3044345aa7']]);
+  });
+
+  // 031 anti-goal: a fresh model does not open with findings nobody wants to fix
+  test('a new model has no finding before its first element', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page);
+    expect(await page.evaluate(() => window.fpb.getFindings())).toEqual([]);
   });
 
   test('setValidationMarkers hides and shows the markers', async ({ page }) => {

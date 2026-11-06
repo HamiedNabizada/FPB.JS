@@ -22,15 +22,26 @@ export const SEVERITY = { ERROR: 'error', WARNING: 'warning', INFO: 'info' };
 
 export const RULES = {
   A2: { severity: SEVERITY.ERROR, title: markText('Exactly one system limit per process') },
-  B1: { severity: SEVERITY.ERROR, title: markText('State inside the system limit or on its border') },
+  // 031: the rules the plugin checked alone until then; A3 and A4 milder than
+  // the cardinality of Blatt 2 Bild 2, a model in progress does not reach it yet
+  A3: { severity: SEVERITY.WARNING, title: markText('At least two states per process') },
+  A4: { severity: SEVERITY.WARNING, title: markText('At least one process operator per process') },
+  B1:{ severity: SEVERITY.ERROR, title: markText('State inside the system limit or on its border') },
   B2: { severity: SEVERITY.ERROR, title: markText('Process operator inside the system limit') },
   B3: { severity: SEVERITY.ERROR, title: markText('Technical resource outside the system limit') },
   B6: { severity: SEVERITY.ERROR, title: markText('Boundary state on the border of the system limit') },
+  // Blatt 1 Abschn. 4.1: states are the nodes, process operators the directed
+  // edges between them; the editor cannot draw anything else, a file can bring it (031 N2)
+  C1: { severity: SEVERITY.ERROR, title: markText('Flow between a state and a process operator') },
+  C2: { severity: SEVERITY.ERROR, title: markText('No flow from state to state') },
+  C3: { severity: SEVERITY.ERROR, title: markText('No flow from process operator to process operator') },
+  C4: { severity: SEVERITY.ERROR, title: markText('Usage between a process operator and a technical resource') },
   C5: { severity: SEVERITY.WARNING, title: markText('No duplicate connections') },
   C9: { severity: SEVERITY.WARNING, title: markText('Parallel or alternative flows not mixed with a normal flow') },
-  D3: { severity: SEVERITY.INFO, title: markText('Process operator has a name') },
-  D4: { severity: SEVERITY.INFO, title: markText('State has a name') },
-  D5: { severity: SEVERITY.INFO, title: markText('Technical resource has a name') },
+  // Blatt 2 Abschn. 5.1: the identification; mild as decided in 031 N3, D3 to D5 merged into D7
+  D1: { severity: SEVERITY.ERROR, title: markText('Unique ID used once') },
+  D7: { severity: SEVERITY.WARNING, title: markText('Element has a name') },
+  D8: { severity: SEVERITY.INFO, title: markText('Version and revision number given') },
   // Blatt 2 Abschn. 5.2: a setpoint with its validity limits (016g B2)
   E5: { severity: SEVERITY.ERROR, title: markText('Lower limit not above upper limit') },
   F5: { severity: SEVERITY.WARNING, title: markText('Decomposition contains every input and output') },
@@ -68,7 +79,41 @@ export function checkModel(processShapes) {
   });
   checkCopies(byId, issues);
   checkLimits(byId, issues);
+  checkUniqueIdents(byId, issues);
   return issues;
+}
+
+/**
+ * D1: one unique ID per element of the model. The copies of a boundary state
+ * on several layers are one element (same id) and count once.
+ */
+function checkUniqueIdents(processes, issues) {
+  const elements = new Map();
+  processes.forEach(function (process) {
+    const layer = layerContents(process);
+    layer.states.concat(layer.operators, layer.resources).forEach(function (element) {
+      if (!elements.has(element.id)) {
+        elements.set(element.id, { element: element, process: process });
+      }
+    });
+  });
+  const byIdent = new Map();
+  elements.forEach(function (entry) {
+    const ident = text(identificationOf(entry.element).uniqueIdent);
+    if (ident) {
+      byIdent.set(ident, (byIdent.get(ident) || []).concat([entry]));
+    }
+  });
+  byIdent.forEach(function (group, ident) {
+    if (group.length < 2) {
+      return;
+    }
+    report(issues, 'D1', group[0].element, group[0].process,
+      msg('Several elements share the unique ID {ident}: {elements}.', {
+        ident: '"' + ident + '"', elements: group.map(function (entry) { return label(entry.element); })
+      }),
+      group.slice(1).map(function (entry) { return { id: entry.element.id, process: entry.process }; }));
+  });
 }
 
 const list = (value) => (Array.isArray(value) ? value : (value ? [value] : []));
@@ -222,6 +267,39 @@ function nameOf(element) {
   return (bo.name || identification.shortName || '').trim();
 }
 
+/** D7: a long name, a short name or a name */
+function hasName(element) {
+  const identification = identificationOf(element);
+  return !!(text(element.businessObject.name) || text(identification.shortName) || text(identification.longName));
+}
+
+const isState = (e) => is(e, 'fpb:State');
+const isOperator = (e) => is(e, 'fpb:ProcessOperator');
+const isResource = (e) => is(e, 'fpb:TechnicalResource');
+
+/**
+ * C1 to C4: one finding per connection, with the most precise rule. A usage
+ * joins an operator and a resource in either direction (C10, undirected).
+ */
+function checkEnds(issues, connection, process) {
+  const source = connection.source;
+  const target = connection.target;
+  const ends = { source: label(source), target: label(target) };
+  if (is(connection, 'fpb:Usage')) {
+    if (!((isOperator(source) && isResource(target)) || (isResource(source) && isOperator(target)))) {
+      report(issues, 'C4', connection, process, msg('The usage between {source} and {target} does not connect a process operator with a technical resource.', ends));
+    }
+    return;
+  }
+  if (isState(source) && isState(target)) {
+    report(issues, 'C2', connection, process, msg('The flow from {source} to {target} connects two states.', ends));
+  } else if (isOperator(source) && isOperator(target)) {
+    report(issues, 'C3', connection, process, msg('The flow from {source} to {target} connects two process operators.', ends));
+  } else if (!((isState(source) && isOperator(target)) || (isOperator(source) && isState(target)))) {
+    report(issues, 'C1', connection, process, msg('The flow from {source} to {target} does not connect a state with a process operator.', ends));
+  }
+}
+
 function label(element) {
   return nameOf(element) ? '"' + nameOf(element) + '"' : element.id;
 }
@@ -276,6 +354,16 @@ function checkProcess(process, issues) {
         : msg('The process has no system limit.'));
   }
 
+  // A3, A4: only for a process that has begun (like A2)
+  if (layer.states.length || layer.operators.length || layer.resources.length) {
+    if (layer.states.length < 2) {
+      report(issues, 'A3', null, process, msg('The process has fewer than two states.'));
+    }
+    if (!layer.operators.length) {
+      report(issues, 'A4', null, process, msg('The process has no process operator.'));
+    }
+  }
+
   if (sl && hasBounds(sl)) {
     // B1: centre of the state within the system limit extended by half the state
     layer.states.forEach(function (state) {
@@ -318,6 +406,7 @@ function checkProcess(process, issues) {
     const source = connection.source;
     const target = connection.target;
     if (!source || !target) return;
+    checkEnds(issues, connection, process);
     if (source === target) {
       report(issues, 'G3', connection, process, msg('A flow connects {element} with itself.', { element: label(source) }));
     }
@@ -340,10 +429,23 @@ function checkProcess(process, issues) {
     }
   });
 
-  // D3 to D5
-  layer.operators.forEach(function (e) { if (!nameOf(e)) report(issues, 'D3', e, process, msg('A process operator has no name.')); });
-  layer.states.forEach(function (e) { if (!nameOf(e)) report(issues, 'D4', e, process, msg('A state has no name.')); });
-  layer.resources.forEach(function (e) { if (!nameOf(e)) report(issues, 'D5', e, process, msg('A technical resource has no name.')); });
+  // D7 (031: D3 to D5 merged): no long name, short name or name
+  layer.operators.forEach(function (e) { if (!hasName(e)) report(issues, 'D7', e, process, msg('A process operator has no name.')); });
+  layer.states.forEach(function (e) { if (!hasName(e)) report(issues, 'D7', e, process, msg('A state has no name.')); });
+  layer.resources.forEach(function (e) { if (!hasName(e)) report(issues, 'D7', e, process, msg('A technical resource has no name.')); });
+
+  // D8: one note per layer, not one per element; new elements start without
+  // version and revision, and a revision "describes an accredited version" (Blatt 2, 5.1)
+  const unversioned = layer.states.concat(layer.operators, layer.resources).filter(function (e) {
+    const identification = identificationOf(e);
+    return !text(identification.versionNumber) || !text(identification.revisionNumber);
+  });
+  if (unversioned.length) {
+    report(issues, 'D8', null, process, unversioned.length === 1
+      ? msg('One element has no version or revision number.')
+      : msg('{count} elements have no version or revision number.', { count: String(unversioned.length) }),
+    unversioned.map(function (e) { return { id: e.id, process: process }; }));
+  }
 
   // G1
   layer.operators.forEach(function (operator) {

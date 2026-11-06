@@ -22,8 +22,8 @@ test.describe('New properties panel, findings', () => {
     await openPanel(page);
     await unnamedState(page);
     const group = page.locator('[data-group-id="group-findings"]');
-    await expect(group).toContainText('D4');
-    await expect(page.locator('[data-entry-id="shortName"] .fpb-field-finding-info')).toBeVisible();
+    await expect(group).toContainText('D7');
+    await expect(page.locator('[data-entry-id="shortName"] .fpb-field-finding-warning')).toBeVisible();
   });
 
   test('a finding is a tinted card without a coloured stripe at the side (016c)', async ({ page }) => {
@@ -46,21 +46,21 @@ test.describe('New properties panel, findings', () => {
     await page.locator('#propertiesPanelToggle').click();
     await unnamedState(page);
     await page.evaluate(() => window.fpbjs.get('fpbValidation').openPanel());
-    await page.locator('.fpb-validation-item[data-rule="D4"]').first().click();
+    await page.locator('.fpb-validation-item[data-rule="D7"]').first().click();
     await expect(page.locator('.fpb-properties-body')).toBeVisible();
-    await expect(page.locator('[data-group-id="group-findings"]')).toContainText('D4');
+    await expect(page.locator('[data-group-id="group-findings"]')).toContainText('D7');
   });
 
   // Review Focus 5
   test('after a layer switch the findings of the new layer show', async ({ page }) => {
     await openPanel(page);
     await unnamedState(page);
-    await expect(findingsWith(page, 'D4')).toHaveCount(1);
+    await expect(findingsWith(page, 'D7')).toHaveCount(1);
     await page.evaluate(() => {
       const op = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Erhitzen' && e.type !== 'label')[0];
       window.fpbjs.get('modeling').switchProcess(op.businessObject.decomposedView);
     });
     await expect(page.locator('.bio-properties-panel-header')).toContainText('Decomposition of Erhitzen');
-    await expect(findingsWith(page, 'D4')).toHaveCount(0);
+    await expect(findingsWith(page, 'D7')).toHaveCount(0);
   });
 });

@@ -76,9 +76,9 @@ test.describe('Szenario 3: Grenz-States in der Kind-Ebene', () => {
     expect(grenzStates).toHaveLength(1);
     expect(grenzStates[0].name).toBeFalsy();
 
-    // Regel D4: die Prüfung weist auf den fehlenden Namen hin, in beiden Ebenen
+    // Regel D7 (031, vorher D4): die Prüfung weist auf den fehlenden Namen hin, in beiden Ebenen
     const befunde = await page.evaluate(() => window.fpbjs.get('fpbValidation').run()
-      .filter((issue) => issue.rule === 'D4')
+      .filter((issue) => issue.rule === 'D7')
       .map((issue) => issue.elementId));
     expect(befunde.filter((id) => id === 'neu0').length).toBe(2);
   });

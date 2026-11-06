@@ -1460,7 +1460,7 @@ test.describe('Names of a state on every layer (B16)', () => {
   }
 
   const unnamed = (page) => page.evaluate(() => window.fpbjs.get('fpbValidation').run()
-    .filter((i) => i.rule === 'D4').map((i) => i.elementId));
+    .filter((i) => i.rule === 'D7').map((i) => i.elementId));
 
   /** What an older file may hold: the copy in the decomposition named differently */
   const nameBelow = (page, id, name) => page.evaluate(({ id, name, child }) => {

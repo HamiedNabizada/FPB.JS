@@ -10,13 +10,13 @@ const issue = (rule, severity, elementId, process, message = rule) => ({ rule, s
 describe('findings for the panel', () => {
 
   it('takes the findings of the element on the shown layer, the layer itself for a process', () => {
-    const issues = [issue('G4', 'warning', 'a', top), issue('D4', 'info', 'a', child), issue('A2', 'error', null, top)];
+    const issues = [issue('G4', 'warning', 'a', top), issue('D7', 'warning', 'a', child), issue('A2', 'error', null, top)];
     expect(findingsFor(issues, { id: 'a' }, top).map((i) => i.rule)).toEqual(['G4']);
     expect(findingsFor(issues, top, top).map((i) => i.rule)).toEqual(['A2']);
   });
 
-  it('puts a missing name at the name field with its severity', () => {
-    const findings = [issue('D4', 'info', 'a', top, 'State has no name.'), issue('G4', 'warning', 'a', top)];
-    expect(fieldFindings(findings)).toEqual({ shortName: { severity: 'info', message: 'State has no name.' } });
+  it('puts a missing name (D7, 031) at the name field with its severity', () => {
+    const findings = [issue('D7', 'warning', 'a', top, 'State has no name.'), issue('G4', 'warning', 'a', top)];
+    expect(fieldFindings(findings)).toEqual({ shortName: { severity: 'warning', message: 'State has no name.' } });
   });
 });

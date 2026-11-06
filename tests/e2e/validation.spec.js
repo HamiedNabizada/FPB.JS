@@ -136,7 +136,8 @@ test.describe('Modellprüfung', () => {
       await expect(filterButton(page, 'warning')).toHaveText('Warnings 0');
       await looseState(page);
       await page.evaluate(() => window.fpbjs.get('fpbValidation').run());
-      await expect(filterButton(page, 'warning')).toHaveText('Warnings 1');
+      // the new state is not connected (G4) and has no name (D7, a warning since 031)
+      await expect(filterButton(page, 'warning')).toHaveText('Warnings 2');
     });
 
     // 016g B4

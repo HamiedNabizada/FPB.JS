@@ -26,8 +26,10 @@ function bo(id, type, extra = {}) {
   return { id, $type: type, $instanceOf: (t) => t === type || (SUPER[type] || []).includes(t), ...extra };
 }
 
+// every element has a version and a revision (D8), unless a test says otherwise
 function shape(id, type, bounds, extra = {}) {
-  return { id, type, ...bounds, incoming: [], outgoing: [], businessObject: bo(id, type, extra) };
+  const identification = { versionNumber: '1', revisionNumber: '0', ...(extra.identification || {}) };
+  return { id, type, ...bounds, incoming: [], outgoing: [], businessObject: bo(id, type, { ...extra, identification }) };
 }
 
 function connect(id, type, source, target) {
@@ -69,7 +71,17 @@ describe('ModelChecker', () => {
   it('uses the severities of the rule catalog', () => {
     expect(RULES.B1.severity).toBe('error');
     expect(RULES.G1.severity).toBe('warning');
-    expect(RULES.D3.severity).toBe('info');
+    // 031: flows the guideline does not know are errors (N2), identification is mild (N3)
+    expect(['C1', 'C2', 'C3', 'C4', 'D1'].map((r) => RULES[r].severity)).toEqual(['error', 'error', 'error', 'error', 'error']);
+    expect(['A3', 'A4', 'D7'].map((r) => RULES[r].severity)).toEqual(['warning', 'warning', 'warning']);
+    expect(RULES.D8.severity).toBe('info');
+  });
+
+  // 031 V1: what is checked on the model, in the web app and in the plugin;
+  // D6 stays with the plugin (a process in FPB.js takes the name of its project or operator)
+  it('RULES lists exactly the rules of FPB.js after 031', () => {
+    expect(Object.keys(RULES).sort()).toEqual(['A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B6', 'C1', 'C2', 'C3', 'C4', 'C5', 'C9',
+      'D1', 'D7', 'D8', 'E5', 'F5', 'F8', 'F9', 'G1', 'G3', 'G4']);
   });
 
   it('B1, B2, B3: placement relative to the system limit', () => {
@@ -100,17 +112,102 @@ describe('ModelChecker', () => {
     const inner = m.process.businessObject.elementsContainer[0].businessObject.elementsContainer;
     inner.push(connect('f1b', 'fpb:Flow', m.input, m.op));
     inner.push(connect('self', 'fpb:Flow', m.op, m.op));
-    expect(rules(checkModel([m.process]))).toEqual(['C5', 'G3']);
+    // a loop at an operator is also a flow between two operators (C3, 031), as in OCL
+    expect(rules(checkModel([m.process]))).toEqual(['C3', 'C5', 'G3']);
   });
 
-  it('D3 to D5 as notes for unnamed elements', () => {
+  it('D7 warns about elements without long name, short name and name', () => {
     const m = validModel();
     m.op.businessObject.name = '';
     m.input.businessObject.name = ' ';
     m.resource.businessObject.name = undefined;
     const issues = checkModel([m.process]);
-    expect(rules(issues)).toEqual(['D3', 'D4', 'D5']);
-    expect(issues.every((i) => i.severity === 'info')).toBe(true);
+    expect(rules(issues)).toEqual(['D7', 'D7', 'D7']);
+    expect(issues.every((i) => i.severity === 'warning')).toBe(true);
+    expect(issues.map((i) => i.message).sort()).toEqual(['A process operator has no name.', 'A state has no name.', 'A technical resource has no name.']);
+  });
+
+  it('D7: a long name alone is enough', () => {
+    const m = validModel();
+    m.input.businessObject.name = '';
+    m.input.businessObject.identification.longName = 'Eingang';
+    expect(checkModel([m.process])).toEqual([]);
+  });
+
+  it('A3 and A4: a process with one state and no operator', () => {
+    const lonely = shape('s', 'fpb:Product', at(275, 75), { name: 'S' });
+    const issues = checkModel([process('p', [lonely])]);
+    const a = issues.filter((i) => i.rule === 'A3' || i.rule === 'A4');
+    expect(a.map((i) => [i.rule, i.severity, i.elementId])).toEqual([['A3', 'warning', null], ['A4', 'warning', null]]);
+  });
+
+  it('A3 and A4: an empty process says nothing', () => {
+    expect(checkModel([process('p', [])])).toEqual([]);
+  });
+
+  it('C2 and C3: a flow between two states and one between two operators', () => {
+    const m = validModel();
+    const inner = m.process.businessObject.elementsContainer[0].businessObject.elementsContainer;
+    const op2 = shape('op2', 'fpb:ProcessOperator', at(225, 380, OPERATOR), { name: 'Polishing' });
+    inner.push(op2, connect('ss', 'fpb:Flow', m.input, m.output), connect('oo', 'fpb:Flow', m.op, op2));
+    const c = checkModel([m.process]).filter((i) => /^C[1-4]$/.test(i.rule));
+    expect(c.map((i) => [i.rule, i.severity, i.elementId])).toEqual([['C2', 'error', 'ss'], ['C3', 'error', 'oo']]);
+    expect(c[1].message).toBe('The flow from "Machining" to "Polishing" connects two process operators.');
+  });
+
+  it('C1: a flow from an operator to a technical resource', () => {
+    const m = validModel();
+    m.process.businessObject.elementsContainer.push(connect('ft', 'fpb:Flow', m.op, m.resource));
+    const c = checkModel([m.process]).filter((i) => /^C[1-4]$/.test(i.rule));
+    expect(c.map((i) => [i.rule, i.elementId])).toEqual([['C1', 'ft']]);
+  });
+
+  it('C4: a usage from a state; from the resource to the operator is fine', () => {
+    const m = validModel();
+    m.process.businessObject.elementsContainer.push(connect('us', 'fpb:Usage', m.input, m.op), connect('ur', 'fpb:Usage', m.resource, m.op));
+    const c = checkModel([m.process]).filter((i) => /^C[1-4]$/.test(i.rule));
+    expect(c.map((i) => [i.rule, i.elementId])).toEqual([['C4', 'us']]);
+  });
+
+  it('C3 and G3: a flow from an operator to itself', () => {
+    const m = validModel();
+    m.process.businessObject.elementsContainer[0].businessObject.elementsContainer.push(connect('self', 'fpb:Flow', m.op, m.op));
+    expect(rules(checkModel([m.process]))).toEqual(['C3', 'G3']);
+  });
+
+  it('a connection without source or target is passed over', () => {
+    const m = validModel();
+    const dangling = { id: 'dangling', type: 'fpb:Flow', source: null, target: m.op, waypoints: [{}, {}], businessObject: bo('dangling', 'fpb:Flow') };
+    m.process.businessObject.elementsContainer[0].businessObject.elementsContainer.push(dangling);
+    expect(checkModel([m.process])).toEqual([]);
+  });
+
+  it('D1: two elements with one unique ID', () => {
+    const m = validModel();
+    m.input.businessObject.identification.uniqueIdent = 'X-1';
+    m.output.businessObject.identification.uniqueIdent = 'X-1';
+    const d1 = checkModel([m.process]).filter((i) => i.rule === 'D1');
+    expect(d1.map((i) => [i.severity, i.elementId])).toEqual([['error', 'in']]);
+    expect(d1[0].involved.map((x) => x.id)).toEqual(['in', 'out']);
+    expect(d1[0].args.ident).toBe('"X-1"');
+  });
+
+  it('D8: one note per process with the count', () => {
+    const m = validModel();
+    m.input.businessObject.identification.versionNumber = '';
+    m.op.businessObject.identification.revisionNumber = ' ';
+    const d8 = checkModel([m.process]).filter((i) => i.rule === 'D8');
+    expect(d8.map((i) => [i.severity, i.elementId, i.args.count])).toEqual([['info', null, '2']]);
+    expect(d8[0].involved.map((x) => x.id)).toEqual(['in', 'op']);
+    expect(d8[0].message).toBe('2 elements have no version or revision number.');
+  });
+
+  it('D8: an element without identification counts and nothing throws', () => {
+    const m = validModel();
+    delete m.input.businessObject.identification;
+    const issues = checkModel([m.process]);
+    expect(rules(issues)).toEqual(['D8']);
+    expect(issues[0].message).toBe('One element has no version or revision number.');
   });
 
   // 024 point 6, 016b V8: every element a finding is about
@@ -126,8 +223,8 @@ describe('ModelChecker', () => {
   it('a finding without others involved names its own element', () => {
     const m = validModel();
     m.input.businessObject.name = '';
-    const d4 = checkModel([m.process]).find((i) => i.rule === 'D4');
-    expect(d4.involved).toEqual([{ id: 'in', process: m.process }]);
+    const d7 = checkModel([m.process]).find((i) => i.rule === 'D7');
+    expect(d7.involved).toEqual([{ id: 'in', process: m.process }]);
   });
 
   describe('decomposition', () => {
@@ -139,10 +236,18 @@ describe('ModelChecker', () => {
       return { m, child };
     }
 
+    it('D1: a boundary state on two layers is one element', () => {
+      const copy = shape('in', 'fpb:Product', at(275, 75), { name: 'Input', identification: { uniqueIdent: 'in' } });
+      const { m, child } = decomposed([copy, shape('out', 'fpb:Product', at(275, 475), { name: 'Output' })]);
+      m.input.businessObject.identification.uniqueIdent = 'in';
+      expect(checkModel([m.process, child]).filter((i) => i.rule === 'D1')).toEqual([]);
+    });
+
     it('F5: the decomposition lacks an output of the operator', () => {
       const { m, child } = decomposed([shape('in', 'fpb:Product', at(275, 75), { name: 'Input' })]);
       const issues = checkModel([m.process, child]);
-      expect(rules(issues)).toEqual(['F5', 'G4']);
+      // the child layer has one state and no operator yet: A3, A4 (031)
+      expect(rules(issues)).toEqual(['A3', 'A4', 'F5', 'G4']);
       expect(issues.find((i) => i.rule === 'F5').message).toContain('"Output"');
     });
 
@@ -203,7 +308,7 @@ describe('ModelChecker', () => {
     it('F9: copies that differ are reported once, at the copy on the upper layer, with what differs', () => {
       const characteristic = { $type: 'fpbch:Characteristics', category: { shortName: 'C_1', longName: 'Temperatur' } };
       const m = validModel();
-      m.input.businessObject.identification = { shortName: 'Input', longName: 'Raw material' };
+      Object.assign(m.input.businessObject.identification, { shortName: 'Input', longName: 'Raw material' });
       m.input.businessObject.characteristics = [characteristic];
       const below = shape('in', 'fpb:Product', at(275, 75), { name: 'Input', identification: { shortName: 'Input' } });
       const child = process('c', [below, shape('out', 'fpb:Product', at(275, 475), { name: 'Output' })], [], {
@@ -224,7 +329,7 @@ describe('ModelChecker', () => {
 
     it('F9 names every copy as involved, the upper one first', () => {
       const m = validModel();
-      m.input.businessObject.identification = { shortName: 'Input', longName: 'Raw material' };
+      Object.assign(m.input.businessObject.identification, { shortName: 'Input', longName: 'Raw material' });
       const below = shape('in', 'fpb:Product', at(275, 75), { name: 'Input', identification: { shortName: 'Input' } });
       const child = process('c', [below, shape('out', 'fpb:Product', at(275, 475), { name: 'Output' })], [], {
         isDecomposedProcessOperator: m.op.businessObject, parent: m.process
@@ -237,7 +342,7 @@ describe('ModelChecker', () => {
 
     it('F9 compares the content: copies with equal objects of their own agree', () => {
       const m = validModel();
-      m.input.businessObject.identification = { shortName: 'Input', longName: 'Raw material' };
+      Object.assign(m.input.businessObject.identification, { shortName: 'Input', longName: 'Raw material', versionNumber: '' });
       const below = shape('in', 'fpb:Product', at(275, 75), { name: 'Input', identification: { shortName: 'Input', longName: 'Raw material', versionNumber: '' } });
       const child = process('c', [below, shape('out', 'fpb:Product', at(275, 475), { name: 'Output' })], [], {
         isDecomposedProcessOperator: m.op.businessObject, parent: m.process

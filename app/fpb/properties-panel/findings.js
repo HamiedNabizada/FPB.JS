@@ -4,12 +4,12 @@
  * element and shows when the process is shown.
  *
  * A finding about a field shows at that field in the colour of its severity:
- * a missing name (D3 to D5) is a note, not an error (016b V7 as settled in
- * plan B1, task 11).
+ * a missing name is a warning, not an error (016b V7 as settled in plan B1,
+ * task 11; since 031 rule D7, which took over D3 to D5).
  */
 
 /** Rules about one field of the panel: the entry id they belong to */
-export const FIELD_OF_RULE = { D3: 'shortName', D4: 'shortName', D5: 'shortName' };
+export const FIELD_OF_RULE = { D7: 'shortName' };
 
 export function findingsFor(issues, element, root) {
   if (!element || Array.isArray(element)) {
