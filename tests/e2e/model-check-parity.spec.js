@@ -24,7 +24,9 @@ async function verdict(page, text, hierarchy, rules) {
     const aml = window.fpbjs.get('amlSupport');
     const found = await aml.inspect(text);
     const ih = found.find((h) => h.name === hierarchy);
+    const done = new Promise((resolve) => { window.fpbjs.get('eventBus').once('import.done', resolve); setTimeout(resolve, 8000); });
     await aml.importAml(text, { hierarchyId: ih && ih.id });
+    await done;
     const out = [];
     window.fpbjs.get('fpbValidation').run().filter((i) => rules.includes(i.rule)).forEach((i) => {
       if (['A2', 'A3', 'A4'].includes(i.rule)) {
