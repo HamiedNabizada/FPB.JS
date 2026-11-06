@@ -1,0 +1,14 @@
+{
+  "aml": "tests/fixtures/model-check/cardinality.aml",
+  "hierarchy": "FPBJS_Project",
+  "rules": [
+    "A3",
+    "A4"
+  ],
+  "findings": [
+    {
+      "rule": "A4",
+      "process": "Erhitzen"
+    }
+  ]
+}

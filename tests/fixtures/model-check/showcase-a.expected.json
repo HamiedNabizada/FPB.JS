@@ -1,0 +1,25 @@
+{
+  "aml": "tests/unit/aml/oracle/inputs/generated/mixed.aml",
+  "hierarchy": "FPD_Heating",
+  "rules": [
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "I3"
+  ],
+  "findings": [
+    {
+      "rule": "C3",
+      "element": "18a24c31-0ab0-0847-a938-0eb5e13a541e"
+    },
+    {
+      "rule": "C3",
+      "element": "2b97725b-ca27-abbd-8fd6-714897f9f55a"
+    },
+    {
+      "rule": "C3",
+      "element": "a0bb9ee5-1af8-72fd-a603-f9c26aeefba0"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "aml": "tests/fixtures/model-check/flows.aml",
+  "hierarchy": "FPBJS_Project",
+  "rules": [
+    "C1",
+    "C2",
+    "C3",
+    "C4"
+  ],
+  "findings": [
+    {
+      "rule": "C1",
+      "element": "baefb918-128f-4f3b-924d-a6ca6e1e5ca1"
+    },
+    {
+      "rule": "C2",
+      "element": "6551201a-9b9a-43fa-ad15-dc59a37933f7"
+    },
+    {
+      "rule": "C3",
+      "element": "d5dc692d-61ac-4b4b-aea5-3d3044345aa7"
+    },
+    {
+      "rule": "C4",
+      "element": "0059ef37-ea80-4414-8e8d-8985a35e59bf"
+    }
+  ]
+}

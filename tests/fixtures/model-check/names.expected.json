@@ -1,0 +1,23 @@
+{
+  "aml": "tests/fixtures/model-check/names.aml",
+  "hierarchy": "FPBJS_Project",
+  "rules": [
+    "D1",
+    "D7",
+    "D8"
+  ],
+  "findings": [
+    {
+      "rule": "D1",
+      "element": "*"
+    },
+    {
+      "rule": "D7",
+      "element": "9833d9a9-1b88-4bfb-91b3-7ab5e2617045"
+    },
+    {
+      "rule": "D8",
+      "element": "61a6df5b-1081-4651-93ae-572fea3994ab"
+    }
+  ]
+}
