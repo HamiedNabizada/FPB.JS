@@ -51,6 +51,8 @@ const look = (page, selector) => page.evaluate((selector) => {
 // differ elsewhere. In a CI under Linux the first try wrote a Linux picture
 // and the retry passed against it, so the guard did nothing (016g H2).
 test.skip(process.platform !== 'win32', 'the reference pictures were made on Windows');
+// and with Chromium; Firefox and WebKit draw text and edges a little differently
+test.skip(({ browserName }) => browserName !== 'chromium', 'the reference pictures were made with Chromium');
 
 for (const scheme of ['light', 'dark']) {
   test.describe(`Canvas look (${scheme})`, () => {

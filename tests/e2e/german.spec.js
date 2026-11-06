@@ -107,6 +107,7 @@ test.describe('On a phone', () => {
   // narrow and touch: the panels are sheets (016f E2)
   const { defaultBrowserType, ...phone } = devices['Pixel 5'];
   test.use(phone);
+  test.skip(({ browserName }) => browserName === 'firefox', 'Playwright has no phone emulation (isMobile) in Firefox');
 
   for (const surface of PHONE_SURFACES) {
     test('nothing hard-coded: ' + surface.name, ({ page }) => checkUnmarked(page, surface));

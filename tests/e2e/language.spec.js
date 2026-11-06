@@ -216,6 +216,7 @@ test.describe('Lengths in German', () => {
   test.describe('on a narrow phone', () => {
     const { defaultBrowserType, ...phone } = devices['iPhone SE'];
     test.use(Object.assign({}, phone, { viewport: { width: 375, height: 812 } }));
+    test.skip(({ browserName }) => browserName === 'firefox', 'Playwright has no phone emulation (isMobile) in Firefox');
 
     test('nothing overflows on a phone 375 px wide', async ({ page }) => {
       await open(page, null);
@@ -227,6 +228,7 @@ test.describe('Lengths in German', () => {
   test.describe('on a phone', () => {
     const { defaultBrowserType, ...phone } = devices['Pixel 5'];
     test.use(phone);
+    test.skip(({ browserName }) => browserName === 'firefox', 'Playwright has no phone emulation (isMobile) in Firefox');
 
     test('nothing overflows on a phone', async ({ page }) => {
       await open(page, null);
