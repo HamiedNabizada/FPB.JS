@@ -118,6 +118,28 @@ test.describe('AutomationML import and export', () => {
     expect(fehler).toEqual([]);
   });
 
+  // stability round after 031: the second view of Showcase B and C has no ID in
+  // the file; the web app opened the first view instead and the export added a third
+  test('a process view without an ID opens as chosen and the export updates it', async ({ page }) => {
+    await start(page);
+    const text = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'examples', 'Showcase-C-CncRobotikMontage.aml'), 'utf8');
+    const r = await page.evaluate(async (t) => {
+      const aml = window.fpbjs.get('amlSupport');
+      const found = await aml.inspect(t);
+      const second = found.find((h) => h.name === 'FPD_Fasteners_Stock');
+      const done = new Promise((resolve) => { window.fpbjs.get('eventBus').once('import.done', resolve); setTimeout(resolve, 8000); });
+      const opened = await aml.importAml(t, { hierarchyId: second.id });
+      await done;
+      const out = await aml.exportAml();
+      const again = await aml.inspect(out.text);
+      return { key: second.id, opened: opened.hierarchy.name, kept: aml.getSource().hierarchyName, views: again.map((h) => h.name) };
+    }, text);
+    expect(r.key).toBeTruthy();
+    expect(r.opened).toBe('FPD_Fasteners_Stock');
+    expect(r.kept).toBe('FPD_Fasteners_Stock');
+    expect(r.views).toEqual(['FPD_Assembly', 'FPD_Fasteners_Stock']);
+  });
+
   test('the AML export writes the edit into the file and keeps everything else', async ({ page }) => {
     const { fehler } = await start(page);
     const result = await importAml(page, MIXED);

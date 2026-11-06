@@ -156,7 +156,7 @@ AmlSupport.prototype._buildIndex = function (source) {
   return this._load().then(({ engine, toJson }) => {
     const doc = engine.CAEXDocument.loadFromString(source.text);
     const found = toJson.findFpdInstanceHierarchies(doc);
-    const ih = source.hierarchyId ? found.find((h) => h.id === source.hierarchyId) || null : null;
+    const ih = source.hierarchyId ? found.find((h, i) => hierarchyKey(h, i) === source.hierarchyId) || null : null;
     return describe(doc, ih, found, source);
   });
 };
@@ -168,7 +168,7 @@ AmlSupport.prototype._buildIndex = function (source) {
 AmlSupport.prototype.inspect = function (text) {
   return this._load().then(({ engine, toJson }) => {
     const doc = parse(engine, text);
-    return toJson.findFpdInstanceHierarchies(doc).map((ih) => ({ id: ih.id, name: ih.name }));
+    return toJson.findFpdInstanceHierarchies(doc).map((ih, i) => ({ id: hierarchyKey(ih, i), name: ih.name }));
   });
 };
 
@@ -184,7 +184,7 @@ AmlSupport.prototype.importAml = function (text, options = {}) {
   return this._load().then(({ engine, toJson }) => {
     const doc = parse(engine, text);
     const found = toJson.findFpdInstanceHierarchies(doc);
-    const hierarchies = found.map((ih) => ({ id: ih.id, name: ih.name }));
+    const hierarchies = found.map((ih, i) => ({ id: hierarchyKey(ih, i), name: ih.name }));
 
     if (!found.length) {
       this._pendingSource = { text, fileName, hierarchyId: null, hierarchyName: null };
@@ -199,12 +199,13 @@ AmlSupport.prototype.importAml = function (text, options = {}) {
       return { hierarchies, hierarchy: null };
     }
 
-    const ih = options.hierarchyId ? found.find((h) => h.id === options.hierarchyId) : found[0];
+    const index = options.hierarchyId ? found.findIndex((h, i) => hierarchyKey(h, i) === options.hierarchyId) : 0;
+    const ih = found[index];
     if (!ih) {
       throw new Error('The AML file has no FPD hierarchy with the id ' + options.hierarchyId);
     }
     const result = toJson.convertCaexToFpbJson(doc, ih);
-    const hierarchy = { id: ih.id, name: ih.name };
+    const hierarchy = { id: hierarchyKey(ih, index), name: ih.name };
     const amlSource = { text, fileName, hierarchyId: hierarchy.id, hierarchyName: hierarchy.name };
 
     // the document is loaded already: index and overview now, and a note for
@@ -243,13 +244,18 @@ AmlSupport.prototype.exportAml = function () {
       const doc = parse(engine, source.text);
       const ih = source.hierarchyId ? findHierarchy(toJson, doc, source.hierarchyId) : null;
       result = toCaex.updateInPlace(doc, json, ih || undefined);
-      // a file without FPD content has one now
-      const target = ih || toJson.findFpdInstanceHierarchies(result.value).slice(-1)[0] || null;
-      hierarchy = target ? { id: target.id, name: target.name } : null;
+      if (ih) {
+        hierarchy = { id: source.hierarchyId, name: ih.name };
+      } else {
+        // a file without FPD content has one now
+        const all = toJson.findFpdInstanceHierarchies(result.value);
+        const target = all[all.length - 1] || null;
+        hierarchy = target ? { id: hierarchyKey(target, all.length - 1), name: target.name } : null;
+      }
     } else {
       result = toCaex.convertFpbJsonToCaex(json);
       const target = toJson.findFpdInstanceHierarchies(result.value)[0] || null;
-      hierarchy = target ? { id: target.id, name: target.name } : null;
+      hierarchy = target ? { id: hierarchyKey(target, 0), name: target.name } : null;
     }
 
     const bytes = result.value.saveToStream(true);
@@ -315,5 +321,14 @@ function importNotes(overview, translate) {
 }
 
 function findHierarchy(toJson, doc, id) {
-  return toJson.findFpdInstanceHierarchies(doc).find((ih) => ih.id === id) || null;
+  return toJson.findFpdInstanceHierarchies(doc).find((ih, i) => hierarchyKey(ih, i) === id) || null;
+}
+
+/**
+ * How FPB.js names an FPD hierarchy of a file: its ID, and for one without an
+ * ID (CAEX allows that; the second views of Showcase B and C have none) its
+ * place among the FPD hierarchies. The file is not changed.
+ */
+function hierarchyKey(ih, index) {
+  return ih.id || ('#' + index);
 }
