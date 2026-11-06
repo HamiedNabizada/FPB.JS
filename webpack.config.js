@@ -1,8 +1,21 @@
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const fs = require('fs');
 const path = require('path');
 const aliases = require('./build/aliases');
+
+// dist/css lies outside dist/web, so `output.clean` does not reach it: a CSS
+// file deleted from app/ stayed there and went into the npm package and the
+// plugin (stability round after 031). A build empties it first; the dev
+// server (watch mode) does not run this hook.
+const cleanCss = {
+  apply(compiler) {
+    compiler.hooks.beforeRun.tap('CleanDistCss', () => {
+      fs.rmSync(path.join(__dirname, 'dist', 'css'), { recursive: true, force: true });
+    });
+  }
+};
 
 module.exports = (env, argv) => {
   const isProduction = argv.mode === 'production';
@@ -87,6 +100,7 @@ module.exports = (env, argv) => {
       }
     },
     plugins: [
+      cleanCss,
       new HtmlWebpackPlugin({
         template: './app/index.html',
         filename: 'index.html',
