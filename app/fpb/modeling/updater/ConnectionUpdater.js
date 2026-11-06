@@ -335,6 +335,24 @@ ConnectionUpdater.prototype._handleDelete = function (element, context, process_
     if (context.target.businessObject.incoming) {
       removeTracked(context.target.businessObject.incoming, connection.businessObject);
     }
+    return;
+  }
+
+  // B21: neither a state nor a resource at an end, a flow between two operators
+  // that only a foreign file brings (the editor cannot draw it, 031 C3). It
+  // left the drawing but stayed in the data of its layer and its ends.
+  if (!is(context.source, 'fpb:State') && !is(context.target, 'fpb:State')) {
+    const processSystemLimit = getSystemLimit(process_rootElement);
+    if (processSystemLimit) {
+      removeTracked(processSystemLimit.businessObject.elementsContainer, connection);
+    }
+    removeTracked(process_rootElement.businessObject.elementsContainer, connection);
+    if (context.source && context.source.businessObject.outgoing) {
+      removeTracked(context.source.businessObject.outgoing, connection.businessObject);
+    }
+    if (context.target && context.target.businessObject.incoming) {
+      removeTracked(context.target.businessObject.incoming, connection.businessObject);
+    }
   }
 };
 

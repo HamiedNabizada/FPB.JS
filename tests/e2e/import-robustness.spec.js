@@ -327,3 +327,39 @@ test.describe('Import - zweites Modell', () => {
   });
 
 });
+
+// B21 (found in the run of 016f E4): a flow between two operators, which only a
+// foreign file can bring, stayed in the data after one of its operators was deleted
+test.describe('Import - Fluss zwischen zwei Operatoren', () => {
+  const FLOW = 'd5dc692d-61ac-4b4b-aea5-3d3044345aa7';
+  const ERHITZEN = '9ca400c0-a373-48c0-9f13-37ce196cee29';
+  const PRUEFEN = '9833d9a9-1b88-4bfb-91b3-7ab5e2617045';
+
+  for (const geloescht of [PRUEFEN, ERHITZEN]) {
+    test('Löschen eines seiner Operatoren nimmt ihn aus den Daten (' + (geloescht === PRUEFEN ? 'Ziel' : 'Quelle') + ')', async ({ page }) => {
+      const modell = clone();
+      prozesse(modell).flatMap(daten).find((d) => d.id === FLOW).sourceRef = ERHITZEN;
+      const importer = new ImportPage(page);
+      await importer.goto();
+      await importer.import(modell);
+
+      await page.evaluate((id) => {
+        const shape = window.fpbjs.get('elementRegistry').get(id);
+        window.fpbjs.get('modeling').removeElements([shape]);
+      }, geloescht);
+      // a question about the decomposition below may come for "Erhitzen": confirm it
+      const frage = page.locator('dialog.fpb-dialog[open] [data-answer="confirm"], dialog.fpb-dialog[open] [data-answer="ok"]');
+      if (await frage.count()) await frage.first().click();
+      await page.waitForTimeout(300);
+
+      const elemente = await importer.elements();
+      expect(elemente.find((e) => e.id === FLOW)).toBeUndefined();
+      expect(elemente.filter((e) => e.sourceRef === geloescht || e.targetRef === geloescht)).toEqual([]);
+
+      // undo brings it back, in the drawing and in the data
+      await page.evaluate(() => window.fpbjs.get('commandStack').undo());
+      await page.waitForTimeout(300);
+      expect((await importer.elements()).find((e) => e.id === FLOW)).toBeTruthy();
+    });
+  }
+});
