@@ -11,197 +11,6 @@
       <Attribute Name="refObj" AttributeDataType="xs:IDREF" RefAttributeType="ObjectReferences@AutomationML_ObjectReferences_AttributeTypeLib/refAbstractObj">
         <Value>9ca400c0-a373-48c0-9f13-37ce196cee29</Value>
       </Attribute>
-      <InternalElement Name="Abwärme" ID="{f4acd82f-ddb6-535d-9aaa-c1a6091b6f38}" RefBaseSystemUnitPath="VDI_FPD_SystemUnitClassLib/FPD_Energy">
-        <Attribute Name="Identification" AttributeDataType="xs:string" RefAttributeType="VDI_FPD_AttributeTypeLib/FPD_Identification">
-          <Attribute Name="uniqueIdent" AttributeDataType="xs:string">
-            <Value>ad82ec45-1b70-48ee-bf1f-a56cc2f40c8c</Value>
-          </Attribute>
-          <Attribute Name="longName" AttributeDataType="xs:string" />
-          <Attribute Name="shortName" AttributeDataType="xs:string">
-            <Value>Abwärme</Value>
-          </Attribute>
-          <Attribute Name="versionNumber" AttributeDataType="xs:string">
-            <Value>1</Value>
-          </Attribute>
-          <Attribute Name="revisionNumber" AttributeDataType="xs:string">
-            <Value>0</Value>
-          </Attribute>
-        </Attribute>
-        <Attribute Name="Characteristics" AttributeDataType="xs:string" />
-        <Attribute Name="ViewInformation" AttributeDataType="xs:string" RefAttributeType="OMG_DD@OMG_DD_AttributeTypeLib/DD_Bounds">
-          <Attribute Name="position" AttributeDataType="xs:string" RefAttributeType="OMG_DD@OMG_DD_AttributeTypeLib/DD_Point">
-            <Attribute Name="x" AttributeDataType="xs:double">
-              <Value>487.66666666666663</Value>
-            </Attribute>
-            <Attribute Name="y" AttributeDataType="xs:double">
-              <Value>725</Value>
-            </Attribute>
-          </Attribute>
-          <Attribute Name="width" AttributeDataType="xs:double">
-            <Value>50</Value>
-          </Attribute>
-          <Attribute Name="height" AttributeDataType="xs:double">
-            <Value>50</Value>
-          </Attribute>
-        </Attribute>
-        <Attribute Name="refObj" AttributeDataType="xs:IDREF" RefAttributeType="ObjectReferences@AutomationML_ObjectReferences_AttributeTypeLib/refBaseObj">
-          <Value>ad82ec45-1b70-48ee-bf1f-a56cc2f40c8c</Value>
-        </Attribute>
-        <RoleRequirements RefBaseRoleClassPath="VDI_FPD_RoleClassLib/FPD_Energy" />
-      </InternalElement>
-      <InternalElement Name="Produkt_Vorgewärmt" ID="{2ef5a29f-cf06-4faa-833d-62f61f98eb0f}" RefBaseSystemUnitPath="VDI_FPD_SystemUnitClassLib/FPD_Product">
-        <Attribute Name="Identification" AttributeDataType="xs:string" RefAttributeType="VDI_FPD_AttributeTypeLib/FPD_Identification">
-          <Attribute Name="uniqueIdent" AttributeDataType="xs:string">
-            <Value>2ef5a29f-cf06-4faa-833d-62f61f98eb0f</Value>
-          </Attribute>
-          <Attribute Name="longName" AttributeDataType="xs:string" />
-          <Attribute Name="shortName" AttributeDataType="xs:string">
-            <Value>Produkt_
-Vorgewärmt</Value>
-          </Attribute>
-          <Attribute Name="versionNumber" AttributeDataType="xs:string">
-            <Value>1</Value>
-          </Attribute>
-          <Attribute Name="revisionNumber" AttributeDataType="xs:string">
-            <Value>0</Value>
-          </Attribute>
-        </Attribute>
-        <Attribute Name="Characteristics" AttributeDataType="xs:string" />
-        <Attribute Name="ViewInformation" AttributeDataType="xs:string" RefAttributeType="OMG_DD@OMG_DD_AttributeTypeLib/DD_Bounds">
-          <Attribute Name="position" AttributeDataType="xs:string" RefAttributeType="OMG_DD@OMG_DD_AttributeTypeLib/DD_Point">
-            <Attribute Name="x" AttributeDataType="xs:double">
-              <Value>665</Value>
-            </Attribute>
-            <Attribute Name="y" AttributeDataType="xs:double">
-              <Value>345</Value>
-            </Attribute>
-          </Attribute>
-          <Attribute Name="width" AttributeDataType="xs:double">
-            <Value>50</Value>
-          </Attribute>
-          <Attribute Name="height" AttributeDataType="xs:double">
-            <Value>50</Value>
-          </Attribute>
-        </Attribute>
-        <Attribute Name="refObj" AttributeDataType="xs:IDREF" RefAttributeType="ObjectReferences@AutomationML_ObjectReferences_AttributeTypeLib/refBaseObj" />
-        <RoleRequirements RefBaseRoleClassPath="VDI_FPD_RoleClassLib/FPD_Product" />
-        <RoleRequirements RefBaseRoleClassPath="AutomationMLBaseLibrariesAMLEd22_11_0@AutomationMLBaseRoleClassLib/AutomationMLBaseRole/Product" />
-      </InternalElement>
-      <InternalElement Name="Warmprodukt" ID="{f57a0694-4483-7650-9260-cfc6977650c4}" RefBaseSystemUnitPath="VDI_FPD_SystemUnitClassLib/FPD_Product">
-        <Attribute Name="Identification" AttributeDataType="xs:string" RefAttributeType="VDI_FPD_AttributeTypeLib/FPD_Identification">
-          <Attribute Name="uniqueIdent" AttributeDataType="xs:string">
-            <Value>ee2dd67d-eecf-4a76-bb64-148b6ed4c320</Value>
-          </Attribute>
-          <Attribute Name="longName" AttributeDataType="xs:string" />
-          <Attribute Name="shortName" AttributeDataType="xs:string">
-            <Value>Warmprodukt</Value>
-          </Attribute>
-          <Attribute Name="versionNumber" AttributeDataType="xs:string">
-            <Value>1</Value>
-          </Attribute>
-          <Attribute Name="revisionNumber" AttributeDataType="xs:string">
-            <Value>0</Value>
-          </Attribute>
-        </Attribute>
-        <Attribute Name="Characteristics" AttributeDataType="xs:string" />
-        <Attribute Name="ViewInformation" AttributeDataType="xs:string" RefAttributeType="OMG_DD@OMG_DD_AttributeTypeLib/DD_Bounds">
-          <Attribute Name="position" AttributeDataType="xs:string" RefAttributeType="OMG_DD@OMG_DD_AttributeTypeLib/DD_Point">
-            <Attribute Name="x" AttributeDataType="xs:double">
-              <Value>758.3333333333333</Value>
-            </Attribute>
-            <Attribute Name="y" AttributeDataType="xs:double">
-              <Value>725</Value>
-            </Attribute>
-          </Attribute>
-          <Attribute Name="width" AttributeDataType="xs:double">
-            <Value>50</Value>
-          </Attribute>
-          <Attribute Name="height" AttributeDataType="xs:double">
-            <Value>50</Value>
-          </Attribute>
-        </Attribute>
-        <Attribute Name="refObj" AttributeDataType="xs:IDREF" RefAttributeType="ObjectReferences@AutomationML_ObjectReferences_AttributeTypeLib/refBaseObj">
-          <Value>ee2dd67d-eecf-4a76-bb64-148b6ed4c320</Value>
-        </Attribute>
-        <RoleRequirements RefBaseRoleClassPath="VDI_FPD_RoleClassLib/FPD_Product" />
-        <RoleRequirements RefBaseRoleClassPath="AutomationMLBaseLibrariesAMLEd22_11_0@AutomationMLBaseRoleClassLib/AutomationMLBaseRole/Product" />
-      </InternalElement>
-      <InternalElement Name="Temperatur" ID="{877de73e-7e19-f459-8782-cb3ab05cd06d}" RefBaseSystemUnitPath="VDI_FPD_SystemUnitClassLib/FPD_Information">
-        <Attribute Name="Identification" AttributeDataType="xs:string" RefAttributeType="VDI_FPD_AttributeTypeLib/FPD_Identification">
-          <Attribute Name="uniqueIdent" AttributeDataType="xs:string">
-            <Value>448910e5-360c-4533-adbc-e4a022f30780</Value>
-          </Attribute>
-          <Attribute Name="longName" AttributeDataType="xs:string" />
-          <Attribute Name="shortName" AttributeDataType="xs:string">
-            <Value>Temperatur</Value>
-          </Attribute>
-          <Attribute Name="versionNumber" AttributeDataType="xs:string">
-            <Value>1</Value>
-          </Attribute>
-          <Attribute Name="revisionNumber" AttributeDataType="xs:string">
-            <Value>0</Value>
-          </Attribute>
-        </Attribute>
-        <Attribute Name="Characteristics" AttributeDataType="xs:string" />
-        <Attribute Name="ViewInformation" AttributeDataType="xs:string" RefAttributeType="OMG_DD@OMG_DD_AttributeTypeLib/DD_Bounds">
-          <Attribute Name="position" AttributeDataType="xs:string" RefAttributeType="OMG_DD@OMG_DD_AttributeTypeLib/DD_Point">
-            <Attribute Name="x" AttributeDataType="xs:double">
-              <Value>812.5</Value>
-            </Attribute>
-            <Attribute Name="y" AttributeDataType="xs:double">
-              <Value>25</Value>
-            </Attribute>
-          </Attribute>
-          <Attribute Name="width" AttributeDataType="xs:double">
-            <Value>50</Value>
-          </Attribute>
-          <Attribute Name="height" AttributeDataType="xs:double">
-            <Value>50</Value>
-          </Attribute>
-        </Attribute>
-        <Attribute Name="refObj" AttributeDataType="xs:IDREF" RefAttributeType="ObjectReferences@AutomationML_ObjectReferences_AttributeTypeLib/refBaseObj">
-          <Value>448910e5-360c-4533-adbc-e4a022f30780</Value>
-        </Attribute>
-        <RoleRequirements RefBaseRoleClassPath="VDI_FPD_RoleClassLib/FPD_Information" />
-      </InternalElement>
-      <InternalElement Name="Strom" ID="{724f7c61-5497-2d5d-9c88-8dc5b0976bec}" RefBaseSystemUnitPath="VDI_FPD_SystemUnitClassLib/FPD_Energy">
-        <Attribute Name="Identification" AttributeDataType="xs:string" RefAttributeType="VDI_FPD_AttributeTypeLib/FPD_Identification">
-          <Attribute Name="uniqueIdent" AttributeDataType="xs:string">
-            <Value>6d5ba42c-ba5f-4348-abc3-3f7395b8ce2d</Value>
-          </Attribute>
-          <Attribute Name="longName" AttributeDataType="xs:string" />
-          <Attribute Name="shortName" AttributeDataType="xs:string">
-            <Value>Strom</Value>
-          </Attribute>
-          <Attribute Name="versionNumber" AttributeDataType="xs:string">
-            <Value>1</Value>
-          </Attribute>
-          <Attribute Name="revisionNumber" AttributeDataType="xs:string">
-            <Value>0</Value>
-          </Attribute>
-        </Attribute>
-        <Attribute Name="Characteristics" AttributeDataType="xs:string" />
-        <Attribute Name="ViewInformation" AttributeDataType="xs:string" RefAttributeType="OMG_DD@OMG_DD_AttributeTypeLib/DD_Bounds">
-          <Attribute Name="position" AttributeDataType="xs:string" RefAttributeType="OMG_DD@OMG_DD_AttributeTypeLib/DD_Point">
-            <Attribute Name="x" AttributeDataType="xs:double">
-              <Value>650</Value>
-            </Attribute>
-            <Attribute Name="y" AttributeDataType="xs:double">
-              <Value>25</Value>
-            </Attribute>
-          </Attribute>
-          <Attribute Name="width" AttributeDataType="xs:double">
-            <Value>50</Value>
-          </Attribute>
-          <Attribute Name="height" AttributeDataType="xs:double">
-            <Value>50</Value>
-          </Attribute>
-        </Attribute>
-        <Attribute Name="refObj" AttributeDataType="xs:IDREF" RefAttributeType="ObjectReferences@AutomationML_ObjectReferences_AttributeTypeLib/refBaseObj">
-          <Value>6d5ba42c-ba5f-4348-abc3-3f7395b8ce2d</Value>
-        </Attribute>
-        <RoleRequirements RefBaseRoleClassPath="VDI_FPD_RoleClassLib/FPD_Energy" />
-      </InternalElement>
       <InternalElement Name="Rohstoff" ID="{dbed06aa-1de5-f954-b504-f9ea3953b613}" RefBaseSystemUnitPath="VDI_FPD_SystemUnitClassLib/FPD_Product">
         <Attribute Name="Identification" AttributeDataType="xs:string" RefAttributeType="VDI_FPD_AttributeTypeLib/FPD_Identification">
           <Attribute Name="uniqueIdent" AttributeDataType="xs:string">
@@ -1146,13 +955,13 @@ Vorgewärmt</Value>
   <SystemUnitClassLib Name="VDI_FPD_SystemUnitClassLib">
     <Description>Instantiation templates with mirrored attributes and SUC inheritance.</Description>
     <Version>1.2.0</Version>
-    <SystemUnitClass Name="FPD_Process" ID="b3a6d0e3-867a-4dd3-8207-be6c54aee91e">
+    <SystemUnitClass Name="FPD_Process" ID="a5306f71-bb21-4680-ab26-75d6d90e2703">
       <Version>1.2.0</Version>
       <Attribute Name="refObj" AttributeDataType="xs:IDREF" RefAttributeType="ObjectReferences@AutomationML_ObjectReferences_AttributeTypeLib/refAbstractObj" />
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_Process" />
       <SupportedRoleClass RefRoleClassPath="AutomationMLBaseLibrariesAMLEd22_11_0@AutomationMLBaseRoleClassLib/AutomationMLBaseRole/Structure" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_SystemLimit" ID="0448fbed-c03d-4c29-8124-eeae9a17d60e">
+    <SystemUnitClass Name="FPD_SystemLimit" ID="0cd4f6cd-ee20-416a-9727-a2637062ab96">
       <Version>1.2.0</Version>
       <Attribute Name="Identification" AttributeDataType="xs:string" RefAttributeType="VDI_FPD_AttributeTypeLib/FPD_Identification">
         <Attribute Name="uniqueIdent" AttributeDataType="xs:string" />
@@ -1171,7 +980,7 @@ Vorgewärmt</Value>
       </Attribute>
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_SystemLimit" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_Object" ID="84c5c9e7-18de-4306-ba18-dca6fbddc1b4">
+    <SystemUnitClass Name="FPD_Object" ID="5e3fce55-ae7b-4715-ada9-50c53746c469">
       <Version>1.2.0</Version>
       <Attribute Name="Identification" AttributeDataType="xs:string" RefAttributeType="VDI_FPD_AttributeTypeLib/FPD_Identification">
         <Attribute Name="uniqueIdent" AttributeDataType="xs:string" />
@@ -1191,31 +1000,31 @@ Vorgewärmt</Value>
       </Attribute>
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_Object" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_State" ID="1f339d05-7da4-4b47-bbff-23649852cbc9" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_Object">
+    <SystemUnitClass Name="FPD_State" ID="a4ed5398-981e-487f-b82a-496703784a6d" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_Object">
       <Version>1.2.0</Version>
       <Attribute Name="refObj" AttributeDataType="xs:IDREF" RefAttributeType="ObjectReferences@AutomationML_ObjectReferences_AttributeTypeLib/refBaseObj" />
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_State" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_Product" ID="77673698-a125-442b-8305-1f0e9969020b" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_State">
+    <SystemUnitClass Name="FPD_Product" ID="15206703-cba5-405a-9a8a-a6b72a6f0876" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_State">
       <Version>1.2.0</Version>
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_Product" />
       <SupportedRoleClass RefRoleClassPath="AutomationMLBaseLibrariesAMLEd22_11_0@AutomationMLBaseRoleClassLib/AutomationMLBaseRole/Product" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_Energy" ID="7c2ef9b9-5ee6-476c-be60-492e20d1a6cc" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_State">
+    <SystemUnitClass Name="FPD_Energy" ID="f398affa-9101-45af-bfd7-470679f9558b" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_State">
       <Version>1.2.0</Version>
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_Energy" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_Information" ID="d3e90d19-d6ed-4f97-9ad4-7bc0d7b5da89" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_State">
+    <SystemUnitClass Name="FPD_Information" ID="2e8f7b05-3539-4aed-b9a8-5cd4416833d6" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_State">
       <Version>1.2.0</Version>
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_Information" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_ProcessOperator" ID="453978ff-53ce-47d4-92fe-bc03d581ef7b" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_Object">
+    <SystemUnitClass Name="FPD_ProcessOperator" ID="64665cf3-ca0f-44c1-990b-2f746317af70" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_Object">
       <Version>1.2.0</Version>
       <Attribute Name="refProcess" AttributeDataType="xs:IDREF" RefAttributeType="ObjectReferences@AutomationML_ObjectReferences_AttributeTypeLib/refDetailObj" />
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_ProcessOperator" />
       <SupportedRoleClass RefRoleClassPath="AutomationMLBaseLibrariesAMLEd22_11_0@AutomationMLBaseRoleClassLib/AutomationMLBaseRole/Process" />
     </SystemUnitClass>
-    <SystemUnitClass Name="FPD_TechnicalResource" ID="3550636d-5a16-4da4-8a45-87169da089b5" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_Object">
+    <SystemUnitClass Name="FPD_TechnicalResource" ID="7453c4f2-fcbe-420a-b20e-c8d14c438ed1" RefBaseClassPath="VDI_FPD_SystemUnitClassLib/FPD_Object">
       <Version>1.2.0</Version>
       <SupportedRoleClass RefRoleClassPath="VDI_FPD_RoleClassLib/FPD_TechnicalResource" />
       <SupportedRoleClass RefRoleClassPath="AutomationMLBaseLibrariesAMLEd22_11_0@AutomationMLBaseRoleClassLib/AutomationMLBaseRole/Resource" />

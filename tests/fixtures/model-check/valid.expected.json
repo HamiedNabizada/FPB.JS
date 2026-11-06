@@ -1,0 +1,17 @@
+{
+  "aml": "tests/fixtures/model-check/valid.aml",
+  "hierarchy": "FPBJS_Project",
+  "rules": [
+    "A2",
+    "A3",
+    "A4",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "D1",
+    "D7",
+    "D8"
+  ],
+  "findings": []
+}

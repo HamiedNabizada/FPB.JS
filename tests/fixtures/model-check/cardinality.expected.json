@@ -7,8 +7,12 @@
   ],
   "findings": [
     {
+      "rule": "A3",
+      "process": "9ca400c0-a373-48c0-9f13-37ce196cee29"
+    },
+    {
       "rule": "A4",
-      "process": "Erhitzen"
+      "process": "9ca400c0-a373-48c0-9f13-37ce196cee29"
     }
   ]
 }

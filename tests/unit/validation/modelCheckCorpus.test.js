@@ -13,7 +13,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { fixedEnvironment } from '../../../app/fpb/aml/mapper/environment.js';
-import { convertFpbJsonToCaex } from '../../../app/fpb/aml/mapper/FpbJsonToCaex.js';
+import { convertFpbJsonToCaex, createEmptyFpdInstanceHierarchy } from '../../../app/fpb/aml/mapper/FpbJsonToCaex.js';
 import { guidsIn, maskRandomGuids, maskWritingTime } from '../aml/oracleMask.js';
 import basis from '../../e2e/fixtures/temperieren.json';
 
@@ -53,6 +53,24 @@ const bare = (id) => String(id || '').replace(/^\{|\}$/g, '');
 
 /** The cases: a change of the model, then of the AML document */
 const CASES = {
+  // a valid model: every compared rule kept, a usage from the resource to the operator (C10)
+  valid: {
+    model() {
+      const m = versioned(clone());
+      const usage = top(m).elementDataInformation.find((d) => d.$type === 'fpb:Usage');
+      [usage.sourceRef, usage.targetRef] = [usage.targetRef, usage.sourceRef];
+      return m;
+    }
+  },
+  // a hierarchy with an empty process, without a system limit: not begun, no A2 to A4
+  empty: {
+    model: () => versioned(clone()),
+    document(doc) {
+      const ih = createEmptyFpdInstanceHierarchy(doc, 'Empty_IH', 'Empty');
+      const walk = (list) => { for (const ie of [...list]) { if (/FPD_SystemLimit$/.test(ie.refBaseSystemUnitPath || '')) ie.remove(); else walk(ie.internalElement); } };
+      walk(ih.internalElement);
+    }
+  },
   // flows the guideline does not know (C1 to C4)
   flows: {
     model() {
@@ -70,6 +88,8 @@ const CASES = {
     model() {
       const m = versioned(clone());
       data(m, AUSSCHUSS).forEach((d) => { d.identification.versionNumber = ''; });
+      // a boundary state on two layers: one element for both checks
+      data(m, ROHSTOFF).forEach((d) => { d.identification.revisionNumber = ''; });
       data(m, HEIZPLATTE).forEach((d) => { d.identification.uniqueIdent = 'DUP-1'; });
       data(m, GUTPRODUKT).forEach((d) => { d.identification.uniqueIdent = 'DUP-1'; d.identification.longName = 'Gutes Produkt'; });
       return m;
@@ -83,13 +103,14 @@ const CASES = {
       ['shortName', 'longName'].forEach((n) => { const a = identification && identification.attribute.item(n); if (a) a.value = ''; });
     }
   },
-  // cardinality (A3, A4): the decomposition of "Erhitzen" without its operators and flows
+  // cardinality (A3, A4): the decomposition of "Erhitzen" with one state, without operators and flows
   cardinality: {
     model() {
       const m = versioned(clone());
       const child = processOf(m, ERHITZEN);
       const gone = new Set(child.elementDataInformation
-        .filter((d) => /ProcessOperator$|Flow$/.test(d.$type)).map((d) => d.id));
+        .filter((d) => /ProcessOperator$|Flow$/.test(d.$type) || (/Product$|Energy$|Information$/.test(d.$type) && d.id !== ROHSTOFF))
+        .map((d) => d.id));
       child.elementDataInformation = child.elementDataInformation.filter((d) => !gone.has(d.id));
       child.elementVisualInformation = child.elementVisualInformation.filter((v) => !gone.has(v.id));
       child.elementDataInformation.forEach((d) => {
@@ -134,6 +155,7 @@ describe('model check corpus (031 V8)', () => {
 
   it('every case has its expected verdict', () => {
     Object.keys(CASES).concat(['showcase-a']).forEach((name) => {
+      expect(fs.existsSync(path.join(DIR, name + '.expected.json'))).toBe(true);
       const expected = JSON.parse(fs.readFileSync(path.join(DIR, name + '.expected.json'), 'utf8'));
       expect(Array.isArray(expected.rules) && Array.isArray(expected.findings)).toBe(true);
     });

@@ -141,6 +141,13 @@ describe('ModelChecker', () => {
     expect(a.map((i) => [i.rule, i.severity, i.elementId])).toEqual([['A3', 'warning', null], ['A4', 'warning', null]]);
   });
 
+  // final review of 031: "begun" is the same for A2 to A4, here and in OCL
+  it('A2, A3 and A4: a process with only a technical resource and no system limit', () => {
+    const tr = shape('tr', 'fpb:TechnicalResource', at(600, 260, OPERATOR), { name: 'Machine' });
+    const p = { id: 'p', type: 'fpb:Process', businessObject: bo('p', 'fpb:Process', { elementsContainer: [tr] }) };
+    expect(rules(checkModel([p])).filter((r) => /^A/.test(r))).toEqual(['A2', 'A3', 'A4']);
+  });
+
   it('A3 and A4: an empty process says nothing', () => {
     expect(checkModel([process('p', [])])).toEqual([]);
   });

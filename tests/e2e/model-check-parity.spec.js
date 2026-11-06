@@ -9,8 +9,8 @@ import { ImportPage } from './pages/ImportPage';
  * same verdict on the same files. Each file of tests/fixtures/model-check has
  * its expected verdict; the plugin checks OCL against the same files
  * (ModelCheckParityTests.cs). Compared are the rules the case names, as pairs
- * of rule and element: D8 for every element it involves, A2 to A4 by the name
- * of the process as the export writes it, D1 only whether it is broken.
+ * of rule and element: D1 and D8 for every element they involve, A2 to A4 by
+ * the id of the process in FPB.js.
  */
 
 const ROOT = path.join(__dirname, '..', '..');
@@ -25,23 +25,12 @@ async function verdict(page, text, hierarchy, rules) {
     const found = await aml.inspect(text);
     const ih = found.find((h) => h.name === hierarchy);
     await aml.importAml(text, { hierarchyId: ih && ih.id });
-    // the name of a process as the export writes it: its operator, else its system limit
-    const processName = (process) => {
-      const bo = process.businessObject;
-      if (bo.isDecomposedProcessOperator) {
-        return bo.isDecomposedProcessOperator.name;
-      }
-      const sl = (bo.elementsContainer || []).find((e) => e.type === 'fpb:SystemLimit');
-      return sl ? sl.businessObject.name : 'Process';
-    };
     const out = [];
     window.fpbjs.get('fpbValidation').run().filter((i) => rules.includes(i.rule)).forEach((i) => {
       if (['A2', 'A3', 'A4'].includes(i.rule)) {
-        out.push({ rule: i.rule, process: processName(i.process) });
-      } else if (i.rule === 'D1') {
-        out.push({ rule: 'D1', element: '*' });
-      } else if (i.rule === 'D8') {
-        i.involved.forEach((x) => out.push({ rule: 'D8', element: x.id }));
+        out.push({ rule: i.rule, process: i.process.id });
+      } else if (i.rule === 'D1' || i.rule === 'D8') {
+        i.involved.forEach((x) => out.push({ rule: i.rule, element: x.id }));
       } else {
         out.push({ rule: i.rule, element: i.elementId });
       }

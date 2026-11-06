@@ -30,3 +30,6 @@ tests/e2e/screenshots/
 # build output of the C# oracle for the mapper port
 tools/aml-oracle/bin/
 tools/aml-oracle/obj/
+
+# Aml.Engine writes the CAEX schema next to every AML file it loads (031); third-party, not ours to commit
+tests/fixtures/model-check/CAEX_ClassModel_V.3.0.xsd

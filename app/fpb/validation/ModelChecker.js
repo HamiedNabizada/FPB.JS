@@ -267,6 +267,11 @@ function nameOf(element) {
   return (bo.name || identification.shortName || '').trim();
 }
 
+/** A process has begun once it holds a state, an operator or a resource (A2 to A4) */
+function begun(layer) {
+  return !!(layer.states.length || layer.operators.length || layer.resources.length);
+}
+
 /** D7: a long name, a short name or a name */
 function hasName(element) {
   const identification = identificationOf(element);
@@ -346,8 +351,8 @@ function checkProcess(process, issues) {
   const layer = layerContents(process);
   const sl = layer.systemLimit;
 
-  // A2
-  if (layer.systemLimits.length !== 1 && (layer.states.length || layer.operators.length || layer.systemLimits.length)) {
+  // A2: at most one system limit; exactly one once the process has begun (as in OCL, 031)
+  if (layer.systemLimits.length > 1 || (!layer.systemLimits.length && begun(layer))) {
     report(issues, 'A2', layer.systemLimits[1] || null, process,
       layer.systemLimits.length
         ? msg('The process has {count} system limits.', { count: layer.systemLimits.length })
@@ -355,7 +360,7 @@ function checkProcess(process, issues) {
   }
 
   // A3, A4: only for a process that has begun (like A2)
-  if (layer.states.length || layer.operators.length || layer.resources.length) {
+  if (begun(layer)) {
     if (layer.states.length < 2) {
       report(issues, 'A3', null, process, msg('The process has fewer than two states.'));
     }

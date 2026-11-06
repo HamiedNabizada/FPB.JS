@@ -9,7 +9,11 @@
   "findings": [
     {
       "rule": "D1",
-      "element": "*"
+      "element": "9fe05bdc-4f2b-4ec5-8128-51dbc597eee2"
+    },
+    {
+      "rule": "D1",
+      "element": "1a9fc4c7-3c89-4277-8965-3b186eaa2672"
     },
     {
       "rule": "D7",
@@ -18,6 +22,10 @@
     {
       "rule": "D8",
       "element": "61a6df5b-1081-4651-93ae-572fea3994ab"
+    },
+    {
+      "rule": "D8",
+      "element": "c50336d6-9a7f-46e3-a7f5-e6187618dd69"
     }
   ]
 }

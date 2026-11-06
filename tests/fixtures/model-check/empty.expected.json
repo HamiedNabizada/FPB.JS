@@ -1,0 +1,10 @@
+{
+  "aml": "tests/fixtures/model-check/empty.aml",
+  "hierarchy": "Empty_IH",
+  "rules": [
+    "A2",
+    "A3",
+    "A4"
+  ],
+  "findings": []
+}
