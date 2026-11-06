@@ -117,9 +117,7 @@ function build(name) {
 // as in the oracle test: the random GUIDs of Aml.Engine depend on which test
 // built the libraries first, the writing time on the zone of the machine, the
 // line ends on how git checks the file out
-const masked = (text, keep) => maskWritingTime(maskRandomGuids(text, keep)).replace(/
-/g, '
-');
+const masked = (text, keep) => maskWritingTime(maskRandomGuids(text, keep)).replace(/\r\n/g, '\n');
 
 describe('model check corpus (031 V8)', () => {
   Object.keys(CASES).forEach((name) => {
