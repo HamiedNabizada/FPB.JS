@@ -10,10 +10,11 @@
  * @param {Object} [options]
  * @param {number} [options.scale=2] - Scale factor (2 = retina quality)
  * @param {string} [options.backgroundColor='#ffffff'] - Background fill color
+ * @param {number} [options.margin=20] - Room around the drawing in pixels before scaling
  * @returns {Promise<string>} PNG as data URL (data:image/png;base64,...)
  */
 export async function exportPNG(svgString, options = {}) {
-  const { scale = 2, backgroundColor = '#ffffff' } = options;
+  const { scale = 2, backgroundColor = '#ffffff', margin = 20 } = options;
 
   // 1. Create an Image from the SVG
   const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
@@ -32,14 +33,14 @@ export async function exportPNG(svgString, options = {}) {
 
     // 2. Draw onto a scaled canvas
     const canvas = document.createElement('canvas');
-    canvas.width = img.width * scale;
-    canvas.height = img.height * scale;
+    canvas.width = (img.width + 2 * margin) * scale;
+    canvas.height = (img.height + 2 * margin) * scale;
 
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.scale(scale, scale);
-    ctx.drawImage(img, 0, 0);
+    ctx.drawImage(img, margin, margin);
 
     // 3. Export as PNG data URL
     return canvas.toDataURL('image/png');

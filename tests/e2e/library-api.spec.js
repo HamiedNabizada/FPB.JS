@@ -1224,6 +1224,36 @@ test.describe('Image and PDF export', () => {
     expect(result.pixel).toEqual([255, 0, 0, 255]);
   });
 
+  test('toPNG leaves room around the drawing', async ({ page }) => {
+    // Testrunde 2026-11-07: the drawing touched the edge of the picture
+    await withModel(page);
+
+    const band = await page.evaluate(async () => {
+      const img = new Image();
+      const url = await window.fpb.toPNG({ scale: 1 });
+      await new Promise((resolve) => { img.onload = resolve; img.src = url; });
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, c.width, c.height).data;
+      const white = (x, y) => { const i = (y * c.width + x) * 4; return data[i] === 255 && data[i + 1] === 255 && data[i + 2] === 255; };
+      const edge = 20;
+      let colored = 0;
+      let inside = 0;
+      for (let y = 0; y < c.height; y++) {
+        for (let x = 0; x < c.width; x++) {
+          const onEdge = x < edge || y < edge || x >= c.width - edge || y >= c.height - edge;
+          if (!white(x, y)) { if (onEdge) colored++; else inside++; }
+        }
+      }
+      return { colored, inside };
+    });
+
+    expect(band.inside).toBeGreaterThan(0);
+    expect(band.colored).toBe(0);
+  });
+
   test('toPDF returns a one page PDF blob of the current layer', async ({ page }) => {
     await withModel(page);
 
