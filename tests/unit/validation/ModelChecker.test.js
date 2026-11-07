@@ -127,6 +127,15 @@ describe('ModelChecker', () => {
     expect(issues.map((i) => i.message).sort()).toEqual(['A process operator has no name.', 'A state has no name.', 'A technical resource has no name.']);
   });
 
+  // found by the exploratory test after 031: findings showed the bare id of an unnamed element
+  it('a finding names an unnamed element by its kind, not by its id', () => {
+    const m = validModel();
+    m.output.businessObject.name = '';
+    m.output.incoming = [];
+    const g4 = checkModel([m.process]).find((i) => i.rule === 'G4');
+    expect(g4.message).toBe('(state without a name) is not connected.');
+  });
+
   it('D7: a long name alone is enough', () => {
     const m = validModel();
     m.input.businessObject.name = '';

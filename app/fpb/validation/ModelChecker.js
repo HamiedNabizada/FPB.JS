@@ -305,8 +305,20 @@ function checkEnds(issues, connection, process) {
   }
 }
 
+// an element without a name reads by its kind, not by its id (found by the
+// exploratory test after 031)
+const UNNAMED = [
+  ['fpb:State', markText('(state without a name)')],
+  ['fpb:ProcessOperator', markText('(process operator without a name)')],
+  ['fpb:TechnicalResource', markText('(technical resource without a name)')]
+];
+
 function label(element) {
-  return nameOf(element) ? '"' + nameOf(element) + '"' : element.id;
+  if (nameOf(element)) {
+    return '"' + nameOf(element) + '"';
+  }
+  const kind = UNNAMED.find(function (entry) { return is(element, entry[0]); });
+  return msg(kind ? kind[1] : markText('(element without a name)'));
 }
 
 function layerContents(process) {
