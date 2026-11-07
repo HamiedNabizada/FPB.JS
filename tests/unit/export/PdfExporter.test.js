@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import zlib from 'node:zlib';
 
-import { exportPDF } from '../../../app/fpb/export/PdfExporter.js';
+import { exportPDF, exportMultiLayerPDF } from '../../../app/fpb/export/PdfExporter.js';
 
 /**
  * Testrunde 2026-11-07: ein PDF mit zwei Ebenen wog 13,9 MB, weil jsPDF die
@@ -52,5 +52,11 @@ describe('PdfExporter', () => {
 
     // ungepackt allein die Farben: 1200 * 800 * 3 Byte = 2,8 MB
     expect(blob.size).toBeLessThan(width * height * 3 / 20);
+  });
+
+  it('schreibt eine Seite auch für eine Ebene ohne Namen', () => {
+    // final review: a project without a name made jsPDF throw on the page title
+    const blob = exportMultiLayerPDF([{ name: undefined, pngDataUrl: png(40, 20) }, { name: '', pngDataUrl: png(40, 20) }], { title: 'Modell' });
+    expect(blob.size).toBeGreaterThan(0);
   });
 });

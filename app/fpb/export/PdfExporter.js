@@ -82,7 +82,8 @@ function addImagePage(pdf, pngDataUrl, title) {
 
   // Title
   pdf.setFontSize(14);
-  pdf.text(title, pageWidth / 2, PAGE_MARGIN, { align: 'center' });
+  // a layer without a name (a project without one) gets an empty title; jsPDF throws on undefined
+  pdf.text(title || '', pageWidth / 2, PAGE_MARGIN, { align: 'center' });
 
   // Available area for the image
   const availableWidth = pageWidth - 2 * PAGE_MARGIN;
