@@ -215,8 +215,8 @@ export function buildFpdElementIndex(ih) {
 
 /**
  * AmlLinkList.For: the found links placed on the layer and element of the
- * diagram, as setAmlLinks takes them; objects the diagram does not show are
- * left out.
+ * diagram, as setAmlLinks takes them and sorted the same way; objects the
+ * diagram does not show are left out.
  *
  * @return {Array<{ processId: string, elementId: string, name: string, link: string, owner: string }>}
  */
@@ -231,7 +231,18 @@ export function amlLinkList(found, index) {
       list.push({ processId: hit.processId, elementId: hit.fpbId, name: element.elementName, link: l.link, owner: l.owner });
     }
   }
-  return list;
+  // as Sorted: layer, element, link, owner, OrdinalIgnoreCase
+  const key = (e) => [e.processId, e.elementId, e.link, e.owner].map((v) => v.toUpperCase());
+  return list.sort((a, b) => {
+    const ka = key(a);
+    const kb = key(b);
+    for (let i = 0; i < ka.length; i++) {
+      if (ka[i] !== kb[i]) {
+        return ka[i] < kb[i] ? -1 : 1;
+      }
+    }
+    return 0;
+  });
 }
 
 function forEachInterface(roots, visit) {

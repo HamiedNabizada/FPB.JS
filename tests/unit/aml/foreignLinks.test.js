@@ -49,4 +49,22 @@ describe('foreignLinks: placing the links on the diagram', () => {
     // the process of that layer: the layer itself
     expect(pick('L_Prozess')).toEqual([{ processId: '6d37cff1-a715-266d-7750-8ee6e7574a4c', elementId: '6d37cff1-a715-266d-7750-8ee6e7574a4c' }]);
   });
+
+  it('sorts the list as AmlLinkList.For: layer, element, link, owner, ordinal without case', () => {
+    // final review: the plugin names the first five of the sorted list, the web app named others
+    const { list } = listOf(read('inputs/generated/links.aml'), 0);
+    const key = (e) => [e.processId, e.elementId, e.link, e.owner].map((v) => v.toUpperCase());
+    const cmp = (a, b) => {
+      const ka = key(a);
+      const kb = key(b);
+      for (let i = 0; i < ka.length; i++) {
+        if (ka[i] !== kb[i]) {
+          return ka[i] < kb[i] ? -1 : 1;
+        }
+      }
+      return 0;
+    };
+    expect(list.length).toBeGreaterThan(5);
+    expect(list).toEqual([...list].sort(cmp));
+  });
 });
