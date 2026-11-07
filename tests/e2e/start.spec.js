@@ -259,3 +259,28 @@ test.describe('Start card', () => {
     await expect(page.locator(OPEN)).toBeVisible();
   });
 });
+
+test.describe('Name of a new model', () => {
+  // Testrunde 2026-11-07: the breadcrumbs and the file name said "FPBJS_Project"
+  const drawFirst = (page) => page.evaluate(() => {
+    const fpb = window.fpbjs;
+    fpb.newModel();
+    fpb.get('modeling').createShape({ type: 'fpb:SystemLimit' }, { x: 400, y: 300 }, fpb.get('canvas').getRootElement());
+    return fpb.getProjectDefinition().name;
+  });
+
+  test('a new model is called "New project", in German "Neues Projekt"', async ({ page }) => {
+    await new ImportPage(page).goto();
+    expect(await drawFirst(page)).toBe('New project');
+
+    await page.evaluate(() => window.fpbjs.get('fpbI18n').set('de'));
+    expect(await drawFirst(page)).toBe('Neues Projekt');
+  });
+
+  test('an opened model keeps its name', async ({ page }) => {
+    const importer = new ImportPage(page);
+    await importer.goto();
+    await importer.import(JSON.parse(JSON.stringify(basis)));
+    expect(await page.evaluate(() => window.fpbjs.getProjectDefinition().name)).toBe('FPBJS_Project');
+  });
+});

@@ -1,3 +1,4 @@
+import { markText } from '../../i18n/markText';
 import inherits from 'inherits';
 
 import { getElementById, checkIfOnSystemBorder, getSystemLimit } from '../../help/helpUtils';
@@ -122,8 +123,10 @@ ShapeUpdater.prototype._handleCreate = function (element, process_rootElement) {
 
     process_rootElement = this._elementFactory.create('root', { type: 'fpb:Process' });
 
+    // a host may name new projects (config); else "New project" in the
+    // language in effect (Testrunde 2026-11-07: it said "FPBJS_Project")
     const projectDefintion = this._fpbFactory.create('fpb:Project', {
-      name: this._config.ProjectDefintion.name,
+      name: this._config.ProjectDefintion.name || this._injector.get('translate')(markText('New project')),
       targetNamespace: this._config.ProjectDefintion.targetNamespace,
       entryPoint: process_rootElement
     });
