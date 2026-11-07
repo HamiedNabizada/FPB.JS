@@ -90,6 +90,12 @@ FpbRuleProvider.prototype.init = function () {
       }
       else {
         const process = canvas.getRootElement();
+        // one system limit per process (VDI 3682, rule A2): a second one made
+        // deleting and the export lose data (monkey test 2026-11-07)
+        if (is(process, ELEMENT_TYPES.PROCESS)
+          && getElementsFromElementsContainer(process.businessObject.elementsContainer, ELEMENT_TYPES.SYSTEM_LIMIT).length) {
+          return false;
+        }
         if (is(process, ELEMENT_TYPES.PROCESS)) {
           const technicalResources = getElementsFromElementsContainer(process.businessObject.elementsContainer, ELEMENT_TYPES.TECHNICAL_RESOURCE);
           if (technicalResources.length === 0) {

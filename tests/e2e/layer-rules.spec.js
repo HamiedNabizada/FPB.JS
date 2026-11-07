@@ -328,6 +328,23 @@ test.describe('Rules: shape.create', () => {
     expect(r.noTarget).toBe(false);
   });
 
+  test('a layer has one system limit: a second one cannot be created on it', async ({ page }) => {
+    // Monkey test 2026-11-07: a second system limit from the palette made
+    // deleting and the export lose data (VDI 3682: one system limit per process, A2)
+    await load(page);
+    const r = await page.evaluate(() => {
+      const root = window.fpbjs.get('canvas').getRootElement();
+      const sl = window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:SystemLimit')[0];
+      const shape = window.fpbjs.get('elementFactory').createShape({ type: 'fpb:SystemLimit' });
+      const far = { x: sl.x + sl.width + 600, y: sl.y };
+      return {
+        beside: window.fpbjs.get('rules').allowed('shape.create', { shape, target: root, position: far }),
+        inside: window.fpbjs.get('rules').allowed('shape.create', { shape, target: sl, position: { x: sl.x + 100, y: sl.y + 100 } })
+      };
+    });
+    expect(r).toEqual({ beside: false, inside: false });
+  });
+
   test('an element that is no FPB shape (a flow) cannot be created as a shape', async ({ page }) => {
     await load(page);
     const r = await page.evaluate(() => {
@@ -386,30 +403,42 @@ test.describe('Rules: shape.create', () => {
 
 test.describe('Rules: system limit versus technical resource', () => {
 
+  // a layer with a technical resource and no system limit yet: a new model
+  // whose first element is the resource (a layer has one system limit, A2)
+  async function resourceOnly(page) {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await new ImportPage(page).goto();
+    await install(page);
+    return page.evaluate(() => {
+      window.fpbjs.newModel();
+      const tr = window.fpbjs.get('elementFactory').createShape({ type: 'fpb:TechnicalResource', id: 'heiz' });
+      window.fpbjs.get('modeling').createShape(tr, { x: 500, y: 300 }, window.fpbjs.get('canvas').getRootElement());
+      return 'heiz';
+    });
+  }
+
   test('creating a system limit over a technical resource is refused and explained', async ({ page }) => {
-    await load(page);
-    const r = await page.evaluate(({ IDS }) => {
+    const id = await resourceOnly(page);
+    const r = await page.evaluate((id) => {
       const rules = window.fpbjs.get('rules');
-      const factory = window.fpbjs.get('elementFactory');
-      const reg = window.fpbjs.get('elementRegistry');
+      const heiz = window.fpbjs.get('elementRegistry').get(id);
       const root = window.fpbjs.get('canvas').getRootElement();
-      const heiz = reg.get(IDS.heizplatte);
       const fired = [];
       window.fpbjs.get('eventBus').on('illegalCreate', (e) => fired.push(e.targetElement.id));
-      const shape = factory.createShape({ type: 'fpb:SystemLimit' });
+      const shape = window.fpbjs.get('elementFactory').createShape({ type: 'fpb:SystemLimit' });
       return {
         overResource: rules.allowed('shape.create', { shape, target: root, position: { x: heiz.x + heiz.width / 2, y: heiz.y + heiz.height / 2 } }),
         firedFor: fired.slice(),
         onResourceTarget: rules.allowed('shape.create', { shape, target: heiz, position: { x: 3000, y: 3000 } }),
         farAway: rules.allowed('shape.create', { shape, target: root, position: { x: heiz.x + 3000, y: heiz.y + 3000 } }),
       };
-    }, { IDS });
-    expect(r).toEqual({ overResource: false, firedFor: [IDS.heizplatte], onResourceTarget: false, farAway: true });
+    }, id);
+    expect(r).toEqual({ overResource: false, firedFor: [id], onResourceTarget: false, farAway: true });
     const tip = page.locator('.djs-tooltip.djs-tooltip-error', { hasText: 'You are not allowed to place a SystemLimit on a TechnicalResource' });
     await expect(tip).toBeVisible();
   });
 
-  test('a system limit may be created anywhere on a layer without technical resources', async ({ page }) => {
+  test('a layer below with its system limit takes no second one', async ({ page }) => {
     await load(page);
     await switchTo(page, IDS.child);
     const r = await page.evaluate(() => {
@@ -418,7 +447,7 @@ test.describe('Rules: system limit versus technical resource', () => {
         shape, target: window.fpbjs.get('canvas').getRootElement(), position: { x: 100, y: 100 }
       });
     });
-    expect(r).toBe(true);
+    expect(r).toBe(false);
   });
 
   test('moving the system limit onto a technical resource is refused and explained', async ({ page }) => {
