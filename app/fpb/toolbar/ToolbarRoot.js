@@ -13,7 +13,7 @@ import { faFolderOpen } from '@fortawesome/free-solid-svg-icons/faFolderOpen';
 import { faListCheck } from '@fortawesome/free-solid-svg-icons/faListCheck';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons/faMagnifyingGlass';
 import { faMoon } from '@fortawesome/free-solid-svg-icons/faMoon';
-import { faSun } from '@fortawesome/free-solid-svg-icons/faSun';
+import { sunIcon } from './sunIcon';
 import { faEye } from '@fortawesome/free-solid-svg-icons/faEye';
 import { faEyeLowVision } from '@fortawesome/free-solid-svg-icons/faEyeLowVision';
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons/faCircleInfo';
@@ -288,7 +288,7 @@ function ViewGroup(props) {
       {!themeState.host && (
         <ToolbarButton
           label={dark ? translate('Switch to Light Mode') : translate('Switch to Dark Mode')}
-          icon={dark ? faSun : faMoon}
+          icon={dark ? sunIcon : faMoon}
           onClick={() => theme.choose(dark ? 'light' : 'dark')}
         />
       )}
