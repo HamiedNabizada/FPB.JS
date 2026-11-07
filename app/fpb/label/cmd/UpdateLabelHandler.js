@@ -131,8 +131,10 @@ UpdateLabelHandler.prototype.postExecute = function(ctx) {
   // Update business object identification
   this._updateBusinessObjectIdentification(element, ctx.newLabel, ctx);
 
-  // Handle State element resizing
-  if (is(element, 'fpb:State')) {
+  // Handle State element resizing: its label only. Without one (a name of
+  // blanks after a cleared name) the state itself shrank to the size of the
+  // text (monkey test 2026-11-07)
+  if (is(element, 'fpb:State') && isLabel(label)) {
     this._handleStateElementResize(element, label, newBounds);
   }
 

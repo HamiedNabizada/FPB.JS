@@ -550,3 +550,24 @@ test.describe('Label of a new state', () => {
     expect(fehler).toEqual([]);
   });
 });
+
+test.describe('Renaming a state without a label', () => {
+  // Monkey test 2026-11-07: a state whose name was cleared has no label; the
+  // next name of blanks took the state itself for its label and shrank it to
+  // the size of the text (0 x 17), so it lay outside the system limit
+  test('a state keeps its size when it is named again', async ({ page }) => {
+    const { fehler } = await laden(page);
+    const groesse = await page.evaluate(() => {
+      const state = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Rohstoff' && e.type !== 'label')[0];
+      const modeling = window.fpbjs.get('modeling');
+      modeling.updateLabel(state, '');
+      const ohne = !state.label;
+      modeling.updateLabel(state, '   ');
+      const leer = { w: state.width, h: state.height };
+      modeling.updateLabel(state, 'Rohstoff neu');
+      return { ohne, leer, neu: { w: state.width, h: state.height }, beschriftung: !!state.label };
+    });
+    expect(groesse).toEqual({ ohne: true, leer: { w: 50, h: 50 }, neu: { w: 50, h: 50 }, beschriftung: true });
+    expect(fehler).toEqual([]);
+  });
+});
