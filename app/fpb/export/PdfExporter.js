@@ -102,5 +102,6 @@ function addImagePage(pdf, pngDataUrl, title) {
   const x = (pageWidth - imgWidth) / 2;
   const y = PAGE_MARGIN + TITLE_HEIGHT;
 
-  pdf.addImage(pngDataUrl, 'PNG', x, y, imgWidth, imgHeight);
+  // packed: unpacked, jsPDF stores every pixel (two layers weighed 13.9 MB)
+  pdf.addImage(pngDataUrl, 'PNG', x, y, imgWidth, imgHeight, undefined, 'FAST');
 }
