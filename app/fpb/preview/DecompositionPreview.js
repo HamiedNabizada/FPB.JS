@@ -25,7 +25,7 @@ const fills = () => ({
  * elements, so it also works for a layer that is not on the canvas. A click on
  * the preview switches to that layer.
  */
-export default function DecompositionPreview(eventBus, overlays, canvas, modeling, translate) {
+export default function DecompositionPreview(eventBus, overlays, canvas, modeling, translate, injector) {
   this._overlays = overlays;
   this._translate = translate;
   this._canvas = canvas;
@@ -33,6 +33,7 @@ export default function DecompositionPreview(eventBus, overlays, canvas, modelin
   this._timer = null;
   this._hideTimer = null;
   this._shown = null;
+  this._dragging = injector ? injector.get('dragging', false) : null;
 
   const self = this;
 
@@ -54,9 +55,17 @@ export default function DecompositionPreview(eventBus, overlays, canvas, modelin
   });
 }
 
-DecompositionPreview.$inject = ['eventBus', 'overlays', 'canvas', 'modeling', 'translate'];
+DecompositionPreview.$inject = ['eventBus', 'overlays', 'canvas', 'modeling', 'translate', 'injector'];
+
+/** During a drag the preview stays shut: over a decomposed operator it covered the target of a dragged flow end (WebKit, 2026-11-07) */
+DecompositionPreview.prototype._isDragging = function () {
+  return !!(this._dragging && this._dragging.context());
+};
 
 DecompositionPreview.prototype._scheduleFor = function (element) {
+  if (this._isDragging()) {
+    return;
+  }
   const child = decompositionOf(element);
   clearTimeout(this._hideTimer);
   if (!child || this._shown === element) {
@@ -70,6 +79,9 @@ DecompositionPreview.prototype._scheduleFor = function (element) {
 };
 
 DecompositionPreview.prototype.show = function (element) {
+  if (this._isDragging()) {
+    return;
+  }
   const child = decompositionOf(element);
   if (!child) {
     return;

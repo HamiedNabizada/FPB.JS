@@ -96,4 +96,31 @@ test.describe('Vorschau der Dekomposition', () => {
     expect(verschoben).toBeGreaterThan(0);
   });
 
+
+  test('geht während einer Ziehbewegung nicht auf, auch nicht über dem zerlegten Operator', async ({ page }) => {
+    // WebKit 2026-11-07: beim Ziehen eines Flussendes ging die Vorschau über
+    // dem zerlegten Operator auf und lag über dem Ziel, das Loslassen traf sie
+    await vorbereiten(page);
+    const punkte = await page.evaluate(() => {
+      const fpb = window.fpbjs;
+      const reg = fpb.get('elementRegistry');
+      const canvas = fpb.get('canvas');
+      const vb = canvas.viewbox();
+      const rect = canvas.getContainer().getBoundingClientRect();
+      const screen = (p) => ({ x: rect.left + (p.x - vb.x) * vb.scale, y: rect.top + (p.y - vb.y) * vb.scale });
+      const name = (n) => reg.filter((e) => e.businessObject && e.businessObject.name === n && e.type !== 'label')[0];
+      const flow = name('Warmprodukt').outgoing[0]; // Warmprodukt -> Prüfen
+      const erhitzen = name('Erhitzen');
+      const index = flow.waypoints.length - 1;
+      const start = screen(flow.waypoints[index]);
+      fpb.get('bendpointMove').start(new MouseEvent('mousedown', { clientX: start.x, clientY: start.y, button: 0 }), flow, index);
+      return { start, ueber: screen({ x: erhitzen.x + erhitzen.width / 2, y: erhitzen.y + erhitzen.height / 2 }) };
+    });
+    await page.mouse.move(punkte.start.x, punkte.start.y);
+    await page.mouse.move(punkte.ueber.x, punkte.ueber.y, { steps: 6 });
+    await page.waitForTimeout(900);
+    await expect(vorschau(page)).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await page.mouse.up();
+  });
 });
