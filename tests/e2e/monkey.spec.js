@@ -455,13 +455,20 @@ test.describe('Monkey', () => {
             const bo = root.businessObject || {};
             return 'root ' + String(root.id).slice(0, 8) + ' entry ' + (project && project.entryPoint ? project.entryPoint.id.slice(0, 8) : '-')
               + ' sl ' + sls.join(',') + ' states ' + (bo.consistsOfStates || []).length + ' sub ' + (bo.consistsOfProcesses || []).map((p) => p.id.slice(0, 8)).join(',')
-              + ' store ' + (window.fpbjs.getProcesses() || []).filter((e) => e.process).map((e) => e.process.id.slice(0, 8)).join(',');
+              + ' store ' + (window.fpbjs.getProcesses() || []).filter((e) => e.process).map((e) => e.process.id.slice(0, 8)).join(',')
+              + ' dialog ' + document.querySelectorAll('dialog[open]').length
+              + ' odd ' + window.fpbjs.get('elementRegistry').filter((e) => /Product|Energy|Information/.test(e.type) && e.type !== 'label' && (!e.parent || e.parent.type !== 'fpb:SystemLimit'))
+                .map((e) => e.id.slice(0, 8) + '@' + Math.round(e.x) + ',' + Math.round(e.y) + ' in ' + (e.parent && e.parent.type)).join(' ')
+              + ' issue ' + (() => { try { return (window.__lr.issues()[0] || '-'); } catch (e) { return 'threw'; } })();
           }).catch((e) => 'trace failed ' + e.message));
         }
 
         if (pageErrors.length) await fail('page error: ' + pageErrors.join('\n'));
         if (consoleErrors.length) await fail('console error: ' + consoleErrors.join('\n'));
-        const issues = await page.evaluate(() => {
+        // a question open (e.g. "Confirm boundary placement") holds the model
+        // between two consistent states on purpose: check after the answer
+        const asking = await page.locator('dialog[open]').count();
+        const issues = asking ? [] : await page.evaluate(() => {
           // the check walks the layers from the project: an empty model has none yet
           const project = window.fpbjs.getProjectDefinition && window.fpbjs.getProjectDefinition();
           if (!project || !project.entryPoint) return [];
