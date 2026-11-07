@@ -323,8 +323,9 @@ test.describe('Rules: shape.create', () => {
       expect(r[t], t).toEqual({ onSystemLimit: true, onProcess: false, onOperator: false, onResource: false });
     }
     expect(r['fpb:TechnicalResource']).toEqual({ onSystemLimit: false, onProcess: true });
-    // a label is no target at all: the rule abstains (null) so diagram-js decides
-    expect(r.label).toBeNull();
+    // a label is no target: dropped on one, a state landed on the layer outside
+    // the system limit, where diagram-js put it (monkey test 2026-11-07)
+    expect(r.label).toBe(false);
     expect(r.noTarget).toBe(false);
   });
 

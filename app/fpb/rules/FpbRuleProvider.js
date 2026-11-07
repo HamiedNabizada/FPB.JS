@@ -54,8 +54,11 @@ FpbRuleProvider.prototype.init = function () {
       return false;
     }
 
+    // nothing is dropped on a label: diagram-js put a state dropped on the
+    // label of another one on the layer itself, outside the system limit
+    // (monkey test 2026-11-07); a little beside the label it goes in
     if (isLabel(target)) {
-      return null;
+      return false;
     }
 
 
