@@ -153,4 +153,34 @@ test.describe('Hilfslinien', () => {
     expect(nachher.y).toBe(gezogen.y);
   });
 
+
+  test('Anhängen unter einem Ausgang vergrößert die Systemgrenze, die anderen Ausgänge bleiben auf dem Rand', async ({ page }) => {
+    // Zufallstest 2026-11-07: die Ausgänge zogen mit der Systemgrenze mit und
+    // wurden danach noch einmal verschoben, also doppelt so weit, unter die Grenze
+    await vorbereiten(page);
+    const lage = () => page.evaluate(() => {
+      const reg = window.fpbjs.get('elementRegistry');
+      const sl = reg.filter((e) => e.type === 'fpb:SystemLimit')[0];
+      const unten = sl.y + sl.height;
+      const zustaende = reg.filter((e) => /fpb:(Product|Energy|Information)/.test(e.type) && e.parent === sl);
+      return {
+        unten,
+        aufDemRand: zustaende.filter((z) => Math.abs(z.y + z.height / 2 - unten) <= 30).map((z) => z.businessObject.name).sort(),
+        gutprodukt: reg.filter((e) => e.businessObject && e.businessObject.name === 'Gutprodukt' && e.type !== 'label')[0].y
+      };
+    });
+    const vorher = await lage();
+    expect(vorher.aufDemRand).toContain('Ausschuss');
+
+    await page.evaluate(() => {
+      const quelle = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Gutprodukt' && e.type !== 'label')[0];
+      window.fpbjs.get('fpbAppend').append(quelle, 'fpb:ProcessOperator');
+    });
+    const nachher = await lage();
+
+    expect(nachher.unten).toBeGreaterThan(vorher.unten);
+    // Gutprodukt wird zum Zwischenzustand und bleibt stehen, die anderen Ausgänge gehen mit dem Rand
+    expect(nachher.gutprodukt).toBe(vorher.gutprodukt);
+    expect(nachher.aufDemRand).toEqual(vorher.aufDemRand.filter((n) => n !== 'Gutprodukt'));
+  });
 });

@@ -30,12 +30,14 @@ AppendHandler.prototype.preExecute = function (context) {
       return element !== source && is(element, 'fpb:State') && element.parent
         && checkIfOnSystemBorder(systemLimit, element) === 'onBottomBorder';
     });
+    // the states move here, not with the resize (BoundaryStateResizeBehavior
+    // would move them all, the source too, and they went twice as far)
     modeling.resizeShape(systemLimit, {
       x: systemLimit.x,
       y: systemLimit.y,
       width: systemLimit.width,
       height: systemLimit.height + delta
-    });
+    }, null, { fpbBoundaryStatesStay: true });
     if (onBorder.length) {
       modeling.moveElements(onBorder, { x: 0, y: delta });
     }

@@ -60,7 +60,8 @@ export default function BoundaryStateResizeBehavior(eventBus, modeling) {
     const context = event.context;
     const shape = context.shape;
 
-    if (shape.type !== 'fpb:SystemLimit') {
+    // a command that places the states itself (fpb.append) says so
+    if (shape.type !== 'fpb:SystemLimit' || (context.hints && context.hints.fpbBoundaryStatesStay)) {
       return;
     }
 
