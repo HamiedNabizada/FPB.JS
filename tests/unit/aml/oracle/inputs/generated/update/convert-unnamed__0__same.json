@@ -1,0 +1,80 @@
+[
+  {
+    "$type": "fpb:Project",
+    "name": "Test",
+    "targetNamespace": "http://www.hsu-ifa.de/fpbjs",
+    "entryPoint": "00000000-0000-4000-8000-000000000001"
+  },
+  {
+    "process": {
+      "$type": "fpb:Process",
+      "id": "po-1",
+      "elementsContainer": [
+        "sl-2"
+      ],
+      "isDecomposedProcessOperator": "po-1",
+      "consistsOfStates": [],
+      "consistsOfSystemLimit": "sl-2",
+      "consistsOfProcesses": [],
+      "consistsOfProcessOperator": [],
+      "parent": "00000000-0000-4000-8000-000000000001"
+    },
+    "elementDataInformation": [
+      {
+        "$type": "fpb:SystemLimit",
+        "id": "sl-2",
+        "elementsContainer": [],
+        "name": "Process"
+      }
+    ],
+    "elementVisualInformation": []
+  },
+  {
+    "process": {
+      "$type": "fpb:Process",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "elementsContainer": [
+        "sl-1"
+      ],
+      "isDecomposedProcessOperator": "",
+      "consistsOfStates": [],
+      "consistsOfSystemLimit": "sl-1",
+      "consistsOfProcesses": [
+        "po-1"
+      ],
+      "consistsOfProcessOperator": [
+        "po-1"
+      ],
+      "parent": ""
+    },
+    "elementDataInformation": [
+      {
+        "$type": "fpb:SystemLimit",
+        "id": "sl-1",
+        "elementsContainer": [
+          "po-1"
+        ],
+        "name": "Process"
+      },
+      {
+        "$type": "fpb:ProcessOperator",
+        "id": "po-1",
+        "incoming": [],
+        "outgoing": [],
+        "isAssignedTo": [],
+        "name": "ProcessOperator",
+        "identification": {
+          "$type": "fpb:Identification",
+          "uniqueIdent": "",
+          "longName": "",
+          "shortName": "ProcessOperator",
+          "versionNumber": "",
+          "revisionNumber": ""
+        },
+        "characteristics": [],
+        "decomposedView": "po-1"
+      }
+    ],
+    "elementVisualInformation": []
+  }
+]

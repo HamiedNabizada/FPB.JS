@@ -1,0 +1,18 @@
+[
+  {"$type":"fpb:Project","name":"Test","entryPoint":"proc-1"},
+  {
+    "process":{"$type":"fpb:Process","id":"proc-1","consistsOfProcesses":["po-1"]},
+    "elementDataInformation":[
+      {"$type":"fpb:SystemLimit","id":"sl-1","name":""},
+      {"$type":"fpb:ProcessOperator","id":"po-1","name":"","decomposedView":"po-1"}
+    ],
+    "elementVisualInformation":[]
+  },
+  {
+    "process":{"$type":"fpb:Process","id":"po-1","isDecomposedProcessOperator":"po-1","parent":"proc-1"},
+    "elementDataInformation":[
+      {"$type":"fpb:SystemLimit","id":"sl-2","name":""}
+    ],
+    "elementVisualInformation":[]
+  }
+]

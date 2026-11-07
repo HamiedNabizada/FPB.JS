@@ -38,6 +38,20 @@
       "warnings": []
     },
     {
+      "kind": "convert",
+      "id": "unnamed",
+      "json": "inputs/json/unnamed.json",
+      "expected": "expected/convert/unnamed.aml",
+      "warnings": [
+        "Non-GUID process ID \u0027proc-1\u0027 \u2014 round-trip ID normalization may not be idempotent.",
+        "Non-GUID element ID \u0027sl-1\u0027 (type=\u0027fpb:SystemLimit\u0027) \u2014 round-trip ID normalization may not be idempotent.",
+        "Non-GUID element ID \u0027po-1\u0027 (type=\u0027fpb:ProcessOperator\u0027) \u2014 round-trip ID normalization may not be idempotent.",
+        "Non-GUID process ID \u0027po-1\u0027 \u2014 round-trip ID normalization may not be idempotent.",
+        "Non-GUID element ID \u0027sl-2\u0027 (type=\u0027fpb:SystemLimit\u0027) \u2014 round-trip ID normalization may not be idempotent.",
+        "Process \u0027po-1\u0027 has no ProcessOperator."
+      ]
+    },
+    {
       "kind": "find",
       "id": "Showcase-A-WaermetauscherMitRegelung",
       "aml": "inputs/aml/Showcase-A-WaermetauscherMitRegelung.aml",
@@ -742,6 +756,50 @@
       "expected": "expected/update/convert-mapper-testdata-Temperieren__0__add.aml",
       "warnings": [
         "UpdateInPlace summary: updated=20, added=1, connection-waypoints-updated=19, connections-added=1, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
+      ]
+    },
+    {
+      "kind": "find",
+      "id": "convert-unnamed",
+      "aml": "expected/convert/unnamed.aml",
+      "hierarchies": [
+        {
+          "id": "{00000000-0000-4000-8000-000000000003}",
+          "name": "Test"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "kind": "tojson",
+      "id": "convert-unnamed__0",
+      "aml": "expected/convert/unnamed.aml",
+      "hierarchy": 0,
+      "expected": "expected/tojson/convert-unnamed__0.json",
+      "warnings": []
+    },
+    {
+      "kind": "foreignlinks",
+      "id": "convert-unnamed__0",
+      "aml": "expected/convert/unnamed.aml",
+      "hierarchy": 0,
+      "expected": "expected/foreignlinks/convert-unnamed__0.json",
+      "warnings": []
+    },
+    {
+      "kind": "update",
+      "id": "convert-unnamed__0__same",
+      "aml": "expected/convert/unnamed.aml",
+      "hierarchy": 0,
+      "json": "inputs/generated/update/convert-unnamed__0__same.json",
+      "expected": "expected/update/convert-unnamed__0__same.aml",
+      "warnings": [
+        "Non-GUID process ID \u0027po-1\u0027 \u2014 round-trip ID normalization may not be idempotent.",
+        "Non-GUID element ID \u0027sl-2\u0027 (type=\u0027fpb:SystemLimit\u0027) \u2014 round-trip ID normalization may not be idempotent.",
+        "Non-GUID element ID \u0027sl-1\u0027 (type=\u0027fpb:SystemLimit\u0027) \u2014 round-trip ID normalization may not be idempotent.",
+        "Non-GUID element ID \u0027po-1\u0027 (type=\u0027fpb:ProcessOperator\u0027) \u2014 round-trip ID normalization may not be idempotent.",
+        "Process \u0027po-1\u0027 has no ProcessOperator.",
+        "UpdateInPlace summary: updated=3, added=0, connection-waypoints-updated=0, connections-added=0, processes-added=0, sub-processes-removed=0, removed-element-orphans=0, removed-connection-orphans=0, unmatched-skipped=0."
       ]
     },
     {

@@ -1186,7 +1186,7 @@ function addProcessImpl(fpdIH, parentPo, sucLookup, elementIndex) {
   // Derived from the parent PO: Decompose, Compose, Decompose gives the same
   // sub-process ID, so tools watching the file see a clean diff
   procIE.id = deriveSubProcessId(stripBraces(parentPo.id));
-  procIE.name = parentPo.name ?? 'Sub-Process';
+  procIE.name = isNullOrWhiteSpace(parentPo.name) ? 'Sub-Process' : parentPo.name;
   fpdIH.insert(procIE);
   // refObj brace-free (the parent PO's uniqueIdent), as Convert writes it;
   // VDI 3682 rule F1 resolves it against uniqueIdent
@@ -1511,8 +1511,13 @@ function buildProcess(ih, processId, processMap, processAmlIds, poToChildProcess
       }
     }
   }
-  if (processName == null) {
-    processName = slData?.name ?? 'Process';
+  // an unnamed operator or system limit: the next name, else "Process"
+  // (an empty name gave "SystemLimit_" and an IE named after its class)
+  if (isNullOrWhiteSpace(processName)) {
+    processName = slData?.name ?? null;
+  }
+  if (isNullOrWhiteSpace(processName)) {
+    processName = 'Process';
   }
 
   const procIE = createInstance(sucLookup, 'FPD_Process');
