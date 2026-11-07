@@ -105,6 +105,13 @@ export default function ModelingFeedback(eventBus, tooltips, translate, canvas, 
         hinted = true;
         showHint('navigation', translate(SWITCHINGPROCESS));
     })
+    // the hint was made in the language of its moment; while it stands, it
+    // follows a change (found by the exploratory test after 031)
+    eventBus.on('i18n.changed', function () {
+        if (fpbNotifications.list().some(function (note) { return note.id === 'feedback.navigation'; })) {
+            showHint('navigation', translate(SWITCHINGPROCESS));
+        }
+    });
 
     eventBus.on(['toolTips.effectOnOtherLevel'], function (event) {
 

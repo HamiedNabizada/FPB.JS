@@ -237,3 +237,20 @@ test.describe('Lengths in German', () => {
     });
   });
 });
+
+// Found by the exploratory test after 031: the hint about switching layers
+// comes once, in the language of that moment; switched to German afterwards,
+// it stayed English
+test('the hint about switching layers follows a change of the language', async ({ page }) => {
+  const importer = new ImportPage(page);
+  await importer.goto();
+  await importer.import(JSON.parse(JSON.stringify(basis)));
+  await page.evaluate(() => {
+    const op = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Erhitzen' && e.type === 'fpb:ProcessOperator')[0];
+    window.fpbjs.get('fpbLayers').openDecomposition(op);
+  });
+  const hint = page.locator('.fpb-notification', { hasText: /Switching between processes|Der Wechsel/ });
+  await expect(hint).toContainText('Switching between processes');
+  await page.evaluate(() => window.fpbjs.get('fpbI18n').set('de'));
+  await expect(hint).toContainText('Der Wechsel');
+});
