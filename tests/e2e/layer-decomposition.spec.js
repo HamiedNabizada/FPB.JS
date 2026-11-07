@@ -1577,3 +1577,38 @@ test.describe('Names of a state on every layer (B16)', () => {
     }
   });
 });
+
+// Found by the exploratory test after 031: "Decompose" on an operator that is
+// decomposed already laid the boundary states below out anew (Warmprodukt and
+// Abwärme swapped places), bent the start of the flows to them and kept the
+// arrows where the states had been; nothing of it could be undone.
+test.describe('Decompose again', () => {
+  const ERHITZEN = '9ca400c0-a373-48c0-9f13-37ce196cee29';
+
+  const layout = (page) => page.evaluate(() => {
+    const reg = window.fpbjs.get('elementRegistry');
+    const shapes = reg.filter((e) => e.type !== 'label' && !e.waypoints && e.businessObject && /State|Product|Energy|Information|ProcessOperator/.test(e.type))
+      .map((e) => e.id + '@' + Math.round(e.x) + ',' + Math.round(e.y)).sort();
+    const flows = reg.filter((e) => e.waypoints).map((e) => e.id + ':' + e.waypoints.map((p) => Math.round(p.x) + ',' + Math.round(p.y)).join(' ')).sort();
+    return { shapes, flows };
+  });
+
+  test('keeps the layer below as it was', async ({ page }) => {
+    const importer = new ImportPage(page);
+    await importer.goto();
+    await importer.import(JSON.parse(JSON.stringify(require('./fixtures/temperieren.json'))));
+
+    // the layer below as it is, opened through the layers
+    await page.evaluate((id) => window.fpbjs.get('fpbLayers').openDecomposition(window.fpbjs.get('elementRegistry').get(id)), ERHITZEN);
+    await page.waitForTimeout(300);
+    const before = await layout(page);
+    await page.evaluate(() => window.fpbjs.get('fpbLayers').openParent());
+    await page.waitForTimeout(300);
+
+    // and through "Decompose" on the decomposed operator
+    await page.evaluate((id) => window.fpbjs.get('selection').select(window.fpbjs.get('elementRegistry').get(id)), ERHITZEN);
+    await page.locator('.djs-context-pad .entry[data-action="decompose"]').click();
+    await page.waitForTimeout(500);
+    expect(await layout(page)).toEqual(before);
+  });
+});

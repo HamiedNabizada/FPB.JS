@@ -66,7 +66,7 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
                 let stateShape = createStateShapeForNewLayer(elementFactory, incoming.businessObject.sourceRef.$type, incoming.businessObject.sourceRef);
                 collectionAdd(decomposedProcess.businessObject.consistsOfStates, stateShape.businessObject);
                 collectionAdd(systemLimit.businessObject.elementsContainer, stateShape);
-                stateShapes.push({ state: stateShape, position: 'incoming' });
+                stateShapes.push({ state: stateShape, position: 'incoming', isNew: true });
             }
         });
         outgoingFlows.forEach((outgoing) => {
@@ -74,7 +74,7 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
                 let stateShape = createStateShapeForNewLayer(elementFactory, outgoing.businessObject.targetRef.$type, outgoing.businessObject.targetRef);
                 collectionAdd(decomposedProcess.businessObject.consistsOfStates, stateShape.businessObject);
                 collectionAdd(systemLimit.businessObject.elementsContainer, stateShape);
-                stateShapes.push({ state: stateShape, position: 'outgoing' });
+                stateShapes.push({ state: stateShape, position: 'outgoing', isNew: true });
             }
         });
     }
@@ -134,6 +134,16 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
     if (!systemLimit.businessObject.name) {
         systemLimit.businessObject.name = "SL_" + (processOperator.businessObject.name || '');
     }
+    // Re-entering a decomposition opens it as it is: its boundary states and
+    // their flows keep their places (the layout pass below once moved them all,
+    // swapped outputs and bent the flows at the operator). A state added since
+    // goes to the right of those on its border.
+    if (isDecomposed) {
+        placeNewBoundaryStates(systemLimit, stateShapes);
+        storeContext();
+        return;
+    }
+
     // Calculate positioning of shapes
     const sizesAndPositions = calculateSizeAndPositions(systemLimit, incomingFlows, outgoingFlows);
     systemLimit.width = sizesAndPositions.SystemLimitWidth;
@@ -185,7 +195,10 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
         }
     });
 
+    storeContext();
+
     // Retrieve remaining shapes and connections, if ProcessOperator has already been decomposed before
+    function storeContext() {
     let processFlows = [];
     let systemLimitFlows = [];
     let processShapes = [];
@@ -223,6 +236,26 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
     context.processShapes = processShapes;
     context.processFlows = processFlows;
     context.systemLimitFlows = systemLimitFlows;
+    context.isDecomposed = isDecomposed;
+    }
+}
+
+/**
+ * The boundary states a re-entry adds (connected to the operator above since
+ * the last visit): to the right of the states already on their border.
+ */
+function placeNewBoundaryStates(systemLimit, stateShapes) {
+    const STEP = 75;
+    ['incoming', 'outgoing'].forEach(function (position) {
+        const onBorder = stateShapes.filter((s) => s.position === position && !s.isNew).map((s) => s.state);
+        const y = position === 'incoming' ? systemLimit.y - 25 : systemLimit.y + systemLimit.height - 25;
+        let x = onBorder.length ? Math.max.apply(null, onBorder.map((s) => s.x)) + STEP : systemLimit.x + STEP;
+        stateShapes.filter((s) => s.position === position && s.isNew).forEach(function (s) {
+            s.state.x = x;
+            s.state.y = y;
+            x += STEP;
+        });
+    });
 }
 
 DecomposeProcessOperator.prototype.execute = function (context) {
@@ -281,8 +314,9 @@ DecomposeProcessOperator.prototype.postExecute = function (context) {
             modeling.updateLabel(state.state, state.state.businessObject.name);
         }
         // Only re-layout connections for newly created/repositioned states,
-        // not for existing shapes (position: '') to preserve user bendpoints
-        if (state.position === 'incoming' || state.position === 'outgoing') {
+        // not for existing shapes (position: '') to preserve user bendpoints;
+        // on re-entry only the states added since are new
+        if ((state.position === 'incoming' || state.position === 'outgoing') && (!context.isDecomposed || state.isNew)) {
             (state.state.incoming || []).forEach(function (connection) {
                 modeling.layoutConnection(connection);
             });
