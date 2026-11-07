@@ -183,4 +183,26 @@ test.describe('Hilfslinien', () => {
     expect(nachher.gutprodukt).toBe(vorher.gutprodukt);
     expect(nachher.aufDemRand).toEqual(vorher.aufDemRand.filter((n) => n !== 'Gutprodukt'));
   });
+
+  test('auf einer Unterebene hängt nichts an einem Ausgang, der zur Ebene darüber gehört', async ({ page }) => {
+    // Zufallstest 2026-11-07: der Ausgang wurde zum Zwischenzustand und fehlte
+    // danach unter den Ausgängen des zerlegten Operators
+    await vorbereiten(page);
+    const angebot = await page.evaluate(() => {
+      const reg = window.fpbjs.get('elementRegistry');
+      const erhitzen = reg.filter((e) => e.businessObject && e.businessObject.name === 'Erhitzen' && e.type !== 'label')[0];
+      window.fpbjs.get('modeling').switchProcess(erhitzen.businessObject.decomposedView);
+      const sl = reg.filter((e) => e.type === 'fpb:SystemLimit')[0];
+      const zustaende = reg.filter((e) => /fpb:(Product|Energy|Information)/.test(e.type) && e.parent === sl);
+      const append = window.fpbjs.get('fpbAppend');
+      const rand = (z) => {
+        const mitte = z.y + z.height / 2;
+        return Math.abs(mitte - (sl.y + sl.height)) <= 30 ? 'unten' : Math.abs(mitte - sl.y) <= 30 ? 'oben' : 'innen';
+      };
+      return zustaende.map((z) => rand(z) + ':' + append.canAppend(z)).sort();
+    });
+    expect(angebot.filter((a) => a.startsWith('unten'))).not.toHaveLength(0);
+    expect(angebot.filter((a) => a.startsWith('unten')).every((a) => a === 'unten:false')).toBe(true);
+    expect(angebot.filter((a) => a.startsWith('oben')).every((a) => a === 'oben:true')).toBe(true);
+  });
 });

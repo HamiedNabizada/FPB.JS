@@ -1,5 +1,5 @@
 import { is, isAny } from '../help/utils';
-import { getSystemLimit } from '../help/helpUtils';
+import { getSystemLimit, checkIfOnSystemBorder } from '../help/helpUtils';
 import { markText } from '../i18n/markText';
 
 const GAP = 70;
@@ -45,12 +45,25 @@ FpbAppend.prototype.getOptions = function (element) {
 };
 
 FpbAppend.prototype.canAppend = function (element) {
-  return this.getOptions(element).length > 0 && !!this._systemLimit();
+  const systemLimit = this._systemLimit();
+  return this.getOptions(element).length > 0 && !!systemLimit && !this._isOutputOfLayerAbove(element, systemLimit);
+};
+
+/**
+ * A state on the lower border of a decomposed layer is an output of the
+ * operator one layer up. Appending below it would make it an intermediate
+ * state there (as on the top layer) and drop it from those outputs (monkey
+ * test 2026-11-07); it stays an output, nothing is appended to it.
+ */
+FpbAppend.prototype._isOutputOfLayerAbove = function (element, systemLimit) {
+  const root = this._canvas.getRootElement();
+  return !!(root && root.businessObject && root.businessObject.isDecomposedProcessOperator)
+    && is(element, 'fpb:State') && checkIfOnSystemBorder(systemLimit, element) === 'onBottomBorder';
 };
 
 FpbAppend.prototype.append = function (source, type) {
   const systemLimit = this._systemLimit();
-  if (!systemLimit) {
+  if (!systemLimit || !this.canAppend(source)) {
     return null;
   }
   const shape = this._elementFactory.createShape({ type: type });
