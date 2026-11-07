@@ -8,9 +8,9 @@ import { InstanceHierarchyType } from 'amlengine-js';
  * What an AML file holds for each FPB element: where it stands in the file
  * (path, ID, class, roles), its flows, and what goes beyond FPD: attributes,
  * interfaces and the InternalLinks that reach it from elsewhere (a plant
- * hierarchy, links drawn in another tool). The properties panel shows it
- * (read only); deleting an element with such links asks first, since the AML
- * export removes those links with it.
+ * hierarchy, links drawn in another tool). The properties panel and the
+ * overview show it (read only). Which links a deletion removes says
+ * foreignLinks.js (B19), per layer as the export removes them.
  *
  * Keyed by the FPB element id, as CaexToFpbJson gives it: the AML id without
  * braces; a boundary state copy on a sub-process layer counts for the state

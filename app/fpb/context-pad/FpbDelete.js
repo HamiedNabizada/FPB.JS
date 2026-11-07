@@ -100,49 +100,35 @@ FpbDelete.prototype.getLayerConsequences = function (element) {
 };
 
 /**
- * Links from the rest of the kept AML file into what the deletion removes: the
- * elements, their contents and the layers of decomposed operators. The AML
- * export removes such links with the element, so the user is told before.
+ * Links from the rest of the AML file that go with what the deletion removes:
+ * the elements, their contents and the layers of decomposed operators. The
+ * export removes them, so the user is told before. The list comes from the
+ * file the web app keeps (amlSupport, B19) or from the host (setAmlLinks).
  *
  * @return {Array<{ element: string, link: string, owner: string }>}
  */
 FpbDelete.prototype.getAmlLinks = function (elements, options) {
-  const amlSupport = this._amlSupport;
-  if (!amlSupport || !amlSupport.getIndex()) {
-    return this._usesHostLinks() ? this._getHostLinks(elements, options) : [];
+  const links = this._linkList();
+  return links ? this._getHostLinks(links, elements, options) : [];
+};
+
+/** The list of links in effect: the kept file's, else the host's, else null */
+FpbDelete.prototype._linkList = function () {
+  const kept = this._amlSupport && this._amlSupport.getIndex() && this._amlSupport.getLinks
+    ? this._amlSupport.getLinks()
+    : null;
+  if (kept) {
+    return kept;
   }
-  const found = [];
-  const seen = new Set();
-  const visit = (element) => {
-    if (!element || seen.has(element)) {
-      return;
-    }
-    seen.add(element);
-    const content = amlSupport.getForeignContent(element.id);
-    (content ? content.links : []).forEach((l) => {
-      if (!found.some((f) => f.element === content.name && f.link === l.link && f.owner === l.owner)) {
-        found.push({ element: content.name, link: l.link, owner: l.owner });
-      }
-    });
-    (element.children || []).forEach(visit);
-    const bo = element.businessObject;
-    // layers not on the canvas have no children there: their elements are in
-    // the elementsContainer of the process and its system limit
-    ((bo && bo.elementsContainer) || []).forEach(visit);
-    if (bo && bo.decomposedView) {
-      visit(bo.decomposedView);
-    }
-  };
-  (elements || []).forEach(visit);
-  return found;
+  return this._hostLinks && this._hostLinks.isSet() ? this._hostLinks : null;
 };
 
 FpbDelete.prototype._usesHostLinks = function () {
-  return !!(this._hostLinks && this._hostLinks.isSet() && !(this._amlSupport && this._amlSupport.getIndex()));
+  return !!this._hostLinks && this._linkList() === this._hostLinks;
 };
 
 /**
- * The links of the host's list the deletion removes (016f E4, V19). Each
+ * The links of the list the deletion removes (016f E4, V19; B19). Each
  * element counts on its layer and the layers below it: FPB.js deletes the
  * copies of a state downwards (Szenario 1 and 9), never upwards (Szenario 2).
  * A flow between a state and a decomposed operator takes the state's copy on
@@ -151,8 +137,7 @@ FpbDelete.prototype._usesHostLinks = function () {
  * its process element, the system limit with its contents and what lies
  * beside it, such as technical resources.
  */
-FpbDelete.prototype._getHostLinks = function (elements, options) {
-  const hostLinks = this._hostLinks;
+FpbDelete.prototype._getHostLinks = function (hostLinks, elements, options) {
   const found = [];
   const add = (entries) => entries.forEach((l) => {
     if (!found.some((f) => f.element === l.name && f.link === l.link && f.owner === l.owner)) {

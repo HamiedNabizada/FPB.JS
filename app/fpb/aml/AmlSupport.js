@@ -1,6 +1,8 @@
 import { serializeModel } from '../export/serializeModel.js';
 
 import { buildAmlIndex, buildAmlOverview } from './amlIndex.js';
+import { findForeignLinks, buildFpdElementIndex, amlLinkList } from './foreignLinks.js';
+import AmlLinks from '../context-pad/AmlLinks';
 import { isAmlText } from './detect.js';
 
 /**
@@ -29,6 +31,8 @@ export default function AmlSupport(eventBus, fpbjs, translate) {
   this._source = null;
   this._index = null;
   this._overview = null;
+  // what deleting an element removes from the file, per layer (B19)
+  this._links = null;
   this._pendingSource = null;
   // index and overview an import has built already, for the source it brings
   this._prebuilt = null;
@@ -45,7 +49,7 @@ export default function AmlSupport(eventBus, fpbjs, translate) {
     self._prebuilt = null;
     self._beforeImport = {
       source: self._source,
-      built: self._index ? { index: self._index, overview: self._overview } : null
+      built: self._index ? { index: self._index, overview: self._overview, links: self._links } : null
     };
     self._setSource(source, prebuilt);
   });
@@ -116,6 +120,17 @@ AmlSupport.prototype.getForeignContent = function (elementId) {
 };
 
 /**
+ * The links of the kept file the AML export removes with an element, per
+ * layer and element of the diagram (B19), as the plugin hands them over
+ * (setAmlLinks); null while not known. The delete question names them.
+ *
+ * @return {AmlLinks|null}
+ */
+AmlSupport.prototype.getLinks = function () {
+  return this._links;
+};
+
+/**
  * Everything in the kept file, or null while it is not known: hierarchies,
  * libraries, external references and the elements with foreign content
  * (see buildAmlOverview), with the file name.
@@ -128,6 +143,7 @@ AmlSupport.prototype._setSource = function (source, prebuilt = null) {
   this._source = source || null;
   this._index = null;
   this._overview = null;
+  this._links = null;
   this._eventBus.fire('aml.sourceChanged', { source: this._source });
   if (!this._source) {
     return;
@@ -146,9 +162,10 @@ AmlSupport.prototype._setSource = function (source, prebuilt = null) {
   });
 };
 
-AmlSupport.prototype._useIndex = function ({ index, overview }) {
+AmlSupport.prototype._useIndex = function ({ index, overview, links }) {
   this._index = index;
   this._overview = overview;
+  this._links = links || null;
   this._eventBus.fire('aml.indexChanged', { index, overview });
 };
 
@@ -301,7 +318,9 @@ function parse(engine, text) {
 function describe(doc, ih, found, source) {
   const index = buildAmlIndex(doc, ih);
   const overview = Object.assign(buildAmlOverview(doc, ih, index, found), { fileName: source.fileName });
-  return { index, overview };
+  const links = new AmlLinks();
+  links.set(ih ? amlLinkList(findForeignLinks(doc, ih), buildFpdElementIndex(ih)) : []);
+  return { index, overview, links };
 }
 
 /** Notes for the import report: which elements carry more than FPD */

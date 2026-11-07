@@ -202,6 +202,81 @@ test.describe('AutomationML import and export', () => {
     await expect(dialog).toContainText('VentilToPressureCtl (Stellventil betätigen)');
   });
 
+  // B19: the question names what the export removes, per layer, as the plugin
+  // does (ForeignLinks of the C# mapper, ported to foreignLinks.js). links.aml
+  // of the oracle links a control system to what the old index overlooked.
+  test.describe('links the export removes (B19)', () => {
+    const LINKS = read('generated/links.aml');
+    const STATE = '8891b025-4d01-3179-be62-74c48ee6c819';
+    const SHARED = 'dd4eb84c-c312-509d-25a0-10a5872a370e';
+    const LAYER_1 = 'ab7eea01-4aca-f679-ace3-4933ae99838a';
+    const LAYER_2 = '0af743ab-f96f-a476-cf50-a5ff03231bb8';
+    const LAYER_3 = '6d37cff1-a715-266d-7750-8ee6e7574a4c';
+
+    async function open(page, layer) {
+      await start(page);
+      await importAml(page, LINKS, 'Leitebene.aml');
+      await indexReady(page);
+      if (layer) {
+        await page.evaluate((id) => {
+          const queue = [window.fpbjs.getProjectDefinition().entryPoint];
+          while (queue.length) {
+            const shape = queue.shift();
+            if (shape.id === id) {
+              window.fpbjs.get('modeling').switchProcess(shape);
+              return;
+            }
+            (shape.businessObject.consistsOfProcesses || []).forEach((child) => queue.push(child));
+          }
+        }, layer);
+      }
+    }
+    const remove = (page, find) => page.evaluate((find) => {
+      const registry = window.fpbjs.get('elementRegistry');
+      const element = find.flow
+        ? registry.filter((e) => e.waypoints && [e.source.id, e.target.id].sort().join() === find.flow.slice().sort().join())[0]
+        : find.type
+          ? registry.filter((e) => e.type === find.type)[0]
+          : registry.get(find.id);
+      window.fpbjs.get('fpbDelete').remove([element]);
+    }, find);
+
+    test('deleting a state names the links to an element below it', async ({ page }) => {
+      await open(page);
+      await remove(page, { id: STATE });
+      const dialog = page.locator(DIALOG);
+      await expect(dialog).toContainText('L_Sensor (Leitsystem)');
+      await expect(dialog).toContainText('L_Alt (Leitsystem)');
+    });
+
+    test('removing a decomposition names the links to the process of that layer', async ({ page }) => {
+      await open(page, LAYER_3);
+      await remove(page, { type: 'fpb:SystemLimit' });
+      const dialog = page.locator(DIALOG);
+      await expect(dialog).toContainText('Remove the decomposition');
+      await expect(dialog).toContainText('L_Prozess (Leitsystem)');
+      await expect(dialog).toContainText('L_Ebene (Druckregelung)');
+      await expect(dialog).toContainText('L_Kopie (Leitsystem)');
+    });
+
+    test('deleting the flow from a state into a decomposed operator names the links of the copy below', async ({ page }) => {
+      await open(page, LAYER_2);
+      await remove(page, { flow: [SHARED, LAYER_3] });
+      const dialog = page.locator(DIALOG);
+      await expect(dialog).toContainText('L_Kopie (Leitsystem)');
+      await expect(dialog).toContainText('L_Quer (Druckregelung)');
+    });
+
+    test('deleting the copy of a boundary state leaves out the links of the state above', async ({ page }) => {
+      await open(page, LAYER_1);
+      await remove(page, { id: STATE });
+      const dialog = page.locator(DIALOG);
+      await expect(dialog).toContainText('This state is connected to the parent layer.');
+      // the old index named the links of the state on the top layer, which share its id
+      await expect(dialog).not.toContainText('L_Alt');
+    });
+  });
+
   test('cancelling that question keeps the state', async ({ page }) => {
     await start(page);
     await importAml(page, MIXED);

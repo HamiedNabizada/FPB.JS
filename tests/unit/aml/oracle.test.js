@@ -15,6 +15,7 @@ import { findFpdInstanceHierarchies, convertCaexToFpbJson } from '../../../app/f
 import { convertFpbJsonToCaex, updateInPlace } from '../../../app/fpb/aml/mapper/FpbJsonToCaex.js';
 import { guidsIn, maskRandomGuids, maskWritingTime } from './oracleMask.js';
 import { buildAmlIndex } from '../../../app/fpb/aml/amlIndex.js';
+import { findForeignLinks } from '../../../app/fpb/aml/foreignLinks.js';
 
 const base = path.join(__dirname, 'oracle');
 const manifest = JSON.parse(fs.readFileSync(path.join(base, 'cases.json'), 'utf8'));
@@ -120,6 +121,18 @@ describe('Links from outside (buildAmlIndex against ForeignLinks)', () => {
       const expected = JSON.parse(read(c.expected));
       Object.keys(expected).forEach((id) => expected[id].sort(order));
       expect(actual).toEqual(expected);
+    });
+  });
+});
+
+// B19: what deleting each element of an FPD hierarchy removes from the file,
+// the port (foreignLinks.js) against ForeignLinks.Find of the C# mapper, entry
+// for entry and in its order. The web app's delete question asks with it.
+describe('Links an element takes along (findForeignLinks against ForeignLinks)', () => {
+  byKind('foreignlinks').forEach((c) => {
+    it(c.id, () => {
+      const doc = CAEXDocument.loadFromString(read(c.aml));
+      expect(findForeignLinks(doc, hierarchy(doc, c.hierarchy))).toEqual(JSON.parse(read(c.expected)));
     });
   });
 });

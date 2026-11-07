@@ -2,8 +2,9 @@
  * The links of an AML file a host keeps (016f E4, T10): per layer and element,
  * the InternalLinks the host removes from its file when the element is
  * deleted there. The plugin AMLFPB.js sets them through setAmlLinks; the
- * delete question (FpbDelete) names them. The web app asks its own index
- * (amlSupport) instead. An import leaves the list alone: only the host sets it.
+ * delete question (FpbDelete) names them. The web app builds the same list
+ * from the file it keeps (amlSupport.getLinks, B19), which goes first. An
+ * import leaves the host's list alone: only the host sets it.
  */
 export default function AmlLinks() {
   this._links = null;
