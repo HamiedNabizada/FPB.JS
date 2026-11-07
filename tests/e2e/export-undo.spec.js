@@ -45,6 +45,7 @@ async function downloadDialogOeffnen(page) {
 }
 
 test.describe('PDF-Export und Historie', () => {
+  test.slow(({ browserName }) => browserName === 'webkit', 'PDF in WebKit takes about 17 s for two layers (jsPDF decodes the PNG in JavaScript; Chromium 1.5 s, packing is not the cause)');
 
   test('der PDF-Export lässt die Historie unangetastet', async ({ page }) => {
     await laden(page);
@@ -54,7 +55,7 @@ test.describe('PDF-Export und Historie', () => {
     const ebeneVorher = await page.evaluate(() => window.fpbjs.get('canvas').getRootElement().id);
     await downloadDialogOeffnen(page);
 
-    const download = page.waitForEvent('download', { timeout: 30000 });
+    const download = page.waitForEvent('download', { timeout: 90000 });
     await page.locator('dialog.fpb-export-dialog[open] #exportFormat-pdf').check();
     await page.locator('dialog.fpb-export-dialog[open] [data-answer="export"]').click();
     expect((await download).suggestedFilename()).toMatch(/\.pdf$/);

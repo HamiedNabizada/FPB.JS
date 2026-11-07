@@ -58,7 +58,8 @@ async function readDownload(download) {
 }
 
 /** Waits for a download started by action; fails if none comes */
-async function expectDownload(page, action, timeout = 30000) {
+// generous: a PDF takes WebKit about 17 s, under load more
+async function expectDownload(page, action, timeout = 90000) {
   const waiting = page.waitForEvent('download', { timeout });
   await action();
   const download = await waiting;
@@ -495,6 +496,7 @@ test.describe('Export dialog', () => {
   });
 
   test.describe('filename', () => {
+    test.slow(({ browserName }) => browserName === 'webkit', 'PDF in WebKit takes about 17 s for two layers (jsPDF decodes the PNG in JavaScript; Chromium 1.5 s, packing is not the cause)');
 
     async function downloadWithName(page, name) {
       await openDialog(page);
@@ -568,6 +570,7 @@ test.describe('Export dialog', () => {
   });
 
   test.describe('SVG, PNG and PDF', () => {
+    test.slow(({ browserName }) => browserName === 'webkit', 'PDF in WebKit takes about 17 s for two layers (jsPDF decodes the PNG in JavaScript; Chromium 1.5 s, packing is not the cause)');
 
     test('SVG of the current layer', async ({ page }) => {
       await load(page);
