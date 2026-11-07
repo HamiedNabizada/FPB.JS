@@ -576,6 +576,30 @@ test.describe('Connections to decomposed operators and technical resources', () 
     expect(await issues(page)).toEqual([]);
   });
 
+  test('dragging that end with the mouse does the same without a question when no AML file links to the copy (B23)', async ({ page }) => {
+    await load(page);
+    const points = await page.evaluate((IDS) => {
+      const fpb = window.fpbjs;
+      const canvas = fpb.get('canvas');
+      const flow = window.__lr.byId(IDS.rohstoff).outgoing.find((f) => f.target && f.target.id === IDS.child);
+      const onto = window.__lr.byId(IDS.pruefen);
+      const vb = canvas.viewbox();
+      const rect = canvas.getContainer().getBoundingClientRect();
+      const screen = (p) => ({ x: rect.left + (p.x - vb.x) * vb.scale, y: rect.top + (p.y - vb.y) * vb.scale });
+      const index = flow.waypoints.length - 1;
+      const from = screen(flow.waypoints[index]);
+      fpb.get('bendpointMove').start(new MouseEvent('mousedown', { clientX: from.x, clientY: from.y, button: 0 }), flow, index);
+      return { from, to: screen({ x: onto.x + onto.width / 2, y: onto.y + onto.height / 2 }) };
+    }, IDS);
+    await page.mouse.move(points.from.x, points.from.y);
+    await page.mouse.move(points.to.x, points.to.y, { steps: 8 });
+    await page.mouse.up();
+
+    await expect(page.locator('dialog[open]')).toHaveCount(0);
+    expect(await page.evaluate((IDS) => window.__lr.byId(IDS.rohstoff).outgoing.some((f) => f.target && f.target.id === IDS.pruefen), IDS)).toBe(true);
+    expect(await onBoundary(page, IDS.child, 'upper', IDS.rohstoff)).toBe(false);
+  });
+
   test('reconnecting an input onto the decomposed operator puts the state on the child boundary', async ({ page }) => {
     await load(page);
     // a new state feeding Prüfen; its flow is then dragged over to Erhitzen

@@ -275,6 +275,73 @@ test.describe('AutomationML import and export', () => {
       // the old index named the links of the state on the top layer, which share its id
       await expect(dialog).not.toContainText('L_Alt');
     });
+
+    // B23: dragging the end of that flow onto another operator takes the copy
+    // below along, as deleting the flow does: the same question comes first
+    const OTHER = 'f44249c9-f7f4-2e3b-dbf8-110976a1fb02';
+    const COPY_BELOW = (page) => page.evaluate(({ shared, layer }) => {
+      const queue = [window.fpbjs.getProjectDefinition().entryPoint];
+      while (queue.length) {
+        const shape = queue.shift();
+        if (shape.id === layer) {
+          return (shape.businessObject.consistsOfStates || []).some((s) => s.id === shared);
+        }
+        (shape.businessObject.consistsOfProcesses || []).forEach((child) => queue.push(child));
+      }
+      return null;
+    }, { shared: SHARED, layer: LAYER_3 });
+    const operatorEnd = (page) => page.evaluate(({ shared, layer }) => {
+      const flow = window.fpbjs.get('elementRegistry').filter((e) => e.waypoints && [e.source.id, e.target.id].sort().join() === [shared, layer].sort().join())[0];
+      return flow ? (flow.target.id === layer ? flow.target.id : flow.source.id) : null;
+    }, { shared: SHARED, layer: LAYER_3 });
+
+    /** Drags the operator end of the flow onto `onto` with the mouse */
+    async function dragEnd(page, onto) {
+      const points = await page.evaluate(({ shared, layer, onto }) => {
+        const fpb = window.fpbjs;
+        const registry = fpb.get('elementRegistry');
+        const canvas = fpb.get('canvas');
+        const flow = registry.filter((e) => e.waypoints && [e.source.id, e.target.id].sort().join() === [shared, layer].sort().join())[0];
+        const index = flow.target.id === layer ? flow.waypoints.length - 1 : 0;
+        const vb = canvas.viewbox();
+        const rect = canvas.getContainer().getBoundingClientRect();
+        const screen = (p) => ({ x: rect.left + (p.x - vb.x) * vb.scale, y: rect.top + (p.y - vb.y) * vb.scale });
+        const target = registry.get(onto);
+        const from = screen(flow.waypoints[index]);
+        fpb.get('bendpointMove').start(new MouseEvent('mousedown', { clientX: from.x, clientY: from.y, button: 0 }), flow, index);
+        return { from, to: screen({ x: target.x + target.width / 2, y: target.y + target.height / 2 }) };
+      }, { shared: SHARED, layer: LAYER_3, onto });
+      await page.mouse.move(points.from.x, points.from.y);
+      await page.mouse.move(points.to.x, points.to.y, { steps: 8 });
+      await page.mouse.up();
+    }
+
+    test('dragging the end of a flow off a decomposed operator asks first; Cancel keeps it', async ({ page }) => {
+      await open(page, LAYER_2);
+      await dragEnd(page, OTHER);
+      const dialog = page.locator(DIALOG);
+      await expect(dialog).toContainText('L_Kopie (Leitsystem)');
+      // nothing happened yet
+      expect(await operatorEnd(page)).toBe(LAYER_3);
+      expect(await COPY_BELOW(page)).toBe(true);
+
+      await dialog.getByRole('button', { name: 'Cancel' }).click();
+      await expect(dialog).toHaveCount(0);
+      expect(await operatorEnd(page)).toBe(LAYER_3);
+      expect(await COPY_BELOW(page)).toBe(true);
+    });
+
+    test('confirming reconnects the flow and the copy below goes', async ({ page }) => {
+      await open(page, LAYER_2);
+      await dragEnd(page, OTHER);
+      const dialog = page.locator(DIALOG);
+      await expect(dialog).toContainText('L_Kopie (Leitsystem)');
+      await dialog.locator('[data-answer="confirm"]').click();
+      await expect(dialog).toHaveCount(0);
+
+      expect(await operatorEnd(page)).toBe(null);
+      expect(await COPY_BELOW(page)).toBe(false);
+    });
   });
 
   test('cancelling that question keeps the state', async ({ page }) => {

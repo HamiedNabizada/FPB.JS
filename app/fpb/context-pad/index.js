@@ -10,6 +10,7 @@ import FpbDelete from './FpbDelete';
 import AmlLinks from './AmlLinks';
 import ContextPadPosition from './ContextPadPosition';
 import ContextPadTooltips from './ContextPadTooltips';
+import ReconnectQuestion from './ReconnectQuestion';
 
 export default {
   __depends__: [
@@ -20,9 +21,10 @@ export default {
     ConnectModule,
     CreateModule
   ],
-  __init__: [ 'fpbDelete', 'contextPadProvider', 'contextPadPosition', 'contextPadTooltips' ],
+  __init__: [ 'fpbDelete', 'fpbReconnectQuestion', 'contextPadProvider', 'contextPadPosition', 'contextPadTooltips' ],
   fpbAmlLinks: [ 'type', AmlLinks ],
   fpbDelete: [ 'type', FpbDelete ],
+  fpbReconnectQuestion: [ 'type', ReconnectQuestion ],
   contextPadProvider: [ 'type', ContextPadProvider ],
   contextPadPosition: [ 'type', ContextPadPosition ],
   contextPadTooltips: [ 'type', ContextPadTooltips ]
