@@ -857,3 +857,33 @@ test.describe('Feedback when the editor refuses a move or create (UI drags)', ()
     expect(await hint.count()).toBe(0);
   });
 });
+
+test.describe('Rules: dragging an end keeps the kind of the connection', () => {
+  // Monkey test 2026-11-07: a usage could be dragged onto a state and the
+  // source of a flow onto a technical resource; the model broke afterwards
+  const allowed = (page, { connection, end, onto }) => page.evaluate(({ connection, end, onto }) => {
+    const reg = window.fpbjs.get('elementRegistry');
+    const c = reg.get(connection);
+    const other = reg.get(onto);
+    const source = end === 'source' ? other : c.source;
+    const target = end === 'target' ? other : c.target;
+    return !!window.fpbjs.get('rules').allowed('connection.reconnect', { connection: c, source, target, hover: other });
+  }, { connection, end, onto });
+  const USAGE = '0059ef37-ea80-4414-8e8d-8985a35e59bf';
+  const FLOW = 'd5dc692d-61ac-4b4b-aea5-3d3044345aa7'; // Warmprodukt -> Prüfen
+
+  test('a usage joins an operator and a technical resource only', async ({ page }) => {
+    await load(page);
+    // Erhitzen -> Heizplatte: the operator end onto a state is refused, onto another operator allowed
+    expect(await allowed(page, { connection: USAGE, end: 'source', onto: IDS.warmprodukt })).toBe(false);
+    expect(await allowed(page, { connection: USAGE, end: 'target', onto: IDS.rohstoff })).toBe(false);
+    expect(await allowed(page, { connection: USAGE, end: 'source', onto: IDS.pruefen })).toBe(true);
+  });
+
+  test('a flow joins a state and an operator only', async ({ page }) => {
+    await load(page);
+    expect(await allowed(page, { connection: FLOW, end: 'source', onto: IDS.heizplatte })).toBe(false);
+    expect(await allowed(page, { connection: FLOW, end: 'target', onto: IDS.heizplatte })).toBe(false);
+    expect(await allowed(page, { connection: FLOW, end: 'source', onto: IDS.rohstoff })).toBe(true);
+  });
+});

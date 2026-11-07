@@ -135,7 +135,7 @@ FpbRuleProvider.prototype.init = function () {
     const source = context.source || (connection && connection.source);
     const target = context.target || (connection && connection.target);
     if (!source || !target) return false;
-    return canConnect(source, target, connection) || false;
+    return canReconnect(connection, source, target);
   });
 
   this.addRule('connection.reconnectStart', RULE_PRIORITIES.HIGH, (context) => {
@@ -143,7 +143,7 @@ FpbRuleProvider.prototype.init = function () {
     const source = context.hover || context.source;
     const target = connection.target;
     if (!source) return false;
-    return canConnect(source, target, connection) || false;
+    return canReconnect(connection, source, target);
   });
 
   this.addRule('connection.reconnectEnd', RULE_PRIORITIES.HIGH, (context) => {
@@ -151,7 +151,7 @@ FpbRuleProvider.prototype.init = function () {
     const source = connection.source;
     const target = context.hover || context.target;
     if (!target) return false;
-    return canConnect(source, target, connection) || false;
+    return canReconnect(connection, source, target);
   });
 
   this.addRule('shape.resize', (context) => {
@@ -338,4 +338,34 @@ function canConnect(source, target) {
 }
 
 FpbRuleProvider.prototype.canConnect = canConnect;
+
+/**
+ * Dragging an end keeps the kind of the connection (monkey test 2026-11-07:
+ * a usage could end at a state, a flow start at a technical resource): a
+ * usage joins a process operator and a technical resource, a flow a state and
+ * a process operator, either way round; and no other connection joins the two
+ * ends already.
+ */
+function canReconnect(connection, source, target) {
+  if (!connection || !source || !target || source === target
+    || source.type === ELEMENT_TYPES.LABEL || target.type === ELEMENT_TYPES.LABEL) {
+    return false;
+  }
+  const either = (a, b) => (a(source) && b(target)) || (b(source) && a(target));
+  const operator = (e) => is(e, ELEMENT_TYPES.PROCESS_OPERATOR);
+  const fits = is(connection, ELEMENT_TYPES.USAGE)
+    ? either(operator, (e) => is(e, ELEMENT_TYPES.TECHNICAL_RESOURCE))
+    : either(operator, (e) => isAny(e, ELEMENT_GROUPS.STATES));
+  if (!fits) {
+    return false;
+  }
+  const others = (source.outgoing || []).concat(source.incoming || []).filter((c) => c !== connection);
+  if (others.some((c) => c.source === target || c.target === target)) {
+    return false;
+  }
+  // the same answer as connection.create for these ends
+  return is(connection, ELEMENT_TYPES.USAGE) ? { type: ELEMENT_TYPES.USAGE } : getConnectionType(source, source.TemporaryFlowHint);
+}
+
+FpbRuleProvider.prototype.canReconnect = canReconnect;
 
