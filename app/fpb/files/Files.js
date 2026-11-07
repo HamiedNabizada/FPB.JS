@@ -639,6 +639,8 @@ Files.prototype.export = function () {
   const amlSupport = this._amlSupport();
   const source = amlSupport ? amlSupport.getSource() : null;
   const hasSelection = this._injector.get('selection').get().length > 0;
+  const layer = this._injector.get('canvas').getRootElement();
+  const hasLayersBelow = !!(layer && layer.businessObject && (layer.businessObject.consistsOfProcesses || []).length);
   const choices = this._exportChoices;
   const initial = Object.assign({}, choices, {
     format: choices.format === 'aml' && !amlSupport ? 'json' : choices.format,
@@ -654,7 +656,8 @@ Files.prototype.export = function () {
     amlSource: source ? source.fileName : null,
     eventName: this._exportEventName(),
     check: this._checkCounts(),
-    hasSelection
+    hasSelection,
+    hasLayersBelow
   }, { className: 'fpb-export-dialog' });
   this._exportDialog = handle;
   handle.closed.then(() => {

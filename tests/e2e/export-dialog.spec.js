@@ -303,10 +303,18 @@ test.describe('Export dialog', () => {
       await importer.switchToChildLayer();
       expect(await rootId(page)).toBe(CHILD_ID);
 
-      const data = await exportJson(page, 'layer');
+      const model = await exportJson(page, 'layer');
       await expect(dialog(page)).toHaveCount(0);
 
+      // a model of its own (Testrunde 2026-11-07, the user: "Öffnebares Modell"):
+      // the project, then the layer as its top layer
+      expect(model).toHaveLength(2);
+      expect(model[0].$type).toBe('fpb:Project');
+      expect(model[0].entryPoint).toBe(CHILD_ID);
+      const data = model[1];
       expect(data.process.id).toBe(CHILD_ID);
+      expect(data.process.isDecomposedProcessOperator).toBeNull();
+      expect(data.process.parent).toEqual(model[0]);
       const onCanvas = await page.evaluate(() => window.fpbjs.get('elementRegistry')
         .filter((e) => e.businessObject && e.type !== 'label' && e.type !== 'fpb:Process' && e.id !== window.fpbjs.get('canvas').getRootElement().id)
         .map((e) => e.id).sort());
@@ -318,8 +326,52 @@ test.describe('Export dialog', () => {
       await load(page);
       await recordEvents(page, ['model.downloaded']);
       const json = await exportJson(page, 'layer');
-      expect(json.process.id).toBe(ROOT_ID);
+      expect(json[1].process.id).toBe(ROOT_ID);
       expect(await recorded(page)).toEqual([]);
+    });
+
+    test('the current layer opens as a model; its operators lose the layers below', async ({ page }) => {
+      await load(page);
+      const model = await exportJson(page, 'layer');
+      expect(model[1].process.consistsOfProcesses).toEqual([]);
+      expect(model[1].elementDataInformation.filter((d) => d.decomposedView)).toEqual([]);
+
+      await load(page, model);
+      const opened = await page.evaluate(() => ({
+        root: window.fpbjs.get('canvas').getRootElement().id,
+        layers: window.fpbjs.getProcesses().filter((p) => p.process).length,
+        operators: window.fpbjs.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator').length,
+        decomposed: window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.decomposedView).length,
+      }));
+      expect(opened).toEqual({ root: ROOT_ID, layers: 1, operators: 2, decomposed: 0 });
+    });
+
+    test('the current layer of a child opens as a model of that layer', async ({ page }) => {
+      const importer = await load(page);
+      await importer.switchToChildLayer();
+      const model = await exportJson(page, 'layer');
+
+      await load(page, model);
+      expect(await rootId(page)).toBe(CHILD_ID);
+      expect(await page.evaluate(() => window.fpbjs.getProcesses().filter((p) => p.process).length)).toBe(1);
+    });
+
+    test('choosing the current layer says that the layers below stay out, where there are any', async ({ page }) => {
+      const importer = await load(page);
+      const note = dialog(page).locator('.fpb-export-layer-note');
+      await openDialog(page);
+      await format(page, 'json').check();
+      await dialog(page).locator('#exportScope-layer').check();
+      await expect(note).toHaveText('Opens as a model of its own, without the layers below.');
+      await dialog(page).locator('#exportScope-model').check();
+      await expect(note).toHaveCount(0);
+      await page.keyboard.press('Escape');
+
+      await importer.switchToChildLayer();
+      await openDialog(page);
+      await format(page, 'json').check();
+      await dialog(page).locator('#exportScope-layer').check();
+      await expect(note).toHaveCount(0);
     });
 
     test('selected elements exports exactly the selection', async ({ page }) => {

@@ -381,6 +381,7 @@ const de = {
   'Scope': 'Umfang',
   'Whole model': 'Ganzes Modell',
   'Current layer': 'Aktuelle Ebene',
+  'Opens as a model of its own, without the layers below.': 'Öffnet sich als eigenes Modell, ohne die Ebenen darunter.',
   'Selected elements': 'Ausgewählte Elemente',
   'With layout (positions and sizes)': 'Mit Layout (Positionen und Größen)',
   'Destination': 'Ziel',

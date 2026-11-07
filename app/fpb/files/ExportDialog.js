@@ -20,7 +20,7 @@ const PICTURE_NAMES = { svg: 'SVG', png: 'PNG', pdf: 'PDF' };
  * is reloaded. A successful export closes the dialog, an error stays in it.
  */
 export default function ExportDialog(props) {
-  const { files, translate, close, titleId, initial, amlSource, aml, eventName, check, hasSelection } = props;
+  const { files, translate, close, titleId, initial, amlSource, aml, eventName, check, hasSelection, hasLayersBelow } = props;
   const [format, setFormat] = useState(initial.format);
   const [scope, setScope] = useState(initial.scope);
   const [layout, setLayout] = useState(initial.layout);
@@ -145,6 +145,9 @@ export default function ExportDialog(props) {
               {radio('exportScope', 'exportScope-model', translate('Whole model'), scope === 'model', () => chooseScope('model'))}
               {radio('exportScope', 'exportScope-layer', translate('Current layer'), scope === 'layer', () => chooseScope('layer'))}
               {radio('exportScope', 'exportScope-selection', translate('Selected elements'), scope === 'selection', () => chooseScope('selection'), !hasSelection)}
+              {scope === 'layer' && hasLayersBelow && (
+                <p class="fpb-export-note fpb-export-layer-note">{translate('Opens as a model of its own, without the layers below.')}</p>
+              )}
             </fieldset>
           ) : (
             <p class="fpb-export-scope">{scopeText}</p>

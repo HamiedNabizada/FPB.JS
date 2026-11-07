@@ -62,12 +62,32 @@ function modelData(fpbjs, scope) {
     data = fpbjs.getProcesses();
   } else {
     const rootId = fpbjs.get('canvas').getRootElement().id;
-    data = scope === 'layer' ? fpbjs.getProcess(rootId) : fpbjs.getSelectedElements(rootId);
+    data = scope === 'layer' ? layerModel(fpbjs, rootId) : fpbjs.getSelectedElements(rootId);
   }
   if (data === undefined) {
     throw new Error('No data available for export');
   }
   return data;
+}
+
+/**
+ * The layer on the canvas as a model of its own, so that the file opens again
+ * (Testrunde 2026-11-07, the user: "Öffnebares Modell"): the project, then the
+ * layer as its top layer. Its operators lose the layers below, which stay out.
+ */
+function layerModel(fpbjs, rootId) {
+  const layer = fpbjs.getProcess(rootId);
+  if (!layer) {
+    return undefined;
+  }
+  const copy = (value) => JSON.parse(serializeModel(value, { indent: 0 }));
+  const entry = copy(layer);
+  const project = Object.assign(copy(fpbjs.getProcesses()).find((e) => e.$type === 'fpb:Project'), { entryPoint: rootId });
+  Object.assign(entry.process, { parent: project, isDecomposedProcessOperator: null, consistsOfProcesses: [] });
+  (entry.elementDataInformation || []).forEach((data) => {
+    delete data.decomposedView;
+  });
+  return [project, entry];
 }
 
 function currentSvg(fpbjs) {
