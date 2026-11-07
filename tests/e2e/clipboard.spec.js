@@ -127,4 +127,27 @@ test.describe('Kopieren und Einfügen', () => {
     expect(await importer.unresolvedReferences()).toEqual([]);
   });
 
+
+  test('die Kopie eines Grenz-Zustands landet in der Systemgrenze, nicht darunter', async ({ page }) => {
+    // Zufallstest 2026-11-07: die Kopie lag 40 px versetzt unter dem unteren Rand
+    await vorbereiten(page);
+    const lage = await page.evaluate(() => {
+      const reg = window.fpbjs.get('elementRegistry');
+      const sl = reg.filter((e) => e.type === 'fpb:SystemLimit')[0];
+      const ausschuss = reg.filter((e) => e.businessObject && e.businessObject.name === 'Ausschuss' && e.type !== 'label')[0];
+      const copyPaste = window.fpbjs.get('fpbCopyPaste');
+      copyPaste.copy([ausschuss]);
+      const [kopie] = copyPaste.paste();
+      return {
+        sl: { links: sl.x, oben: sl.y, rechts: sl.x + sl.width, unten: sl.y + sl.height },
+        kopie: { links: kopie.x, oben: kopie.y, rechts: kopie.x + kopie.width, unten: kopie.y + kopie.height }
+      };
+    });
+    // ganz innen, nicht auf dem Rand (der zählt 30 px weit)
+    expect(lage.kopie.oben).toBeGreaterThan(lage.sl.oben + 5);
+    expect(lage.kopie.unten).toBeLessThan(lage.sl.unten - 5);
+    expect(lage.kopie.links).toBeGreaterThan(lage.sl.links + 5);
+    expect(lage.kopie.rechts).toBeLessThan(lage.sl.rechts - 5);
+    expect(await page.locator('dialog[open]').count()).toBe(0);
+  });
 });
