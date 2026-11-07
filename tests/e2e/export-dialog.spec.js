@@ -566,8 +566,8 @@ test.describe('Export dialog', () => {
         window.fpbjs.get('modeling').moveElements([op], { x: 30, y: 0 });
       });
       expect(await canUndo(page)).toBe(true);
-      const names = await page.evaluate(() => window.fpbjs.getProcesses().filter((p) => p.process)
-        .map((p) => (p.process.identification && p.process.identification.shortName) || p.process.name || p.process.id));
+      // pages named as Layers names the layers: the project on top, the decomposed operator below
+      const names = [basis[0].name, basis.flatMap((e) => e.elementDataInformation || []).find((d) => d.decomposedView === CHILD_ID).name];
 
       await openDialog(page);
       await format(page, 'pdf').check();
@@ -581,6 +581,7 @@ test.describe('Export dialog', () => {
       const text = file.content.toString('latin1');
       expect(text).toContain('/Creator (FPB.JS)');
       names.forEach((n) => expect(text).toContain(`(${n})`));
+      expect(text).not.toContain(`(${ROOT_ID})`);
 
       expect(await rootId(page)).toBe(CHILD_ID);
       expect(await canUndo(page)).toBe(true);

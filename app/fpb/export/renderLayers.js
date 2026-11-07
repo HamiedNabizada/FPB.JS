@@ -1,3 +1,5 @@
+import { layerName } from '../layers/tree';
+
 /**
  * Renders every given layer to an image, one after the other.
  *
@@ -8,7 +10,7 @@
  *
  * The walk switches with `fpbTransient` and runs inside
  * `layerUndoBoundary.keepHistory`, and it always returns to the layer it
- * started from.
+ * started from. A page is named like the layer in Layers and the breadcrumbs.
  *
  * @param {Object} modeler
  * @param {Array} processShapes the process root shapes to render
@@ -34,11 +36,4 @@ export async function renderLayers(modeler, processShapes, renderCurrent) {
   });
 
   return layers;
-}
-
-/** Name of a layer for the page title: short name, else name, else id */
-export function layerName(processShape) {
-  const bo = processShape.businessObject || {};
-
-  return (bo.identification && bo.identification.shortName) || bo.name || processShape.id;
 }

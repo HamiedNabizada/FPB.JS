@@ -1,25 +1,27 @@
 // tests/unit/export/renderLayers.test.js
 import { describe, it, expect } from 'vitest';
 
-import { renderLayers, layerName } from '../../../app/fpb/export/renderLayers.js';
+import { renderLayers } from '../../../app/fpb/export/renderLayers.js';
 
 /**
  * Der Durchlauf über alle Ebenen, den Download-Dialog und API gemeinsam
  * nutzen. Die API-Fassung hatte früher eine eigene Kopie ohne Schutz der
  * Undo-Historie und ohne sichere Rückkehr zur Ausgangsebene.
  */
-function modeler(startRoot) {
+function modeler(startRoot, translate) {
   const log = { switches: [], keepHistory: 0 };
   let root = startRoot;
   const dienste = {
     modeling: { switchProcess: (p, hints) => { log.switches.push({ id: p.id, hints }); root = p; } },
     canvas: { getRootElement: () => root },
     layerUndoBoundary: { keepHistory: async (work) => { log.keepHistory++; return work(); } },
+    translate,
   };
   return { log, modeler: { get: (name) => dienste[name] } };
 }
 
-const ebene = (id, shortName) => ({ id, businessObject: { identification: { shortName } } });
+// a layer below the top one: named after its decomposed operator
+const ebene = (id, name) => ({ id, businessObject: { isDecomposedProcessOperator: { name } } });
 
 describe('renderLayers', () => {
 
@@ -53,9 +55,14 @@ describe('renderLayers', () => {
     expect(log.switches[log.switches.length - 1].id).toBe('p0');
   });
 
-  it('benennt Ebenen nach Kurzname, sonst Name, sonst ID', () => {
-    expect(layerName(ebene('p1', 'Kurz'))).toBe('Kurz');
-    expect(layerName({ id: 'p2', businessObject: { name: 'Lang' } })).toBe('Lang');
-    expect(layerName({ id: 'p3', businessObject: {} })).toBe('p3');
+  it('benennt Ebenen wie Ebenen und Brotkrumen: oben das Projekt, darunter den Operator', async () => {
+    // Testrunde 2026-11-07: der Seitentitel im PDF zeigte die ID der obersten Ebene
+    const projekt = { $instanceOf: (type) => type === 'fpb:Project', name: 'Kaffee kochen' };
+    const oben = { id: 'b2c7e0f4-uuid', businessObject: { parent: projekt } };
+    const { modeler: m } = modeler(oben, (text) => (text === 'unnamed' ? 'unbenannt' : text));
+
+    const ergebnis = await renderLayers(m, [oben, ebene('p2', 'Mahlen'), ebene('p3')], async () => 'bild');
+
+    expect(ergebnis.map((l) => l.name)).toEqual(['Kaffee kochen', 'Mahlen', 'unbenannt']);
   });
 });
