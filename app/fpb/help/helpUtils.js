@@ -139,3 +139,25 @@ export function getElementById(elementsContainer, id) {
     })
     return returnElement;
 }
+
+const BOUNDARY_STATE_TYPES = ['fpb:Product', 'fpb:Energy', 'fpb:Information'];
+
+/**
+ * The width a system limit needs so that the states on its upper and lower
+ * border lie inside it: the right edge of the outermost one and half a state
+ * more, at least its width now. States connected after a decomposition go to
+ * the right of those on the border and could lie past the edge.
+ */
+export function widthForBoundaryStates(systemLimit) {
+  const borders = [systemLimit.y - 25, systemLimit.y + systemLimit.height - 25];
+  let right = systemLimit.x + systemLimit.width;
+  (systemLimit.businessObject.elementsContainer || []).forEach(function (el) {
+    if (!el || !BOUNDARY_STATE_TYPES.some((type) => is(el, type))) {
+      return;
+    }
+    if (borders.some((y) => Math.abs(el.y - y) < 30)) {
+      right = Math.max(right, el.x + (el.width || 50) + 25);
+    }
+  });
+  return right - systemLimit.x;
+}

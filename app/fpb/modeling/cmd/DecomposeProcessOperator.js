@@ -1,6 +1,6 @@
 import { is } from '../../help/utils';
 
-import { getElementsFromElementsContainer, noOfUsageConnections, checkIfOnSystemBorder, createStateShapeForNewLayer, getSystemLimit } from '../../help/helpUtils';
+import { getElementsFromElementsContainer, noOfUsageConnections, checkIfOnSystemBorder, createStateShapeForNewLayer, getSystemLimit, widthForBoundaryStates } from '../../help/helpUtils';
 
 import {
     some,
@@ -62,7 +62,8 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
         });
         // Check if new shapes are connected to the ProcessOperator
         incomingFlows.forEach((incoming) => {
-            if (!is(incoming, 'fpb:Usage') && !checkIfStateIsNew(incoming.businessObject.sourceRef, decomposedProcess)) {
+            // a state only: a flow from another operator (foreign AML files, B21) is none
+            if (is(incoming.businessObject.sourceRef, 'fpb:State') && !checkIfStateIsNew(incoming.businessObject.sourceRef, decomposedProcess)) {
                 let stateShape = createStateShapeForNewLayer(elementFactory, incoming.businessObject.sourceRef.$type, incoming.businessObject.sourceRef);
                 collectionAdd(decomposedProcess.businessObject.consistsOfStates, stateShape.businessObject);
                 collectionAdd(systemLimit.businessObject.elementsContainer, stateShape);
@@ -70,7 +71,7 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
             }
         });
         outgoingFlows.forEach((outgoing) => {
-            if (!is(outgoing, 'fpb:Usage') && !checkIfStateIsNew(outgoing.businessObject.targetRef, decomposedProcess)) {
+            if (is(outgoing.businessObject.targetRef, 'fpb:State') && !checkIfStateIsNew(outgoing.businessObject.targetRef, decomposedProcess)) {
                 let stateShape = createStateShapeForNewLayer(elementFactory, outgoing.businessObject.targetRef.$type, outgoing.businessObject.targetRef);
                 collectionAdd(decomposedProcess.businessObject.consistsOfStates, stateShape.businessObject);
                 collectionAdd(systemLimit.businessObject.elementsContainer, stateShape);
@@ -140,6 +141,8 @@ DecomposeProcessOperator.prototype.preExecute = function (context) {
     // goes to the right of those on its border.
     if (isDecomposed) {
         placeNewBoundaryStates(systemLimit, stateShapes);
+        // the system limit grows to take states that lie past its right edge
+        systemLimit.width = widthForBoundaryStates(systemLimit);
         storeContext();
         return;
     }

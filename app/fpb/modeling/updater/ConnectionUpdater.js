@@ -1,6 +1,6 @@
 import inherits from 'inherits';
 
-import { getElementById, createStateShapeForNewLayer, getSystemLimit } from '../../help/helpUtils';
+import { getElementById, createStateShapeForNewLayer, getSystemLimit, widthForBoundaryStates } from '../../help/helpUtils';
 
 import CommandInterceptor from 'diagram-js/lib/command/CommandInterceptor';
 
@@ -405,6 +405,12 @@ ConnectionUpdater.prototype._addStateToChild = function (stateShape, processOper
       const startX = childSystemLimit.x + 50;
       newStateShape.x = rightEdge === null ? startX : rightEdge + stateSpacing;
       newStateShape.y = targetY;
+
+      // past the right edge the system limit grows (journaled: undo shrinks it)
+      const width = widthForBoundaryStates(childSystemLimit);
+      if (width > childSystemLimit.width) {
+        setTracked(childSystemLimit, 'width', width);
+      }
     }
   }
 };

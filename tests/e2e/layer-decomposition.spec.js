@@ -1635,4 +1635,59 @@ test.describe('Decompose again', () => {
     await page.waitForTimeout(500);
     expect(await layout(page)).toEqual(before);
   });
+
+  // Final review of the stability round: states connected after the first
+  // decomposition land right of those on the border and could lie past the
+  // edge; the layer below keeps its places, the system limit grows instead
+  const connectThree = (page) => page.evaluate((id) => {
+    const reg = window.fpbjs.get('elementRegistry');
+    const modeling = window.fpbjs.get('modeling');
+    const op = reg.get(id);
+    const sl = reg.filter((e) => e.type === 'fpb:SystemLimit')[0];
+    for (let i = 0; i < 3; i++) {
+      const s = modeling.createShape({ type: 'fpb:Product' }, { x: sl.x + 40 + i * 60, y: sl.y }, sl);
+      modeling.updateLabel(s, 'Neu' + i);
+      modeling.connect(s, op, { type: 'fpb:Flow' });
+    }
+  }, ERHITZEN);
+  const outside = (page) => page.evaluate(() => window.fpbjs.get('fpbValidation').run()
+    .filter((i) => i.rule === 'B1').map((i) => i.message));
+
+  test('states connected later lie inside the system limit below, opened through the layers', async ({ page }) => {
+    const importer = new ImportPage(page);
+    await importer.goto();
+    await importer.import(JSON.parse(JSON.stringify(require('./fixtures/temperieren.json'))));
+    await connectThree(page);
+    expect(await outside(page)).toEqual([]);
+    await page.evaluate((id) => window.fpbjs.get('fpbLayers').openDecomposition(window.fpbjs.get('elementRegistry').get(id)), ERHITZEN);
+    await page.waitForTimeout(300);
+    expect(await outside(page)).toEqual([]);
+  });
+
+  test('states connected later lie inside the system limit below, opened through Decompose', async ({ page }) => {
+    const importer = new ImportPage(page);
+    await importer.goto();
+    await importer.import(JSON.parse(JSON.stringify(require('./fixtures/temperieren.json'))));
+    await connectThree(page);
+    await page.evaluate((id) => window.fpbjs.get('selection').select(window.fpbjs.get('elementRegistry').get(id)), ERHITZEN);
+    await page.locator('.djs-context-pad .entry[data-action="decompose"]').click();
+    await page.waitForTimeout(500);
+    expect(await outside(page)).toEqual([]);
+  });
+
+  test('a flow between two operators gives the layer below no boundary state', async ({ page }) => {
+    // a flow from Erhitzen straight to Prüfen, as foreign AML files have them (B21)
+    const model = JSON.parse(JSON.stringify(require('./fixtures/temperieren.json')));
+    model.filter((e) => e.process).flatMap((e) => e.elementDataInformation)
+      .find((d) => d.id === 'd5dc692d-61ac-4b4b-aea5-3d3044345aa7').sourceRef = ERHITZEN;
+    const importer = new ImportPage(page);
+    await importer.goto();
+    await importer.import(model);
+    await page.evaluate((id) => window.fpbjs.get('selection').select(window.fpbjs.get('elementRegistry').get(id)), ERHITZEN);
+    await page.locator('.djs-context-pad .entry[data-action="decompose"]').click();
+    await page.waitForTimeout(500);
+    const states = await page.evaluate(() => (window.fpbjs.get('canvas').getRootElement().businessObject.consistsOfStates || [])
+      .map((s) => s.$type));
+    expect(states.filter((t) => !['fpb:Product', 'fpb:Energy', 'fpb:Information'].includes(t))).toEqual([]);
+  });
 });
