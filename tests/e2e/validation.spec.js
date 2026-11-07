@@ -187,4 +187,23 @@ test.describe('Modellprüfung', () => {
     await expect(item).toContainText('Lower limit not above upper limit');
     await expect(item).toContainText('acceptance region');
   });
+
+  test('die Filter der Liste brechen auf Deutsch nicht um', async ({ page }) => {
+    // Testrunde 2026-11-07: "Warnungen 3" stand auf zwei Zeilen
+    await vorbereiten(page);
+    await page.evaluate(() => {
+      window.fpbjs.get('fpbI18n').set('de');
+      window.fpbjs.get('fpbValidation').run();
+      window.fpbjs.get('fpbValidation').openPanel();
+    });
+    const filters = page.locator('.fpb-validation-panel .fpb-validation-filter button');
+    await expect(filters).toHaveCount(4);
+    await expect(filters.nth(2)).toContainText('Warnungen');
+    const lines = await filters.evaluateAll((buttons) => buttons.map((b) => {
+      const range = document.createRange();
+      range.selectNodeContents(b);
+      return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
+    }));
+    expect(lines).toEqual([1, 1, 1, 1]);
+  });
 });
