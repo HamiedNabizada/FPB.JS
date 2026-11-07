@@ -57,6 +57,7 @@ foreach (var file in jsonInputs)
 // 2. Documents with more than FPD content, and one without any.
 amlInputs.Add(BuildMixed(Path.Combine(inputs, "aml", "Showcase-A-WaermetauscherMitRegelung.aml"), Path.Combine(inputs, "json", "fpbjs-temperieren.json"), Path.Combine(generated, "mixed.aml")));
 amlInputs.Add(BuildWithoutFpd(Path.Combine(generated, "no-fpd.aml")));
+amlInputs.Add(BuildLinks(Path.Combine(inputs, "aml", "Showcase-A-WaermetauscherMitRegelung.aml"), Path.Combine(generated, "links.aml")));
 
 // 3. AML -> JSON per FPD hierarchy, and 4. updates with edited JSON.
 foreach (var file in amlInputs)
@@ -90,6 +91,22 @@ foreach (var file in amlInputs)
             var linksFile = Path.Combine(expected, "links", $"{name}__{i}.json");
             Write(linksFile, LinksByFpbId(linkIh, ForeignLinks.Find(linkDoc, linkIh)).ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
             cases.Add(Case("links", $"{name}__{i}", new() { ["aml"] = Rel(file), ["hierarchy"] = i, ["expected"] = Rel(linksFile) }, []));
+        }
+
+        // B19: what deleting each element removes, as the C# mapper finds it (ForeignLinks);
+        // the web app asks with the port (app/fpb/aml/foreignLinks.js), the plugin with this list
+        {
+            var linkDoc = CAEXDocument.LoadFromString(text);
+            var linkIh = CaexToFpbJson.FindFpdInstanceHierarchies(linkDoc)[i];
+            var foreignFile = Path.Combine(expected, "foreignlinks", $"{name}__{i}.json");
+            var found = new JsonArray(ForeignLinks.Find(linkDoc, linkIh).Select(e => (JsonNode)new JsonObject
+            {
+                ["elementId"] = e.ElementId,
+                ["elementName"] = e.ElementName,
+                ["links"] = new JsonArray(e.Links.Select(l => (JsonNode)new JsonObject { ["link"] = l.Link, ["owner"] = l.Owner }).ToArray())
+            }).ToArray());
+            Write(foreignFile, found.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+            cases.Add(Case("foreignlinks", $"{name}__{i}", new() { ["aml"] = Rel(file), ["hierarchy"] = i, ["expected"] = Rel(foreignFile) }, []));
         }
 
         foreach (var (edit, apply) in edits)
@@ -419,6 +436,68 @@ string BuildMixed(string showcase, string secondJson, string file)
     link.BInterface = stateIf;
 
     Fixed(() => { var r = FpbJsonToCaex.ImportInto(doc, File.ReadAllText(secondJson, Encoding.UTF8)); return (r.Value, r.Warnings); });
+
+    Save(doc, file);
+    return file;
+}
+
+// B19: links from outside onto what the web app overlooked: a child element of
+// a state, the process of a lower layer, the copy of a boundary state, a
+// technical resource; a link stored in an operator, one stored in a lower
+// process, one in the form "element id:interface name" of CAEX 2.15, and one
+// inside a state. Fixed ids, so the file stays the same from run to run.
+string BuildLinks(string showcase, string file)
+{
+    var doc = CAEXDocument.LoadFromString(ReadAml(showcase));
+    var fpd = CaexToFpbJson.FindFpdInstanceHierarchies(doc)[0];
+    string Suc(InternalElementType ie) => FpbMappings.StripAlias(ie.RefBaseSystemUnitPath);
+    bool Is(InternalElementType ie, string type) => Suc(ie) == FpbMappings.ElementToSuc[type];
+    bool IsState(InternalElementType ie) => Is(ie, FpbTypes.Product) || Is(ie, FpbTypes.Energy) || Is(ie, FpbTypes.Information);
+    var processes = fpd.InternalElement.Where(ie => Is(ie, FpbTypes.Process)).ToList();
+    var top = processes.First(p => string.IsNullOrEmpty(p.GetRefObjOrDerived()));
+    var lower = processes.First(p => p.InternalElement.Any(ie => IsState(ie) && !string.IsNullOrEmpty(ie.GetRefObjOrDerived())));
+    var state = top.InternalElement.First(IsState);
+    var op = top.InternalElement.First(ie => Is(ie, FpbTypes.ProcessOperator));
+    var copy = lower.InternalElement.First(ie => IsState(ie) && !string.IsNullOrEmpty(ie.GetRefObjOrDerived()));
+    var resource = processes.SelectMany(p => p.InternalElement).First(ie => Is(ie, FpbTypes.TechnicalResource));
+
+    var n = 0;
+    string Id() => $"{{00000000-0000-4000-8000-b19{++n:x9}}}";
+    ExternalInterfaceType Port(InternalElementType owner, string name)
+    {
+        var port = owner.ExternalInterface.Append(name);
+        port.ID = Id();
+        return port;
+    }
+    void Link(InternalElementType holder, string name, ExternalInterfaceType a, ExternalInterfaceType b)
+    {
+        var link = holder.InternalLink.Append(name);
+        link.ID = Id();
+        link.AInterface = a;
+        link.BInterface = b;
+    }
+
+    var sensor = state.InternalElement.Append("Sensor_T1");
+    sensor.ID = Id();
+    var processPort = Port(lower, "Prozessbezug");
+    Port(state, "Anlagenbezug");
+
+    var plant = doc.CAEXFile.InstanceHierarchy.Append("Leitebene");
+    plant.ID = Id();
+    var control = plant.InternalElement.Append("Leitsystem");
+    control.ID = Id();
+    Link(control, "L_Sensor", Port(control, "ZumSensor"), Port(sensor, "Signal"));
+    Link(control, "L_Prozess", Port(control, "ZumProzess"), processPort);
+    Link(control, "L_Kopie", Port(control, "ZurKopie"), Port(copy, "Messstelle"));
+    Link(control, "L_Ressource", Port(control, "ZurRessource"), Port(resource, "Wartung"));
+    Link(op, "L_Innen", Port(op, "Bedienung"), Port(control, "ZumBedienplatz"));
+    Link(lower, "L_Ebene", processPort, Port(control, "ZurEbene"));
+    Link(lower, "L_Quer", Port(copy, "Quer"), Port(resource, "Quer"));
+    Link(state, "L_Intern", Port(sensor, "Intern"), Port(state, "Intern"));
+    var old = control.InternalLink.Append("L_Alt");
+    old.ID = Id();
+    old.RefPartnerSideA = control.ID + ":" + Port(control, "Alt").Name;
+    old.RefPartnerSideB = state.ID + ":Anlagenbezug";
 
     Save(doc, file);
     return file;

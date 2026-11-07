@@ -1,0 +1,22 @@
+[
+  {
+    "elementId": "cdbbc438-9e8c-826f-4d5f-097eb84f4816",
+    "elementName": "Stellventil bet\u00E4tigen",
+    "links": [
+      {
+        "link": "VentilToPressureCtl",
+        "owner": "Stellventil bet\u00E4tigen"
+      }
+    ]
+  },
+  {
+    "elementId": "ab489182-d5a0-7fed-4460-fd600360882c",
+    "elementName": "Plattenw\u00E4rme\u00FCbertragung",
+    "links": [
+      {
+        "link": "PlatteToTempSensor",
+        "owner": "Plattenw\u00E4rme\u00FCbertragung"
+      }
+    ]
+  }
+]

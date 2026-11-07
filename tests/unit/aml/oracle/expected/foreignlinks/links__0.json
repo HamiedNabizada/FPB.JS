@@ -1,0 +1,88 @@
+[
+  {
+    "elementId": "c03bd9e7-bf00-4577-a4d3-fd0cb6d0e89b",
+    "elementName": "Druckregelung",
+    "links": [
+      {
+        "link": "L_Ebene",
+        "owner": "Druckregelung"
+      },
+      {
+        "link": "L_Prozess",
+        "owner": "Leitsystem"
+      }
+    ]
+  },
+  {
+    "elementId": "cdbbc438-9e8c-826f-4d5f-097eb84f4816",
+    "elementName": "Stellventil bet\u00E4tigen",
+    "links": [
+      {
+        "link": "VentilToPressureCtl",
+        "owner": "Stellventil bet\u00E4tigen"
+      }
+    ]
+  },
+  {
+    "elementId": "988e75d7-b2fe-f454-9129-533c33810c87",
+    "elementName": "Roh-Druck",
+    "links": [
+      {
+        "link": "L_Quer",
+        "owner": "Druckregelung"
+      },
+      {
+        "link": "L_Kopie",
+        "owner": "Leitsystem"
+      }
+    ]
+  },
+  {
+    "elementId": "ab489182-d5a0-7fed-4460-fd600360882c",
+    "elementName": "Plattenw\u00E4rme\u00FCbertragung",
+    "links": [
+      {
+        "link": "PlatteToTempSensor",
+        "owner": "Plattenw\u00E4rme\u00FCbertragung"
+      }
+    ]
+  },
+  {
+    "elementId": "8dbe3703-0485-b372-7a39-54e1342684af",
+    "elementName": "Temperatursensor",
+    "links": [
+      {
+        "link": "L_Quer",
+        "owner": "Druckregelung"
+      },
+      {
+        "link": "L_Ressource",
+        "owner": "Leitsystem"
+      }
+    ]
+  },
+  {
+    "elementId": "8891b025-4d01-3179-be62-74c48ee6c819",
+    "elementName": "Abgek\u00FChltes Medium",
+    "links": [
+      {
+        "link": "L_Sensor",
+        "owner": "Leitsystem"
+      },
+      {
+        "link": "L_Alt",
+        "owner": "Leitsystem"
+      }
+    ]
+  },
+  {
+    "elementId": "ab7eea01-4aca-f679-ace3-4933ae99838a",
+    "elementName": "W\u00E4rme\u00FCbertragen",
+    "links": [
+      {
+        "link": "L_Innen",
+        "owner": "W\u00E4rme\u00FCbertragen"
+      }
+    ]
+  }
+]
