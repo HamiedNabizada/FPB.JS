@@ -47,3 +47,47 @@ test.describe('Example models (031)', () => {
     });
   }
 });
+
+/**
+ * The examples carry their layout (Testrunde 2026-11-07, the user: "Mit
+ * fertigem Layout"): they open as they were arranged, without the note that
+ * FPB.js arranged them. The generator in the mapper (ShowcaseTests.cs) writes
+ * no layout; `UPDATE_EXAMPLE_LAYOUT=1` lets FPB.js arrange every process view
+ * and writes it into the file through the AML export, which keeps the rest.
+ */
+test.describe('Example models carry their layout', () => {
+  const UPDATE = !!process.env.UPDATE_EXAMPLE_LAYOUT;
+
+  const openView = (page, text, id) => page.evaluate(async ({ t, id }) => {
+    const bus = window.fpbjs.get('eventBus');
+    const notes = [];
+    const listen = (event) => notes.push(...event.warnings.map((w) => w.message));
+    bus.on('import.report', listen);
+    const done = new Promise((resolve) => { bus.once('import.done', resolve); setTimeout(resolve, 8000); });
+    await window.fpbjs.get('amlSupport').importAml(t, { hierarchyId: id });
+    await done;
+    bus.off('import.report', listen);
+    return notes.filter((n) => /layout/i.test(n));
+  }, { t: text, id });
+
+  for (const file of fs.readdirSync(DIR).filter((f) => f.endsWith('.aml')).sort()) {
+    test(file + ' opens without arranging anything', async ({ page }) => {
+      await new ImportPage(page).goto();
+      let text = fs.readFileSync(path.join(DIR, file), 'utf8');
+      const found = await page.evaluate((t) => window.fpbjs.get('amlSupport').inspect(t), text);
+      const notes = {};
+      for (const ih of found) {
+        await page.evaluate(() => window.fpbjs.newModel());
+        notes[ih.name] = await openView(page, text, ih.id);
+        if (UPDATE) {
+          text = await page.evaluate(async () => (await window.fpbjs.get('amlSupport').exportAml()).text);
+        }
+      }
+      if (UPDATE) {
+        fs.writeFileSync(path.join(DIR, file), text.split(/\r?\n/).join('\r\n'));
+        return;
+      }
+      expect(notes).toEqual(Object.fromEntries(found.map((ih) => [ih.name, []])));
+    });
+  }
+});
