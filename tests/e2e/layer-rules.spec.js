@@ -917,3 +917,37 @@ test.describe('Rules: dragging an end keeps the kind of the connection', () => {
     expect(await allowed(page, { connection: FLOW, end: 'source', onto: IDS.rohstoff })).toBe(true);
   });
 });
+
+test.describe('Rules: no state is input and output of the same operator', () => {
+  // Monkey test 2026-11-07: a flow back from an output into its operator made
+  // the state both input and output; the layer below of a decomposed operator
+  // cannot hold it on both borders (one shape per id) and broke
+  const allowedConnect = (page, from, to) => page.evaluate(({ from, to }) => {
+    const reg = window.fpbjs.get('elementRegistry');
+    // allowed is an answer with the kind of connection; true means no rule answered
+    const r = window.fpbjs.get('rules').allowed('connection.create', { source: reg.get(from), target: reg.get(to) });
+    return !!(r && r.type);
+  }, { from, to });
+
+  test('a flow back from an output into its operator is refused, into another operator allowed', async ({ page }) => {
+    await load(page);
+    // Erhitzen -> Warmprodukt exists
+    expect(await allowedConnect(page, IDS.warmprodukt, IDS.child)).toBe(false);
+    expect(await allowedConnect(page, IDS.warmprodukt, IDS.pruefen)).toBe(false); // exists already
+    // Rohstoff -> Erhitzen exists: Erhitzen -> Rohstoff is refused
+    expect(await allowedConnect(page, IDS.child, IDS.rohstoff)).toBe(false);
+    // Prüfen -> Gutprodukt exists, Gutprodukt -> Erhitzen is a loop over another operator: allowed
+    expect(await allowedConnect(page, IDS.gutprodukt, IDS.child)).toBe(true);
+  });
+
+  test('dragging an end does not make one either', async ({ page }) => {
+    await load(page);
+    const r = await page.evaluate(({ IDS }) => {
+      const reg = window.fpbjs.get('elementRegistry');
+      const flow = reg.get(IDS.rohstoff).outgoing[0]; // Rohstoff -> Erhitzen
+      const warm = reg.get(IDS.warmprodukt); // Erhitzen -> Warmprodukt exists
+      return !!window.fpbjs.get('rules').allowed('connection.reconnect', { connection: flow, source: warm, target: flow.target, hover: warm });
+    }, { IDS });
+    expect(r).toBe(false);
+  });
+});

@@ -302,8 +302,11 @@ function canConnect(source, target) {
     return;
   }
   
-  // No connection between shapes that are already connected
-  if (areAlreadyConnected(source, target)) {
+  // No connection between shapes that are already connected, either way:
+  // a state is no input and output of the same operator (VDI 3682 Blatt 1, an
+  // operator turns inputs into outputs; the layer below of a decomposed one
+  // cannot hold the state on both borders; monkey test 2026-11-07)
+  if (areAlreadyConnected(source, target) || areAlreadyConnected(target, source)) {
     return;
   }
   
