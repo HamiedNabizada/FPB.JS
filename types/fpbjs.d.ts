@@ -151,13 +151,14 @@ export interface FpbEventMap {
 export interface AmlSource {
   text: string;
   fileName: string;
-  /** The FPD InstanceHierarchy the model came from; null for a file without FPD content */
+  /** The FPD InstanceHierarchy the model came from (its key, see AmlHierarchy.id); null for a file without FPD content */
   hierarchyId: string | null;
   hierarchyName: string | null;
 }
 
 /** An FPD process view (InstanceHierarchy) of an AML file */
 export interface AmlHierarchy {
+  /** The key of the view: its CAEX ID, or for a view without an ID its place among the FPD views, as '#1' */
   id: string;
   name: string;
 }
@@ -846,6 +847,7 @@ export interface FpbInstance {
    * Import an AML text. The rest of the file (other hierarchies, libraries,
    * attributes and links) is kept and written back by toAML(). A file without
    * FPD content opens an empty model; toAML() then adds the process to it.
+   * `instanceHierarchy` picks the view by its key (AmlHierarchy.id).
    */
   importAML(text: string, options?: { instanceHierarchy?: string; fileName?: string }): Promise<{
     hierarchies: AmlHierarchy[];

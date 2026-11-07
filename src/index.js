@@ -237,7 +237,7 @@ export async function createFpbModeler(options = {}) {
     /**
      * Import an AML text. Everything in the file beyond the process view is
      * kept and written back by toAML(). `instanceHierarchy` picks the process
-     * view by id (default: the first); a file without FPD content opens an
+     * view by its key, the CAEX ID or '#n' for a view without one (default: the first); a file without FPD content opens an
      * empty model and toAML() adds the process to that file.
      */
     importAML(text, options = {}) {
