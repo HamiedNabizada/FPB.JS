@@ -197,3 +197,23 @@ test.describe('Ansicht', () => {
   });
 
 });
+
+// Found by the exploratory test after 031: a click on "Decompose" closed the
+// pad and opened the layer below, the mouse never left the entry, and its
+// tooltip stayed on the new layer
+test('the tooltip of a context pad entry goes when the pad closes', async ({ page }) => {
+  const importer = new ImportPage(page);
+  await importer.goto();
+  await importer.import(clone());
+  await page.evaluate(() => {
+    const op = window.fpbjs.get('elementRegistry').filter((e) => e.businessObject && e.businessObject.name === 'Prüfen' && e.type === 'fpb:ProcessOperator')[0];
+    window.fpbjs.get('selection').select(op);
+    window.fpbjs.get('contextPad').open(op);
+  });
+  const entry = page.locator('.djs-context-pad .entry[data-action="decompose"]');
+  await entry.hover();
+  await expect(page.locator('.djs-hover-tooltip')).toBeVisible({ timeout: 3000 });
+  await entry.click();
+  await page.waitForTimeout(500);
+  await expect(page.locator('.djs-hover-tooltip')).toHaveCount(0);
+});

@@ -35,6 +35,12 @@ export default function ContextPadTooltips(eventBus, contextPad, hoverTooltip) {
     }
     self._moveTitles(container);
   });
+
+  // A click on an entry can close the pad and change the layer while the mouse
+  // stays where the entry was ("Decompose"): no mouseleave, the tooltip stayed
+  eventBus.on(['contextPad.close', 'root.set'], function () {
+    hoverTooltip._hide();
+  });
 }
 
 ContextPadTooltips.$inject = ['eventBus', 'contextPad', 'hoverTooltip'];
