@@ -233,6 +233,8 @@ export interface PngExportOptions {
   scale?: number;
   /** Background fill color (default: '#ffffff') */
   backgroundColor?: string;
+  /** Room around the drawing in pixels before scaling (default: 20) */
+  margin?: number;
 }
 
 /** Options for PDF export */
