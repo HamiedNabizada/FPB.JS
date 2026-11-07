@@ -663,6 +663,22 @@ test.describe('Export dialog', () => {
 
   test.describe('error handling', () => {
 
+    test('an empty model says so for XML, AML and PDF, without an error in the console', async ({ page }) => {
+      // monkey test 2026-11-07: XML said "No project data found in JSON", PDF
+      // "Cannot read properties of undefined (reading 'elementsContainer')"
+      const errors = [];
+      page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+      await load(page);
+      await page.evaluate(() => window.fpbjs.newModel());
+      for (const kind of ['xml', 'aml', 'pdf']) {
+        await openDialog(page);
+        await expectNoDownload(page, () => exportFormat(page, kind));
+        await expect(errorBox(page)).toContainText('The model is empty: there is no process to export.');
+        await page.keyboard.press('Escape');
+      }
+      expect(errors).toEqual([]);
+    });
+
     async function exportFormat(page, kind) {
       await format(page, kind).check();
       await exportButton(page).click();

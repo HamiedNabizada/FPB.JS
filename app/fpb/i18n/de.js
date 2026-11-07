@@ -382,6 +382,7 @@ const de = {
   'Whole model': 'Ganzes Modell',
   'Current layer': 'Aktuelle Ebene',
   'New project': 'Neues Projekt',
+  'The model is empty: there is no process to export.': 'Das Modell ist leer: Es gibt keinen Prozess zum Exportieren.',
   'Reconnect the flow?': 'Fluss umhängen?',
   'Reconnect': 'Umhängen',
   'The flow no longer ends at "{operator}": the copy of "{state}" on the layer below goes with it. Other parts of the AutomationML file link to it.': 'Der Fluss endet nicht mehr an "{operator}": die Kopie von "{state}" auf der Ebene darunter fällt mit weg. Andere Teile der AutomationML-Datei verweisen auf sie.',

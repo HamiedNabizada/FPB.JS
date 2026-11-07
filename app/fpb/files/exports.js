@@ -1,4 +1,5 @@
 import { fill } from '../i18n/language';
+import { markText } from '../i18n/markText';
 import XMLMapper from '../xml/XMLMapper.js';
 import { serializeModel } from '../export/serializeModel.js';
 import { exportPNG } from '../export/PngExporter.js';
@@ -21,6 +22,14 @@ import { collectProcessShapes } from '../help/processShapes.js';
  */
 export async function exportContent(fpbjs, { format, scope = 'model', layout = true }) {
   fpbjs.get('eventBus').fire('dataStore.updateAll', {});
+
+  // XML, AML and PDF need a process; an empty model failed with the words of
+  // the converters ("No project data found in JSON", a TypeError for PDF)
+  if (['xml', 'aml', 'pdf'].includes(format) && !(fpbjs.getProcesses() || []).some((entry) => entry && entry.process)) {
+    const translate = fpbjs.get('translate', false) || fill;
+    const message = translate(markText('The model is empty: there is no process to export.'));
+    throw new Error(message);
+  }
 
   if (format === 'json') {
     const text = serializeModel(modelData(fpbjs, scope), { withLayout: layout });
