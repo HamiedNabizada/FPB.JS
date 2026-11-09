@@ -52,6 +52,8 @@ npm install fpbjs
 
 [View on NPM](https://www.npmjs.com/package/fpbjs)
 
+Coming from 1.x? Files open unchanged; for hosts, see [Upgrading to 2.0](./docs/UPGRADING-2.0.md) (React and Bootstrap are no longer needed or loaded).
+
 AutomationML import and export are an add-on, off by default like the browser backup, so the package stays without the AML engine:
 
 ```js
