@@ -253,11 +253,15 @@ export async function createFpbModeler(options = {}) {
       return changes ? changes.isDirty() : false;
     },
 
-    /** The host saved the model: it counts as saved, for the browser backup too */
-    markSaved() {
+    /**
+     * The host saved the model: it counts as saved, for the browser backup
+     * too. Pass the data of toJSON() that was saved, so edits made while it
+     * was written stay unsaved; without it the model as it is now counts.
+     */
+    markSaved(saved) {
       const changes = modeler.get('fpbChanges', false);
       if (changes) {
-        changes.markSaved();
+        changes.markSaved(saved);
       }
     },
 

@@ -168,8 +168,11 @@ export interface FpbEventMap {
 export interface FpbChanges {
   /** True if the model has changes that are in no file */
   isDirty(): boolean;
-  /** The host saved the model; fires 'model.downloaded' with the content */
-  markSaved(): void;
+  /**
+   * The host saved the model; fires 'model.downloaded' with the content.
+   * `saved`: the data of toJSON() that was saved, so edits made meanwhile stay unsaved.
+   */
+  markSaved(saved?: (ProjectData | ProcessData)[]): void;
 }
 
 /** The AML file kept since importAML, written back by toAML */
@@ -840,8 +843,12 @@ export interface FpbInstance {
    */
   isDirty(): boolean;
 
-  /** The host saved the model: it counts as saved, for the browser backup too (2.1) */
-  markSaved(): void;
+  /**
+   * The host saved the model: it counts as saved, for the browser backup too
+   * (2.1). Pass the data of toJSON() that was saved, so edits made while it
+   * was written stay unsaved; without it the model as it is now counts.
+   */
+  markSaved(saved?: (ProjectData | ProcessData)[]): void;
 
   /** Import a diagram from a VDI 3682 XML string; settles like importJSON */
   importXML(xmlString: string): Promise<ImportResult>;

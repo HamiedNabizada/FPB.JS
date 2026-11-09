@@ -107,6 +107,21 @@ describe('fpbChanges', () => {
     expect(changes.isDirty()).toBe(false);
   });
 
+  it('markSaved with the saved data keeps an edit made during the save unsaved', () => {
+    importModel([{ name: 'A' }]);
+    processes[0].name = 'B';
+    // the host takes what it saves, then the user edits while it is written
+    const saved = JSON.parse(JSON.stringify(processes));
+    processes[0].name = 'C';
+
+    changes.markSaved(saved);
+
+    expect(changes.isDirty()).toBe(true);
+    processes[0].name = 'B';
+    bus.fire('commandStack.changed', { trigger: 'undo' });
+    expect(changes.isDirty()).toBe(false);
+  });
+
   it('a restored import stays dirty', () => {
     importModel([{ name: 'A' }], { restored: true });
 

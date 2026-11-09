@@ -98,11 +98,18 @@ Changes.prototype.isDirty = function () {
 
 /**
  * The host saved the model: from now on it counts as saved, for the browser
- * backup and the question before opening another file too.
+ * backup and the question before opening another file too. `saved` is what
+ * the host wrote, as toJSON() gave it: edits made while it was written stay
+ * unsaved (as with fpbFiles, 016g A1). Without it the model as it is now
+ * counts as saved.
+ *
+ * @param {Array} [saved] the data of toJSON() the host saved
  */
-Changes.prototype.markSaved = function () {
+Changes.prototype.markSaved = function (saved) {
   this._check();
-  this._eventBus.fire('model.downloaded', { format: null, fileName: null, baseline: this._serialize() });
+  // toJSON() is JSON.parse of the serialized model: stringified it is that text again
+  const baseline = saved === undefined || saved === null ? this._serialize() : JSON.stringify(saved);
+  this._eventBus.fire('model.downloaded', { format: null, fileName: null, baseline });
 };
 
 Changes.prototype._importer = function () {

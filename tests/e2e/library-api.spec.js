@@ -2659,6 +2659,25 @@ test.describe('Changes for hosts', () => {
     expect(result).toEqual({ before: false, afterEdit: true, afterSave: false, dirty: [true, false], changed: 1 });
   });
 
+  test('markSaved with the data of toJSON: an edit made during the save stays unsaved', async ({ page }) => {
+    await withModel(page);
+    const result = await page.evaluate((id) => {
+      const fpb = window.fpb;
+      const move = () => fpb.get('modeling').moveElements([fpb.get('elementRegistry').get(id)], { x: 10, y: 0 });
+      move();
+      // saved as it is: clean
+      fpb.markSaved(fpb.toJSON());
+      const cleanAfterSave = !fpb.isDirty();
+      // the host takes the data, the user edits while it is written
+      const data = fpb.toJSON();
+      move();
+      fpb.markSaved(data);
+      return { cleanAfterSave, dirtyAfterEditDuringSave: fpb.isDirty() };
+    }, '9833d9a9-1b88-4bfb-91b3-7ab5e2617045');
+
+    expect(result).toEqual({ cleanAfterSave: true, dirtyAfterEditDuringSave: true });
+  });
+
   test('a layer switch is no change for hosts', async ({ page }) => {
     await withModel(page);
     const changed = await page.evaluate((child) => new Promise((resolve) => {

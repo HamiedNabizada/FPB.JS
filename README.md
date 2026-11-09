@@ -54,7 +54,7 @@ npm install fpbjs
 
 Coming from 1.x? Files open unchanged; for hosts, see [Upgrading to 2.0](./docs/UPGRADING-2.0.md) (React and Bootstrap are no longer needed or loaded).
 
-The imports resolve once the model is on the canvas (since 2.1), with the import report and the findings of the model check; they reject with an `FpbImportError` (`code`, `details`) when the content is refused or a newer import replaced the model first. `model.changed` fires for edits only (not for a layer switch, an import or New model); `isDirty()` says whether there are changes that are in no file, `markSaved()` tells FPB.js that the host saved the model:
+The imports resolve once the model is on the canvas (since 2.1), with the import report and the findings of the model check; they reject with an `FpbImportError` (`code`, `details`) when the content is refused or a newer import replaced the model first. `model.changed` fires for edits only (not for a layer switch, an import or New model); `isDirty()` says whether there are changes that are in no file, `markSaved(data)` tells FPB.js that the host saved the model; pass the data you saved, so edits made while it was written stay unsaved:
 
 ```js
 try {
@@ -63,7 +63,11 @@ try {
   console.error(error.code, error.message);
 }
 
-const off = fpb.on('model.changed', () => save(fpb.toJSON()).then(() => fpb.markSaved()));
+const off = fpb.on('model.changed', async () => {
+  const data = fpb.toJSON();
+  await save(data);
+  fpb.markSaved(data);
+});
 fpb.on('model.dirtyChanged', ({ dirty }) => showUnsaved(dirty));
 ```
 

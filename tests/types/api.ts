@@ -79,6 +79,10 @@ function events(): void {
 async function exportsAndState(): Promise<void> {
   const dirty: boolean = fpb.isDirty();
   fpb.markSaved();
+  // what was saved: edits made during the save stay unsaved
+  fpb.markSaved(fpb.toJSON());
+  // @ts-expect-error markSaved takes the data of toJSON, not a text
+  fpb.markSaved('saved');
   fpb.newModel();
   const xml: string = await fpb.toXML();
   const svg: string = await fpb.toSVG();
