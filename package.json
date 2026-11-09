@@ -1,6 +1,6 @@
 {
   "name": "fpbjs",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "JavaScript library for formalized process descriptions according to VDI/VDE 3682, with a complete web application and a library for integration.",
   "main": "dist/fpbjs.js",
   "module": "dist/fpbjs.esm.js",
