@@ -50,11 +50,15 @@ async function init() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const json = JSON.parse(event.target.result);
-      fpb.importJSON(json);
-      setStatus(`Imported JSON: ${file.name}`);
-      showOutput('Imported JSON', json);
+    reader.onload = async (event) => {
+      try {
+        const json = JSON.parse(event.target.result);
+        const result = await fpb.importJSON(json);
+        setStatus(`Imported JSON: ${file.name} (${result.warnings.length} warnings, ${result.findings.length} findings)`);
+        showOutput('Imported JSON', json);
+      } catch (error) {
+        setStatus(`Import failed: ${error.message}`);
+      }
     };
     reader.readAsText(file);
     fileInputJson.value = '';
@@ -65,11 +69,15 @@ async function init() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const xml = event.target.result;
-      fpb.importXML(xml);
-      setStatus(`Imported XML: ${file.name}`);
-      showOutput('Imported XML', xml);
+      try {
+        const result = await fpb.importXML(xml);
+        setStatus(`Imported XML: ${file.name} (${result.warnings.length} warnings, ${result.findings.length} findings)`);
+        showOutput('Imported XML', xml);
+      } catch (error) {
+        setStatus(`Import failed: ${error.message}`);
+      }
     };
     reader.readAsText(file);
     fileInputXml.value = '';
@@ -83,14 +91,14 @@ async function init() {
     setStatus('Exported as JSON');
   });
 
-  document.getElementById('btn-export-xml').addEventListener('click', () => {
-    const xml = fpb.toXML();
+  document.getElementById('btn-export-xml').addEventListener('click', async () => {
+    const xml = await fpb.toXML();
     showOutput('Export: XML', xml);
     setStatus('Exported as XML');
   });
 
-  document.getElementById('btn-export-svg').addEventListener('click', () => {
-    const svg = fpb.toSVG();
+  document.getElementById('btn-export-svg').addEventListener('click', async () => {
+    const svg = await fpb.toSVG();
     showOutput('Export: SVG', svg);
     setStatus('Exported as SVG');
   });
@@ -103,8 +111,8 @@ async function init() {
     setStatus('Downloaded diagram.json');
   });
 
-  document.getElementById('btn-download-xml').addEventListener('click', () => {
-    const xml = fpb.toXML();
+  document.getElementById('btn-download-xml').addEventListener('click', async () => {
+    const xml = await fpb.toXML();
     downloadFile(xml, 'diagram.xml', 'application/xml');
     setStatus('Downloaded diagram.xml');
   });

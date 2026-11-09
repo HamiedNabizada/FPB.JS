@@ -32,7 +32,7 @@ fpb.on('fpbjs', (event) => {
 fpb.fire('fpbjs', { data: fpb.toJSON(), format: 'json' });
 
 // Export as XML
-fpb.fire('fpbjs', { data: fpb.toXML(), format: 'xml' });
+fpb.fire('fpbjs', { data: await fpb.toXML(), format: 'xml' });
 ```
 
 ### Custom Event Names

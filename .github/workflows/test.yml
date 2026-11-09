@@ -60,6 +60,35 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  examples:
+    name: Beispiele
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - run: npm ci --ignore-scripts
+
+      - run: npm run build:lib
+
+      # Das Paket dieses Branches, nicht die letzte Veroeffentlichung auf npm
+      - run: npm pack --ignore-scripts
+
+      # Die Beispiele haben bewusst kein Lockfile im Repo (.gitignore)
+      - name: Beispiele gegen das Paket bauen
+        run: |
+          for example in starter event-export import-export; do
+            (cd "examples/$example" && npm install && npm install --no-save ../../fpbjs-*.tgz && npm run build)
+          done
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npx playwright test tests/e2e/examples-smoke.spec.js --project=chromium
+
   build:
     name: Build
     runs-on: ubuntu-latest

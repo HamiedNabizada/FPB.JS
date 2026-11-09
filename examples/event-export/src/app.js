@@ -47,8 +47,8 @@ async function init() {
     fpb.fire(EVENT_NAME, { data, format: 'json' });
   });
 
-  document.getElementById('btn-export-xml').addEventListener('click', () => {
-    const data = fpb.toXML();
+  document.getElementById('btn-export-xml').addEventListener('click', async () => {
+    const data = await fpb.toXML();
     fpb.fire(EVENT_NAME, { data, format: 'xml' });
   });
 
@@ -58,8 +58,8 @@ async function init() {
 
   // --- Also log diagram changes ---
 
-  fpb.on('changed', () => {
-    log('Diagram changed (commandStack)');
+  fpb.on('model.changed', () => {
+    log('Diagram changed');
   });
 
   fpb.on('element.added', (event) => {

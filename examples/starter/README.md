@@ -30,7 +30,7 @@ const fpb = await createFpbModeler({
 You can listen to diagram events using the `on()` method:
 
 ```javascript
-fpb.on('changed', () => {
+fpb.on('model.changed', () => {
   console.log('Diagram changed');
 });
 
@@ -39,7 +39,7 @@ fpb.on('selection.changed', (event) => {
 });
 ```
 
-Available events: `changed`, `element.added`, `element.removed`, `element.changed`, `selection.changed`, `process.switched`.
+Available events: `model.changed` (edits only), `model.dirtyChanged`, `changed` (deprecated, also fires on a layer switch), `element.added`, `element.removed`, `element.changed`, `selection.changed`, `process.switched`.
 
 ## Run
 

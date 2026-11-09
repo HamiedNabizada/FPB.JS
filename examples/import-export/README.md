@@ -16,15 +16,17 @@ This example demonstrates all import and export capabilities of FPB.JS:
 ```javascript
 const fpb = await createFpbModeler({ container });
 
-// Import from a JSON object (FPB.JS internal format)
-fpb.importJSON(jsonData);
+// Import from a JSON object (FPB.JS internal format). The promise resolves
+// once the model is on the canvas, with the import report and the findings
+// of the model check; it rejects when the content is refused (since 2.1).
+const { warnings, findings } = await fpb.importJSON(jsonData);
 ```
 
 ### From XML (VDI 3682)
 
 ```javascript
-// Import from an XML string (VDI 3682 format)
-fpb.importXML(xmlString);
+// Import from an XML string (VDI 3682 format); settles like importJSON
+await fpb.importXML(xmlString);
 ```
 
 ### Loading from a file
@@ -35,13 +37,16 @@ input.type = 'file';
 input.accept = '.json,.xml';
 input.onchange = (e) => {
   const reader = new FileReader();
-  reader.onload = (event) => {
+  reader.onload = async (event) => {
     const content = event.target.result;
-
-    if (input.accept.includes('json')) {
-      fpb.importJSON(JSON.parse(content));
-    } else {
-      fpb.importXML(content);
+    try {
+      if (input.accept.includes('json')) {
+        await fpb.importJSON(JSON.parse(content));
+      } else {
+        await fpb.importXML(content);
+      }
+    } catch (error) {
+      console.error('Import failed:', error.code, error.message);
     }
   };
   reader.readAsText(e.target.files[0]);
@@ -61,7 +66,7 @@ const json = fpb.toJSON();
 ### To XML (VDI 3682)
 
 ```javascript
-const xml = fpb.toXML();
+const xml = await fpb.toXML();
 // Returns the diagram as a VDI 3682 compliant XML string
 ```
 
@@ -89,7 +94,7 @@ function download(content, filename, mimeType) {
 download(JSON.stringify(fpb.toJSON(), null, 2), 'diagram.json', 'application/json');
 
 // Download XML
-download(fpb.toXML(), 'diagram.xml', 'application/xml');
+download(await fpb.toXML(), 'diagram.xml', 'application/xml');
 ```
 
 ## Run

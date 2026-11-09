@@ -7,9 +7,9 @@ async function init() {
     layerContainer: document.getElementById('layer-container')
   });
 
-  // Listen for changes (e.g. for auto-save)
-  fpb.on('changed', () => {
-    console.log('Diagram changed');
+  // Listen for edits (e.g. for auto-save); a layer switch is none
+  fpb.on('model.changed', () => {
+    console.log('Diagram changed, unsaved:', fpb.isDirty());
   });
 
   // Listen for selection changes
