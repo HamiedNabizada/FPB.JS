@@ -54,6 +54,19 @@ npm install fpbjs
 
 Coming from 1.x? Files open unchanged; for hosts, see [Upgrading to 2.0](./docs/UPGRADING-2.0.md) (React and Bootstrap are no longer needed or loaded).
 
+The imports resolve once the model is on the canvas (since 2.1), with the import report and the findings of the model check; they reject with an `FpbImportError` (`code`, `details`) when the content is refused or a newer import replaced the model first. `model.changed` fires for edits only (not for a layer switch, an import or New model); `isDirty()` says whether there are changes that are in no file, `markSaved()` tells FPB.js that the host saved the model:
+
+```js
+try {
+  const { warnings, findings } = await fpb.importJSON(json);
+} catch (error) {
+  console.error(error.code, error.message);
+}
+
+const off = fpb.on('model.changed', () => save(fpb.toJSON()).then(() => fpb.markSaved()));
+fpb.on('model.dirtyChanged', ({ dirty }) => showUnsaved(dirty));
+```
+
 AutomationML import and export are an add-on, off by default like the browser backup, so the package stays without the AML engine:
 
 ```js

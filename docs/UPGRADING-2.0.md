@@ -47,3 +47,15 @@ Models stay compatible: 2.0 opens JSON, VDI 3682 XML and AutomationML files of 1
 - `getCheckedRules()` returns 23 codes. An element without a name reports `D7` (warning) instead of `D3`, `D4`, `D5` (info); version and revision (`D8`) come as one note per layer.
 - Refused while drawing: a second system limit on a layer, dropping onto a label, a flow whose reverse exists (a state is no input and output of the same operator; provisional, for the VDI 3682 committee), dragging an end of a connection into another kind of connection, appending to an output of a decomposed layer.
 - A new model is called "New project" (German "Neues Projekt") instead of "FPBJS_Project".
+
+## 2.1
+
+Nothing to change: 2.1 only adds. A host that ignores the new return values works as with 2.0.
+
+- `importJSON`, `importXML` resolve with `{ warnings, findings }` once the model is on the canvas and reject with an `FpbImportError` (`code`: `INVALID_DATA_STRUCTURE`, `MISSING_PROJECT_DEFINITION`, ..., `SUPERSEDED` when a newer import replaced the model first). `importAML` resolves after the import as well and carries `findings` and `report`. Ignoring the promise logs nothing.
+- An import that a newer one replaced before it was done tells the screen nothing any more (no switch to its layer, no `import.done`). `import.report`, `import.done` and `import.error` carry the `run` of their import.
+- `on()` returns a function that removes the listener.
+- `isDirty()`, `markSaved()`, events `model.changed` (edits only) and `model.dirtyChanged` (`{ dirty }`). `'changed'` stays as it was and is deprecated: it also fires for a layer switch.
+- Deprecated, removed in 3.0: `addFpbElements` (warns once), the placeholders `FpbModeler`, `PropertiesPanel`, `LayerOverview` and `defaultConfig` of the main entry (use `createFpbModeler` or `getClasses()`).
+- The VDI 3682 XML export keeps a setpoint of 0.
+- Types: `toJSON()` returns `ProjectData` and `ProcessData` (ids, not shapes); the element type of the project is `'fpb:Project'`.
