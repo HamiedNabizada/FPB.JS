@@ -43,6 +43,9 @@ const RESTORE_PARAM = 'fpbRestore';
 export default function Autosave(eventBus, fpbjs, config, injector) {
   this._eventBus = eventBus;
   this._fpbjs = fpbjs;
+  this._injector = injector || null;
+  // the run of a restore (032a): set when the backup goes to the importer
+  this._restoringRun = null;
   // an AML file kept for the AML export goes into the backup too (feature 028)
   this._amlSupport = injector ? injector.get('amlSupport', false) : null;
   this._config = normalizeConfig(config);
@@ -79,28 +82,28 @@ export default function Autosave(eventBus, fpbjs, config, injector) {
 
   // The importer refuses invalid content right away and keeps the model it
   // had. A backup that fails to load is offered again, and the next import
-  // is an ordinary one.
-  eventBus.on('import.error', function () {
-    if (self._restoring) {
-      const entry = self._restoringEntry;
-      self._restoring = null;
-      self._restoringEntry = null;
-      if (entry) {
-        self._pending = self._pending.concat(entry)
-          .sort((a, b) => String(b.savedAt).localeCompare(String(a.savedAt)));
-        self._changed();
-      }
+  // is an ordinary one. Only the run of the restore counts (032a): a newer
+  // import refused meanwhile leaves the restore running.
+  eventBus.on('import.error', function (event) {
+    if (self._restoring && self._isRestoreRun(event)) {
+      self._offerAgain();
     }
   });
 
-  eventBus.on('import.done', function () {
-    if (self._restoring) {
+  eventBus.on('import.done', function (event) {
+    if (self._restoring && self._isRestoreRun(event)) {
       // The restored model is now this tab's; it stays unsaved
       const restored = self._restoring;
       self._restoring = null;
       self._restoringEntry = null;
+      self._restoringRun = null;
       self._enqueue(() => self._store.remove(restored));
     } else {
+      // a newer import replaced the restored model before it showed: the
+      // backup was never seen and stays on offer
+      if (self._restoring) {
+        self._offerAgain();
+      }
       self._baseline = self._serialize();
     }
     self.flush();
@@ -157,6 +160,34 @@ Autosave.prototype.ready = function () {
   return this._ready;
 };
 
+Autosave.prototype._importer = function () {
+  return this._injector ? this._injector.get('jsonImporter', false) : null;
+};
+
+/**
+ * Whether an import event belongs to the running restore. Without an
+ * importer that counts runs, every import event does (as before 2.1).
+ */
+Autosave.prototype._isRestoreRun = function (event) {
+  if (this._restoringRun === null || this._restoringRun === undefined) {
+    return true;
+  }
+  return !!event && event.run === this._restoringRun;
+};
+
+/** The backup being restored goes back on offer */
+Autosave.prototype._offerAgain = function () {
+  const entry = this._restoringEntry;
+  this._restoring = null;
+  this._restoringEntry = null;
+  this._restoringRun = null;
+  if (entry) {
+    this._pending = this._pending.concat(entry)
+      .sort((a, b) => String(b.savedAt).localeCompare(String(a.savedAt)));
+    this._changed();
+  }
+};
+
 /** True if the model has changes that are in no file */
 Autosave.prototype.isDirty = function () {
   return this._dirty;
@@ -189,6 +220,9 @@ Autosave.prototype.restore = function (id) {
     }
     this._restoring = id;
     this._restoringEntry = entry;
+    // the run the importer gives this import: it counts up on every one
+    const importer = this._importer();
+    this._restoringRun = importer ? importer.getLastRun() + 1 : null;
     // restored: the model is in no file, so it stays unsaved (fpbChanges, 032a)
     this._eventBus.fire('FPBJS.import', { data: record.model, amlSource: record.aml || null, restored: true });
     // cleared by import.error if the importer refused it
