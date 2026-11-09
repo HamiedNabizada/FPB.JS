@@ -73,7 +73,7 @@
     "@playwright/test": "^1.50.0",
     "@vitest/browser": "^4.1.12",
     "@vitest/coverage-v8": "^4.1.12",
-    "amlengine-js": "file:vendor/amlengine-js-0.1.0.tgz",
+    "amlengine-js": "^0.2.0",
     "babel-loader": "^9.2.1",
     "babel-plugin-istanbul": "^8.0.0",
     "copy-webpack-plugin": "^14.0.0",
