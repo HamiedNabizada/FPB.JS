@@ -2715,3 +2715,42 @@ test.describe('Types of the facade', () => {
     expect(runtime).toEqual(described);
   });
 });
+
+// 032a V10: leftovers of the old API say that they go in 3.0
+test.describe('Deprecated API', () => {
+
+  test('addFpbElements warns once that it goes in 3.0', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page);
+    const warnings = [];
+    page.on('console', (message) => {
+      if (message.type() === 'warning' && message.text().includes('addFpbElements')) {
+        warnings.push(message.text());
+      }
+    });
+    await page.evaluate(() => {
+      window.fpb.modeler.addFpbElements([]);
+      window.fpb.modeler.addFpbElements([]);
+    });
+    await page.waitForTimeout(200);
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('3.0');
+    expect(warnings[0]).toContain('importJSON');
+  });
+
+  test('the placeholders name createFpbModeler and 3.0', async ({ page }) => {
+    await openLibraryPage(page);
+    const messages = await page.evaluate(() => {
+      const lib = window.FpbJS;
+      return [lib.FpbModeler, lib.PropertiesPanel, lib.LayerOverview].map((Cls) => {
+        try { new Cls(); return null; } catch (e) { return e.message; }
+      });
+    });
+
+    messages.forEach((message) => {
+      expect(message).toContain('createFpbModeler');
+      expect(message).toContain('3.0');
+    });
+  });
+});

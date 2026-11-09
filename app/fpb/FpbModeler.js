@@ -355,7 +355,17 @@ FpbModeler.prototype._addFpbConnection = function (fpbElement) {
 };
 
 
+// a leftover of the old API (032a V10): it says so once per page
+let addFpbElementsWarned = false;
+
+/**
+ * @deprecated since 2.1, removed in 3.0: import models with importJSON.
+ */
 FpbModeler.prototype.addFpbElements = function (fpbElements) {
+    if (!addFpbElementsWarned) {
+        addFpbElementsWarned = true;
+        console.warn('FPB.js: addFpbElements is deprecated and goes in 3.0; import models with importJSON.');
+    }
     if (!isArray(fpbElements)) {
         throw new Error('argument must be an array');
     }

@@ -1051,20 +1051,25 @@ export interface LayerOverviewConstructor {
   new (options: { container: HTMLElement; modeler: any; showNewModel?: boolean }): LayerOverview;
 }
 
-/** Server-side stub class (throws on instantiation) */
+/**
+ * Placeholder that throws on instantiation, in Node and in the browser.
+ * @deprecated since 2.1, removed in 3.0: use createFpbModeler() or getClasses().FpbModeler
+ */
 export const FpbModeler: any;
 /**
- * Server-side stub class (throws on instantiation). In the browser,
+ * Placeholder that throws on instantiation. In the browser,
  * getClasses().PropertiesPanel is the properties panel (Preact); its
  * constructor takes { container, modeler }.
+ * @deprecated since 2.1, removed in 3.0: use createFpbModeler() or getClasses().PropertiesPanel
  */
 export const PropertiesPanel: any;
 /**
- * Server-side stub class (throws on instantiation). In the browser,
+ * Placeholder that throws on instantiation. In the browser,
  * getClasses().LayerOverview is the toolbar.
+ * @deprecated since 2.1, removed in 3.0: use createFpbModeler() or getClasses().LayerOverview
  */
 export const LayerOverview: any;
-/** Default modeler config (empty object on server) */
+
 /** Options for layoutImportData */
 export interface LayoutOptions {
   /**
@@ -1097,6 +1102,10 @@ export function layoutImportData(data: any[], options?: LayoutOptions): LayoutRe
 /** True if some shape or connection in the data has no visual information */
 export function needsLayout(data: any[]): boolean;
 
+/**
+ * An empty object, kept from 1.x.
+ * @deprecated since 2.1, removed in 3.0: getClasses().defaultConfig is the built-in config
+ */
 export const defaultConfig: Record<string, any>;
 
 export default createFpbModeler;

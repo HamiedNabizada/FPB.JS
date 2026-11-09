@@ -14,28 +14,33 @@ const EVENT_MAP = {
   'process.switched':  'layerPanel.processSwitched',
 };
 
-// Server-side stub implementations that provide helpful error messages
+// Placeholders from 1.x that only throw, in Node and in the browser alike.
+// They go in 3.0 (032a V10); the real classes come from getClasses().
+const placeholder = (name) => `${name} is a placeholder that goes in 3.0: create the modeler with createFpbModeler() in a browser environment, or take the class from getClasses().`;
+
 class FpbModelerStub {
   constructor() {
-    throw new Error('FpbModeler requires a browser environment with DOM support. Use createFpbModeler() for proper initialization.');
+    throw new Error(placeholder('FpbModeler'));
   }
 }
 
 class PropertiesPanelStub {
   constructor() {
-    throw new Error('PropertiesPanel requires a browser environment with DOM support. Use createFpbModeler() for proper initialization.');
+    throw new Error(placeholder('PropertiesPanel'));
   }
 }
 
 class LayerOverviewStub {
   constructor() {
-    throw new Error('LayerOverview requires a browser environment with DOM support. Use createFpbModeler() for proper initialization.');
+    throw new Error(placeholder('LayerOverview'));
   }
 }
 
-// Export stub classes for server-side compatibility
+/** @deprecated since 2.1, removed in 3.0: use createFpbModeler() or getClasses() */
 export const FpbModeler = FpbModelerStub;
+/** @deprecated since 2.1, removed in 3.0: use createFpbModeler() or getClasses() */
 export const PropertiesPanel = PropertiesPanelStub;
+/** @deprecated since 2.1, removed in 3.0: use createFpbModeler() or getClasses() */
 export const LayerOverview = LayerOverviewStub;
 
 import { collectProcessShapes, findProcessShape, findLayerOf, layerHasElement } from './processShapes';
@@ -47,7 +52,7 @@ import { createImportError } from '../app/fpb/importer/ImportErrors';
 // Automatic layout works on plain JSON, so it is available without a browser.
 export { layoutImportData, needsLayout } from '../app/fpb/layout/AutoLayout';
 
-// Export an empty config for server-side compatibility
+/** @deprecated since 2.1, removed in 3.0: getClasses().defaultConfig is the built-in config */
 export const defaultConfig = {};
 
 // 2.0 (016b T8): the properties panel has no config; an old one is answered once
