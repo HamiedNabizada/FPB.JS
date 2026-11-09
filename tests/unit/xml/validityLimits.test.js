@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { limitFromXml, limitAttributes } from '../../../app/fpb/xml/XMLMapper.js';
+import { limitFromXml, limitAttributes, setpointAttributes } from '../../../app/fpb/xml/XMLMapper.js';
 
 /**
  * Validity limits through the XML (016c T9a): an empty limit stays empty
@@ -38,5 +38,21 @@ describe('XMLMapper: validity limits', () => {
       .toEqual({ limitType: 'acceptance region', from: '350' });
     expect(limitAttributes({ limitType: '', from: 0, to: 0 }))
       .toEqual({ limitType: '', from: '0', to: '0' });
+  });
+});
+
+// 032a V11: a setpoint of 0 is a value, not an empty field
+describe('XMLMapper: setpoint', () => {
+
+  it('a setpoint of 0 is written to the XML', () => {
+    expect(setpointAttributes({ setpointValue: { value: 0, unit: 'K' } })).toEqual({ setpointValue: '0', unit: 'K' });
+    expect(setpointAttributes({ setpointValue: { value: '0', unit: '' } })).toEqual({ setpointValue: '0' });
+  });
+
+  it('an empty setpoint writes no attribute', () => {
+    ['', null, undefined].forEach((value) => {
+      expect(setpointAttributes({ setpointValue: { value, unit: '' } })).toEqual({});
+    });
+    expect(setpointAttributes({})).toEqual({});
   });
 });

@@ -42,6 +42,22 @@ export function limitAttributes(limit) {
     return attributes;
 }
 
+/**
+ * The attributes of a setpoint: 0 is a value and is written (it was dropped
+ * before, 032a V11); only an empty value or unit writes nothing.
+ */
+export function setpointAttributes(desc) {
+    const setpoint = (desc && desc.setpointValue) || {};
+    const attributes = {};
+    if (isSet(setpoint.value)) {
+        attributes.setpointValue = String(setpoint.value);
+    }
+    if (isSet(setpoint.unit)) {
+        attributes.unit = String(setpoint.unit);
+    }
+    return attributes;
+}
+
 class XMLMapper {
     /** At least two points with numeric coordinates */
     static _usableWaypoints(waypoints) {
@@ -1651,8 +1667,8 @@ class XMLMapper {
                 const desc = char.descriptiveElement || {};
                 if (desc.valueDeterminationProcess) descriptiveElementXml.setAttribute('valueDeterminationProcess', desc.valueDeterminationProcess);
                 if (desc.representivity) descriptiveElementXml.setAttribute('representivity', desc.representivity);
-                if (desc.setpointValue && desc.setpointValue.value) descriptiveElementXml.setAttribute('setpointValue', desc.setpointValue.value);
-                if (desc.setpointValue && desc.setpointValue.unit) descriptiveElementXml.setAttribute('unit', desc.setpointValue.unit);
+                const setpoint = setpointAttributes(desc);
+                Object.keys(setpoint).forEach((name) => descriptiveElementXml.setAttribute(name, setpoint[name]));
 
                 // Validity limits and actual values are lists, so they are child
                 // elements: as attributes (as in the Blatt 3 draft) they would
