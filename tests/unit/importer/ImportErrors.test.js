@@ -7,7 +7,8 @@ import {
   ProjectDefinitionError,
   VisualInformationError,
   DependencyError,
-  ErrorHandler
+  ErrorHandler,
+  createImportError
 } from '../../../app/fpb/importer/ImportErrors.js';
 
 import { IMPORT_ERRORS } from '../../../app/fpb/importer/ImportConstants.js';
@@ -338,6 +339,64 @@ describe('ImportErrors', () => {
 
     });
 
+  });
+
+});
+
+// 032a V2: every import is a run of its own, with its own warnings
+describe('ErrorHandler runs (032a)', () => {
+
+  let bus;
+  let handler;
+
+  beforeEach(() => {
+    bus = { fire: vi.fn() };
+    handler = new ErrorHandler(bus);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  it('takeWarnings returns the collected warnings and clears them', () => {
+    handler.startReport();
+    handler.logWarning('one');
+    handler.logWarning('two');
+
+    const taken = handler.takeWarnings();
+
+    expect(taken.map((w) => w.message)).toEqual(['one', 'two']);
+    expect(handler.warnings).toEqual([]);
+    expect(bus.fire).not.toHaveBeenCalled();
+  });
+
+  it('finishReport fires import.report with warnings and run, nothing for an empty list', () => {
+    const warnings = [{ message: 'one', details: null, hint: null }];
+
+    expect(handler.finishReport(warnings, 4)).toBe(warnings);
+    expect(bus.fire).toHaveBeenCalledWith('import.report', { warnings, run: 4 });
+
+    bus.fire.mockClear();
+    expect(handler.finishReport([], 5)).toEqual([]);
+    expect(bus.fire).not.toHaveBeenCalled();
+  });
+
+  it('handleError puts the run on import.error', () => {
+    handler.setRun(7);
+    handler.handleError(new DataStructureError('Broken'));
+
+    const [name, data] = bus.fire.mock.calls[0];
+    expect(name).toBe('import.error');
+    expect(data.run).toBe(7);
+    expect(data.message).toBe('Broken');
+  });
+
+  it('createImportError gives an FpbImportError with code and details', () => {
+    const error = createImportError({ message: 'Broken', details: 'why', code: 'INVALID_DATA_STRUCTURE' });
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error.name).toBe('FpbImportError');
+    expect(error.message).toBe('Broken');
+    expect(error.details).toBe('why');
+    expect(error.code).toBe('INVALID_DATA_STRUCTURE');
   });
 
 });

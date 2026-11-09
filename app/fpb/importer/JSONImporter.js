@@ -9,7 +9,7 @@ import {
 } from 'diagram-js/lib/util/Collections';
 
 // Import our new utilities and constants
-import { FPB_TYPES, TYPE_GROUPS, IMPORT_TIMING, IMPORT_EVENTS } from './ImportConstants';
+import { FPB_TYPES, TYPE_GROUPS, IMPORT_TIMING, IMPORT_EVENTS, IMPORT_ERRORS } from './ImportConstants';
 import { 
     ArrayUtils, 
     TypeUtils, 
@@ -17,7 +17,7 @@ import {
     VisualUtils, 
     ValidationUtils 
 } from './ImportUtils';
-import { ErrorHandler } from './ImportErrors';
+import { ErrorHandler, createImportError } from './ImportErrors';
 import { needsLayout, layoutImportData } from '../layout/AutoLayout';
 
 export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFactory, elementFactory, uiReadiness, translate) {
@@ -38,7 +38,46 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
         this._eventBus.fire(IMPORT_EVENTS.IMPORT_ERROR, { message, details });
     };
 
+    // Every import is a run (032a V2): `_run` counts them, `_shown` is the run
+    // whose model was put in place last. A run's screen updates wait for the
+    // panels; when a newer run has replaced the model by then, they are
+    // skipped. Hosts wait for a run with whenSettled.
+    this._run = 0;
+    this._shown = 0;
+    this._results = new Map();
+    this._waiting = new Map();
+    // runs whose model was put in place and that wait for the panels
+    this._open = new Set();
+
+    // a refused run is over; import.error of others (a file that could not be
+    // read) carries no run
+    this._eventBus.on(IMPORT_EVENTS.IMPORT_ERROR, (event) => {
+        if (event && typeof event.run === 'number') {
+            this._settle(event.run, false, createImportError({
+                message: event.message,
+                details: event.details,
+                code: event.errorType || IMPORT_ERRORS.UNEXPECTED_ERROR
+            }));
+        }
+    });
+
     this._eventBus.on(IMPORT_EVENTS.IMPORT_REQUEST, (event) => {
+        const run = ++this._run;
+        this._errorHandler.setRun(run);
+        this._handleImport(event, run);
+        // warnings of a refused run stay out of the next report
+        if (this._shown !== run) {
+            this._errorHandler.takeWarnings();
+        }
+        // safety net: a run that neither replaced the model nor failed
+        if (this._shown !== run && !this._results.has(run)) {
+            this._settle(run, false, createImportError({ message: 'The import stopped without a result' }));
+        }
+    });
+
+}
+
+JSONImporter.prototype._handleImport = function (event, run) {
         try {
             this._errorHandler.startReport();
             let data = cloneModelData(event.data);
@@ -152,16 +191,29 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
             // failure while resolving leaves the previous one untouched.
             this.resetModelState();
 
+            // this run's model is the one in place now: an older run still
+            // waiting for the panels is over
+            this._shown = run;
+            this._supersede(run);
+
             this._eventBus.fire(IMPORT_EVENTS.PROJECT_ADDED, {
                 projectDefinition: project
             });
 
             this._fpbjs.setProjectDefinition(project);
 
+            // what this run built and warned about; a newer run starts over
+            const processes = this._processes;
+            const warnings = this._errorHandler.takeWarnings();
+
             // The panels announce themselves when they are mounted; the fixed
             // delay is only the safety net for one that never does.
             this._uiReadiness.whenReady(() => {
-                this._processes.forEach((pr, index) => {
+                if (this._shown !== run) {
+                    // a newer import replaced this model meanwhile
+                    return;
+                }
+                processes.forEach((pr) => {
                     if (pr.process) {
                         this._eventBus.fire(IMPORT_EVENTS.NEW_PROCESS, {
                             newProcess: pr.process,
@@ -176,27 +228,85 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
                 });
                 // Switch to main process
                 try {
-                    modeling.switchProcess(project.entryPoint);
+                    this._modeling.switchProcess(project.entryPoint);
                     fitToViewport(this._canvas);
                 } catch (error) {
                     // The data is in, but the canvas does not show it. Say so
                     // in the report instead of announcing a clean import.
+                    this._errorHandler.takeWarnings();
                     this._errorHandler.logWarning(
                         'The entry layer could not be opened after the import',
                         { message: error && error.message ? error.message : String(error) },
                         'Open a layer in the layer panel. If that fails too, reload the page and import the file again.'
                     );
+                    warnings.push(...this._errorHandler.takeWarnings());
                 }
-                this._errorHandler.finishReport();
+                this._errorHandler.finishReport(warnings, run);
+                this._settle(run, true, { warnings });
                 // Everything is on the canvas now: the model check can look at it
-                this._eventBus.fire(IMPORT_EVENTS.IMPORT_DONE, {});
+                this._eventBus.fire(IMPORT_EVENTS.IMPORT_DONE, { run });
             }, IMPORT_TIMING.UI_READINESS_TIMEOUT);
         } catch (error) {
             this._errorHandler.handleError(error);
         }
-    });
+};
 
-}
+/** The run of the latest import this importer took (032a V2); 0 before any */
+JSONImporter.prototype.getLastRun = function () {
+    return this._run;
+};
+
+/**
+ * Resolves when the model of `run` is on the canvas, with the warnings of its
+ * report; rejects with an FpbImportError when the importer refused it or a
+ * newer import replaced the model first (code SUPERSEDED). A run that is
+ * over answers at once.
+ *
+ * @return {Promise<{ warnings: Array }>}
+ */
+JSONImporter.prototype.whenSettled = function (run) {
+    const result = this._results.get(run);
+    if (result) {
+        return result.ok ? Promise.resolve(result.value) : Promise.reject(result.value);
+    }
+    if (!(run > 0 && run <= this._run)) {
+        return Promise.reject(createImportError({ message: 'No import was started', code: 'NOT_STARTED' }));
+    }
+    return new Promise((resolve, reject) => {
+        if (!this._waiting.has(run)) {
+            this._waiting.set(run, []);
+        }
+        this._waiting.get(run).push({ resolve, reject });
+    });
+};
+
+JSONImporter.prototype._settle = function (run, ok, value) {
+    if (this._results.has(run)) {
+        return;
+    }
+    this._open.delete(run);
+    this._results.set(run, { ok, value });
+    // keep the answers of the latest runs only
+    if (this._results.size > 10) {
+        this._results.delete(this._results.keys().next().value);
+    }
+    const waiting = this._waiting.get(run) || [];
+    this._waiting.delete(run);
+    waiting.forEach((entry) => (ok ? entry.resolve(value) : entry.reject(value)));
+};
+
+/** Every older run still waiting for the panels is over: `run` replaced its model */
+JSONImporter.prototype._supersede = function (run) {
+    this._open.forEach((older) => {
+        if (older < run) {
+            this._settle(older, false, createImportError({
+                message: 'A newer import replaced the model first',
+                code: 'SUPERSEDED'
+            }));
+        }
+    });
+    this._open.add(run);
+};
 /**
  * Human readable end of a connection: the element name, else its id.
  */

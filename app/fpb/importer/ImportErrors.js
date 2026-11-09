@@ -115,16 +115,31 @@ export class ErrorHandler {
   }
 
   /**
-   * Hands the collected warnings to the UI as one report and clears them.
-   * Nothing is fired for a clean import.
+   * The run of the import being handled (032a V2): import.error carries it,
+   * so a failed run can be told from another one.
    */
-  finishReport() {
+  setRun(run) {
+    this.run = run;
+  }
+
+  /** The warnings collected so far, which are cleared: they belong to one run */
+  takeWarnings() {
     const warnings = this.warnings;
     this.warnings = [];
-    if (warnings.length > 0) {
-      this.eventBus.fire(IMPORT_EVENTS.IMPORT_REPORT, { warnings });
-    }
     return warnings;
+  }
+
+  /**
+   * Hands the warnings of a run to the UI as one report: the given ones with
+   * their run, else the collected ones (which are cleared). Nothing is fired
+   * for a clean import.
+   */
+  finishReport(warnings, run) {
+    const list = warnings === undefined ? this.takeWarnings() : warnings;
+    if (list.length > 0) {
+      this.eventBus.fire(IMPORT_EVENTS.IMPORT_REPORT, run === undefined ? { warnings: list } : { warnings: list, run });
+    }
+    return list;
   }
 
   /**
@@ -208,6 +223,22 @@ export class ErrorHandler {
       data.message = this.text(error.texts.message);
       data.details = this.text(error.texts.details);
     }
+    if (this.run !== undefined) {
+      data.run = this.run;
+    }
     return data;
   }
+}
+
+/**
+ * The error an import promise rejects with (032a V1): `code` is one of
+ * IMPORT_ERRORS, SUPERSEDED (a newer import replaced the model first) or
+ * NOT_STARTED (no importer took the import).
+ */
+export function createImportError({ message, details = null, code = IMPORT_ERRORS.UNEXPECTED_ERROR }) {
+  const error = new Error(message);
+  error.name = 'FpbImportError';
+  error.code = code;
+  error.details = details;
+  return error;
 }
