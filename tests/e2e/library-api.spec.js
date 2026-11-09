@@ -2620,6 +2620,24 @@ test.describe('Import promise', () => {
     expect(result).toEqual({ hierarchy: null, findings: [], report: [] });
   });
 
+  // final review I2: what 2.0 hosts do keeps working
+  test('a 2.0 host that ignores the promises and waits for import.done still gets its model, without unhandled rejections', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await createModeler(page);
+    const result = await page.evaluate((data) => new Promise((resolve) => {
+      const fpb = window.fpb;
+      const seen = { done: 0, refused: 0 };
+      fpb.on('import.done', () => { seen.done++; });
+      fpb.on('import.error', () => { seen.refused++; });
+      fpb.importJSON({});
+      fpb.importJSON(data);
+      setTimeout(() => resolve({ ...seen, current: fpb.getCurrentProcess() }), 1500);
+    }), clone());
+
+    expect(result).toEqual({ done: 1, refused: 1, current: MAIN });
+    expect(errors).toEqual([]);
+  });
+
   test('on returns a function that removes the listener', async ({ page }) => {
     await withModel(page);
     const calls = await page.evaluate(() => {

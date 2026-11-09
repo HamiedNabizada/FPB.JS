@@ -50,12 +50,16 @@ Models stay compatible: 2.0 opens JSON, VDI 3682 XML and AutomationML files of 1
 
 ## 2.1
 
-Nothing to change: 2.1 only adds. A host that ignores the new return values works as with 2.0.
+Mostly additions. A host that ignores the return values of the imports and waits for `import.done` works as with 2.0. Check these if you rely on them:
+
+- **`importXML` and `importAML` resolve later.** In 2.0 they returned a promise that resolved as soon as the import had started, also for content the importer refused. Since 2.1 it resolves when the model is on the canvas and rejects when the content is refused. Code that awaited the call and only then waited for `import.done` would wait forever: register the `import.done` listener before the call, or use the promise alone. A refused import now throws inside an `async` function that awaits it.
+- **Types:** `toJSON()` returns `ProjectData` and `ProcessData` (ids, not shapes), so it is no longer assignable to `(ProjectDefinition | ProcessEntry)[]`. The element type of the project is `'fpb:Project'`; `'fpb:ProjectDefinition'` is gone (no such type exists). `importJSON(fpb.toJSON())` still compiles.
+
+What is new:
 
 - `importJSON`, `importXML` resolve with `{ warnings, findings }` once the model is on the canvas and reject with an `FpbImportError` (`code`: `INVALID_DATA_STRUCTURE`, `MISSING_PROJECT_DEFINITION`, ..., `SUPERSEDED` when a newer import replaced the model first). `importAML` resolves after the import as well and carries `findings` and `report`. Ignoring the promise logs nothing.
 - An import that a newer one replaced before it was done tells the screen nothing any more (no switch to its layer, no `import.done`). `import.report`, `import.done` and `import.error` carry the `run` of their import.
 - `on()` returns a function that removes the listener.
-- `isDirty()`, `markSaved()`, events `model.changed` (edits only) and `model.dirtyChanged` (`{ dirty }`). `'changed'` stays as it was and is deprecated: it also fires for a layer switch.
+- `isDirty()`, `markSaved(saved?)`, events `model.changed` (edits only) and `model.dirtyChanged` (`{ dirty }`). Pass the data of `toJSON()` you saved to `markSaved`, so edits made while it was written stay unsaved. `'changed'` stays as it was and is deprecated: it also fires for a layer switch.
 - Deprecated, removed in 3.0: `addFpbElements` (warns once), the placeholders `FpbModeler`, `PropertiesPanel`, `LayerOverview` and `defaultConfig` of the main entry (use `createFpbModeler` or `getClasses()`).
 - The VDI 3682 XML export keeps a setpoint of 0.
-- Types: `toJSON()` returns `ProjectData` and `ProcessData` (ids, not shapes); the element type of the project is `'fpb:Project'`.
