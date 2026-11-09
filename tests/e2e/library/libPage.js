@@ -109,36 +109,23 @@ export async function createModeler(page, { panels = false, options = {}, aml = 
 }
 
 /**
- * Import through the facade (importJSON) and wait for the importer to report
- * completion ('import.done', an internal event reachable through on()).
+ * Import through the facade (importJSON) and wait for its promise (032a V1):
+ * true once the model is on the canvas, false when the import is refused.
  */
 export async function importModel(page, data) {
-  return page.evaluate((d) => new Promise((resolve) => {
-    const done = () => {
-      window.fpb.off('import.done', done);
-      resolve(true);
-    };
-    window.fpb.on('import.done', done);
-    window.fpb.importJSON(d);
+  return page.evaluate((d) => Promise.race([
+    window.fpb.importJSON(d).then(() => true, () => false),
     // A never finishing import must fail the test, not hang it
-    setTimeout(() => resolve(false), 8000);
-  }), data);
+    new Promise((resolve) => setTimeout(() => resolve(false), 8000))
+  ]), data);
 }
 
-/** Like importModel, for importXML */
+/** Like importModel, for importXML; a text that is no XML rejects */
 export async function importXml(page, xml) {
-  return page.evaluate((x) => new Promise((resolve, reject) => {
-    const done = () => {
-      window.fpb.off('import.done', done);
-      resolve(true);
-    };
-    window.fpb.on('import.done', done);
-    window.fpb.importXML(x).catch((e) => {
-      window.fpb.off('import.done', done);
-      reject(e);
-    });
-    setTimeout(() => resolve(false), 8000);
-  }), xml);
+  return page.evaluate((x) => Promise.race([
+    window.fpb.importXML(x).then(() => true),
+    new Promise((resolve) => setTimeout(() => resolve(false), 8000))
+  ]), xml);
 }
 
 /** Id of the process shown on the canvas */

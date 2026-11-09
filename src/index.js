@@ -42,6 +42,7 @@ import { collectProcessShapes, findProcessShape, findLayerOf, layerHasElement } 
 import { RULES } from '../app/fpb/validation/ModelChecker';
 import { serializeModel } from '../app/fpb/export/serializeModel';
 import { translateMessage } from '../app/fpb/i18n/language';
+import { createImportError } from '../app/fpb/importer/ImportErrors';
 
 // Automatic layout works on plain JSON, so it is available without a browser.
 export { layoutImportData, needsLayout } from '../app/fpb/layout/AutoLayout';
@@ -151,6 +152,41 @@ export async function createFpbModeler(options = {}) {
   const modeling = modeler.get('modeling');
   const xmlMapper = new XMLMapper();
   const listeners = createListenerRegistry();
+  const importer = modeler.get('jsonImporter', false);
+
+  function removeListener(event, callback) {
+    const listener = listeners.unwrap(event, callback);
+    if (!listener) {
+      return;
+    }
+    const mapped = EVENT_MAP[event];
+    if (Array.isArray(mapped)) {
+      mapped.forEach(e => eventBus.off(e, listener));
+    } else {
+      eventBus.off(mapped || event, listener);
+    }
+  }
+
+  /** The findings of a model check run now, as plain data */
+  function checkNow() {
+    const validation = modeler.get('fpbValidation', false);
+    const translate = modeler.get('translate');
+    return validation ? validation.run().map((issue) => plainFinding(issue, translate)) : [];
+  }
+
+  /**
+   * Start an import with `start` (which fires FPBJS.import) and wait for its
+   * run (032a V1): { warnings, findings } once the model is on the canvas.
+   */
+  function runImport(start) {
+    const before = importer ? importer.getLastRun() : 0;
+    start();
+    const run = importer ? importer.getLastRun() : before;
+    if (run === before) {
+      return Promise.reject(createImportError({ message: 'No importer took the import', code: 'NOT_STARTED' }));
+    }
+    return importer.whenSettled(run).then(({ warnings }) => ({ warnings, findings: checkNow() }));
+  }
 
   // Fit viewport by default
   canvas.zoom('fit-viewport');
@@ -163,6 +199,7 @@ export async function createFpbModeler(options = {}) {
 
     // --- Event API ---
 
+    /** Returns a function that removes the listener again (032a V3) */
     on(event, callback) {
       // The event bus stops an event at the first listener that returns a
       // value; a host callback such as `() => dirty = true` would silently
@@ -174,19 +211,11 @@ export async function createFpbModeler(options = {}) {
       } else {
         eventBus.on(mapped || event, listener);
       }
+      return () => removeListener(event, callback);
     },
 
     off(event, callback) {
-      const listener = listeners.unwrap(event, callback);
-      if (!listener) {
-        return;
-      }
-      const mapped = EVENT_MAP[event];
-      if (Array.isArray(mapped)) {
-        mapped.forEach(e => eventBus.off(e, listener));
-      } else {
-        eventBus.off(mapped || event, listener);
-      }
+      removeListener(event, callback);
     },
 
     fire(event, data) {
@@ -195,8 +224,13 @@ export async function createFpbModeler(options = {}) {
 
     // --- Import/Export API ---
 
+    /**
+     * Resolves when the model is on the canvas, with { warnings, findings };
+     * rejects with an FpbImportError (code, details) when the content is
+     * refused or a newer import replaced the model first (032a V1).
+     */
     importJSON(json) {
-      eventBus.fire('FPBJS.import', { data: json });
+      return quiet(runImport(() => eventBus.fire('FPBJS.import', { data: json })));
     },
 
     /** Start over with an empty model (also clears the browser backup, if on) */
@@ -204,9 +238,10 @@ export async function createFpbModeler(options = {}) {
       modeler.newModel();
     },
 
-    async importXML(xmlString) {
-      const json = await xmlMapper.convertFromXML(xmlString);
-      eventBus.fire('FPBJS.import', { data: json });
+    /** Like importJSON, for a VDI 3682 XML text */
+    importXML(xmlString) {
+      return quiet(xmlMapper.convertFromXML(xmlString)
+        .then((json) => runImport(() => eventBus.fire('FPBJS.import', { data: json }))));
     },
 
     /**
@@ -241,9 +276,23 @@ export async function createFpbModeler(options = {}) {
      * empty model and toAML() adds the process to that file.
      */
     importAML(text, options = {}) {
-      return requireAml(modeler).then((aml) => aml.importAml(text, {
-        fileName: options.fileName,
-        hierarchyId: options.instanceHierarchy
+      // resolves once the model is on the canvas, with the findings and the
+      // report of the importer (032a V1); `warnings` stay the mapper's
+      return quiet(requireAml(modeler).then((aml) => {
+        // the add-on loads its engine first and fires the import after that
+        const before = importer ? importer.getLastRun() : 0;
+        return aml.importAml(text, {
+          fileName: options.fileName,
+          hierarchyId: options.instanceHierarchy
+        }).then((result) => {
+          const run = importer ? importer.getLastRun() : before;
+          if (!result.hierarchy || run === before) {
+            // no FPD content: an empty model, nothing went through the importer
+            return { ...result, findings: [], report: [] };
+          }
+          return importer.whenSettled(run)
+            .then(({ warnings }) => ({ ...result, findings: checkNow(), report: warnings }));
+        });
       }));
     },
 
@@ -466,6 +515,16 @@ export async function createFpbModeler(options = {}) {
       }
     }
   };
+}
+
+/**
+ * A promise a host may ignore, as with 2.0 where the imports returned nothing:
+ * its rejection is handled here, so ignoring it logs no unhandled rejection;
+ * whoever chains on it still gets the rejection.
+ */
+function quiet(promise) {
+  promise.catch(() => {});
+  return promise;
 }
 
 /** A finding of the model check without references to shapes */

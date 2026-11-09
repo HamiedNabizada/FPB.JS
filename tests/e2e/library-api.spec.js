@@ -1689,18 +1689,8 @@ test.describe('AutomationML (importAML, toAML)', () => {
   const inputs = path.join(__dirname, '..', 'unit', 'aml', 'oracle', 'inputs');
   const mixed = fs.readFileSync(path.join(inputs, 'generated', 'mixed.aml'), 'utf8');
 
-  /** importAML and wait until the model is on the canvas */
-  const importAml = (page, text, options) => page.evaluate(({ text, options }) => new Promise((resolve, reject) => {
-    const done = () => {
-      window.fpb.off('import.done', done);
-      resolve(result);
-    };
-    let result;
-    window.fpb.on('import.done', done);
-    window.fpb.importAML(text, options).then((r) => {
-      result = r;
-    }, reject);
-  }), { text, options });
+  /** importAML, which resolves once the model is on the canvas (032a V1) */
+  const importAml = (page, text, options) => page.evaluate(({ text, options }) => window.fpb.importAML(text, options), { text, options });
 
   test('getAMLHierarchies names the process views of a file', async ({ page }) => {
     await openLibraryPage(page);
@@ -2526,5 +2516,123 @@ test.describe('Language', () => {
     await createModeler(page, { panels: true });
     expect(await page.evaluate(() => window.fpb.getLanguage())).toBe('en');
     expect(await langs(page)).toEqual(['en', 'en', 'en']);
+  });
+});
+
+// 032a V1, V3: the imports say when they are done, on() hands back its removal
+test.describe('Import promise', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const inputs = path.join(__dirname, '..', 'unit', 'aml', 'oracle', 'inputs');
+
+  /** The fixture without layout: its import carries warnings */
+  const bare = () => clone().map((entry) => {
+    if (entry.process) {
+      delete entry.elementVisualInformation;
+    }
+    return entry;
+  });
+
+  test('importJSON resolves after the model is on the canvas, with warnings and findings', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page);
+    const result = await page.evaluate(async (data) => {
+      const r = await window.fpb.importJSON(data);
+      return {
+        current: window.fpb.getCurrentProcess(),
+        warnings: r.warnings.length,
+        hasHint: r.warnings.every((w) => 'message' in w && 'details' in w && 'hint' in w),
+        findings: r.findings,
+        expected: window.fpb.getFindings()
+      };
+    }, bare());
+
+    expect(result.current).toBe(MAIN);
+    expect(result.warnings).toBeGreaterThan(0);
+    expect(result.hasHint).toBe(true);
+    expect(result.findings).toEqual(result.expected);
+  });
+
+  test('importJSON rejects invalid content with an FpbImportError and keeps the model', async ({ page }) => {
+    await withModel(page);
+    const answers = await page.evaluate(async () => {
+      const answer = (p) => p.then(() => 'resolved', (e) => ({ name: e.name, code: e.code, hasDetails: 'details' in e }));
+      return [await answer(window.fpb.importJSON({})), await answer(window.fpb.importJSON([]))];
+    });
+
+    expect(answers[0]).toEqual({ name: 'FpbImportError', code: 'INVALID_DATA_STRUCTURE', hasDetails: true });
+    expect(answers[1].name).toBe('FpbImportError');
+    expect(await currentRootId(page)).toBe(MAIN);
+  });
+
+  test('the older of two imports rejects with SUPERSEDED, the newer resolves', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page);
+    const answers = await page.evaluate((data) => Promise.all([
+      window.fpb.importJSON(data).then(() => 'resolved', (e) => e.code),
+      window.fpb.importJSON(data).then((r) => Array.isArray(r.findings), (e) => 'rejected ' + e.code)
+    ]), clone());
+
+    expect(answers).toEqual(['SUPERSEDED', true]);
+  });
+
+  test('importXML resolves after the import', async ({ page }) => {
+    await withModel(page);
+    const xml = await page.evaluate(() => window.fpb.toXML());
+    await page.evaluate(() => window.fpb.newModel());
+    const result = await page.evaluate(async (x) => {
+      const r = await window.fpb.importXML(x);
+      return { current: window.fpb.getCurrentProcess(), findings: Array.isArray(r.findings), warnings: Array.isArray(r.warnings) };
+    }, xml);
+
+    expect(result).toEqual({ current: MAIN, findings: true, warnings: true });
+  });
+
+  test('importAML resolves with findings and the report', async ({ page }) => {
+    const mixed = fs.readFileSync(path.join(inputs, 'generated', 'mixed.aml'), 'utf8');
+    await openLibraryPage(page);
+    await createModeler(page, { aml: true });
+    const result = await page.evaluate(async (text) => {
+      const r = await window.fpb.importAML(text);
+      return {
+        current: window.fpb.getCurrentProcess(),
+        hierarchy: r.hierarchy && r.hierarchy.name,
+        findings: r.findings,
+        expected: window.fpb.getFindings(),
+        report: Array.isArray(r.report)
+      };
+    }, mixed);
+
+    expect(result.current).not.toBeNull();
+    expect(result.hierarchy).toBe('FPD_Heating');
+    expect(result.findings).toEqual(result.expected);
+    expect(result.report).toBe(true);
+  });
+
+  test('an AML file without FPD content resolves at once', async ({ page }) => {
+    const empty = fs.readFileSync(path.join(inputs, 'generated', 'no-fpd.aml'), 'utf8');
+    await openLibraryPage(page);
+    await createModeler(page, { aml: true });
+    const result = await page.evaluate((text) => window.fpb.importAML(text).then((r) => ({
+      hierarchy: r.hierarchy, findings: r.findings, report: r.report
+    })), empty);
+
+    expect(result).toEqual({ hierarchy: null, findings: [], report: [] });
+  });
+
+  test('on returns a function that removes the listener', async ({ page }) => {
+    await withModel(page);
+    const calls = await page.evaluate(() => {
+      let n = 0;
+      const off = window.fpb.on('selection.changed', () => { n++; });
+      const registry = window.fpb.get('elementRegistry');
+      const someone = registry.filter((e) => e.type === 'fpb:ProcessOperator')[0];
+      window.fpb.get('selection').select(someone);
+      off();
+      window.fpb.get('selection').select(null);
+      return { n, offIsFunction: typeof off === 'function' };
+    });
+
+    expect(calls).toEqual({ n: 1, offIsFunction: true });
   });
 });

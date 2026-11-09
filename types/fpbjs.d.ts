@@ -129,12 +129,12 @@ export interface FpbEventMap {
   'selection.changed': { newSelection: Element[]; oldSelection: Element[] };
   /** Process layer was switched */
   'process.switched': { selectedProcess: Shape };
-  /** An import went through with warnings (skipped elements, automatic layout) */
-  'import.report': { warnings: ImportWarning[] };
-  /** An import is complete and the model is on the canvas (importJSON and importXML return before this) */
-  'import.done': Record<string, never>;
+  /** An import went through with warnings (skipped elements, automatic layout); `run` names the import (2.1) */
+  'import.report': { warnings: ImportWarning[]; run?: number };
+  /** An import is complete and the model is on the canvas; an import a newer one replaced first sends none (2.1) */
+  'import.done': { run?: number };
   /** An import failed; the previous model stays */
-  'import.error': { message: string; details?: string };
+  'import.error': { message: string; details?: string; errorType?: string; run?: number };
   /** The read-only mode was turned on or off */
   'readOnly.changed': { readOnly: boolean };
   /** The AML file kept for the AML export changed (import, export, New model) */
@@ -171,6 +171,38 @@ export interface ImportWarning {
   details: string | null;
   /** What the user can do about it, if anything */
   hint: string | null;
+}
+
+/** What importJSON and importXML resolve with (2.1) */
+export interface ImportResult {
+  /** The import report; empty for a clean file */
+  warnings: ImportWarning[];
+  /** The model check right after the import, as getFindings() */
+  findings: PlainFinding[];
+}
+
+/** What importAML resolves with */
+export interface AmlImportResult {
+  hierarchies: AmlHierarchy[];
+  hierarchy: AmlHierarchy | null;
+  /** Warnings of the AML mapper */
+  warnings?: string[];
+  /** The model check right after the import (2.1) */
+  findings: PlainFinding[];
+  /** The import report of FPB.js (2.1) */
+  report: ImportWarning[];
+}
+
+/**
+ * The error an import promise rejects with (2.1). `code`: INVALID_DATA_STRUCTURE,
+ * MISSING_PROJECT_DEFINITION, MISSING_VISUAL_INFORMATION,
+ * DEPENDENCY_RESOLUTION_FAILED, UNEXPECTED_ERROR; SUPERSEDED when a newer import
+ * replaced the model first; NOT_STARTED when no importer took the import.
+ */
+export interface FpbImportError extends Error {
+  name: 'FpbImportError';
+  code: string;
+  details: unknown;
 }
 
 /** All known facade event names */
@@ -728,8 +760,8 @@ export interface FpbInstance {
    * Listeners only observe: a returned value is ignored, so it cannot stop
    * the event for the modeler's own listeners.
    */
-  on<K extends FpbEventName>(event: K, callback: (payload: FpbEventMap[K]) => void): void;
-  on(event: string, callback: (payload: any) => void): void;
+  on<K extends FpbEventName>(event: K, callback: (payload: FpbEventMap[K]) => void): () => void;
+  on(event: string, callback: (payload: any) => void): () => void;
 
   /**
    * Remove an event listener.
@@ -747,14 +779,19 @@ export interface FpbInstance {
 
   // --- Import/Export ---
 
-  /** Import a diagram from a JSON object (FPB.JS internal format) */
-  importJSON(json: FpbProjectData): void;
+  /**
+   * Import a diagram from a JSON object (FPB.JS internal format). Resolves
+   * once the model is on the canvas; rejects with an FpbImportError when the
+   * content is refused or a newer import replaced the model first (2.1).
+   * Ignoring the promise is fine: nothing is logged for its rejection.
+   */
+  importJSON(json: FpbProjectData): Promise<ImportResult>;
 
   /** Start over with an empty model; also clears the browser backup if autosave is on */
   newModel(): void;
 
-  /** Import a diagram from a VDI 3682 XML string */
-  importXML(xmlString: string): Promise<void>;
+  /** Import a diagram from a VDI 3682 XML string; settles like importJSON */
+  importXML(xmlString: string): Promise<ImportResult>;
 
   /**
    * Export the current diagram as plain data (ProjectDefinition + ProcessEntries),
@@ -849,11 +886,7 @@ export interface FpbInstance {
    * FPD content opens an empty model; toAML() then adds the process to it.
    * `instanceHierarchy` picks the view by its key (AmlHierarchy.id).
    */
-  importAML(text: string, options?: { instanceHierarchy?: string; fileName?: string }): Promise<{
-    hierarchies: AmlHierarchy[];
-    hierarchy: AmlHierarchy | null;
-    warnings?: string[];
-  }>;
+  importAML(text: string, options?: { instanceHierarchy?: string; fileName?: string }): Promise<AmlImportResult>;
 
   /**
    * The model as AML text: written into the imported file when there is one
