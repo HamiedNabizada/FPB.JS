@@ -118,11 +118,14 @@ test.describe('AutomationML import and export', () => {
     expect(fehler).toEqual([]);
   });
 
-  // stability round after 031: the second view of Showcase B and C has no ID in
-  // the file; the web app opened the first view instead and the export added a third
+  // stability round after 031: the second view of Showcase B and C had no ID in
+  // the file; the web app opened the first view instead and the export added a third.
+  // The examples have IDs now, so the test takes the ID away itself
   test('a process view without an ID opens as chosen and the export updates it', async ({ page }) => {
     await start(page);
-    const text = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'examples', 'Showcase-C-CncRobotikMontage.aml'), 'utf8');
+    const text = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'examples', 'Showcase-C-CncRobotikMontage.aml'), 'utf8')
+      .replace(/(<InstanceHierarchy Name="FPD_Fasteners_Stock")\s+ID="[^"]*"/, '$1');
+    expect(text).toContain('<InstanceHierarchy Name="FPD_Fasteners_Stock">');
     const r = await page.evaluate(async (t) => {
       const aml = window.fpbjs.get('amlSupport');
       const found = await aml.inspect(t);
