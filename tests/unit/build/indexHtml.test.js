@@ -20,4 +20,10 @@ describe('app/index.html', () => {
   it('declares UTF-8 within the first 1024 bytes', () => {
     expect(Buffer.from(html, 'utf8').subarray(0, 1024).toString('utf8')).toMatch(/<meta\s+charset="utf-8"\s*\/?>/i);
   });
+
+  // a browser tab and a bookmark showed the address only, and a page needs a
+  // title to be accessible (WCAG 2.4.2)
+  it('has a title', () => {
+    expect(html).toMatch(/<head>[\s\S]*<title>FPB\.js<\/title>[\s\S]*<\/head>/);
+  });
 });
