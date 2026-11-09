@@ -189,7 +189,8 @@ Autosave.prototype.restore = function (id) {
     }
     this._restoring = id;
     this._restoringEntry = entry;
-    this._eventBus.fire('FPBJS.import', { data: record.model, amlSource: record.aml || null });
+    // restored: the model is in no file, so it stays unsaved (fpbChanges, 032a)
+    this._eventBus.fire('FPBJS.import', { data: record.model, amlSource: record.aml || null, restored: true });
     // cleared by import.error if the importer refused it
     return this._restoring === id;
   }).catch((error) => {

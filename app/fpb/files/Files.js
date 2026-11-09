@@ -265,6 +265,12 @@ Files.prototype._hasUnsavedChanges = function () {
     autosave.flush();
     return autosave.isDirty();
   }
+  // the same answer hosts get (032a V5); the own comparison stays for a
+  // modeler built without the module
+  const changes = this._injector.get('fpbChanges', false);
+  if (changes) {
+    return changes.isDirty();
+  }
   if (this._baseline === null) {
     return (this._fpbjs.getProcesses() || []).length > 0;
   }

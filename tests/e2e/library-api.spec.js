@@ -2636,3 +2636,64 @@ test.describe('Import promise', () => {
     expect(calls).toEqual({ n: 1, offIsFunction: true });
   });
 });
+
+// 032a V4, V5: edits and unsaved changes for hosts
+test.describe('Changes for hosts', () => {
+
+  test('isDirty and markSaved through the facade; model.dirtyChanged reports the change', async ({ page }) => {
+    await withModel(page);
+    const result = await page.evaluate((id) => new Promise((resolve) => {
+      const fpb = window.fpb;
+      const seen = { dirty: [], changed: 0 };
+      fpb.on('model.dirtyChanged', (e) => { seen.dirty.push(e.dirty); });
+      fpb.on('model.changed', () => { seen.changed++; });
+      const before = fpb.isDirty();
+      fpb.get('modeling').moveElements([fpb.get('elementRegistry').get(id)], { x: 10, y: 0 });
+      setTimeout(() => {
+        const afterEdit = fpb.isDirty();
+        fpb.markSaved();
+        resolve({ before, afterEdit, afterSave: fpb.isDirty(), ...seen });
+      }, 100);
+    }), '9833d9a9-1b88-4bfb-91b3-7ab5e2617045');
+
+    expect(result).toEqual({ before: false, afterEdit: true, afterSave: false, dirty: [true, false], changed: 1 });
+  });
+
+  test('a layer switch is no change for hosts', async ({ page }) => {
+    await withModel(page);
+    const changed = await page.evaluate((child) => new Promise((resolve) => {
+      let n = 0;
+      window.fpb.on('model.changed', () => { n++; });
+      window.fpb.switchProcess(child);
+      setTimeout(() => resolve({ n, dirty: window.fpb.isDirty() }), 200);
+    }), CHILD);
+
+    expect(changed).toEqual({ n: 0, dirty: false });
+  });
+
+  test('Open asks nothing after markSaved (without the browser backup)', async ({ page }) => {
+    await withModel(page);
+    await page.evaluate(() => {
+      const fpb = window.fpb;
+      const operator = fpb.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+      fpb.get('modeling').moveElements([operator], { x: 10, y: 0 });
+      fpb.markSaved();
+    });
+    const other = clone();
+    other[0].name = 'Zweites Projekt';
+    const opened = await page.evaluate((content) => new Promise((resolve) => {
+      window.fpb.on('import.done', () => resolve(true));
+      setTimeout(() => resolve(false), 8000);
+      const target = document.querySelector('#modeler .djs-container > svg');
+      const transfer = new DataTransfer();
+      transfer.items.add(new File([content], 'zweites.json', { type: 'application/json' }));
+      const options = { bubbles: true, cancelable: true, dataTransfer: transfer };
+      target.dispatchEvent(new DragEvent('dragenter', options));
+      target.dispatchEvent(new DragEvent('dragover', options));
+      target.dispatchEvent(new DragEvent('drop', options));
+    }), JSON.stringify(other));
+
+    expect(opened).toBe(true);
+    await expect(page.getByRole('alertdialog')).toHaveCount(0);
+  });
+});

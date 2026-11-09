@@ -256,6 +256,11 @@ JSONImporter.prototype.getLastRun = function () {
     return this._run;
 };
 
+/** True while a model is in place whose import has not told the screen yet */
+JSONImporter.prototype.isBusy = function () {
+    return this._open.size > 0;
+};
+
 /**
  * Resolves when the model of `run` is on the canvas, with the warnings of its
  * report; rejects with an FpbImportError when the importer refused it or a

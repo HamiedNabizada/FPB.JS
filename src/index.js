@@ -238,6 +238,24 @@ export async function createFpbModeler(options = {}) {
       modeler.newModel();
     },
 
+    /**
+     * True if the model has changes that are in no file (032a V5): false after
+     * an import, New model and markSaved, true after an edit or a restored
+     * backup. 'model.dirtyChanged' ({ dirty }) says when it flips.
+     */
+    isDirty() {
+      const changes = modeler.get('fpbChanges', false);
+      return changes ? changes.isDirty() : false;
+    },
+
+    /** The host saved the model: it counts as saved, for the browser backup too */
+    markSaved() {
+      const changes = modeler.get('fpbChanges', false);
+      if (changes) {
+        changes.markSaved();
+      }
+    },
+
     /** Like importJSON, for a VDI 3682 XML text */
     importXML(xmlString) {
       return quiet(xmlMapper.convertFromXML(xmlString)

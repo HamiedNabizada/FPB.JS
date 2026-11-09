@@ -117,8 +117,15 @@ export type Element = Shape | Connection;
 
 /** Events supported by the facade's on()/off() methods */
 export interface FpbEventMap {
-  /** Diagram was modified (commandStack changed) */
+  /**
+   * The command stack changed, also for a layer switch.
+   * @deprecated since 2.1: use 'model.changed', which fires for edits only
+   */
   'changed': Record<string, never>;
+  /** An edit changed the model; not for layer switches, imports or New model (2.1) */
+  'model.changed': Record<string, never>;
+  /** The model got or lost changes that are in no file (2.1) */
+  'model.dirtyChanged': { dirty: boolean };
   /** A shape or connection was added */
   'element.added': { element: Element };
   /** A shape or connection was removed */
@@ -145,6 +152,14 @@ export interface FpbEventMap {
   'notifications.changed': { notes: Array<NotificationOptions & { id: string }> };
   /** The floating list of the model check opened or closed; its sheet says so with sheets.changed */
   'fpbValidation.panelChanged': { open: boolean };
+}
+
+/** Edits and unsaved changes (service fpbChanges, 2.1) */
+export interface FpbChanges {
+  /** True if the model has changes that are in no file */
+  isDirty(): boolean;
+  /** The host saved the model; fires 'model.downloaded' with the content */
+  markSaved(): void;
 }
 
 /** The AML file kept since importAML, written back by toAML */
@@ -602,6 +617,7 @@ export interface UiReadiness {
 /** Map of known DI service names to their types */
 export interface FpbServiceMap {
   eventBus: EventBus;
+  fpbChanges: FpbChanges;
   canvas: Canvas;
   modeling: Modeling;
   selection: Selection;
@@ -789,6 +805,16 @@ export interface FpbInstance {
 
   /** Start over with an empty model; also clears the browser backup if autosave is on */
   newModel(): void;
+
+  /**
+   * True if the model has changes that are in no file (2.1): false after an
+   * import, New model and markSaved, true after an edit or a restored backup.
+   * 'model.dirtyChanged' says when it flips.
+   */
+  isDirty(): boolean;
+
+  /** The host saved the model: it counts as saved, for the browser backup too (2.1) */
+  markSaved(): void;
 
   /** Import a diagram from a VDI 3682 XML string; settles like importJSON */
   importXML(xmlString: string): Promise<ImportResult>;

@@ -53,6 +53,7 @@ import PaletteModule from './palette';
 import ModelingModule from './modeling';
 import LayersModule from './layers';
 import JsonImporter from './importer';
+import ChangesModule from './changes';
 import ServicesModule from './services';
 import TouchModule from './touch';
 import EditorModule from './editor';
@@ -167,6 +168,8 @@ FpbModeler.prototype._modules = [
     ModelingModule,
     LayersModule,
     JsonImporter,
+    // edits and unsaved changes for hosts and the web app (032a)
+    ChangesModule,
     ServicesModule,
     TouchModule,
     EditorModule,
