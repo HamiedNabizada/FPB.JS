@@ -79,7 +79,8 @@ test.describe('Performance budget', () => {
     expect(result).toEqual({ warnings: [], findings: [] });
   });
 
-  test('budget for 20 layers of 300 elements', async ({ page }, testInfo) => {
+  test('budget for 20 layers of 300 elements', async ({ page, browserName }, testInfo) => {
+    test.skip(browserName !== 'chromium', 'the limits are measured in Chromium');
     test.setTimeout(240000);
     await openLibraryPage(page);
     await createModeler(page);
