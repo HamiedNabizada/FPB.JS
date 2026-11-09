@@ -14,7 +14,7 @@ export type FpbElementType =
   | 'fpb:TechnicalResource'
   | 'fpb:SystemLimit'
   | 'fpb:Process'
-  | 'fpb:ProjectDefinition'
+  | 'fpb:Project'
   | 'fpb:Flow'
   | 'fpb:AlternativeFlow'
   | 'fpb:ParallelFlow'
@@ -152,6 +152,16 @@ export interface FpbEventMap {
   'notifications.changed': { notes: Array<NotificationOptions & { id: string }> };
   /** The floating list of the model check opened or closed; its sheet says so with sheets.changed */
   'fpbValidation.panelChanged': { open: boolean };
+  /** The model check ran: all findings and their counts */
+  'fpbValidation.changed': { issues: ValidationIssue[]; counts: ValidationCounts };
+  /** Light or dark changed; `mode` says who decides (setTheme, the user, the system) */
+  'theme.changed': { theme: 'light' | 'dark'; mode: string };
+  /** The language changed (setLanguage or the language button) */
+  'i18n.changed': { language: 'en' | 'de' };
+  /** New model: the canvas is empty */
+  'model.new': Record<string, never>;
+  /** The model was saved with this content (Save, an export of the whole model, markSaved) */
+  'model.downloaded': { format: string | null; fileName?: string | null; baseline?: string };
 }
 
 /** Edits and unsaved changes (service fpbChanges, 2.1) */
@@ -266,9 +276,26 @@ export interface ProjectDefinition {
   [key: string]: any;
 }
 
-/** Complete project data (returned by toJSON()) */
+/** Data importJSON reads: the array of a JSON file, as toJSON() returns it */
 export interface FpbProjectData {
   [key: string]: any;
+}
+
+/** The project entry of a JSON file: references are ids */
+export interface ProjectData {
+  $type: 'fpb:Project';
+  name: string;
+  targetNamespace: string;
+  /** Id of the process opened first */
+  entryPoint: string;
+  [key: string]: any;
+}
+
+/** A process entry of a JSON file: references are ids */
+export interface ProcessData {
+  process: { $type: 'fpb:Process'; id: string; [key: string]: any };
+  elementDataInformation: ElementDataInfo[];
+  elementVisualInformation?: ElementVisualInfo[];
 }
 
 // ---------------------------------------------------------------------------
@@ -824,7 +851,7 @@ export interface FpbInstance {
    * the same as the JSON download: references are ids, so it can go straight
    * to JSON.stringify, postMessage or importJSON.
    */
-  toJSON(): (ProjectDefinition | ProcessEntry)[];
+  toJSON(): (ProjectData | ProcessData)[];
 
   /** Export the current diagram as a VDI 3682 XML string */
   toXML(): Promise<string>;

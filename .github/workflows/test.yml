@@ -30,6 +30,9 @@ jobs:
 
       - run: npm run test:unit
 
+      # Typtest: die Typen beschreiben die Fassade (032a V8)
+      - run: npx tsc --noEmit --strict tests/types/*.ts
+
   e2e:
     name: E2E-Tests (Chromium)
     runs-on: ubuntu-latest

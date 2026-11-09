@@ -2697,3 +2697,21 @@ test.describe('Changes for hosts', () => {
     await expect(page.getByRole('alertdialog')).toHaveCount(0);
   });
 });
+
+// 032a V8: the types describe the facade, method for method
+test.describe('Types of the facade', () => {
+
+  test('every method of the facade is described in FpbInstance and no more', async ({ page }) => {
+    const fs = require('fs');
+    const path = require('path');
+    await withModel(page);
+    const runtime = await page.evaluate(() => Object.keys(window.fpb).filter((k) => typeof window.fpb[k] === 'function').sort());
+
+    const dts = fs.readFileSync(path.join(__dirname, '..', '..', 'types', 'fpbjs.d.ts'), 'utf8').replace(/\r\n/g, '\n');
+    const start = dts.indexOf('export interface FpbInstance {');
+    const body = dts.slice(start, dts.indexOf('\n}', start));
+    const described = [...new Set([...body.matchAll(/^ {2}(\w+)\s*(?:<[^>]*>)?\(/gm)].map((m) => m[1]))].sort();
+
+    expect(runtime).toEqual(described);
+  });
+});
