@@ -6,7 +6,9 @@ import { serializeModel } from '../export/serializeModel';
  * The content counts, as the browser backup compares it: a layer switch or an
  * undo history cleared at a layer change is no change, an edit outside the
  * command stack (the removal of a decomposition after its question) is one.
- * The comparison runs once per task after the commands of that task.
+ * The comparison runs once per task after the commands of that task, and
+ * only after a command or a confirmed dialog announced a change (2.1.1): a
+ * change written into the model objects without either is not seen.
  *
  * Events: `model.changed` after an edit that changed the model (not for an
  * import or New model), `model.dirtyChanged` ({ dirty }) when the unsaved

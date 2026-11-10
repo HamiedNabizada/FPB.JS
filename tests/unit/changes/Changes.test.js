@@ -81,6 +81,7 @@ describe('fpbChanges', () => {
   it('dirty after an edit and clean again after undoing to the saved content', async () => {
     importModel([{ name: 'A' }]);
     processes[0].name = 'B';
+    bus.fire('commandStack.changed', { trigger: 'execute' });
     expect(changes.isDirty()).toBe(true);
 
     processes[0].name = 'A';
@@ -97,6 +98,7 @@ describe('fpbChanges', () => {
     bus.on('model.downloaded', (e) => { downloaded.push(e); });
     importModel([{ name: 'A' }]);
     processes[0].name = 'B';
+    bus.fire('commandStack.changed', { trigger: 'execute' });
     expect(changes.isDirty()).toBe(true);
 
     changes.markSaved();
@@ -120,6 +122,17 @@ describe('fpbChanges', () => {
     processes[0].name = 'B';
     bus.fire('commandStack.changed', { trigger: 'undo' });
     expect(changes.isDirty()).toBe(false);
+  });
+
+  // 2.1.1: isDirty() compares only after a command or a confirmed dialog
+  // announced a change; it used to serialize the whole model on every call
+  it('isDirty does not compare again until a change is announced', () => {
+    importModel([{ name: 'A' }]);
+    processes[0].name = 'B';
+    expect(changes.isDirty()).toBe(false);
+
+    bus.fire('commandStack.changed', { trigger: 'execute' });
+    expect(changes.isDirty()).toBe(true);
   });
 
   it('a restored import stays dirty', () => {
@@ -147,6 +160,7 @@ describe('fpbChanges', () => {
   it('a refused import leaves the state as it was', async () => {
     importModel([{ name: 'A' }]);
     processes[0].name = 'B';
+    bus.fire('commandStack.changed', { trigger: 'execute' });
     expect(changes.isDirty()).toBe(true);
 
     importer.run++;
