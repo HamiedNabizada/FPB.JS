@@ -2132,7 +2132,7 @@ test.describe('Model check for hosts', () => {
   test('getCheckedRules lists the rules FPB.js checks', async ({ page }) => {
     await withModel(page);
     expect(await page.evaluate(() => window.fpb.getCheckedRules())).toEqual(
-      ['A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B6', 'C1', 'C2', 'C3', 'C4', 'C5', 'C9', 'D1', 'D7', 'D8', 'E5', 'F5', 'F8', 'F9', 'G1', 'G3', 'G4']
+      ['A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B6', 'C1', 'C2', 'C3', 'C4', 'C5', 'C9', 'D1', 'D7', 'D8', 'E5', 'F5', 'F8', 'F9', 'G1', 'G3', 'G4', 'G6']
     );
   });
 
