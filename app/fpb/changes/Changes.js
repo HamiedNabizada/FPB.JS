@@ -28,15 +28,48 @@ export default function Changes(eventBus, fpbjs, injector) {
   this._importing = false;
   // runs of imports that restore a backup: their model is in no file
   this._restored = new Set();
+  // something may have changed since the last comparison (2.1.1: isDirty()
+  // serialized the whole model on every call)
+  this._stale = true;
+  // the outermost command of the running execution, and how deep it is
+  this._topCommand = null;
+  this._depth = 0;
+  // markSaved is announcing model.downloaded (a listener may save again)
+  this._announcingSave = false;
 
   const self = this;
 
-  eventBus.on('commandStack.changed', function () {
+  // every command, nested ones too; the first of an execution is the outermost
+  eventBus.on('commandStack.preExecute', function (event) {
+    if (self._depth === 0) {
+      self._topCommand = event && event.command;
+    }
+    self._depth++;
+  });
+
+  eventBus.on('commandStack.changed', function (event) {
+    // a cleared undo history changes no content; LayerUndoBoundary clears it
+    // from within the changed event of a layer switch, so the outermost
+    // command is still needed after it
+    const trigger = event && event.trigger;
+    if (trigger === 'clear') {
+      return;
+    }
+    const top = self._topCommand;
+    self._topCommand = null;
+    self._depth = 0;
+    // a layer switch changes no content either (2.1.1: each one serialized
+    // the model)
+    if (trigger === 'execute' && top === 'process.switch') {
+      return;
+    }
+    self._stale = true;
     self._schedule();
   });
 
   // dialogs change the model outside of any command
   eventBus.on('confirmation.confirmed', 200, function () {
+    self._stale = true;
     self._schedule();
   });
 
@@ -59,6 +92,10 @@ export default function Changes(eventBus, fpbjs, injector) {
     const importer = self._importer();
     if (!importer || !importer.isBusy()) {
       self._importing = false;
+      // an edit in the same task as the refused import was put off while the
+      // import ran: compare now (2.1.1, it waited for the next edit)
+      self._stale = true;
+      self._schedule();
     }
   });
 
@@ -66,6 +103,7 @@ export default function Changes(eventBus, fpbjs, injector) {
     const run = event && event.run;
     const content = self._serialize();
     self._importing = false;
+    self._stale = false;
     self._last = content;
     self._baseline = self._restored.has(run) ? null : content;
     self._restored.delete(run);
@@ -75,6 +113,7 @@ export default function Changes(eventBus, fpbjs, injector) {
   eventBus.on('model.new', function () {
     const content = self._serialize();
     self._importing = false;
+    self._stale = false;
     self._clearTimer();
     self._last = content;
     self._baseline = content;
@@ -109,7 +148,19 @@ Changes.prototype.markSaved = function (saved) {
   this._check();
   // toJSON() is JSON.parse of the serialized model: stringified it is that text again
   const baseline = saved === undefined || saved === null ? this._serialize() : JSON.stringify(saved);
-  this._eventBus.fire('model.downloaded', { format: null, fileName: null, baseline });
+  // a listener on model.downloaded that saves again: take its baseline, do
+  // not announce again (2.1.1: it called itself until the stack overflowed)
+  if (this._announcingSave) {
+    this._baseline = baseline;
+    this._setDirty(this._isDirty(this._serialize()));
+    return;
+  }
+  this._announcingSave = true;
+  try {
+    this._eventBus.fire('model.downloaded', { format: null, fileName: null, baseline });
+  } finally {
+    this._announcingSave = false;
+  }
 };
 
 Changes.prototype._importer = function () {
@@ -135,9 +186,10 @@ Changes.prototype._clearTimer = function () {
 /** Compare now: model.changed when the content differs from the one announced */
 Changes.prototype._check = function () {
   this._clearTimer();
-  if (this._importing) {
+  if (this._importing || !this._stale) {
     return;
   }
+  this._stale = false;
   const content = this._serialize();
   if (content !== this._last) {
     this._last = content;

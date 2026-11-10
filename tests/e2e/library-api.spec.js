@@ -2791,3 +2791,126 @@ test.describe('Deprecated API', () => {
     });
   });
 });
+
+// 2.1.1: the small points the final review of 2.1 left (032a, "Zurückgestellt")
+test.describe('Hosts: deferred points of 2.1', () => {
+  const someOperator = () => window.fpb.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+
+  test('an edit and a refused import in the same task still report model.changed', async ({ page }) => {
+    await withModel(page);
+    const changed = await page.evaluate((pick) => new Promise((resolve) => {
+      let n = 0;
+      window.fpb.on('model.changed', () => { n++; });
+      const op = new Function('return (' + pick + ')()')();
+      window.fpb.get('modeling').moveElements([op], { x: 30, y: 0 });
+      window.fpb.importJSON({});
+      setTimeout(() => resolve(n), 800);
+    }), someOperator.toString());
+
+    expect(changed).toBe(1);
+  });
+
+  test('New model during an open import ends that import as SUPERSEDED and keeps the empty model', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page);
+    const result = await page.evaluate((data) => new Promise((resolve) => {
+      const fpb = window.fpb;
+      let done = 0;
+      fpb.on('import.done', () => { done++; });
+      const answer = fpb.importJSON(data).then(() => 'resolved', (e) => e.code);
+      fpb.newModel();
+      setTimeout(async () => resolve({
+        answer: await answer,
+        done,
+        processes: fpb.getProcesses().length,
+        current: fpb.getCurrentProcess()
+      }), 1500);
+    }), clone());
+
+    expect(result).toEqual({ answer: 'SUPERSEDED', done: 0, processes: 0, current: null });
+  });
+
+  test('isDirty and a layer switch do not serialize the model again', async ({ page }) => {
+    await withModel(page);
+    const counts = await page.evaluate((child) => new Promise((resolve) => {
+      const changes = window.fpb.get('fpbChanges');
+      const original = changes._serialize.bind(changes);
+      let calls = 0;
+      changes._serialize = () => { calls++; return original(); };
+      for (let i = 0; i < 50; i++) window.fpb.isDirty();
+      const afterIsDirty = calls;
+      window.fpb.switchProcess(child);
+      setTimeout(() => {
+        const afterSwitch = calls - afterIsDirty;
+        const op = window.fpb.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+        window.fpb.get('modeling').moveElements([op], { x: 20, y: 0 });
+        resolve({ afterIsDirty, afterSwitch, dirtyAfterEdit: window.fpb.isDirty() });
+      }, 200);
+    }), CHILD);
+
+    expect(counts).toEqual({ afterIsDirty: 0, afterSwitch: 0, dirtyAfterEdit: true });
+  });
+
+  test('a 2.0 host that ignores importXML of broken XML still hears import.error', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await createModeler(page);
+    const seen = await page.evaluate(() => new Promise((resolve) => {
+      let n = 0;
+      window.fpb.on('import.error', () => { n++; });
+      window.fpb.importXML('<project><unclosed>');
+      setTimeout(() => resolve(n), 1000);
+    }));
+
+    expect(seen).toBe(1);
+    expect(errors).toEqual([]);
+  });
+
+  test('a host that ignores importAML of a broken file still hears import.error', async ({ page }) => {
+    const { errors } = await openLibraryPage(page);
+    await createModeler(page, { aml: true });
+    const seen = await page.evaluate(() => new Promise((resolve) => {
+      let n = 0;
+      window.fpb.on('import.error', () => { n++; });
+      window.fpb.importAML('<CAEXFile><broken');
+      setTimeout(() => resolve(n), 3000);
+    }));
+
+    expect(seen).toBe(1);
+    expect(errors).toEqual([]);
+  });
+
+  test('whenSettled for a run the importer no longer remembers answers at once', async ({ page }) => {
+    await openLibraryPage(page);
+    await createModeler(page);
+    const answer = await page.evaluate(async () => {
+      const importer = window.fpb.get('jsonImporter');
+      for (let i = 0; i < 12; i++) {
+        await window.fpb.importJSON({}).catch(() => {});
+      }
+      return Promise.race([
+        importer.whenSettled(1).then(() => 'resolved', (e) => e.code),
+        new Promise((r) => setTimeout(() => r('no answer'), 1000))
+      ]);
+    });
+
+    expect(answer).toBe('FORGOTTEN');
+  });
+
+  test('markSaved inside a model.downloaded listener does not call itself without end', async ({ page }) => {
+    await withModel(page);
+    const result = await page.evaluate(() => {
+      let downloaded = 0;
+      window.fpb.on('model.downloaded', () => { downloaded++; window.fpb.markSaved(); });
+      const op = window.fpb.get('elementRegistry').filter((e) => e.type === 'fpb:ProcessOperator')[0];
+      window.fpb.get('modeling').moveElements([op], { x: 20, y: 0 });
+      try {
+        window.fpb.markSaved();
+        return { downloaded, dirty: window.fpb.isDirty() };
+      } catch (e) {
+        return { error: String(e && e.message) };
+      }
+    });
+
+    expect(result).toEqual({ downloaded: 1, dirty: false });
+  });
+});

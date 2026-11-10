@@ -193,6 +193,26 @@ export async function createFpbModeler(options = {}) {
     return importer.whenSettled(run).then(({ warnings }) => ({ warnings, findings: checkNow() }));
   }
 
+  /**
+   * A file that cannot be read (broken XML or AML, no AML module) never
+   * reaches the importer, so no import.error says so. A host of 2.0 that
+   * ignores the promise and listens to import.error heard nothing, and the
+   * promise is quiet (2.1.1). An FpbImportError comes from the importer,
+   * which reported it already.
+   */
+  function reportUnread(promise) {
+    return promise.catch((error) => {
+      if (!error || error.name !== 'FpbImportError') {
+        const translate = modeler.get('translate');
+        eventBus.fire('import.error', {
+          message: translate('Import failed'),
+          details: translate('An error occurred during import: {message}', { message: (error && error.message) || String(error) })
+        });
+      }
+      throw error;
+    });
+  }
+
   // Fit viewport by default
   canvas.zoom('fit-viewport');
 
@@ -267,7 +287,7 @@ export async function createFpbModeler(options = {}) {
 
     /** Like importJSON, for a VDI 3682 XML text */
     importXML(xmlString) {
-      return quiet(xmlMapper.convertFromXML(xmlString)
+      return quiet(reportUnread(xmlMapper.convertFromXML(xmlString))
         .then((json) => runImport(() => eventBus.fire('FPBJS.import', { data: json }))));
     },
 
@@ -305,13 +325,13 @@ export async function createFpbModeler(options = {}) {
     importAML(text, options = {}) {
       // resolves once the model is on the canvas, with the findings and the
       // report of the importer (032a V1); `warnings` stay the mapper's
-      return quiet(requireAml(modeler).then((aml) => {
+      return quiet(reportUnread(requireAml(modeler)).then((aml) => {
         // the add-on loads its engine first and fires the import after that
         const before = importer ? importer.getLastRun() : 0;
-        return aml.importAml(text, {
+        return reportUnread(aml.importAml(text, {
           fileName: options.fileName,
           hierarchyId: options.instanceHierarchy
-        }).then((result) => {
+        })).then((result) => {
           const run = importer ? importer.getLastRun() : before;
           if (!result.hierarchy || run === before) {
             // no FPD content: an empty model, nothing went through the importer

@@ -61,6 +61,19 @@ export default function JSONImporter(eventBus, canvas, modeling, fpbjs, fpbFacto
         }
     });
 
+    // New model while a run waits for the panels (2.1.1): that run is over.
+    // Without this it later announced the layers of the model just thrown
+    // away and switched the canvas to one of them.
+    this._eventBus.on('model.new', () => {
+        this._shown = 0;
+        this._open.forEach((run) => {
+            this._settle(run, false, createImportError({
+                message: 'A new model replaced the import first',
+                code: 'SUPERSEDED'
+            }));
+        });
+    });
+
     this._eventBus.on(IMPORT_EVENTS.IMPORT_REQUEST, (event) => {
         const run = ++this._run;
         this._errorHandler.setRun(run);
@@ -264,8 +277,9 @@ JSONImporter.prototype.isBusy = function () {
 /**
  * Resolves when the model of `run` is on the canvas, with the warnings of its
  * report; rejects with an FpbImportError when the importer refused it or a
- * newer import replaced the model first (code SUPERSEDED). A run that is
- * over answers at once.
+ * newer import or New model replaced the model first (code SUPERSEDED). A
+ * run that is over answers at once; one too far back for its answer to be
+ * kept rejects with code FORGOTTEN.
  *
  * @return {Promise<{ warnings: Array }>}
  */
@@ -276,6 +290,12 @@ JSONImporter.prototype.whenSettled = function (run) {
     }
     if (!(run > 0 && run <= this._run)) {
         return Promise.reject(createImportError({ message: 'No import was started', code: 'NOT_STARTED' }));
+    }
+    // Only the answers of the latest runs are kept; an older run that is not
+    // open any more is over, and its answer is gone (2.1.1: it waited forever).
+    // The latest run may still be in the middle of its FPBJS.import.
+    if (run < this._run && !this._open.has(run)) {
+        return Promise.reject(createImportError({ message: 'This import is too far back to answer for', code: 'FORGOTTEN' }));
     }
     return new Promise((resolve, reject) => {
         if (!this._waiting.has(run)) {
