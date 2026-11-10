@@ -106,6 +106,15 @@ export default function BoundaryStateResizeBehavior(eventBus, modeling) {
       // without it ShapeUpdater takes the move for a state newly placed on the
       // border and asks the user to confirm it (see Szenario 6 there).
       modeling.moveShape(state, delta, shape, { fpbBoundaryFollow: true });
+
+      // The name of a state is a label, a shape of its own. diagram-js carries
+      // labels along only for elements.move (LabelSupport), not for a single
+      // shape.move, so without this the names stayed where the states had been.
+      // elements.move is no way out: it does not hand the hint above on to the
+      // moves of the single shapes.
+      (state.labels || []).slice().forEach(function (label) {
+        modeling.moveShape(label, delta);
+      });
     });
   });
 }

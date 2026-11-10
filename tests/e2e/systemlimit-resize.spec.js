@@ -70,6 +70,45 @@ test.describe('Systemgrenze vergrößern', () => {
     expect(await befunde(page, 'B6')).toEqual([]);
   });
 
+  /**
+   * Die Beschriftung eines States ist eine eigene Form (Label). Das Mitziehen
+   * verschob nur den State, die Beschriftung blieb an der alten Stelle stehen
+   * (gemeldet am 2026-11-10 auf dev.fpbjs.net, 2.1.0).
+   */
+  const beschriftungen = (page) => page.evaluate(() => {
+    const registry = window.fpbjs.get('elementRegistry');
+    return registry
+      .filter((e) => ['fpb:Product', 'fpb:Energy', 'fpb:Information'].includes(e.type) && (e.labels || []).length)
+      .map((state) => ({
+        id: state.id,
+        dx: Math.round(state.labels[0].x - state.x),
+        dy: Math.round(state.labels[0].y - state.y),
+      }));
+  });
+
+  test('die Beschriftungen der Grenz-States wandern mit', async ({ page }) => {
+    await inDerKindEbene(page);
+    const vorher = await beschriftungen(page);
+    const amRand = (await lage(page)).filter((s) => s.anOberkante || s.anUnterkante).map((s) => s.id);
+    expect(vorher.filter((b) => amRand.includes(b.id)).length).toBeGreaterThan(1);
+
+    await vergroessern(page, 300, 200);
+
+    expect(await beschriftungen(page)).toEqual(vorher);
+  });
+
+  test('Rückgängig bringt auch die Beschriftungen zurück', async ({ page }) => {
+    await inDerKindEbene(page);
+    const vorher = await page.evaluate(() => window.fpbjs.get('elementRegistry')
+      .filter((e) => e.type === 'label').map((l) => ({ id: l.id, x: l.x, y: l.y })));
+
+    await vergroessern(page, 300, 200);
+    await page.evaluate(() => window.fpbjs.get('commandStack').undo());
+
+    expect(await page.evaluate(() => window.fpbjs.get('elementRegistry')
+      .filter((e) => e.type === 'label').map((l) => ({ id: l.id, x: l.x, y: l.y })))).toEqual(vorher);
+  });
+
   test('die States im Inneren bleiben, wo sie sind', async ({ page }) => {
     await inDerKindEbene(page);
     const innen = (await lage(page)).filter((s) => !s.anOberkante && !s.anUnterkante);
