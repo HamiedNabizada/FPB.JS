@@ -494,6 +494,7 @@ const de = {
   'Branching type matches the decomposition': 'Art der Verzweigung passt zur Dekomposition',
   'Copies of a boundary state agree': 'Kopien eines Grenzzustands stimmen überein',
   'Process operator has an input and an output': 'Prozessoperator hat einen Ein- und einen Ausgang',
+  'A product that goes into a process operator also comes out': 'Ein Produkt, das in einen Prozessoperator hineingeht, kommt auch heraus',
   'Flow has different source and target': 'Fluss hat verschiedene Quelle und Ziel',
   'Element is connected': 'Element ist verbunden',
 
@@ -537,6 +538,8 @@ const de = {
   'Process operator {element} has no input and no output.': 'Prozessoperator {element} hat weder Ein- noch Ausgang.',
   'Process operator {element} has no input.': 'Prozessoperator {element} hat keinen Eingang.',
   'Process operator {element} has no output.': 'Prozessoperator {element} hat keinen Ausgang.',
+  'A product goes into process operator {element}, but none comes out.': 'In den Prozessoperator {element} geht ein Produkt hinein, aber keins kommt heraus.',
+  'A product comes out of process operator {element}, but none goes in.': 'Aus dem Prozessoperator {element} kommt ein Produkt heraus, aber keins geht hinein.',
   '{element} is not connected.': '{element} ist nicht verbunden.',
   'The outputs of {element} are {parent}, but its decomposition produces them {child}.': 'Die Ausgänge von {element} sind {parent}, die Dekomposition erzeugt sie aber {child}.',
   'The inputs of {element} are {parent}, but its decomposition uses them {child}.': 'Die Eingänge von {element} sind {parent}, die Dekomposition nutzt sie aber {child}.',

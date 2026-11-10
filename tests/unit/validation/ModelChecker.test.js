@@ -3,6 +3,9 @@ import { describe, it, expect } from 'vitest';
 
 import { checkModel as runCheck, RULES } from '../../../app/fpb/validation/ModelChecker.js';
 import { fill, translateMessage } from '../../../app/fpb/i18n/language.js';
+import deCatalog from '../../../app/fpb/i18n/de.js';
+
+const inGerman = (issue) => translateMessage((s, r) => fill(deCatalog[s] || s, r), issue);
 
 // every finding of this file, for the last test (016h T15)
 const seen = [];
@@ -81,7 +84,7 @@ describe('ModelChecker', () => {
   // D6 stays with the plugin (a process in FPB.js takes the name of its project or operator)
   it('RULES lists exactly the rules of FPB.js after 031', () => {
     expect(Object.keys(RULES).sort()).toEqual(['A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B6', 'C1', 'C2', 'C3', 'C4', 'C5', 'C9',
-      'D1', 'D7', 'D8', 'E5', 'F5', 'F8', 'F9', 'G1', 'G3', 'G4']);
+      'D1', 'D7', 'D8', 'E5', 'F5', 'F8', 'F9', 'G1', 'G3', 'G4', 'G6']);
   });
 
   it('B1, B2, B3: placement relative to the system limit', () => {
@@ -97,6 +100,58 @@ describe('ModelChecker', () => {
     m.op.outgoing = m.op.outgoing.filter((c) => c.type === 'fpb:Usage');
     m.output.incoming = [];
     expect(rules(checkModel([m.process]))).toEqual(['G1', 'G4']);
+  });
+
+  // G6 (2026-11-10, user): a product does not vanish in an operator and does not
+  // come out of nothing; VDI 3682 Blatt 1, 4.1 (system limit as balance limit for
+  // products), not stated as a must there, so a note
+  describe('G6: products into and out of a process operator', () => {
+    const retype = (state, type) => {
+      state.type = type;
+      state.businessObject = bo(state.id, type, { name: state.businessObject.name, identification: state.businessObject.identification });
+    };
+
+    it('is a note in the catalog', () => {
+      expect(RULES.G6.severity).toBe('info');
+    });
+
+    it('reports a product that goes in when only information comes out', () => {
+      const m = validModel();
+      retype(m.output, 'fpb:Information');
+      const issues = checkModel([m.process]);
+      expect(rules(issues)).toEqual(['G6']);
+      expect(issues[0].elementId).toBe('op');
+      expect(inGerman(issues[0])).toBe('In den Prozessoperator "Machining" geht ein Produkt hinein, aber keins kommt heraus.');
+    });
+
+    it('reports a product that comes out when none goes in', () => {
+      const m = validModel();
+      retype(m.input, 'fpb:Information');
+      const issues = checkModel([m.process]);
+      expect(rules(issues)).toEqual(['G6']);
+      expect(inGerman(issues[0])).toBe('Aus dem Prozessoperator "Machining" kommt ein Produkt heraus, aber keins geht hinein.');
+    });
+
+    it('accepts a product that comes out next to information', () => {
+      const m = validModel();
+      const info = shape('info', 'fpb:Information', at(375, 475), { name: 'Measured value' });
+      m.process.businessObject.elementsContainer[0].businessObject.elementsContainer.push(info);
+      connect('f3', 'fpb:Flow', m.op, info);
+      expect(rules(checkModel([m.process]))).toEqual([]);
+    });
+
+    it('leaves operators without products alone', () => {
+      const m = validModel();
+      [m.input, m.output].forEach((s) => retype(s, 'fpb:Energy'));
+      expect(rules(checkModel([m.process]))).toEqual([]);
+    });
+
+    it('leaves an operator without output to G1', () => {
+      const m = validModel();
+      m.op.outgoing = m.op.outgoing.filter((c) => c.type === 'fpb:Usage');
+      m.output.incoming = [];
+      expect(rules(checkModel([m.process]))).toEqual(['G1', 'G4']);
+    });
   });
 
   it('C9: normal flow mixed with a parallel flow at one source', () => {

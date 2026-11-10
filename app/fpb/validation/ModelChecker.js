@@ -51,7 +51,10 @@ export const RULES = {
   F9: { severity: SEVERITY.INFO, title: markText('Copies of a boundary state agree') },
   G1: { severity: SEVERITY.WARNING, title: markText('Process operator has an input and an output') },
   G3: { severity: SEVERITY.ERROR, title: markText('Flow has different source and target') },
-  G4: { severity: SEVERITY.WARNING, title: markText('Element is connected') }
+  G4: { severity: SEVERITY.WARNING, title: markText('Element is connected') },
+  // VDI 3682 Blatt 1, 4.1: the system limit may serve as balance limit for
+  // products; not stated as a must per operator, so a note (user, 2026-11-10)
+  G6: { severity: SEVERITY.INFO, title: markText('A product that goes into a process operator also comes out') }
 };
 
 const FLOW_TYPES = ['fpb:Flow', 'fpb:ParallelFlow', 'fpb:AlternativeFlow'];
@@ -472,6 +475,26 @@ function checkProcess(process, issues) {
       report(issues, 'G1', operator, process, msg(!inputs && !outputs
         ? 'Process operator {element} has no input and no output.'
         : (!inputs ? 'Process operator {element} has no input.' : 'Process operator {element} has no output.'), { element: label(operator) }));
+    }
+  });
+
+  // G6: a product does not vanish in an operator, and none comes out of
+  // nothing. Only for operators with an input and an output; the rest is G1.
+  layer.operators.forEach(function (operator) {
+    const products = function (direction, end) {
+      return flowsOf(operator, direction)
+        .map(function (c) { return c[end]; })
+        .filter(function (state) { return state && is(state, 'fpb:Product'); });
+    };
+    if (!flowsOf(operator, 'incoming').length || !flowsOf(operator, 'outgoing').length) return;
+    const into = products('incoming', 'source');
+    const outOf = products('outgoing', 'target');
+    if (into.length && !outOf.length) {
+      report(issues, 'G6', operator, process, msg('A product goes into process operator {element}, but none comes out.', { element: label(operator) }),
+        into.map(function (s) { return { id: s.id, process: process }; }));
+    } else if (outOf.length && !into.length) {
+      report(issues, 'G6', operator, process, msg('A product comes out of process operator {element}, but none goes in.', { element: label(operator) }),
+        outOf.map(function (s) { return { id: s.id, process: process }; }));
     }
   });
 
